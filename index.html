@@ -207,6 +207,7 @@
         <div class="main"><div class="wrap" id="content"></div></div>
       </div>
       ${sagaModalHtml()}
+      ${sousSagaModalHtml()}
       ${oeuvreModalHtml()}
       ${personnageModalHtml()}
       ${ideeModalHtml()}
@@ -263,7 +264,7 @@
   }
 
   // ============================================================
-  // SAGAS
+  // SAGAS — catalogue
   // ============================================================
   async function renderSagas(){
     const content = document.getElementById('content');
@@ -276,11 +277,153 @@
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucune saga pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(s => `
-      <div class="char-card" onclick="openSagaModal('${s.id}')">
+      <div class="char-card" onclick="openSagaDetail('${s.id}')">
         <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(s.nom)}</div>
         <div class="char-name">${s.nom}</div>
         <div class="char-role">${s.genre || '—'} · ${s.statut || 'Sans statut'}${s.archive ? ' · Archivée' : ''}</div>
       </div>`).join('')}</div>`;
+  }
+
+  // ============================================================
+  // SAGAS — page détail, avec onglets
+  // ============================================================
+  const SAGA_TABS = [
+    { key:'apercu', label:'Aperçu', real:true },
+    { key:'sous-sagas', label:'Sous-sagas', real:true },
+    { key:'oeuvres', label:'Œuvres', real:true },
+    { key:'personnages', label:'Personnages', real:false },
+    { key:'univers-lore', label:'Univers & Lore', real:false },
+    { key:'chronologie', label:'Chronologie', real:false },
+    { key:'fiche-detaillee', label:'Fiche détaillée', real:false },
+    { key:'parametres', label:'Paramètres', real:true },
+  ];
+  let currentSagaId = null;
+  let currentSagaTab = 'apercu';
+
+  async function openSagaDetail(id){
+    currentSagaId = id;
+    currentSagaTab = 'apercu';
+    setActiveNav('sagas');
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: s, error } = await db().from('sagas').select('*').eq('id', id).single();
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+
+    content.innerHTML = `
+      <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
+      <div class="oeuvre-head">
+        <div class="cover-block">${initials(s.nom)}</div>
+        <div class="oeuvre-info">
+          <h1>${s.nom}</h1>
+          <div class="oeuvre-sub">${s.genre || '—'}</div>
+          <span class="status-badge">${s.statut || 'Sans statut'}</span>
+        </div>
+      </div>
+      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+        ${SAGA_TABS.map(t => `<button id="sagatab-${t.key}" onclick="showSagaTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+      </div>
+      <div id="saga-tab-content"></div>
+    `;
+    showSagaTab('apercu');
+  }
+
+  async function showSagaTab(key){
+    currentSagaTab = key;
+    document.querySelectorAll('[id^="sagatab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    const activeBtn = document.getElementById('sagatab-'+key);
+    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+
+    const tab = SAGA_TABS.find(t=>t.key===key);
+    const zone = document.getElementById('saga-tab-content');
+    if (!tab.real){
+      zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà — on le construit dès qu'on y arrive dans l'ordre.</span></div>`;
+      return;
+    }
+    if (key === 'apercu') await renderSagaApercu(zone);
+    if (key === 'sous-sagas') await renderSagaSousSagas(zone);
+    if (key === 'oeuvres') await renderSagaOeuvres(zone);
+    if (key === 'parametres') await renderSagaParametres(zone);
+  }
+
+  async function renderSagaApercu(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ data: s }, { count: nbSousSagas }, { count: nbOeuvres }] = await Promise.all([
+      db().from('sagas').select('description').eq('id', currentSagaId).single(),
+      db().from('sous_sagas').select('*', { count:'exact', head:true }).eq('saga_id', currentSagaId),
+      db().from('oeuvres').select('*', { count:'exact', head:true }).eq('saga_id', currentSagaId),
+    ]);
+    zone.innerHTML = `
+      <div class="panel"><h2>À propos</h2><p style="font-size:14px; color:var(--text);">${s?.description || 'Pas encore de résumé — ajoute-le depuis Paramètres.'}</p></div>
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Sous-sagas</h3><div class="stat-big">${nbSousSagas ?? 0}</div></div>
+        <div class="stat-card"><h3>Œuvres</h3><div class="stat-big">${nbOeuvres ?? 0}</div></div>
+      </div>
+    `;
+  }
+
+  async function renderSagaSousSagas(zone){
+    zone.innerHTML = `<div class="head-row"><div></div><button class="btn-primary" onclick="openSousSagaModal()">+ Créer une sous-saga</button></div><div id="sous-sagas-zone"><div class="status-line">Chargement…</div></div>`;
+    const { data, error } = await db().from('sous_sagas').select('id, nom, format, statut').eq('saga_id', currentSagaId).order('ordre');
+    const inner = document.getElementById('sous-sagas-zone');
+    if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { inner.innerHTML = `<div class="empty">Aucune sous-saga pour l'instant.</div>`; return; }
+    inner.innerHTML = `<div class="gallery">${data.map(ss => `
+      <div class="char-card" onclick="openSousSagaModal('${ss.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--wine)33, var(--bg-2));">${initials(ss.nom)}</div>
+        <div class="char-name">${ss.nom}</div>
+        <div class="char-role">${ss.format || '—'} · ${ss.statut || 'Sans statut'}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  async function renderSagaOeuvres(zone){
+    zone.innerHTML = `<div class="head-row"><div></div><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div id="saga-oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
+    const { data, error } = await db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('saga_id', currentSagaId).order('created_at', { ascending:false });
+    const inner = document.getElementById('saga-oeuvres-zone');
+    if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { inner.innerHTML = `<div class="empty">Aucune œuvre dans cette saga pour l'instant.</div>`; return; }
+    inner.innerHTML = `<div class="gallery">${data.map(o => {
+      const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
+      return `<div class="char-card" onclick="openOeuvreModal('${o.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
+        <div class="char-name">${o.titre}</div>
+        <div class="char-role">${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+  function openOeuvreModalForSaga(){ openOeuvreModal(null, currentSagaId); }
+
+  async function renderSagaParametres(zone){
+    const { data: s } = await db().from('sagas').select('*').eq('id', currentSagaId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Informations générales</h2>
+        <label>Nom</label><input id="sp-nom" value="${s.nom||''}">
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Genre</label><input id="sp-genre" value="${s.genre||''}"></div>
+          <div><label>Statut</label><select id="sp-statut">
+            ${['Saga en cours','En pause','Terminée'].map(o=>`<option ${s.statut===o?'selected':''}>${o}</option>`).join('')}
+          </select></div>
+        </div>
+        <label style="margin-top:12px;">Résumé</label><textarea id="sp-description">${s.description||''}</textarea>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Archivage</h2>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:12px;">Masque cette saga (et ses sous-sagas/œuvres) sans les supprimer.</p>
+        <button class="btn-secondary" onclick="toggleArchiveSaga(${s.archive})">${s.archive ? 'Désarchiver' : 'Archiver cette saga'}</button>
+      </div>
+    `;
+  }
+  async function saveSagaParametres(){
+    const payload = { nom: document.getElementById('sp-nom').value.trim()||'Sans titre', genre: document.getElementById('sp-genre').value.trim(), statut: document.getElementById('sp-statut').value, description: document.getElementById('sp-description').value.trim() };
+    const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openSagaDetail(currentSagaId);
+  }
+  async function toggleArchiveSaga(currentlyArchived){
+    const { error } = await db().from('sagas').update({ archive: !currentlyArchived }).eq('id', currentSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    navigate('sagas');
   }
 
   function sagaModalHtml(){
@@ -315,11 +458,54 @@
   function closeSagaModal(){ document.getElementById('modal-saga-overlay').classList.remove('open'); }
   async function saveSaga(){
     const payload = { nom: document.getElementById('sf-nom').value.trim()||'Sans titre', genre: document.getElementById('sf-genre').value.trim(), statut: document.getElementById('sf-statut').value, description: document.getElementById('sf-description').value.trim() };
-    let error;
+    let error, newId;
     if (editingSagaId) ({ error } = await db().from('sagas').update(payload).eq('id', editingSagaId));
-    else { payload.user_id = currentUser.id; ({ error } = await db().from('sagas').insert(payload)); }
+    else { payload.user_id = currentUser.id; const res = await db().from('sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
     if (error) { alert('Erreur : ' + error.message); return; }
-    closeSagaModal(); await renderSagas();
+    closeSagaModal();
+    if (newId) openSagaDetail(newId); else await renderSagas();
+  }
+
+  // ---- Sous-sagas : modal création/édition ----
+  function sousSagaModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-soussaga-overlay" onclick="if(event.target===this) closeSousSagaModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-soussaga-title">Nouvelle sous-saga</h2><button onclick="closeSousSagaModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Nom</label><input id="ssf-nom"></div>
+            <div class="row2">
+              <div><label>Format</label><input id="ssf-format" placeholder="Trilogie, Série..."></div>
+              <div><label>Statut</label><select id="ssf-statut"><option>En cours</option><option>À venir</option><option>Terminée</option></select></div>
+            </div>
+            <div><label>Description</label><textarea id="ssf-description"></textarea></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeSousSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSousSaga()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  let editingSousSagaId = null;
+  async function openSousSagaModal(id){
+    editingSousSagaId = id || null;
+    document.getElementById('modal-soussaga-title').textContent = id ? 'Modifier la sous-saga' : 'Nouvelle sous-saga';
+    document.getElementById('ssf-nom').value=''; document.getElementById('ssf-format').value='';
+    document.getElementById('ssf-statut').value='En cours'; document.getElementById('ssf-description').value='';
+    if (id) {
+      const { data } = await db().from('sous_sagas').select('nom, format, statut, description').eq('id', id).single();
+      if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; }
+    }
+    document.getElementById('modal-soussaga-overlay').classList.add('open');
+  }
+  function closeSousSagaModal(){ document.getElementById('modal-soussaga-overlay').classList.remove('open'); }
+  async function saveSousSaga(){
+    const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim() };
+    let error;
+    if (editingSousSagaId) ({ error } = await db().from('sous_sagas').update(payload).eq('id', editingSousSagaId));
+    else { payload.user_id = currentUser.id; payload.saga_id = currentSagaId; ({ error } = await db().from('sous_sagas').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeSousSagaModal();
+    const zone = document.getElementById('saga-tab-content');
+    await renderSagaSousSagas(zone);
   }
 
   // ============================================================
@@ -368,15 +554,18 @@
       </div>`;
   }
   let editingOeuvreId = null;
-  async function openOeuvreModal(id){
+  let presetSagaId = null;
+  async function openOeuvreModal(id, sagaId){
     editingOeuvreId = id || null;
+    presetSagaId = sagaId || null;
     document.getElementById('modal-oeuvre-title').textContent = id ? "Modifier l'œuvre" : 'Nouvelle œuvre';
     const { data: sagasList } = await db().from('sagas').select('id, nom').order('ordre');
     const sel = document.getElementById('of-saga');
     sel.innerHTML = '<option value="">— Indépendante —</option>' + (sagasList||[]).map(s => `<option value="${s.id}">${s.nom}</option>`).join('');
     document.getElementById('of-titre').value=''; document.getElementById('of-genre').value='';
     document.getElementById('of-statut').value='En écriture'; document.getElementById('of-objectif').value='';
-    document.getElementById('of-mots').value=''; document.getElementById('of-resume').value=''; sel.value='';
+    document.getElementById('of-mots').value=''; document.getElementById('of-resume').value='';
+    sel.value = presetSagaId || '';
     if (id) {
       const { data } = await db().from('oeuvres').select('titre, saga_id, genre, statut, objectif_mots, mots_ecrits, resume').eq('id', id).single();
       if (data) {
@@ -403,7 +592,9 @@
     if (editingOeuvreId) ({ error } = await db().from('oeuvres').update(payload).eq('id', editingOeuvreId));
     else { payload.user_id = currentUser.id; ({ error } = await db().from('oeuvres').insert(payload)); }
     if (error) { alert('Erreur : ' + error.message); return; }
-    closeOeuvreModal(); await renderOeuvres();
+    closeOeuvreModal();
+    if (currentSagaId && (payload.saga_id === currentSagaId)) { await renderSagaOeuvres(document.getElementById('saga-tab-content')); }
+    else { await renderOeuvres(); }
   }
 
   // ============================================================
