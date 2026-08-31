@@ -221,6 +221,7 @@
   }
 
   function navigate(key){
+    resetTheme();
     setActiveNav(key);
     const item = NAV.flatMap(g=>g.items).find(i=>i.key===key);
     const content = document.getElementById('content');
@@ -294,7 +295,7 @@
     { key:'personnages', label:'Personnages', real:false },
     { key:'univers-lore', label:'Univers & Lore', real:false },
     { key:'chronologie', label:'Chronologie', real:false },
-    { key:'fiche-detaillee', label:'Fiche détaillée', real:false },
+    { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
     { key:'parametres', label:'Paramètres', real:true },
   ];
   let currentSagaId = null;
@@ -308,6 +309,7 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
     const { data: s, error } = await db().from('sagas').select('*').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    applyTheme(s.theme_base, s.accent_color);
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
@@ -342,6 +344,7 @@
     if (key === 'apercu') await renderSagaApercu(zone);
     if (key === 'sous-sagas') await renderSagaSousSagas(zone);
     if (key === 'oeuvres') await renderSagaOeuvres(zone);
+    if (key === 'fiche-detaillee') await renderSagaFicheDetaillee(zone);
     if (key === 'parametres') await renderSagaParametres(zone);
   }
 
@@ -383,7 +386,7 @@
     if (!data.length) { inner.innerHTML = `<div class="empty">Aucune œuvre dans cette saga pour l'instant.</div>`; return; }
     inner.innerHTML = `<div class="gallery">${data.map(o => {
       const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
-      return `<div class="char-card" onclick="openOeuvreModal('${o.id}')">
+      return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
         <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
         <div class="char-name">${o.titre}</div>
         <div class="char-role">${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}</div>
@@ -392,6 +395,54 @@
   }
   function openOeuvreModalForSaga(){ openOeuvreModal(null, currentSagaId); }
 
+  async function renderSagaFicheDetaillee(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: s } = await db().from('sagas').select('pitch, public_cible, a_propos, intentions, tient_a_coeur, enjeu_principal, tonalite, temporalite, lieu_principal, sous_genre, citation').eq('id', currentSagaId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Pitch & intentions</h2>
+        <label>Pitch (accroche courte)</label><textarea id="sfd-pitch">${s.pitch||''}</textarea>
+        <label style="margin-top:10px;">À propos</label><textarea id="sfd-a-propos">${s.a_propos||''}</textarea>
+        <label style="margin-top:10px;">Intentions</label><textarea id="sfd-intentions">${s.intentions||''}</textarea>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:10px;"><input type="checkbox" id="sfd-tient-a-coeur" style="width:auto;" ${s.tient_a_coeur?'checked':''}><label style="margin:0;" for="sfd-tient-a-coeur">Ce projet me tient particulièrement à cœur</label></div>
+      </div>
+      <div class="panel">
+        <h2>Infos clés</h2>
+        <div class="row2">
+          <div><label>Tonalité</label><input id="sfd-tonalite" value="${s.tonalite||''}"></div>
+          <div><label>Temporalité</label><input id="sfd-temporalite" value="${s.temporalite||''}"></div>
+        </div>
+        <div class="row2" style="margin-top:10px;">
+          <div><label>Lieu principal</label><input id="sfd-lieu" value="${s.lieu_principal||''}"></div>
+          <div><label>Sous-genre</label><input id="sfd-sous-genre" value="${s.sous_genre||''}"></div>
+        </div>
+        <label style="margin-top:10px;">Public cible</label>
+        <select id="sfd-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(o=>`<option ${s.public_cible===o?'selected':''}>${o}</option>`).join('')}</select>
+        <label style="margin-top:10px;">Enjeu principal</label><textarea id="sfd-enjeu">${s.enjeu_principal||''}</textarea>
+        <label style="margin-top:10px;">Citation d'ambiance</label><textarea id="sfd-citation">${s.citation||''}</textarea>
+      </div>
+      <button class="btn-primary" onclick="saveSagaFicheDetaillee()">Enregistrer</button>
+    `;
+  }
+  async function saveSagaFicheDetaillee(){
+    const payload = {
+      pitch: document.getElementById('sfd-pitch').value.trim(),
+      a_propos: document.getElementById('sfd-a-propos').value.trim(),
+      intentions: document.getElementById('sfd-intentions').value.trim(),
+      tient_a_coeur: document.getElementById('sfd-tient-a-coeur').checked,
+      tonalite: document.getElementById('sfd-tonalite').value.trim(),
+      temporalite: document.getElementById('sfd-temporalite').value.trim(),
+      lieu_principal: document.getElementById('sfd-lieu').value.trim(),
+      sous_genre: document.getElementById('sfd-sous-genre').value.trim(),
+      public_cible: document.getElementById('sfd-public').value || null,
+      enjeu_principal: document.getElementById('sfd-enjeu').value.trim(),
+      citation: document.getElementById('sfd-citation').value.trim(),
+    };
+    const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    alert('Enregistré.');
+  }
+
   async function renderSagaParametres(zone){
     const { data: s } = await db().from('sagas').select('*').eq('id', currentSagaId).single();
     zone.innerHTML = `
@@ -399,13 +450,27 @@
         <h2>Informations générales</h2>
         <label>Nom</label><input id="sp-nom" value="${s.nom||''}">
         <div class="row2" style="margin-top:12px;">
+          <div><label>Sous-titre</label><input id="sp-sous-titre" value="${s.sous_titre||''}"></div>
           <div><label>Genre</label><input id="sp-genre" value="${s.genre||''}"></div>
-          <div><label>Statut</label><select id="sp-statut">
-            ${['Saga en cours','En pause','Terminée'].map(o=>`<option ${s.statut===o?'selected':''}>${o}</option>`).join('')}
-          </select></div>
         </div>
+        <label style="margin-top:12px;">Statut</label><select id="sp-statut">
+          ${['Saga en cours','En pause','Terminée'].map(o=>`<option ${s.statut===o?'selected':''}>${o}</option>`).join('')}
+        </select>
         <label style="margin-top:12px;">Résumé</label><textarea id="sp-description">${s.description||''}</textarea>
+        <label style="margin-top:12px;">Lore complet</label><textarea id="sp-lore" style="min-height:120px;">${s.lore_complet||''}</textarea>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Apparence</h2>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le thème et la couleur choisis ici s'appliquent immédiatement à cette page (et à toutes les pages liées).</p>
+        <div class="row2">
+          <div><label>Thème</label><select id="sp-theme">
+            <option value="sombre" ${s.theme_base==='sombre'?'selected':''}>Sombre</option>
+            <option value="clair" ${s.theme_base==='clair'?'selected':''}>Clair</option>
+          </select></div>
+          <div><label>Couleur d'accent</label><input type="color" id="sp-accent" value="${s.accent_color||'#8C7FB0'}" style="height:42px; padding:4px;"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaApparence()">Appliquer</button>
       </div>
       <div class="panel">
         <h2>Archivage</h2>
@@ -414,8 +479,14 @@
       </div>
     `;
   }
+  async function saveSagaApparence(){
+    const payload = { theme_base: document.getElementById('sp-theme').value, accent_color: document.getElementById('sp-accent').value };
+    const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    applyTheme(payload.theme_base, payload.accent_color);
+  }
   async function saveSagaParametres(){
-    const payload = { nom: document.getElementById('sp-nom').value.trim()||'Sans titre', genre: document.getElementById('sp-genre').value.trim(), statut: document.getElementById('sp-statut').value, description: document.getElementById('sp-description').value.trim() };
+    const payload = { nom: document.getElementById('sp-nom').value.trim()||'Sans titre', sous_titre: document.getElementById('sp-sous-titre').value.trim(), genre: document.getElementById('sp-genre').value.trim(), statut: document.getElementById('sp-statut').value, description: document.getElementById('sp-description').value.trim(), lore_complet: document.getElementById('sp-lore').value.trim() };
     const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
     if (error) { alert('Erreur : ' + error.message); return; }
     openSagaDetail(currentSagaId);
@@ -523,12 +594,200 @@
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucune œuvre pour l'instant.<br><br><button class="btn-primary" onclick="openOeuvreModal()">Créer ta première œuvre</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(o => {
       const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
-      return `<div class="char-card" onclick="openOeuvreModal('${o.id}')">
+      return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
         <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
         <div class="char-name">${o.titre}</div>
         <div class="char-role">${o.sagas?.nom ? o.sagas.nom+' · ' : ''}${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}${o.archive?' · Archivée':''}</div>
       </div>`;
     }).join('')}</div>`;
+  }
+
+  // ============================================================
+  // ŒUVRE — page détail, avec onglets
+  // ============================================================
+  const OEUVRE_TABS = [
+    { key:'apercu', label:'Aperçu', real:true },
+    { key:'ecriture', label:'Écriture', real:false },
+    { key:'personnages', label:'Personnages', real:false },
+    { key:'plans', label:'Plans', real:false },
+    { key:'relecture', label:'Relecture', real:false },
+    { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
+    { key:'parametres', label:'Paramètres', real:true },
+  ];
+  let currentOeuvreId = null;
+
+  async function openOeuvreDetail(id){
+    currentOeuvreId = id;
+    setActiveNav('oeuvres');
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: o, error } = await db().from('oeuvres').select('*, sagas(nom)').eq('id', id).single();
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    applyTheme(o.theme_base, o.accent_color);
+
+    const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
+    content.innerHTML = `
+      <div class="back-link" onclick="navigate('oeuvres')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux œuvres</div>
+      <div class="oeuvre-head">
+        <div class="cover-block">${initials(o.titre)}</div>
+        <div class="oeuvre-info">
+          <h1>${o.titre}</h1>
+          <div class="oeuvre-sub">${o.sagas?.nom || 'Œuvre indépendante'}</div>
+          <span class="status-badge">${o.statut || 'Sans statut'}</span>
+          ${o.objectif_mots ? `<div style="font-size:14px;">${o.mots_ecrits||0} / ${o.objectif_mots} mots</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>` : ''}
+        </div>
+      </div>
+      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+        ${OEUVRE_TABS.map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+      </div>
+      <div id="oeuvre-tab-content"></div>
+    `;
+    showOeuvreTab('apercu');
+  }
+
+  async function showOeuvreTab(key){
+    document.querySelectorAll('[id^="oeuvretab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    const activeBtn = document.getElementById('oeuvretab-'+key);
+    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+
+    const tab = OEUVRE_TABS.find(t=>t.key===key);
+    const zone = document.getElementById('oeuvre-tab-content');
+    if (!tab.real){
+      zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà — on le construit dès qu'on y arrive dans l'ordre.</span></div>`;
+      return;
+    }
+    if (key === 'apercu') await renderOeuvreApercu(zone);
+    if (key === 'fiche-detaillee') await renderOeuvreFicheDetaillee(zone);
+    if (key === 'parametres') await renderOeuvreParametres(zone);
+  }
+
+  async function renderOeuvreApercu(zone){
+    const { data: o } = await db().from('oeuvres').select('resume, pitch').eq('id', currentOeuvreId).single();
+    zone.innerHTML = `
+      ${o.pitch ? `<div class="panel"><h2>Pitch</h2><p style="font-size:14px; font-style:italic;">${o.pitch}</p></div>` : ''}
+      <div class="panel"><h2>Résumé</h2><p style="font-size:14px;">${o.resume || 'Pas encore de résumé.'}</p></div>
+    `;
+  }
+
+  async function renderOeuvreFicheDetaillee(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: o } = await db().from('oeuvres').select('pitch, genre, public_cible, a_propos, intentions, tient_a_coeur, tropes, enjeu_principal, tonalite, temporalite, lieu_principal, sous_genre').eq('id', currentOeuvreId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Pitch & intentions</h2>
+        <label>Pitch (accroche courte)</label><textarea id="ofd-pitch">${o.pitch||''}</textarea>
+        <label style="margin-top:10px;">À propos</label><textarea id="ofd-a-propos">${o.a_propos||''}</textarea>
+        <label style="margin-top:10px;">Intentions</label><textarea id="ofd-intentions">${o.intentions||''}</textarea>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:10px;"><input type="checkbox" id="ofd-tient-a-coeur" style="width:auto;" ${o.tient_a_coeur?'checked':''}><label style="margin:0;" for="ofd-tient-a-coeur">Ce projet me tient particulièrement à cœur</label></div>
+      </div>
+      <div class="panel">
+        <h2>Infos clés</h2>
+        <div class="row2">
+          <div><label>Genre</label><input id="ofd-genre" value="${o.genre||''}"></div>
+          <div><label>Sous-genre</label><input id="ofd-sous-genre" value="${o.sous_genre||''}"></div>
+        </div>
+        <div class="row2" style="margin-top:10px;">
+          <div><label>Tonalité</label><input id="ofd-tonalite" value="${o.tonalite||''}"></div>
+          <div><label>Temporalité</label><input id="ofd-temporalite" value="${o.temporalite||''}"></div>
+        </div>
+        <label style="margin-top:10px;">Lieu principal</label><input id="ofd-lieu" value="${o.lieu_principal||''}">
+        <label style="margin-top:10px;">Public cible</label>
+        <select id="ofd-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(opt=>`<option ${o.public_cible===opt?'selected':''}>${opt}</option>`).join('')}</select>
+        <label style="margin-top:10px;">Tropes / mots-clés (séparés par des virgules)</label>
+        <input id="ofd-tropes" value="${(o.tropes||[]).join(', ')}">
+        <label style="margin-top:10px;">Enjeu principal</label><textarea id="ofd-enjeu">${o.enjeu_principal||''}</textarea>
+      </div>
+      <button class="btn-primary" onclick="saveOeuvreFicheDetaillee()">Enregistrer</button>
+    `;
+  }
+  async function saveOeuvreFicheDetaillee(){
+    const tropesRaw = document.getElementById('ofd-tropes').value.trim();
+    const payload = {
+      pitch: document.getElementById('ofd-pitch').value.trim(),
+      a_propos: document.getElementById('ofd-a-propos').value.trim(),
+      intentions: document.getElementById('ofd-intentions').value.trim(),
+      tient_a_coeur: document.getElementById('ofd-tient-a-coeur').checked,
+      genre: document.getElementById('ofd-genre').value.trim(),
+      sous_genre: document.getElementById('ofd-sous-genre').value.trim(),
+      tonalite: document.getElementById('ofd-tonalite').value.trim(),
+      temporalite: document.getElementById('ofd-temporalite').value.trim(),
+      lieu_principal: document.getElementById('ofd-lieu').value.trim(),
+      public_cible: document.getElementById('ofd-public').value || null,
+      tropes: tropesRaw ? tropesRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
+      enjeu_principal: document.getElementById('ofd-enjeu').value.trim(),
+    };
+    const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    alert('Enregistré.');
+  }
+
+  async function renderOeuvreParametres(zone){
+    const { data: o } = await db().from('oeuvres').select('*').eq('id', currentOeuvreId).single();
+    const { data: sagasList } = await db().from('sagas').select('id, nom').order('ordre');
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Informations générales</h2>
+        <label>Titre</label><input id="op-titre" value="${o.titre||''}">
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Sous-titre</label><input id="op-sous-titre" value="${o.sous_titre||''}"></div>
+          <div><label>Saga</label><select id="op-saga"><option value="">— Indépendante —</option>${(sagasList||[]).map(s=>`<option value="${s.id}" ${o.saga_id===s.id?'selected':''}>${s.nom}</option>`).join('')}</select></div>
+        </div>
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Langue</label><input id="op-langue" value="${o.langue||'Français'}"></div>
+          <div><label>Format</label><input id="op-format" value="${o.format_cible||''}" placeholder="Roman, Novella..."></div>
+        </div>
+        <label style="margin-top:12px;">Statut</label><select id="op-statut">${['En écriture','En pause','Terminée'].map(s=>`<option ${o.statut===s?'selected':''}>${s}</option>`).join('')}</select>
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Objectif de mots</label><input type="number" id="op-objectif" value="${o.objectif_mots||''}"></div>
+          <div><label>Mots écrits</label><input type="number" id="op-mots" value="${o.mots_ecrits||0}"></div>
+        </div>
+        <label style="margin-top:12px;">Résumé</label><textarea id="op-resume">${o.resume||''}</textarea>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Apparence</h2>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">S'applique immédiatement à cette page.</p>
+        <div class="row2">
+          <div><label>Thème</label><select id="op-theme">
+            <option value="sombre" ${o.theme_base==='sombre'?'selected':''}>Sombre</option>
+            <option value="clair" ${o.theme_base==='clair'?'selected':''}>Clair</option>
+          </select></div>
+          <div><label>Couleur d'accent</label><input type="color" id="op-accent" value="${o.accent_color||'#C9A227'}" style="height:42px; padding:4px;"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Appliquer</button>
+      </div>
+      <div class="panel">
+        <h2>Archivage</h2>
+        <button class="btn-secondary" onclick="toggleArchiveOeuvre(${o.archive})">${o.archive ? 'Désarchiver' : 'Archiver cette œuvre'}</button>
+      </div>
+    `;
+  }
+  async function saveOeuvreParametres(){
+    const payload = {
+      titre: document.getElementById('op-titre').value.trim()||'Sans titre',
+      sous_titre: document.getElementById('op-sous-titre').value.trim(),
+      saga_id: document.getElementById('op-saga').value || null,
+      langue: document.getElementById('op-langue').value.trim(),
+      format_cible: document.getElementById('op-format').value.trim(),
+      statut: document.getElementById('op-statut').value,
+      objectif_mots: parseInt(document.getElementById('op-objectif').value)||null,
+      mots_ecrits: parseInt(document.getElementById('op-mots').value)||0,
+      resume: document.getElementById('op-resume').value.trim(),
+    };
+    const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openOeuvreDetail(currentOeuvreId);
+  }
+  async function saveOeuvreApparence(){
+    const payload = { theme_base: document.getElementById('op-theme').value, accent_color: document.getElementById('op-accent').value };
+    const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    applyTheme(payload.theme_base, payload.accent_color);
+  }
+  async function toggleArchiveOeuvre(currentlyArchived){
+    const { error } = await db().from('oeuvres').update({ archive: !currentlyArchived }).eq('id', currentOeuvreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    navigate('oeuvres');
   }
 
   function oeuvreModalHtml(){
@@ -588,11 +847,12 @@
       mots_ecrits: parseInt(document.getElementById('of-mots').value)||0,
       resume: document.getElementById('of-resume').value.trim(),
     };
-    let error;
+    let error, newId;
     if (editingOeuvreId) ({ error } = await db().from('oeuvres').update(payload).eq('id', editingOeuvreId));
-    else { payload.user_id = currentUser.id; ({ error } = await db().from('oeuvres').insert(payload)); }
+    else { payload.user_id = currentUser.id; const res = await db().from('oeuvres').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
     if (error) { alert('Erreur : ' + error.message); return; }
     closeOeuvreModal();
+    if (newId) { openOeuvreDetail(newId); return; }
     if (currentSagaId && (payload.saga_id === currentSagaId)) { await renderSagaOeuvres(document.getElementById('saga-tab-content')); }
     else { await renderOeuvres(); }
   }
@@ -715,6 +975,20 @@
   }
 
   function initials(str){ return (str||'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase(); }
+
+  // ============================================================
+  // Apparence par fiche (theme_base + accent_color, appliqués pour de vrai)
+  // ============================================================
+  const DEFAULT_ACCENT = '#C9A227';
+  const LIGHT_PALETTE = { '--bg':'#F3EFE6', '--bg-2':'#EAE4D6', '--card':'#FFFFFF', '--line':'rgba(27,36,54,0.14)', '--text':'#1B2436', '--text-dim':'#6B7280' };
+  const DARK_PALETTE = { '--bg':'#161513', '--bg-2':'#1E1C19', '--card':'#161513', '--line':'rgba(255,255,255,0.08)', '--text':'#F3EFE6', '--text-dim':'#8A8780' };
+
+  function applyTheme(themeBase, accentColor){
+    const palette = themeBase === 'clair' ? LIGHT_PALETTE : DARK_PALETTE;
+    Object.entries(palette).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
+    document.documentElement.style.setProperty('--accent', accentColor || DEFAULT_ACCENT);
+  }
+  function resetTheme(){ applyTheme('sombre', DEFAULT_ACCENT); }
 
   init();
 </script>
