@@ -183,7 +183,7 @@
       { key:'poesie', label:'Poésie', real:false },
       { key:'chapitres', label:'Chapitres', real:false },
       { key:'plans', label:'Plans', real:false },
-      { key:'relecture', label:'Relecture', real:false },
+      { key:'relecture', label:'Relecture', real:true },
       { key:'idees', label:'Idées', real:true },
       { key:'bureau-editorial', label:'Bureau éditorial', real:false },
       { key:'archives', label:'Archives', real:false },
@@ -234,6 +234,7 @@
     if (key === 'sagas') renderSagas();
     if (key === 'personnages') renderPersonnages();
     if (key === 'idees') renderIdees();
+    if (key === 'relecture') renderRelecture();
   }
 
   // ============================================================
@@ -242,24 +243,171 @@
   async function renderAccueil(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const [{ count: nbSagas }, { count: nbOeuvres }, { count: nbPersonnages }, { count: nbIdees }] = await Promise.all([
-      db().from('sagas').select('*', { count:'exact', head:true }),
-      db().from('oeuvres').select('*', { count:'exact', head:true }),
-      db().from('personnages').select('*', { count:'exact', head:true }),
-      db().from('idees').select('*', { count:'exact', head:true }),
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+    const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().slice(0,10);
+
+    const [
+      enBureau, pepiniere, dernierGraine, atelierStats, aReprendre, objectifAnnuel, sommeAnnuelle
+    ] = await Promise.all([
+      db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
+      db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
+      db().from('idees').select('titre, note').order('created_at', { ascending:false }).limit(1).maybeSingle(),
+      Promise.all([
+        db().from('oeuvres').select('*', { count:'exact', head:true }).eq('statut','En écriture'),
+        db().from('chapitres').select('*', { count:'exact', head:true }).gte('date_ecriture', startOfMonth),
+        db().from('relectures').select('*', { count:'exact', head:true }).is('date_terminee', null),
+      ]),
+      db().from('oeuvres').select('id, titre, statut, updated_at').eq('statut','En pause').order('updated_at', { ascending:true }).limit(3),
+      db().from('objectifs_annuels').select('objectif_mots').eq('annee', now.getFullYear()).maybeSingle(),
+      db().from('sessions_ecriture').select('mots_ecrits').gte('date', startOfYear),
     ]);
+
+    const [{ count: nbEnEcriture }, { count: nbChapitresMois }, { count: nbRelecturesEnCours }] = atelierStats;
+    const motsAnnee = (sommeAnnuelle.data||[]).reduce((s,r)=>s+(r.mots_ecrits||0), 0);
+    const objectifAnnee = objectifAnnuel.data?.objectif_mots;
+    const pctAnnee = objectifAnnee ? Math.min(100, Math.round(motsAnnee/objectifAnnee*100)) : 0;
+
+    function joursDepuis(dateStr){
+      const diff = Math.floor((now - new Date(dateStr)) / 86400000);
+      return diff <= 0 ? "aujourd'hui" : `il y a ${diff} jour${diff>1?'s':''}`;
+    }
+
     content.innerHTML = `
       <div class="banner">
         <div>
-          <h1>Bonsoir, ${currentUser.email.split('@')[0]} ✨</h1>
+          <h1>Bonjour, ${currentUser.email.split('@')[0]} ✨</h1>
           <div class="sub">Que va-t-on raconter aujourd'hui ?</div>
         </div>
       </div>
+
+      <div class="panel">
+        <h2>Sur le bureau</h2>
+        ${!enBureau.data?.length ? `<div class="empty">Aucune œuvre en écriture pour l'instant.</div>` : `
+        <div class="gallery">${enBureau.data.map(o => {
+          const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
+          return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
+            <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
+            <div class="char-name">${o.titre}</div>
+            <div class="char-role">${pct!==null ? pct+'% · '+(o.mots_ecrits||0)+' / '+o.objectif_mots+' mots' : 'En écriture'}</div>
+          </div>`;
+        }).join('')}</div>`}
+      </div>
+
       <div class="stat-cards-row">
-        <div class="stat-card" onclick="navigate('sagas')" style="cursor:pointer;"><h3>Sagas</h3><div class="stat-big">${nbSagas ?? 0}</div></div>
-        <div class="stat-card" onclick="navigate('oeuvres')" style="cursor:pointer;"><h3>Œuvres</h3><div class="stat-big">${nbOeuvres ?? 0}</div></div>
-        <div class="stat-card" onclick="navigate('personnages')" style="cursor:pointer;"><h3>Personnages</h3><div class="stat-big">${nbPersonnages ?? 0}</div></div>
-        <div class="stat-card" onclick="navigate('idees')" style="cursor:pointer;"><h3>Idées</h3><div class="stat-big">${nbIdees ?? 0}</div></div>
+        <div class="stat-card"><h3>Œuvres en écriture</h3><div class="stat-big">${nbEnEcriture ?? 0}</div></div>
+        <div class="stat-card"><h3>Chapitres écrits ce mois</h3><div class="stat-big">${nbChapitresMois ?? 0}</div></div>
+        <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${nbRelecturesEnCours ?? 0}</div></div>
+        <div class="stat-card"><h3>Idées à explorer</h3><div class="stat-big">${pepiniere.count ?? 0}</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Progression annuelle</h2>
+        ${objectifAnnee ? `
+          <div style="font-size:13px; color:var(--text-dim); margin-bottom:6px;">${motsAnnee.toLocaleString('fr-FR')} / ${objectifAnnee.toLocaleString('fr-FR')} mots — ${pctAnnee}%</div>
+          <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pctAnnee}%;"></div></div>
+        ` : `
+          <p style="font-size:13px; color:var(--text-dim); margin-bottom:10px;">Aucun objectif défini pour ${now.getFullYear()}.</p>
+          <input type="number" id="objectif-annuel-input" placeholder="Objectif de mots pour ${now.getFullYear()}" style="max-width:260px; display:inline-block;">
+          <button class="btn-primary" onclick="saveObjectifAnnuel()">Définir</button>
+        `}
+      </div>
+
+      <div class="panel">
+        <h2>🌱 La pépinière frémit</h2>
+        ${dernierGraine.data ? `<p style="font-size:13px; color:var(--text-dim);">Dernière graine capturée : <strong style="color:var(--text);">${dernierGraine.data.titre}</strong></p>` : ''}
+        <button class="btn-primary" style="margin-top:10px;" onclick="openIdeeModal()">+ Capturer une idée</button>
+      </div>
+
+      <div class="panel">
+        <h2>À reprendre</h2>
+        ${!aReprendre.data?.length ? `<div class="empty">Aucun projet en pause en ce moment.</div>` : aReprendre.data.map(o => `
+          <div class="info-line" style="cursor:pointer;" onclick="openOeuvreDetail('${o.id}')">
+            <span>${o.titre}</span>
+            <span>Dernière activité : ${joursDepuis(o.updated_at)}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="head-row" style="margin-top:10px;">
+        <button class="btn-secondary" onclick="openIdeeModal()">+ Nouvelle idée</button>
+        <button class="btn-secondary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>
+        <button class="btn-secondary" onclick="navigate('oeuvres')">Écrire</button>
+        <button class="btn-secondary" onclick="navigate('bureau-editorial')">Bureau éditorial</button>
+      </div>
+    `;
+  }
+  async function saveObjectifAnnuel(){
+    const val = parseInt(document.getElementById('objectif-annuel-input').value);
+    if (!val) return;
+    const { error } = await db().from('objectifs_annuels').insert({ user_id: currentUser.id, annee: new Date().getFullYear(), objectif_mots: val });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    renderAccueil();
+  }
+
+  // ============================================================
+  // RELECTURE — centre de contrôle, dérivé du statut éditorial
+  // ============================================================
+  async function renderRelecture(){
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('relecture_file_travail').select('*');
+    if (error) {
+      content.innerHTML = `<div class="empty">Erreur : ${error.message}<br><span style="font-size:11px;">Si l'erreur mentionne "relation does not exist", le correctif de sécurité des vues n'a peut-être pas encore tourné.</span></div>`;
+      return;
+    }
+
+    const enCours = data.filter(d => d.bucket_relecture === 'en_cours');
+    const enAttente = data.filter(d => d.bucket_relecture === 'en_attente');
+    const termineesOuAPreparerRaw = data.filter(d => d.bucket_relecture === 'recemment_terminee' || d.bucket_relecture === 'a_preparer');
+    const chapitresARelire = data.reduce((s,d) => s + Math.max(0, (d.total_chapitres||0) - (d.chapitres_relus||0)), 0);
+    const tempsMoy = data.map(d=>d.temps_moyen_par_chapitre).filter(v=>v!=null);
+    const tempsMoyGlobal = tempsMoy.length ? Math.round(tempsMoy.reduce((a,b)=>a+b,0)/tempsMoy.length) : null;
+
+    function carte(d, actionLabel){
+      const pct = d.total_chapitres ? Math.min(100, Math.round((d.chapitres_relus||0)/d.total_chapitres*100)) : 0;
+      return `
+        <div class="panel" style="cursor:pointer;" onclick="openOeuvreDetail('${d.oeuvre_id}')">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size:15px; font-weight:500;">${d.titre}</div>
+            <span class="status-badge" style="margin:0;">${d.statut_editorial_actuel||''}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); margin:8px 0;">${d.chapitres_relus||0} / ${d.total_chapitres||0} chapitres — ${pct}%</div>
+          <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
+          <button class="btn-secondary" style="margin-top:12px; width:100%;">${actionLabel}</button>
+        </div>`;
+    }
+
+    content.innerHTML = `
+      <h2 style="margin-bottom:6px;">Relecture</h2>
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:20px;">Centre de contrôle de tes manuscrits en relecture — alimenté par le statut éditorial de chaque œuvre.</p>
+
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${enCours.length}</div></div>
+        <div class="stat-card"><h3>À commencer</h3><div class="stat-big">${enAttente.length}</div></div>
+        <div class="stat-card"><h3>Chapitres à relire</h3><div class="stat-big">${chapitresARelire}</div></div>
+        <div class="stat-card"><h3>Temps moyen / chapitre</h3><div class="stat-big" style="font-size:1.3rem;">${tempsMoyGlobal ? tempsMoyGlobal+' min' : '—'}</div></div>
+      </div>
+
+      <div class="row2" style="grid-template-columns:1fr 1fr 1fr; gap:16px;">
+        <div>
+          <h2 style="font-size:1rem; margin-bottom:10px; color:var(--text-dim);">🔥 En cours</h2>
+          ${enCours.length ? enCours.map(d=>carte(d,'Continuer la relecture')).join('') : '<div class="empty">Rien en cours.</div>'}
+        </div>
+        <div>
+          <h2 style="font-size:1rem; margin-bottom:10px; color:var(--text-dim);">⏳ En attente</h2>
+          ${enAttente.length ? enAttente.map(d=>carte(d,'Commencer la relecture')).join('') : '<div class="empty">Rien en attente.</div>'}
+        </div>
+        <div>
+          <h2 style="font-size:1rem; margin-bottom:10px; color:var(--text-dim);">✅ Terminées / à préparer</h2>
+          ${termineesOuAPreparerRaw.length ? termineesOuAPreparerRaw.map(d=>carte(d,'Voir le récapitulatif')).join('') : '<div class="empty">Rien ici pour l\\'instant.</div>'}
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:20px;">
+        <h2>Comment ça fonctionne ?</h2>
+        <p style="font-size:13px; color:var(--text-dim);">Les œuvres apparaissent ici selon leur statut éditorial (défini pour l'instant dans Paramètres de chaque œuvre, futur Bureau éditorial). La progression est calculée depuis les corrections de chaque chapitre — rien n'est saisi deux fois.</p>
       </div>
     `;
   }
@@ -371,11 +519,189 @@
     if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { inner.innerHTML = `<div class="empty">Aucune sous-saga pour l'instant.</div>`; return; }
     inner.innerHTML = `<div class="gallery">${data.map(ss => `
-      <div class="char-card" onclick="openSousSagaModal('${ss.id}')">
+      <div class="char-card" onclick="openSousSagaDetail('${ss.id}')">
         <div class="char-portrait" style="background:linear-gradient(160deg, var(--wine)33, var(--bg-2));">${initials(ss.nom)}</div>
         <div class="char-name">${ss.nom}</div>
         <div class="char-role">${ss.format || '—'} · ${ss.statut || 'Sans statut'}</div>
       </div>`).join('')}</div>`;
+  }
+
+  // ============================================================
+  // SOUS-SAGA — page détail, avec onglets
+  // ============================================================
+  const SOUS_SAGA_TABS = [
+    { key:'apercu', label:'Aperçu', real:true },
+    { key:'oeuvres', label:'Œuvres', real:true },
+    { key:'personnages', label:'Personnages', real:false },
+    { key:'plan-global', label:'Plan global', real:false },
+    { key:'univers-lore', label:'Univers & Lore', real:false },
+    { key:'chronologie', label:'Chronologie', real:false },
+    { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
+    { key:'parametres', label:'Paramètres', real:true },
+  ];
+  let currentSousSagaId = null;
+  let currentSousSagaParentSagaId = null;
+
+  async function openSousSagaDetail(id){
+    currentSousSagaId = id;
+    setActiveNav('sagas');
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: ss, error } = await db().from('sous_sagas').select('*, sagas(id, nom)').eq('id', id).single();
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    currentSousSagaParentSagaId = ss.saga_id;
+    applyTheme(ss.theme_base, ss.accent_color);
+
+    content.innerHTML = `
+      <div class="back-link" onclick="openSagaDetail('${ss.saga_id}')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à ${ss.sagas?.nom || 'la saga'}</div>
+      <div class="oeuvre-head">
+        <div class="cover-block">${initials(ss.nom)}</div>
+        <div class="oeuvre-info">
+          <h1>${ss.nom}</h1>
+          <div class="oeuvre-sub">${ss.format || 'Sous-saga'} · ${ss.sagas?.nom || ''}</div>
+          <span class="status-badge">${ss.statut || 'Sans statut'}</span>
+        </div>
+      </div>
+      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+        ${SOUS_SAGA_TABS.map(t => `<button id="ssagatab-${t.key}" onclick="showSousSagaTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+      </div>
+      <div id="soussaga-tab-content"></div>
+    `;
+    showSousSagaTab('apercu');
+  }
+
+  async function showSousSagaTab(key){
+    document.querySelectorAll('[id^="ssagatab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    const activeBtn = document.getElementById('ssagatab-'+key);
+    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+
+    const tab = SOUS_SAGA_TABS.find(t=>t.key===key);
+    const zone = document.getElementById('soussaga-tab-content');
+    if (!tab.real){
+      zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà — on le construit dès qu'on y arrive dans l'ordre.</span></div>`;
+      return;
+    }
+    if (key === 'apercu') await renderSousSagaApercu(zone);
+    if (key === 'oeuvres') await renderSousSagaOeuvres(zone);
+    if (key === 'fiche-detaillee') await renderSousSagaFicheDetaillee(zone);
+    if (key === 'parametres') await renderSousSagaParametres(zone);
+  }
+
+  async function renderSousSagaApercu(zone){
+    const [{ data: ss }, { count: nbOeuvres }] = await Promise.all([
+      db().from('sous_sagas').select('description, fil_rouge').eq('id', currentSousSagaId).single(),
+      db().from('oeuvres').select('*', { count:'exact', head:true }).eq('sous_saga_id', currentSousSagaId),
+    ]);
+    zone.innerHTML = `
+      <div class="panel"><h2>À propos</h2><p style="font-size:14px;">${ss?.description || 'Pas encore de description.'}</p></div>
+      ${ss?.fil_rouge ? `<div class="panel"><h2>Fil rouge</h2><p style="font-size:14px;">${ss.fil_rouge}</p></div>` : ''}
+      <div class="stat-cards-row"><div class="stat-card"><h3>Œuvres</h3><div class="stat-big">${nbOeuvres ?? 0}</div></div></div>
+    `;
+  }
+
+  async function renderSousSagaOeuvres(zone){
+    zone.innerHTML = `<div class="head-row"><div></div><button class="btn-primary" onclick="openOeuvreModalForSousSaga()">+ Créer une œuvre</button></div><div id="ss-oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
+    const { data, error } = await db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('sous_saga_id', currentSousSagaId).order('created_at', { ascending:false });
+    const inner = document.getElementById('ss-oeuvres-zone');
+    if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { inner.innerHTML = `<div class="empty">Aucune œuvre dans cette sous-saga pour l'instant.</div>`; return; }
+    inner.innerHTML = `<div class="gallery">${data.map(o => {
+      const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
+      return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
+        <div class="char-name">${o.titre}</div>
+        <div class="char-role">${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+  async function openOeuvreModalForSousSaga(){
+    await openOeuvreModal(null, currentSousSagaParentSagaId);
+    await loadSousSagaOptions(currentSousSagaParentSagaId, currentSousSagaId);
+  }
+
+  async function renderSousSagaFicheDetaillee(zone){
+    const { data: ss } = await db().from('sous_sagas').select('pitch, a_propos, intentions, genre, temporalite, lieu_principal, resume_deja_raconte, resume_prevu, resume_envisage, fil_rouge, registre_continuite').eq('id', currentSousSagaId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Pitch & fil rouge</h2>
+        <label>Pitch</label><textarea id="ssfd-pitch">${ss.pitch||''}</textarea>
+        <label style="margin-top:10px;">À propos</label><textarea id="ssfd-a-propos">${ss.a_propos||''}</textarea>
+        <label style="margin-top:10px;">Fil rouge</label><textarea id="ssfd-fil-rouge">${ss.fil_rouge||''}</textarea>
+      </div>
+      <div class="panel">
+        <h2>Résumé narratif global</h2>
+        <label>Déjà raconté</label><textarea id="ssfd-deja-raconte">${ss.resume_deja_raconte||''}</textarea>
+        <label style="margin-top:10px;">Prévu</label><textarea id="ssfd-prevu">${ss.resume_prevu||''}</textarea>
+        <label style="margin-top:10px;">Envisagé</label><textarea id="ssfd-envisage">${ss.resume_envisage||''}</textarea>
+      </div>
+      <div class="panel">
+        <h2>Registre de continuité</h2>
+        <textarea id="ssfd-continuite" style="min-height:100px;">${ss.registre_continuite||''}</textarea>
+      </div>
+      <button class="btn-primary" onclick="saveSousSagaFicheDetaillee()">Enregistrer</button>
+    `;
+  }
+  async function saveSousSagaFicheDetaillee(){
+    const payload = {
+      pitch: document.getElementById('ssfd-pitch').value.trim(),
+      a_propos: document.getElementById('ssfd-a-propos').value.trim(),
+      fil_rouge: document.getElementById('ssfd-fil-rouge').value.trim(),
+      resume_deja_raconte: document.getElementById('ssfd-deja-raconte').value.trim(),
+      resume_prevu: document.getElementById('ssfd-prevu').value.trim(),
+      resume_envisage: document.getElementById('ssfd-envisage').value.trim(),
+      registre_continuite: document.getElementById('ssfd-continuite').value.trim(),
+    };
+    const { error } = await db().from('sous_sagas').update(payload).eq('id', currentSousSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    alert('Enregistré.');
+  }
+
+  async function renderSousSagaParametres(zone){
+    const { data: ss } = await db().from('sous_sagas').select('*').eq('id', currentSousSagaId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Informations générales</h2>
+        <label>Nom</label><input id="ssp-nom" value="${ss.nom||''}">
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Format</label><input id="ssp-format" value="${ss.format||''}" placeholder="Trilogie, Série..."></div>
+          <div><label>Statut</label><select id="ssp-statut">${['En cours','À venir','Terminée'].map(o=>`<option ${ss.statut===o?'selected':''}>${o}</option>`).join('')}</select></div>
+        </div>
+        <label style="margin-top:12px;">Description</label><textarea id="ssp-description">${ss.description||''}</textarea>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSousSagaParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Apparence</h2>
+        <div class="row2">
+          <div><label>Thème</label><select id="ssp-theme">
+            <option value="sombre" ${ss.theme_base==='sombre'?'selected':''}>Sombre</option>
+            <option value="clair" ${ss.theme_base==='clair'?'selected':''}>Clair</option>
+          </select></div>
+          <div><label>Couleur d'accent</label><input type="color" id="ssp-accent" value="${ss.accent_color||'#8C7FB0'}" style="height:42px; padding:4px;"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSousSagaApparence()">Appliquer</button>
+      </div>
+      <div class="panel">
+        <h2>Archivage</h2>
+        <button class="btn-secondary" onclick="toggleArchiveSousSaga(${ss.archive})">${ss.archive ? 'Désarchiver' : 'Archiver cette sous-saga'}</button>
+      </div>
+    `;
+  }
+  async function saveSousSagaParametres(){
+    const payload = { nom: document.getElementById('ssp-nom').value.trim()||'Sans titre', format: document.getElementById('ssp-format').value.trim(), statut: document.getElementById('ssp-statut').value, description: document.getElementById('ssp-description').value.trim() };
+    const { error } = await db().from('sous_sagas').update(payload).eq('id', currentSousSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openSousSagaDetail(currentSousSagaId);
+  }
+  async function saveSousSagaApparence(){
+    const payload = { theme_base: document.getElementById('ssp-theme').value, accent_color: document.getElementById('ssp-accent').value };
+    const { error } = await db().from('sous_sagas').update(payload).eq('id', currentSousSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    applyTheme(payload.theme_base, payload.accent_color);
+  }
+  async function toggleArchiveSousSaga(currentlyArchived){
+    const { error } = await db().from('sous_sagas').update({ archive: !currentlyArchived }).eq('id', currentSousSagaId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openSagaDetail(currentSousSagaParentSagaId);
   }
 
   async function renderSagaOeuvres(zone){
@@ -570,11 +896,12 @@
   function closeSousSagaModal(){ document.getElementById('modal-soussaga-overlay').classList.remove('open'); }
   async function saveSousSaga(){
     const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim() };
-    let error;
+    let error, newId;
     if (editingSousSagaId) ({ error } = await db().from('sous_sagas').update(payload).eq('id', editingSousSagaId));
-    else { payload.user_id = currentUser.id; payload.saga_id = currentSagaId; ({ error } = await db().from('sous_sagas').insert(payload)); }
+    else { payload.user_id = currentUser.id; payload.saga_id = currentSagaId; const res = await db().from('sous_sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
     if (error) { alert('Erreur : ' + error.message); return; }
     closeSousSagaModal();
+    if (newId) { openSousSagaDetail(newId); return; }
     const zone = document.getElementById('saga-tab-content');
     await renderSagaSousSagas(zone);
   }
@@ -724,14 +1051,20 @@
   async function renderOeuvreParametres(zone){
     const { data: o } = await db().from('oeuvres').select('*').eq('id', currentOeuvreId).single();
     const { data: sagasList } = await db().from('sagas').select('id, nom').order('ordre');
+    let sousSagasHtml = '<option value="">—</option>';
+    if (o.saga_id) {
+      const { data: ssList } = await db().from('sous_sagas').select('id, nom').eq('saga_id', o.saga_id).order('ordre');
+      sousSagasHtml += (ssList||[]).map(ss => `<option value="${ss.id}" ${o.sous_saga_id===ss.id?'selected':''}>${ss.nom}</option>`).join('');
+    }
     zone.innerHTML = `
       <div class="panel">
         <h2>Informations générales</h2>
         <label>Titre</label><input id="op-titre" value="${o.titre||''}">
         <div class="row2" style="margin-top:12px;">
           <div><label>Sous-titre</label><input id="op-sous-titre" value="${o.sous_titre||''}"></div>
-          <div><label>Saga</label><select id="op-saga"><option value="">— Indépendante —</option>${(sagasList||[]).map(s=>`<option value="${s.id}" ${o.saga_id===s.id?'selected':''}>${s.nom}</option>`).join('')}</select></div>
+          <div><label>Saga</label><select id="op-saga" onchange="onOpSagaChange()"><option value="">— Indépendante —</option>${(sagasList||[]).map(s=>`<option value="${s.id}" ${o.saga_id===s.id?'selected':''}>${s.nom}</option>`).join('')}</select></div>
         </div>
+        <label style="margin-top:12px;">Sous-saga</label><select id="op-sous-saga" ${o.saga_id?'':'disabled'}>${sousSagasHtml}</select>
         <div class="row2" style="margin-top:12px;">
           <div><label>Langue</label><input id="op-langue" value="${o.langue||'Français'}"></div>
           <div><label>Format</label><input id="op-format" value="${o.format_cible||''}" placeholder="Roman, Novella..."></div>
@@ -743,6 +1076,18 @@
         </div>
         <label style="margin-top:12px;">Résumé</label><textarea id="op-resume">${o.resume||''}</textarea>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Éditorial (temporaire, en attendant le Bureau éditorial)</h2>
+        <div class="row2">
+          <div><label>Niveau éditorial cible</label><select id="op-niveau-cible">
+            <option value="">—</option>${['V1','V1.5','V2'].map(v=>`<option ${o.niveau_editorial_cible===v?'selected':''}>${v}</option>`).join('')}
+          </select></div>
+          <div><label>Statut éditorial actuel</label><select id="op-statut-editorial">
+            <option value="">—</option>${['V1 à écrire','V1 en cours','V1 terminée','V1.5 à faire','V1.5 en cours','V1.5 terminée','V2 à écrire','V2 en cours','V2 terminée'].map(v=>`<option ${o.statut_editorial_actuel===v?'selected':''}>${v}</option>`).join('')}
+          </select></div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreEditorial()">Enregistrer</button>
       </div>
       <div class="panel">
         <h2>Apparence</h2>
@@ -762,11 +1107,20 @@
       </div>
     `;
   }
+  async function onOpSagaChange(){
+    const sagaId = document.getElementById('op-saga').value;
+    const sel = document.getElementById('op-sous-saga');
+    if (!sagaId) { sel.innerHTML = '<option value="">—</option>'; sel.disabled = true; return; }
+    sel.disabled = false;
+    const { data } = await db().from('sous_sagas').select('id, nom').eq('saga_id', sagaId).order('ordre');
+    sel.innerHTML = '<option value="">—</option>' + (data||[]).map(ss => `<option value="${ss.id}">${ss.nom}</option>`).join('');
+  }
   async function saveOeuvreParametres(){
     const payload = {
       titre: document.getElementById('op-titre').value.trim()||'Sans titre',
       sous_titre: document.getElementById('op-sous-titre').value.trim(),
       saga_id: document.getElementById('op-saga').value || null,
+      sous_saga_id: document.getElementById('op-sous-saga').value || null,
       langue: document.getElementById('op-langue').value.trim(),
       format_cible: document.getElementById('op-format').value.trim(),
       statut: document.getElementById('op-statut').value,
@@ -777,6 +1131,12 @@
     const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
     if (error) { alert('Erreur : ' + error.message); return; }
     openOeuvreDetail(currentOeuvreId);
+  }
+  async function saveOeuvreEditorial(){
+    const payload = { niveau_editorial_cible: document.getElementById('op-niveau-cible').value || null, statut_editorial_actuel: document.getElementById('op-statut-editorial').value || null };
+    const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    alert('Enregistré.');
   }
   async function saveOeuvreApparence(){
     const payload = { theme_base: document.getElementById('op-theme').value, accent_color: document.getElementById('op-accent').value };
@@ -798,9 +1158,10 @@
           <div class="modal-body">
             <div><label>Titre</label><input id="of-titre"></div>
             <div class="row2">
-              <div><label>Saga (optionnel)</label><select id="of-saga"><option value="">— Indépendante —</option></select></div>
-              <div><label>Genre</label><input id="of-genre"></div>
+              <div><label>Saga (optionnel)</label><select id="of-saga" onchange="onOfSagaChange()"><option value="">— Indépendante —</option></select></div>
+              <div><label>Sous-saga (optionnel)</label><select id="of-sous-saga"><option value="">—</option></select></div>
             </div>
+            <div><label>Genre</label><input id="of-genre"></div>
             <div class="row2">
               <div><label>Statut</label><select id="of-statut"><option>En écriture</option><option>En pause</option><option>Terminée</option></select></div>
               <div><label>Objectif de mots</label><input type="number" id="of-objectif"></div>
@@ -814,6 +1175,19 @@
   }
   let editingOeuvreId = null;
   let presetSagaId = null;
+
+  async function loadSousSagaOptions(sagaId, selectedValue){
+    const sel = document.getElementById('of-sous-saga');
+    if (!sagaId) { sel.innerHTML = '<option value="">—</option>'; sel.disabled = true; return; }
+    sel.disabled = false;
+    const { data } = await db().from('sous_sagas').select('id, nom').eq('saga_id', sagaId).order('ordre');
+    sel.innerHTML = '<option value="">—</option>' + (data||[]).map(ss => `<option value="${ss.id}">${ss.nom}</option>`).join('');
+    if (selectedValue) sel.value = selectedValue;
+  }
+  async function onOfSagaChange(){
+    await loadSousSagaOptions(document.getElementById('of-saga').value, null);
+  }
+
   async function openOeuvreModal(id, sagaId){
     editingOeuvreId = id || null;
     presetSagaId = sagaId || null;
@@ -825,15 +1199,18 @@
     document.getElementById('of-statut').value='En écriture'; document.getElementById('of-objectif').value='';
     document.getElementById('of-mots').value=''; document.getElementById('of-resume').value='';
     sel.value = presetSagaId || '';
+    let sousSagaId = null;
     if (id) {
-      const { data } = await db().from('oeuvres').select('titre, saga_id, genre, statut, objectif_mots, mots_ecrits, resume').eq('id', id).single();
+      const { data } = await db().from('oeuvres').select('titre, saga_id, sous_saga_id, genre, statut, objectif_mots, mots_ecrits, resume').eq('id', id).single();
       if (data) {
         document.getElementById('of-titre').value = data.titre||''; sel.value = data.saga_id||'';
         document.getElementById('of-genre').value = data.genre||''; document.getElementById('of-statut').value = data.statut||'En écriture';
         document.getElementById('of-objectif').value = data.objectif_mots||''; document.getElementById('of-mots').value = data.mots_ecrits||'';
         document.getElementById('of-resume').value = data.resume||'';
+        sousSagaId = data.sous_saga_id;
       }
     }
+    await loadSousSagaOptions(sel.value, sousSagaId);
     document.getElementById('modal-oeuvre-overlay').classList.add('open');
   }
   function closeOeuvreModal(){ document.getElementById('modal-oeuvre-overlay').classList.remove('open'); }
@@ -841,6 +1218,7 @@
     const payload = {
       titre: document.getElementById('of-titre').value.trim()||'Sans titre',
       saga_id: document.getElementById('of-saga').value || null,
+      sous_saga_id: document.getElementById('of-sous-saga').value || null,
       genre: document.getElementById('of-genre').value.trim(),
       statut: document.getElementById('of-statut').value,
       objectif_mots: parseInt(document.getElementById('of-objectif').value)||null,
