@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Passerelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -15,18 +15,43 @@
     --lavender:#8C7FB0; --accent:#C9A227;
   }
   *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora',serif; min-height:100vh; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora',serif; }
   h1,h2{ font-family:'Cormorant Garamond',serif; font-weight:600; margin:0; }
   a{ color:inherit; }
 
-  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 32px; border-bottom:1px solid var(--line); background:var(--bg-2); }
-  .brand{ font-family:'Cormorant Garamond',serif; font-size:1.3rem; letter-spacing:0.03em; }
-  .who{ font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:14px; }
-  .who button{ background:none; border:1px solid var(--line); color:var(--text-dim); padding:6px 14px; border-radius:20px; cursor:pointer; font-family:'Lora',serif; font-size:12px; }
+  .shell{ display:flex; min-height:100vh; }
+  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
+  .sidebar-brand{ font-family:'Cormorant Garamond',serif; font-size:1.3rem; padding:0 20px 18px; border-bottom:1px solid var(--line); margin-bottom:12px; }
+  .nav-group{ font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); padding:14px 20px 6px; }
+  .nav-link{ display:block; padding:9px 20px; font-size:14px; color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; }
+  .nav-link:hover{ color:var(--text); background:rgba(255,255,255,0.03); }
+  .nav-link.active{ color:var(--accent); border-left-color:var(--accent); background:rgba(201,162,39,0.08); font-weight:500; }
+  .sidebar-foot{ margin-top:auto; padding:14px 20px; border-top:1px solid var(--line); font-size:12px; color:var(--text-dim); }
+  .sidebar-foot button{ background:none; border:1px solid var(--line); color:var(--text-dim); padding:6px 12px; border-radius:16px; cursor:pointer; font-family:'Lora',serif; font-size:11px; margin-top:8px; }
 
-  .wrap{ max-width:900px; margin:0 auto; padding:40px 24px 80px; }
+  .main{ flex:1; min-width:0; }
+  .topbar{ padding:16px 32px; border-bottom:1px solid var(--line); background:var(--bg-2); font-size:13px; color:var(--text-dim); }
+  .content{ max-width:1000px; margin:0 auto; padding:32px 32px 80px; }
 
-  /* ---- écran de connexion ---- */
+  .head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .btn-primary{ background:var(--accent); color:var(--bg); border:none; padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; font-weight:500; }
+  .btn-secondary{ background:var(--bg-2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; }
+
+  .gallery{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:800px){ .gallery{ grid-template-columns:1fr 1fr; } }
+  .card{ position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--bg-2); cursor:pointer; transition:border-color .15s; }
+  .card:hover{ border-color:var(--accent); }
+  .card .top{ height:80px; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.4rem; }
+  .card .body{ padding:12px 14px; }
+  .card .nom{ font-size:14px; font-weight:500; margin-bottom:3px; }
+  .card .meta{ font-size:11px; color:var(--text-dim); }
+
+  .empty{ text-align:center; padding:60px 20px; color:var(--text-dim); border:1px dashed var(--line); border-radius:6px; }
+  .status-line{ text-align:center; color:var(--text-dim); font-size:13px; padding:40px; }
+
+  .panel{ border:1px solid var(--line); border-radius:6px; padding:20px 22px; margin-bottom:18px; background:var(--card); }
+  .panel h2{ font-size:1.1rem; color:var(--lavender); margin-bottom:12px; }
+
   .auth-box{ max-width:380px; margin:80px auto; background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:32px; }
   .auth-box h1{ font-size:1.6rem; margin-bottom:6px; text-align:center; }
   .auth-box .sub{ text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:24px; }
@@ -34,30 +59,13 @@
   .auth-tabs button{ flex:1; background:none; border:none; color:var(--text-dim); padding:8px; border-radius:16px; cursor:pointer; font-family:'Lora',serif; font-size:13px; }
   .auth-tabs button.active{ background:var(--accent); color:var(--bg); font-weight:500; }
   label{ display:block; font-size:12px; color:var(--text-dim); margin:14px 0 5px; }
-  input{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:5px; padding:10px 12px; font-family:'Lora',serif; font-size:14px; }
+  input, select, textarea{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:5px; padding:10px 12px; font-family:'Lora',serif; font-size:14px; }
+  textarea{ min-height:70px; resize:vertical; }
   .auth-submit{ width:100%; margin-top:22px; background:var(--accent); color:var(--bg); border:none; padding:12px; border-radius:5px; font-weight:500; cursor:pointer; font-family:'Lora',serif; font-size:14px; }
   .auth-msg{ font-size:12px; margin-top:14px; text-align:center; min-height:16px; }
   .auth-msg.error{ color:#e88; }
   .auth-msg.ok{ color:#8fc95a; }
 
-  /* ---- catalogue sagas ---- */
-  .head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-  .btn-primary{ background:var(--accent); color:var(--bg); border:none; padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; font-weight:500; }
-  .btn-secondary{ background:var(--bg-2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; }
-
-  .gallery{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  @media (max-width:700px){ .gallery{ grid-template-columns:1fr; } }
-  .card{ position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--bg-2); cursor:pointer; transition:border-color .15s; }
-  .card:hover{ border-color:var(--accent); }
-  .card .top{ height:90px; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.5rem; }
-  .card .body{ padding:12px 14px; }
-  .card .nom{ font-size:15px; font-weight:500; margin-bottom:3px; }
-  .card .meta{ font-size:12px; color:var(--text-dim); }
-  .card .edit{ position:absolute; top:8px; right:8px; color:var(--text-dim); font-size:13px; z-index:2; }
-
-  .empty{ text-align:center; padding:60px 20px; color:var(--text-dim); border:1px dashed var(--line); border-radius:6px; }
-
-  /* ---- modal ---- */
   .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:40px 20px; overflow-y:auto; }
   .modal-overlay.open{ display:flex; }
   .modal-box{ background:var(--bg-2); border:1px solid var(--line); border-radius:6px; width:100%; max-width:520px; }
@@ -66,54 +74,43 @@
   .modal-body{ padding:20px 24px; display:flex; flex-direction:column; gap:12px; max-height:65vh; overflow-y:auto; }
   .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid var(--line); }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  textarea{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:5px; padding:10px 12px; font-family:'Lora',serif; font-size:14px; min-height:70px; resize:vertical; }
-
-  .status-line{ text-align:center; color:var(--text-dim); font-size:13px; padding:40px; }
 </style>
 </head>
 <body>
 
-<div id="app">
-  <div class="status-line">Chargement…</div>
-</div>
+<div id="app"><div class="status-line">Chargement…</div></div>
 
 <script>
   const supabaseUrl = 'https://ilhfzulwuuxyidhityoo.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaGZ6dWx3dXV4eWlkaGl0eW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDA5NTgsImV4cCI6MjEwMjQxNjk1OH0.nux1ehaes_1rPSQhaYJ3hdCcipYn3B5PQMokUzSuBl0';
   const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
-  const db = () => sb.schema('passerelle');  // toutes les tables Passerelle vivent dans ce schéma dédié
+  const db = () => sb.schema('passerelle');
 
   const app = document.getElementById('app');
+  let currentUser = null;
 
-  // ---------- Démarrage : vérifie s'il y a déjà une session ----------
   async function init(){
     const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      renderCatalogue(session.user);
-    } else {
-      renderAuth();
-    }
+    if (session) { currentUser = session.user; renderShell(); navigate('accueil'); }
+    else renderAuth();
   }
 
-  // ---------- Écran de connexion / inscription ----------
   function renderAuth(mode){
     mode = mode || 'login';
     app.innerHTML = `
-      <div class="wrap">
-        <div class="auth-box">
-          <h1>Passerelle</h1>
-          <div class="sub">L'atelier de vos histoires</div>
-          <div class="auth-tabs">
-            <button id="tab-login" class="${mode==='login'?'active':''}" onclick="renderAuth('login')">Se connecter</button>
-            <button id="tab-signup" class="${mode==='signup'?'active':''}" onclick="renderAuth('signup')">Créer un compte</button>
-          </div>
-          <label>Email</label>
-          <input type="email" id="auth-email" placeholder="toi@exemple.com">
-          <label>Mot de passe</label>
-          <input type="password" id="auth-password" placeholder="••••••••">
-          <button class="auth-submit" onclick="${mode==='login' ? 'doLogin()' : 'doSignup()'}">${mode==='login' ? 'Se connecter' : 'Créer mon compte'}</button>
-          <div class="auth-msg" id="auth-msg"></div>
+      <div class="auth-box">
+        <h1>Passerelle</h1>
+        <div class="sub">L'atelier de vos histoires</div>
+        <div class="auth-tabs">
+          <button class="${mode==='login'?'active':''}" onclick="renderAuth('login')">Se connecter</button>
+          <button class="${mode==='signup'?'active':''}" onclick="renderAuth('signup')">Créer un compte</button>
         </div>
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="toi@exemple.com">
+        <label>Mot de passe</label>
+        <input type="password" id="auth-password" placeholder="••••••••">
+        <button class="auth-submit" onclick="${mode==='login' ? 'doLogin()' : 'doSignup()'}">${mode==='login' ? 'Se connecter' : 'Créer mon compte'}</button>
+        <div class="auth-msg" id="auth-msg"></div>
       </div>
     `;
   }
@@ -125,7 +122,8 @@
     msg.textContent = 'Connexion…'; msg.className = 'auth-msg';
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
-    renderCatalogue(data.user);
+    currentUser = data.user;
+    renderShell(); navigate('accueil');
   }
 
   async function doSignup(){
@@ -136,136 +134,342 @@
     msg.textContent = 'Création du compte…'; msg.className = 'auth-msg';
     const { data, error } = await sb.auth.signUp({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
-    if (data.session) {
-      renderCatalogue(data.user);
-    } else {
-      msg.textContent = 'Compte créé — vérifie ta boîte mail pour confirmer, puis connecte-toi.';
-      msg.className = 'auth-msg ok';
-    }
+    if (data.session) { currentUser = data.user; renderShell(); navigate('accueil'); }
+    else { msg.textContent = 'Compte créé — vérifie ta boîte mail, puis connecte-toi.'; msg.className = 'auth-msg ok'; }
   }
 
-  async function doLogout(){
-    await sb.auth.signOut();
-    renderAuth();
-  }
+  async function doLogout(){ await sb.auth.signOut(); currentUser = null; renderAuth(); }
 
-  // ---------- Catalogue des sagas (vraies données Supabase) ----------
-  let currentUser = null;
+  const NAV = [
+    { group: 'Écriture', items: [
+      { key:'accueil', label:'Accueil', real:true },
+      { key:'oeuvres', label:'Œuvres', real:true },
+      { key:'sagas', label:'Sagas', real:true },
+      { key:'personnages', label:'Personnages', real:true },
+      { key:'univers-lore', label:'Univers & Lore', real:false },
+      { key:'poesie', label:'Poésie', real:false },
+      { key:'chapitres', label:'Chapitres', real:false },
+      { key:'plans', label:'Plans', real:false },
+      { key:'relecture', label:'Relecture', real:false },
+      { key:'idees', label:'Idées', real:true },
+      { key:'bureau-editorial', label:'Bureau éditorial', real:false },
+      { key:'archives', label:'Archives', real:false },
+    ]}
+  ];
 
-  async function renderCatalogue(user){
-    currentUser = user;
+  function renderShell(){
     app.innerHTML = `
-      <div class="topbar">
-        <div class="brand">✒️ Passerelle</div>
-        <div class="who">${user.email} <button onclick="doLogout()">Déconnexion</button></div>
-      </div>
-      <div class="wrap">
-        <div class="head-row">
-          <div><h2>Sagas</h2></div>
-          <button class="btn-primary" onclick="openSagaModal()">+ Créer une saga</button>
+      <div class="shell">
+        <div class="sidebar">
+          <div class="sidebar-brand">✒️ Passerelle</div>
+          ${NAV.map(g => `
+            <div class="nav-group">${g.group}</div>
+            ${g.items.map(it => `<div class="nav-link" id="nav-${it.key}" onclick="navigate('${it.key}')">${it.label}</div>`).join('')}
+          `).join('')}
+          <div class="sidebar-foot">
+            ${currentUser.email}
+            <button onclick="doLogout()">Déconnexion</button>
+          </div>
         </div>
-        <div id="sagas-zone"><div class="status-line">Chargement de tes sagas…</div></div>
+        <div class="main">
+          <div class="topbar" id="topbar">Passerelle</div>
+          <div class="content" id="content"></div>
+        </div>
       </div>
-      ${modalHtml()}
+      ${sagaModalHtml()}
+      ${oeuvreModalHtml()}
+      ${personnageModalHtml()}
+      ${ideeModalHtml()}
     `;
-    await loadSagas();
   }
 
-  async function loadSagas(){
+  function setActiveNav(key){
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('nav-'+key);
+    if (el) el.classList.add('active');
+  }
+
+  function navigate(key){
+    setActiveNav(key);
+    const item = NAV.flatMap(g=>g.items).find(i=>i.key===key);
+    document.getElementById('topbar').textContent = item ? item.label : key;
+    const content = document.getElementById('content');
+    if (!item.real){
+      content.innerHTML = `<div class="empty">Cette page (« ${item.label} ») n'est pas encore branchée à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà pour elle — on la construit dès qu'on y arrive dans l'ordre.</span></div>`;
+      return;
+    }
+    if (key === 'accueil') renderAccueil();
+    if (key === 'oeuvres') renderOeuvres();
+    if (key === 'sagas') renderSagas();
+    if (key === 'personnages') renderPersonnages();
+    if (key === 'idees') renderIdees();
+  }
+
+  async function renderAccueil(){
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ count: nbSagas }, { count: nbOeuvres }, { count: nbPersonnages }, { count: nbIdees }] = await Promise.all([
+      db().from('sagas').select('*', { count:'exact', head:true }),
+      db().from('oeuvres').select('*', { count:'exact', head:true }),
+      db().from('personnages').select('*', { count:'exact', head:true }),
+      db().from('idees').select('*', { count:'exact', head:true }),
+    ]);
+    content.innerHTML = `
+      <h2 style="font-size:1.6rem; margin-bottom:20px;">Bonjour ${currentUser.email.split('@')[0]} ✨</h2>
+      <div class="gallery">
+        <div class="panel"><h2>Sagas</h2><div style="font-size:1.8rem;">${nbSagas ?? 0}</div></div>
+        <div class="panel"><h2>Œuvres</h2><div style="font-size:1.8rem;">${nbOeuvres ?? 0}</div></div>
+        <div class="panel"><h2>Personnages</h2><div style="font-size:1.8rem;">${nbPersonnages ?? 0}</div></div>
+        <div class="panel"><h2>Idées</h2><div style="font-size:1.8rem;">${nbIdees ?? 0}</div></div>
+      </div>
+    `;
+  }
+
+  async function renderSagas(){
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="head-row"><h2>Sagas</h2><button class="btn-primary" onclick="openSagaModal()">+ Créer une saga</button></div>
+      <div id="sagas-zone"><div class="status-line">Chargement…</div></div>
+    `;
+    const { data, error } = await db().from('sagas').select('id, nom, genre, statut, archive').order('ordre', { ascending:true });
     const zone = document.getElementById('sagas-zone');
-    const { data, error } = await db().from('sagas').select('id, nom, genre, statut, archive').order('ordre', { ascending: true });
-    if (error) {
-      zone.innerHTML = `<div class="empty">Erreur de chargement : ${error.message}<br><span style="font-size:11px;">Vérifie que le schéma "passerelle" est bien ajouté dans Exposed schemas (Supabase → Settings → API).</span></div>`;
-      return;
-    }
-    if (!data.length) {
-      zone.innerHTML = `<div class="empty">Aucune saga pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`;
-      return;
-    }
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune saga pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(s => `
       <div class="card" onclick="openSagaModal('${s.id}')">
-        <div class="top" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${(s.nom||'').split(' ').map(w=>w[0]).join('').slice(0,3)}</div>
-        <div class="body">
-          <div class="nom">${s.nom}</div>
-          <div class="meta">${s.genre || '—'} · ${s.statut || 'Sans statut'}${s.archive ? ' · Archivée' : ''}</div>
-        </div>
-      </div>
-    `).join('')}</div>`;
+        <div class="top" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(s.nom)}</div>
+        <div class="body"><div class="nom">${s.nom}</div><div class="meta">${s.genre || '—'} · ${s.statut || 'Sans statut'}${s.archive ? ' · Archivée' : ''}</div></div>
+      </div>`).join('')}</div>`;
   }
 
-  // ---------- Modal création / édition ----------
-  function modalHtml(){
+  function sagaModalHtml(){
     return `
-      <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) closeSagaModal()">
+      <div class="modal-overlay" id="modal-saga-overlay" onclick="if(event.target===this) closeSagaModal()">
         <div class="modal-box">
-          <div class="modal-head">
-            <h2 id="modal-title" style="font-size:1.3rem;">Nouvelle saga</h2>
-            <button onclick="closeSagaModal()">✕</button>
-          </div>
+          <div class="modal-head"><h2 id="modal-saga-title" style="font-size:1.3rem;">Nouvelle saga</h2><button onclick="closeSagaModal()">✕</button></div>
           <div class="modal-body">
-            <div><label>Nom de la saga</label><input id="f-nom"></div>
+            <div><label>Nom de la saga</label><input id="sf-nom"></div>
             <div class="row2">
-              <div><label>Genre</label><input id="f-genre"></div>
-              <div><label>Statut</label>
-                <select id="f-statut" style="width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:5px; padding:10px 12px; font-family:'Lora',serif; font-size:14px;">
-                  <option>Saga en cours</option><option>En pause</option><option>Terminée</option>
-                </select>
-              </div>
+              <div><label>Genre</label><input id="sf-genre"></div>
+              <div><label>Statut</label><select id="sf-statut"><option>Saga en cours</option><option>En pause</option><option>Terminée</option></select></div>
             </div>
-            <div><label>Résumé / à propos</label><textarea id="f-description"></textarea></div>
+            <div><label>Résumé / à propos</label><textarea id="sf-description"></textarea></div>
           </div>
-          <div class="modal-foot">
-            <button class="btn-secondary" onclick="closeSagaModal()">Annuler</button>
-            <button class="btn-primary" onclick="saveSaga()">Enregistrer</button>
-          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSaga()">Enregistrer</button></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
-
   let editingSagaId = null;
-
   async function openSagaModal(id){
     editingSagaId = id || null;
-    document.getElementById('modal-title').textContent = id ? 'Modifier la saga' : 'Nouvelle saga';
-    document.getElementById('f-nom').value = '';
-    document.getElementById('f-genre').value = '';
-    document.getElementById('f-statut').value = 'Saga en cours';
-    document.getElementById('f-description').value = '';
+    document.getElementById('modal-saga-title').textContent = id ? 'Modifier la saga' : 'Nouvelle saga';
+    document.getElementById('sf-nom').value = ''; document.getElementById('sf-genre').value = '';
+    document.getElementById('sf-statut').value = 'Saga en cours'; document.getElementById('sf-description').value = '';
     if (id) {
-      const { data, error } = await db().from('sagas').select('nom, genre, statut, description').eq('id', id).single();
-      if (!error && data) {
-        document.getElementById('f-nom').value = data.nom || '';
-        document.getElementById('f-genre').value = data.genre || '';
-        document.getElementById('f-statut').value = data.statut || 'Saga en cours';
-        document.getElementById('f-description').value = data.description || '';
+      const { data } = await db().from('sagas').select('nom, genre, statut, description').eq('id', id).single();
+      if (data) { document.getElementById('sf-nom').value = data.nom||''; document.getElementById('sf-genre').value = data.genre||''; document.getElementById('sf-statut').value = data.statut||'Saga en cours'; document.getElementById('sf-description').value = data.description||''; }
+    }
+    document.getElementById('modal-saga-overlay').classList.add('open');
+  }
+  function closeSagaModal(){ document.getElementById('modal-saga-overlay').classList.remove('open'); }
+  async function saveSaga(){
+    const payload = { nom: document.getElementById('sf-nom').value.trim()||'Sans titre', genre: document.getElementById('sf-genre').value.trim(), statut: document.getElementById('sf-statut').value, description: document.getElementById('sf-description').value.trim() };
+    let error;
+    if (editingSagaId) ({ error } = await db().from('sagas').update(payload).eq('id', editingSagaId));
+    else { payload.user_id = currentUser.id; ({ error } = await db().from('sagas').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeSagaModal(); await renderSagas();
+  }
+
+  async function renderOeuvres(){
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="head-row"><h2>Œuvres</h2><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div>
+      <div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>
+    `;
+    const { data, error } = await db().from('oeuvres').select('id, titre, genre, statut, mots_ecrits, objectif_mots, archive, sagas(nom)').order('created_at', { ascending:false });
+    const zone = document.getElementById('oeuvres-zone');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune œuvre pour l'instant.<br><br><button class="btn-primary" onclick="openOeuvreModal()">Créer ta première œuvre</button></div>`; return; }
+    zone.innerHTML = `<div class="gallery">${data.map(o => {
+      const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
+      return `<div class="card" onclick="openOeuvreModal('${o.id}')">
+        <div class="top" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
+        <div class="body"><div class="nom">${o.titre}</div><div class="meta">${o.sagas?.nom ? o.sagas.nom+' · ' : ''}${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}${o.archive?' · Archivée':''}</div></div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function oeuvreModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-oeuvre-overlay" onclick="if(event.target===this) closeOeuvreModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-oeuvre-title" style="font-size:1.3rem;">Nouvelle œuvre</h2><button onclick="closeOeuvreModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Titre</label><input id="of-titre"></div>
+            <div class="row2">
+              <div><label>Saga (optionnel)</label><select id="of-saga"><option value="">— Indépendante —</option></select></div>
+              <div><label>Genre</label><input id="of-genre"></div>
+            </div>
+            <div class="row2">
+              <div><label>Statut</label><select id="of-statut"><option>En écriture</option><option>En pause</option><option>Terminée</option></select></div>
+              <div><label>Objectif de mots</label><input type="number" id="of-objectif"></div>
+            </div>
+            <div><label>Mots écrits</label><input type="number" id="of-mots"></div>
+            <div><label>Résumé</label><textarea id="of-resume"></textarea></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeOeuvreModal()">Annuler</button><button class="btn-primary" onclick="saveOeuvre()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  let editingOeuvreId = null;
+  async function openOeuvreModal(id){
+    editingOeuvreId = id || null;
+    document.getElementById('modal-oeuvre-title').textContent = id ? "Modifier l'œuvre" : 'Nouvelle œuvre';
+    const { data: sagasList } = await db().from('sagas').select('id, nom').order('ordre');
+    const sel = document.getElementById('of-saga');
+    sel.innerHTML = '<option value="">— Indépendante —</option>' + (sagasList||[]).map(s => `<option value="${s.id}">${s.nom}</option>`).join('');
+    document.getElementById('of-titre').value=''; document.getElementById('of-genre').value='';
+    document.getElementById('of-statut').value='En écriture'; document.getElementById('of-objectif').value='';
+    document.getElementById('of-mots').value=''; document.getElementById('of-resume').value=''; sel.value='';
+    if (id) {
+      const { data } = await db().from('oeuvres').select('titre, saga_id, genre, statut, objectif_mots, mots_ecrits, resume').eq('id', id).single();
+      if (data) {
+        document.getElementById('of-titre').value = data.titre||''; sel.value = data.saga_id||'';
+        document.getElementById('of-genre').value = data.genre||''; document.getElementById('of-statut').value = data.statut||'En écriture';
+        document.getElementById('of-objectif').value = data.objectif_mots||''; document.getElementById('of-mots').value = data.mots_ecrits||'';
+        document.getElementById('of-resume').value = data.resume||'';
       }
     }
-    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('modal-oeuvre-overlay').classList.add('open');
   }
-
-  function closeSagaModal(){
-    document.getElementById('modal-overlay').classList.remove('open');
-  }
-
-  async function saveSaga(){
+  function closeOeuvreModal(){ document.getElementById('modal-oeuvre-overlay').classList.remove('open'); }
+  async function saveOeuvre(){
     const payload = {
-      nom: document.getElementById('f-nom').value.trim() || 'Sans titre',
-      genre: document.getElementById('f-genre').value.trim(),
-      statut: document.getElementById('f-statut').value,
-      description: document.getElementById('f-description').value.trim(),
+      titre: document.getElementById('of-titre').value.trim()||'Sans titre',
+      saga_id: document.getElementById('of-saga').value || null,
+      genre: document.getElementById('of-genre').value.trim(),
+      statut: document.getElementById('of-statut').value,
+      objectif_mots: parseInt(document.getElementById('of-objectif').value)||null,
+      mots_ecrits: parseInt(document.getElementById('of-mots').value)||0,
+      resume: document.getElementById('of-resume').value.trim(),
     };
     let error;
-    if (editingSagaId) {
-      ({ error } = await db().from('sagas').update(payload).eq('id', editingSagaId));
-    } else {
-      payload.user_id = currentUser.id;
-      ({ error } = await db().from('sagas').insert(payload));
-    }
+    if (editingOeuvreId) ({ error } = await db().from('oeuvres').update(payload).eq('id', editingOeuvreId));
+    else { payload.user_id = currentUser.id; ({ error } = await db().from('oeuvres').insert(payload)); }
     if (error) { alert('Erreur : ' + error.message); return; }
-    closeSagaModal();
-    await loadSagas();
+    closeOeuvreModal(); await renderOeuvres();
   }
+
+  async function renderPersonnages(){
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="head-row"><h2>Personnages</h2><button class="btn-primary" onclick="openPersonnageModal()">+ Créer un personnage</button></div>
+      <div id="personnages-zone"><div class="status-line">Chargement…</div></div>
+    `;
+    const { data, error } = await db().from('personnages').select('id, nom, resume, favori').order('created_at', { ascending:false });
+    const zone = document.getElementById('personnages-zone');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucun personnage pour l'instant.<br><br><button class="btn-primary" onclick="openPersonnageModal()">Créer ton premier personnage</button></div>`; return; }
+    zone.innerHTML = `<div class="gallery">${data.map(p => `
+      <div class="card" onclick="openPersonnageModal('${p.id}')">
+        <div class="top" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(p.nom)}${p.favori ? ' ♥' : ''}</div>
+        <div class="body"><div class="nom">${p.nom}</div><div class="meta">${p.resume || '—'}</div></div>
+      </div>`).join('')}</div>`;
+  }
+
+  function personnageModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-personnage-overlay" onclick="if(event.target===this) closePersonnageModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-personnage-title" style="font-size:1.3rem;">Nouveau personnage</h2><button onclick="closePersonnageModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Nom</label><input id="pf-nom"></div>
+            <div><label>Résumé</label><textarea id="pf-resume"></textarea></div>
+            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="pf-favori" style="width:auto;"><label style="margin:0;" for="pf-favori">Personnage favori</label></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closePersonnageModal()">Annuler</button><button class="btn-primary" onclick="savePersonnage()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  let editingPersonnageId = null;
+  async function openPersonnageModal(id){
+    editingPersonnageId = id || null;
+    document.getElementById('modal-personnage-title').textContent = id ? 'Modifier le personnage' : 'Nouveau personnage';
+    document.getElementById('pf-nom').value=''; document.getElementById('pf-resume').value=''; document.getElementById('pf-favori').checked=false;
+    if (id) {
+      const { data } = await db().from('personnages').select('nom, resume, favori').eq('id', id).single();
+      if (data) { document.getElementById('pf-nom').value=data.nom||''; document.getElementById('pf-resume').value=data.resume||''; document.getElementById('pf-favori').checked=!!data.favori; }
+    }
+    document.getElementById('modal-personnage-overlay').classList.add('open');
+  }
+  function closePersonnageModal(){ document.getElementById('modal-personnage-overlay').classList.remove('open'); }
+  async function savePersonnage(){
+    const payload = { nom: document.getElementById('pf-nom').value.trim()||'Sans nom', resume: document.getElementById('pf-resume').value.trim(), favori: document.getElementById('pf-favori').checked };
+    let error;
+    if (editingPersonnageId) ({ error } = await db().from('personnages').update(payload).eq('id', editingPersonnageId));
+    else { payload.user_id = currentUser.id; ({ error } = await db().from('personnages').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePersonnageModal(); await renderPersonnages();
+  }
+
+  async function renderIdees(){
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="head-row"><h2>🌱 Idées</h2><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
+      <div id="idees-zone"><div class="status-line">Chargement…</div></div>
+    `;
+    const { data, error } = await db().from('idees').select('id, titre, note, statut, potentiel').order('created_at', { ascending:false });
+    const zone = document.getElementById('idees-zone');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Ta pépinière est vide pour l'instant.<br><br><button class="btn-primary" onclick="openIdeeModal()">Capturer ta première idée</button></div>`; return; }
+    zone.innerHTML = `<div class="gallery">${data.map(i => `
+      <div class="card" onclick="openIdeeModal('${i.id}')">
+        <div class="top" style="background:linear-gradient(160deg, #5B9B6E33, var(--bg-2));">🌱</div>
+        <div class="body"><div class="nom">${i.titre}</div><div class="meta">${i.statut||'Graine'}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div></div>
+      </div>`).join('')}</div>`;
+  }
+
+  function ideeModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-idee-overlay" onclick="if(event.target===this) closeIdeeModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-idee-title" style="font-size:1.3rem;">Nouvelle idée</h2><button onclick="closeIdeeModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Titre</label><input id="if-titre"></div>
+            <div><label>L'idée</label><textarea id="if-note"></textarea></div>
+            <div class="row2">
+              <div><label>Statut</label><select id="if-statut"><option>Graine</option><option>À creuser</option><option>Prometteuse</option><option>En sommeil</option><option>Abandonnée</option></select></div>
+              <div><label>Potentiel (1 à 5)</label><input type="number" min="1" max="5" id="if-potentiel"></div>
+            </div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeIdeeModal()">Annuler</button><button class="btn-primary" onclick="saveIdee()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  let editingIdeeId = null;
+  async function openIdeeModal(id){
+    editingIdeeId = id || null;
+    document.getElementById('modal-idee-title').textContent = id ? "Modifier l'idée" : 'Nouvelle idée';
+    document.getElementById('if-titre').value=''; document.getElementById('if-note').value='';
+    document.getElementById('if-statut').value='Graine'; document.getElementById('if-potentiel').value='';
+    if (id) {
+      const { data } = await db().from('idees').select('titre, note, statut, potentiel').eq('id', id).single();
+      if (data) { document.getElementById('if-titre').value=data.titre||''; document.getElementById('if-note').value=data.note||''; document.getElementById('if-statut').value=data.statut||'Graine'; document.getElementById('if-potentiel').value=data.potentiel||''; }
+    }
+    document.getElementById('modal-idee-overlay').classList.add('open');
+  }
+  function closeIdeeModal(){ document.getElementById('modal-idee-overlay').classList.remove('open'); }
+  async function saveIdee(){
+    const payload = { titre: document.getElementById('if-titre').value.trim()||'Sans titre', note: document.getElementById('if-note').value.trim(), statut: document.getElementById('if-statut').value, potentiel: parseInt(document.getElementById('if-potentiel').value)||null };
+    let error;
+    if (editingIdeeId) ({ error } = await db().from('idees').update(payload).eq('id', editingIdeeId));
+    else { payload.user_id = currentUser.id; ({ error } = await db().from('idees').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeIdeeModal(); await renderIdees();
+  }
+
+  function initials(str){ return (str||'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase(); }
 
   init();
 </script>
