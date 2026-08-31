@@ -9,9 +9,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg: #161513; --bg-2: #1E1C19; --card: #161513;
-    --line: rgba(255,255,255,0.08);
-    --text: #F3EFE6; --text-dim: #8A8780;
+    --bg: #F3EFE6; --bg-2: #EAE4D6; --card: #FFFFFF;
+    --line: rgba(27,36,54,0.14);
+    --text: #1B2436; --text-dim: #6B7280;
     --lavender: #8C7FB0; --lavender-deep: #5E5286;
     --wine: #7A3B4A;
     --accent: #C9A227;
@@ -539,7 +539,7 @@
         </div>
         <div>
           <h2 style="font-size:1rem; margin-bottom:10px; color:var(--text-dim);">✅ Terminées / à préparer</h2>
-          ${termineesOuAPreparerRaw.length ? termineesOuAPreparerRaw.map(d=>carte(d,'Voir le récapitulatif')).join('') : '<div class="empty">Rien ici pour l\\'instant.</div>'}
+          ${termineesOuAPreparerRaw.length ? termineesOuAPreparerRaw.map(d=>carte(d,'Voir le récapitulatif')).join('') : '<div class="empty">Rien ici pour le moment.</div>'}
         </div>
       </div>
 
@@ -1514,7 +1514,7 @@
             <h2>Notes de l'autrice</h2>
             <textarea id="on-new" placeholder="Notes globales sur la structure, les thèmes, les enjeux..."></textarea>
             <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="addOeuvreNote()">Ajouter</button>
-            <div style="margin-top:14px;">${(notes||[]).map(n => `<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">Aucune note pour l\\'instant.</div>'}</div>
+            <div style="margin-top:14px;">${(notes||[]).map(n => `<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">Aucune note pour le moment.</div>'}</div>
           </div>
         </div>
       </div>
@@ -1799,7 +1799,7 @@
 
       <div class="panel" style="margin-top:20px;">
         <h2>Structure narrative</h2>
-        ${plans?.length ? plans.map(p => `<div class="info-line"><span>${p.acte||'—'}</span><span>${p.titre}</span></div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune intrigue principale renseignée dans Plans pour l\\'instant — cette section se remplit automatiquement depuis là-bas.</div>'}
+        ${plans?.length ? plans.map(p => `<div class="info-line"><span>${p.acte||'—'}</span><span>${p.titre}</span></div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune intrigue principale renseignée dans Plans pour le moment — cette section se remplit automatiquement depuis là-bas.</div>'}
       </div>
 
       <div class="panel">
@@ -1907,7 +1907,7 @@
       </div>
       <div class="panel">
         <h2>Échéances versionnées</h2>
-        ${(echeances||[]).map(e => `<div class="info-line"><span>${e.version_label} — ${e.type||''}</span><span style="color:var(--text-dim);">${e.date_prevue||'—'} · ${e.statut||''}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Aucune échéance versionnée pour l\\'instant.</div>'}
+        ${(echeances||[]).map(e => `<div class="info-line"><span>${e.version_label} — ${e.type||''}</span><span style="color:var(--text-dim);">${e.date_prevue||'—'} · ${e.statut||''}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Aucune échéance versionnée pour le moment.</div>'}
         <button class="btn-secondary" style="margin-top:10px;" onclick="addEcheance()">+ Ajouter une échéance</button>
       </div>
       <div class="panel">
@@ -2193,7 +2193,7 @@
     Object.entries(palette).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
     document.documentElement.style.setProperty('--accent', accentColor || DEFAULT_ACCENT);
   }
-  function resetTheme(){ applyTheme('sombre', DEFAULT_ACCENT); }
+  function resetTheme(){ applyTheme('clair', DEFAULT_ACCENT); }
 
   init();
 </script>
