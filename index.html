@@ -5,75 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Passerelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg:#161513; --bg-2:#1E1C19; --card:#161513;
-    --line:rgba(255,255,255,0.08);
-    --text:#F3EFE6; --text-dim:#8A8780;
-    --lavender:#8C7FB0; --accent:#C9A227;
+    --bg: #161513; --bg-2: #1E1C19; --card: #161513;
+    --line: rgba(255,255,255,0.08);
+    --text: #F3EFE6; --text-dim: #8A8780;
+    --lavender: #8C7FB0; --lavender-deep: #5E5286;
+    --wine: #7A3B4A;
+    --accent: #C9A227;
   }
   *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora',serif; }
-  h1,h2{ font-family:'Cormorant Garamond',serif; font-weight:600; margin:0; }
-  a{ color:inherit; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora', serif; line-height:1.6; }
+  h1,h2,h3,h4{ font-family:'Cormorant Garamond', serif; font-weight:600; letter-spacing:0.02em; margin:0; }
+  .quote-hand{ font-family:'Caveat', cursive; font-size:1.4rem; color:var(--accent); }
+  a{ color:inherit; text-decoration:none; cursor:pointer; }
 
+  /* ---- structure générale : sidebar + contenu ---- */
   .shell{ display:flex; min-height:100vh; }
-  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
-  .sidebar-brand{ font-family:'Cormorant Garamond',serif; font-size:1.3rem; padding:0 20px 18px; border-bottom:1px solid var(--line); margin-bottom:12px; }
-  .nav-group{ font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); padding:14px 20px 6px; }
-  .nav-link{ display:block; padding:9px 20px; font-size:14px; color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; }
+  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:22px 0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
+  .sidebar-brand{ font-family:'Cormorant Garamond',serif; font-size:1.35rem; padding:0 22px 18px; border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .nav-group{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-dim); padding:16px 22px 6px; }
+  .nav-link{ display:block; padding:9px 22px; font-size:14px; color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; }
   .nav-link:hover{ color:var(--text); background:rgba(255,255,255,0.03); }
   .nav-link.active{ color:var(--accent); border-left-color:var(--accent); background:rgba(201,162,39,0.08); font-weight:500; }
-  .sidebar-foot{ margin-top:auto; padding:14px 20px; border-top:1px solid var(--line); font-size:12px; color:var(--text-dim); }
+  .sidebar-foot{ margin-top:auto; padding:16px 22px; border-top:1px solid var(--line); font-size:12px; color:var(--text-dim); }
   .sidebar-foot button{ background:none; border:1px solid var(--line); color:var(--text-dim); padding:6px 12px; border-radius:16px; cursor:pointer; font-family:'Lora',serif; font-size:11px; margin-top:8px; }
 
   .main{ flex:1; min-width:0; }
-  .topbar{ padding:16px 32px; border-bottom:1px solid var(--line); background:var(--bg-2); font-size:13px; color:var(--text-dim); }
-  .content{ max-width:1000px; margin:0 auto; padding:32px 32px 80px; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:36px 32px 100px; }
 
-  .head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  /* ---- bannière décorative ---- */
+  .banner{ position:relative; border:1px solid var(--line); background:var(--bg-2); border-radius:6px; padding:36px 40px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:28px; }
+  .banner::before, .banner::after{ content:"✦"; position:absolute; color:var(--accent); opacity:0.5; font-size:14px; }
+  .banner::before{ top:16px; left:28px; } .banner::after{ bottom:16px; right:30px; }
+  .banner h1{ font-size:2rem; text-align:center; }
+  .banner .sub{ text-align:center; color:var(--text-dim); font-size:14px; margin-top:6px; font-style:italic; }
+
+  /* ---- en-tête d'une fiche (œuvre, saga...) ---- */
+  .oeuvre-head{ display:flex; gap:24px; margin-bottom:24px; align-items:flex-start; }
+  .cover-block{ width:100px; height:130px; flex-shrink:0; border-radius:4px; background:linear-gradient(160deg, var(--lavender)33, var(--bg-2)); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:var(--text-dim); }
+  .oeuvre-info{ flex:1; }
+  .oeuvre-info h1{ font-size:1.9rem; margin-bottom:4px; }
+  .oeuvre-sub{ color:var(--lavender); font-size:14px; margin-bottom:12px; }
+  .status-badge{ display:inline-block; font-size:11px; padding:4px 12px; border-radius:20px; background:var(--accent); color:var(--bg); font-weight:500; margin-bottom:10px; }
+  .progress-bar-outer{ width:100%; max-width:340px; height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin:8px 0; }
+  .progress-bar-inner{ height:100%; background:var(--accent); }
+  .oeuvre-meta-line{ font-size:13px; color:var(--text-dim); }
+
+  /* ---- cartes de stats ---- */
+  .stat-cards-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:26px; }
+  @media (max-width:800px){ .stat-cards-row{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:20px; }
+  .stat-card h3{ font-size:13px; color:var(--text-dim); font-weight:400; margin-bottom:10px; font-family:'Lora',serif; }
+  .stat-big{ font-family:'Cormorant Garamond',serif; font-size:1.9rem; color:var(--accent); font-weight:600; }
+
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:22px 24px; margin-bottom:20px; }
+  .panel h2{ font-size:1.1rem; color:var(--lavender); margin-bottom:14px; font-family:'Lora',serif; font-weight:500; }
+
+  .head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:10px; }
   .btn-primary{ background:var(--accent); color:var(--bg); border:none; padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; font-weight:500; }
   .btn-secondary{ background:var(--bg-2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; }
+  .search-input{ background:var(--bg-2); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:9px 14px; font-size:13px; font-family:'Lora',serif; min-width:220px; }
 
-  .gallery{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  @media (max-width:800px){ .gallery{ grid-template-columns:1fr 1fr; } }
-  .card{ position:relative; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--bg-2); cursor:pointer; transition:border-color .15s; }
-  .card:hover{ border-color:var(--accent); }
-  .card .top{ height:80px; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.4rem; }
-  .card .body{ padding:12px 14px; }
-  .card .nom{ font-size:14px; font-weight:500; margin-bottom:3px; }
-  .card .meta{ font-size:11px; color:var(--text-dim); }
+  /* ---- galerie de cartes (sagas, œuvres, personnages, idées) ---- */
+  .gallery{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:820px){ .gallery{ grid-template-columns:repeat(2,1fr); } }
+  .char-card{ position:relative; cursor:pointer; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--bg-2); transition:transform 0.15s ease, border-color 0.15s ease; }
+  .char-card:hover{ transform:translateY(-3px); border-color:var(--accent); }
+  .char-portrait{ height:100px; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.7rem; color:var(--text); opacity:0.9; position:relative; }
+  .fav-heart{ position:absolute; top:8px; right:10px; font-size:15px; color:var(--accent); }
+  .char-name{ padding:12px 14px 3px; font-size:15px; font-weight:500; }
+  .char-role{ padding:0 14px 14px; font-size:12px; color:var(--text-dim); }
 
-  .empty{ text-align:center; padding:60px 20px; color:var(--text-dim); border:1px dashed var(--line); border-radius:6px; }
-  .status-line{ text-align:center; color:var(--text-dim); font-size:13px; padding:40px; }
+  .empty{ text-align:center; padding:60px 24px; color:var(--text-dim); border:1px dashed var(--line); border-radius:6px; font-size:14px; }
+  .status-line{ text-align:center; color:var(--text-dim); font-size:13px; padding:50px; }
 
-  .panel{ border:1px solid var(--line); border-radius:6px; padding:20px 22px; margin-bottom:18px; background:var(--card); }
-  .panel h2{ font-size:1.1rem; color:var(--lavender); margin-bottom:12px; }
-
-  .auth-box{ max-width:380px; margin:80px auto; background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:32px; }
-  .auth-box h1{ font-size:1.6rem; margin-bottom:6px; text-align:center; }
-  .auth-box .sub{ text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:24px; }
-  .auth-tabs{ display:flex; gap:4px; margin-bottom:20px; border:1px solid var(--line); border-radius:20px; padding:3px; }
+  /* ---- auth ---- */
+  .auth-box{ max-width:380px; margin:100px auto; background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:36px; }
+  .auth-box h1{ font-size:1.8rem; margin-bottom:6px; text-align:center; }
+  .auth-box .sub{ text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:26px; font-style:italic; }
+  .auth-tabs{ display:flex; gap:4px; margin-bottom:22px; border:1px solid var(--line); border-radius:20px; padding:3px; }
   .auth-tabs button{ flex:1; background:none; border:none; color:var(--text-dim); padding:8px; border-radius:16px; cursor:pointer; font-family:'Lora',serif; font-size:13px; }
   .auth-tabs button.active{ background:var(--accent); color:var(--bg); font-weight:500; }
   label{ display:block; font-size:12px; color:var(--text-dim); margin:14px 0 5px; }
   input, select, textarea{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:5px; padding:10px 12px; font-family:'Lora',serif; font-size:14px; }
-  textarea{ min-height:70px; resize:vertical; }
+  textarea{ min-height:80px; resize:vertical; }
   .auth-submit{ width:100%; margin-top:22px; background:var(--accent); color:var(--bg); border:none; padding:12px; border-radius:5px; font-weight:500; cursor:pointer; font-family:'Lora',serif; font-size:14px; }
   .auth-msg{ font-size:12px; margin-top:14px; text-align:center; min-height:16px; }
   .auth-msg.error{ color:#e88; }
   .auth-msg.ok{ color:#8fc95a; }
 
+  /* ---- modal ---- */
   .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:40px 20px; overflow-y:auto; }
   .modal-overlay.open{ display:flex; }
-  .modal-box{ background:var(--bg-2); border:1px solid var(--line); border-radius:6px; width:100%; max-width:520px; }
-  .modal-head{ display:flex; justify-content:space-between; align-items:center; padding:18px 24px; border-bottom:1px solid var(--line); }
+  .modal-box{ background:var(--card); border:1px solid var(--line); border-radius:6px; width:100%; max-width:560px; }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; padding:20px 26px; border-bottom:1px solid var(--line); }
+  .modal-head h2{ font-size:1.3rem; }
   .modal-head button{ background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; }
-  .modal-body{ padding:20px 24px; display:flex; flex-direction:column; gap:12px; max-height:65vh; overflow-y:auto; }
-  .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid var(--line); }
-  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-body{ padding:22px 26px; display:flex; flex-direction:column; gap:14px; max-height:65vh; overflow-y:auto; }
+  .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:18px 26px; border-top:1px solid var(--line); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 </style>
 </head>
 <body>
@@ -99,7 +132,7 @@
     mode = mode || 'login';
     app.innerHTML = `
       <div class="auth-box">
-        <h1>Passerelle</h1>
+        <h1>✒️ Passerelle</h1>
         <div class="sub">L'atelier de vos histoires</div>
         <div class="auth-tabs">
           <button class="${mode==='login'?'active':''}" onclick="renderAuth('login')">Se connecter</button>
@@ -171,10 +204,7 @@
             <button onclick="doLogout()">Déconnexion</button>
           </div>
         </div>
-        <div class="main">
-          <div class="topbar" id="topbar">Passerelle</div>
-          <div class="content" id="content"></div>
-        </div>
+        <div class="main"><div class="wrap" id="content"></div></div>
       </div>
       ${sagaModalHtml()}
       ${oeuvreModalHtml()}
@@ -192,10 +222,9 @@
   function navigate(key){
     setActiveNav(key);
     const item = NAV.flatMap(g=>g.items).find(i=>i.key===key);
-    document.getElementById('topbar').textContent = item ? item.label : key;
     const content = document.getElementById('content');
     if (!item.real){
-      content.innerHTML = `<div class="empty">Cette page (« ${item.label} ») n'est pas encore branchée à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà pour elle — on la construit dès qu'on y arrive dans l'ordre.</span></div>`;
+      content.innerHTML = `<h2 style="margin-bottom:20px;">${item.label}</h2><div class="empty">Cette page n'est pas encore branchée à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà pour elle — on la construit dès qu'on y arrive dans l'ordre.</span></div>`;
       return;
     }
     if (key === 'accueil') renderAccueil();
@@ -205,6 +234,9 @@
     if (key === 'idees') renderIdees();
   }
 
+  // ============================================================
+  // ACCUEIL
+  // ============================================================
   async function renderAccueil(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
@@ -215,16 +247,24 @@
       db().from('idees').select('*', { count:'exact', head:true }),
     ]);
     content.innerHTML = `
-      <h2 style="font-size:1.6rem; margin-bottom:20px;">Bonjour ${currentUser.email.split('@')[0]} ✨</h2>
-      <div class="gallery">
-        <div class="panel"><h2>Sagas</h2><div style="font-size:1.8rem;">${nbSagas ?? 0}</div></div>
-        <div class="panel"><h2>Œuvres</h2><div style="font-size:1.8rem;">${nbOeuvres ?? 0}</div></div>
-        <div class="panel"><h2>Personnages</h2><div style="font-size:1.8rem;">${nbPersonnages ?? 0}</div></div>
-        <div class="panel"><h2>Idées</h2><div style="font-size:1.8rem;">${nbIdees ?? 0}</div></div>
+      <div class="banner">
+        <div>
+          <h1>Bonsoir, ${currentUser.email.split('@')[0]} ✨</h1>
+          <div class="sub">Que va-t-on raconter aujourd'hui ?</div>
+        </div>
+      </div>
+      <div class="stat-cards-row">
+        <div class="stat-card" onclick="navigate('sagas')" style="cursor:pointer;"><h3>Sagas</h3><div class="stat-big">${nbSagas ?? 0}</div></div>
+        <div class="stat-card" onclick="navigate('oeuvres')" style="cursor:pointer;"><h3>Œuvres</h3><div class="stat-big">${nbOeuvres ?? 0}</div></div>
+        <div class="stat-card" onclick="navigate('personnages')" style="cursor:pointer;"><h3>Personnages</h3><div class="stat-big">${nbPersonnages ?? 0}</div></div>
+        <div class="stat-card" onclick="navigate('idees')" style="cursor:pointer;"><h3>Idées</h3><div class="stat-big">${nbIdees ?? 0}</div></div>
       </div>
     `;
   }
 
+  // ============================================================
+  // SAGAS
+  // ============================================================
   async function renderSagas(){
     const content = document.getElementById('content');
     content.innerHTML = `
@@ -236,9 +276,10 @@
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucune saga pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(s => `
-      <div class="card" onclick="openSagaModal('${s.id}')">
-        <div class="top" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(s.nom)}</div>
-        <div class="body"><div class="nom">${s.nom}</div><div class="meta">${s.genre || '—'} · ${s.statut || 'Sans statut'}${s.archive ? ' · Archivée' : ''}</div></div>
+      <div class="char-card" onclick="openSagaModal('${s.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(s.nom)}</div>
+        <div class="char-name">${s.nom}</div>
+        <div class="char-role">${s.genre || '—'} · ${s.statut || 'Sans statut'}${s.archive ? ' · Archivée' : ''}</div>
       </div>`).join('')}</div>`;
   }
 
@@ -246,7 +287,7 @@
     return `
       <div class="modal-overlay" id="modal-saga-overlay" onclick="if(event.target===this) closeSagaModal()">
         <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-saga-title" style="font-size:1.3rem;">Nouvelle saga</h2><button onclick="closeSagaModal()">✕</button></div>
+          <div class="modal-head"><h2 id="modal-saga-title">Nouvelle saga</h2><button onclick="closeSagaModal()">✕</button></div>
           <div class="modal-body">
             <div><label>Nom de la saga</label><input id="sf-nom"></div>
             <div class="row2">
@@ -281,6 +322,9 @@
     closeSagaModal(); await renderSagas();
   }
 
+  // ============================================================
+  // ŒUVRES
+  // ============================================================
   async function renderOeuvres(){
     const content = document.getElementById('content');
     content.innerHTML = `
@@ -293,9 +337,10 @@
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucune œuvre pour l'instant.<br><br><button class="btn-primary" onclick="openOeuvreModal()">Créer ta première œuvre</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(o => {
       const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
-      return `<div class="card" onclick="openOeuvreModal('${o.id}')">
-        <div class="top" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
-        <div class="body"><div class="nom">${o.titre}</div><div class="meta">${o.sagas?.nom ? o.sagas.nom+' · ' : ''}${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}${o.archive?' · Archivée':''}</div></div>
+      return `<div class="char-card" onclick="openOeuvreModal('${o.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
+        <div class="char-name">${o.titre}</div>
+        <div class="char-role">${o.sagas?.nom ? o.sagas.nom+' · ' : ''}${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}${o.archive?' · Archivée':''}</div>
       </div>`;
     }).join('')}</div>`;
   }
@@ -304,7 +349,7 @@
     return `
       <div class="modal-overlay" id="modal-oeuvre-overlay" onclick="if(event.target===this) closeOeuvreModal()">
         <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-oeuvre-title" style="font-size:1.3rem;">Nouvelle œuvre</h2><button onclick="closeOeuvreModal()">✕</button></div>
+          <div class="modal-head"><h2 id="modal-oeuvre-title">Nouvelle œuvre</h2><button onclick="closeOeuvreModal()">✕</button></div>
           <div class="modal-body">
             <div><label>Titre</label><input id="of-titre"></div>
             <div class="row2">
@@ -361,6 +406,9 @@
     closeOeuvreModal(); await renderOeuvres();
   }
 
+  // ============================================================
+  // PERSONNAGES
+  // ============================================================
   async function renderPersonnages(){
     const content = document.getElementById('content');
     content.innerHTML = `
@@ -372,9 +420,11 @@
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucun personnage pour l'instant.<br><br><button class="btn-primary" onclick="openPersonnageModal()">Créer ton premier personnage</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(p => `
-      <div class="card" onclick="openPersonnageModal('${p.id}')">
-        <div class="top" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(p.nom)}${p.favori ? ' ♥' : ''}</div>
-        <div class="body"><div class="nom">${p.nom}</div><div class="meta">${p.resume || '—'}</div></div>
+      <div class="char-card" onclick="openPersonnageModal('${p.id}')">
+        ${p.favori ? '<span class="fav-heart">♥</span>' : ''}
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(p.nom)}</div>
+        <div class="char-name">${p.nom}</div>
+        <div class="char-role">${p.resume || '—'}</div>
       </div>`).join('')}</div>`;
   }
 
@@ -382,7 +432,7 @@
     return `
       <div class="modal-overlay" id="modal-personnage-overlay" onclick="if(event.target===this) closePersonnageModal()">
         <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-personnage-title" style="font-size:1.3rem;">Nouveau personnage</h2><button onclick="closePersonnageModal()">✕</button></div>
+          <div class="modal-head"><h2 id="modal-personnage-title">Nouveau personnage</h2><button onclick="closePersonnageModal()">✕</button></div>
           <div class="modal-body">
             <div><label>Nom</label><input id="pf-nom"></div>
             <div><label>Résumé</label><textarea id="pf-resume"></textarea></div>
@@ -413,10 +463,13 @@
     closePersonnageModal(); await renderPersonnages();
   }
 
+  // ============================================================
+  // IDÉES ("la pépinière")
+  // ============================================================
   async function renderIdees(){
     const content = document.getElementById('content');
     content.innerHTML = `
-      <div class="head-row"><h2>🌱 Idées</h2><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
+      <div class="head-row"><h2>🌱 La pépinière</h2><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
       <div id="idees-zone"><div class="status-line">Chargement…</div></div>
     `;
     const { data, error } = await db().from('idees').select('id, titre, note, statut, potentiel').order('created_at', { ascending:false });
@@ -424,9 +477,10 @@
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { zone.innerHTML = `<div class="empty">Ta pépinière est vide pour l'instant.<br><br><button class="btn-primary" onclick="openIdeeModal()">Capturer ta première idée</button></div>`; return; }
     zone.innerHTML = `<div class="gallery">${data.map(i => `
-      <div class="card" onclick="openIdeeModal('${i.id}')">
-        <div class="top" style="background:linear-gradient(160deg, #5B9B6E33, var(--bg-2));">🌱</div>
-        <div class="body"><div class="nom">${i.titre}</div><div class="meta">${i.statut||'Graine'}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div></div>
+      <div class="char-card" onclick="openIdeeModal('${i.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, #5B9B6E33, var(--bg-2));">🌱</div>
+        <div class="char-name">${i.titre}</div>
+        <div class="char-role">${i.statut||'Graine'}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div>
       </div>`).join('')}</div>`;
   }
 
@@ -434,7 +488,7 @@
     return `
       <div class="modal-overlay" id="modal-idee-overlay" onclick="if(event.target===this) closeIdeeModal()">
         <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-idee-title" style="font-size:1.3rem;">Nouvelle idée</h2><button onclick="closeIdeeModal()">✕</button></div>
+          <div class="modal-head"><h2 id="modal-idee-title">Nouvelle idée</h2><button onclick="closeIdeeModal()">✕</button></div>
           <div class="modal-body">
             <div><label>Titre</label><input id="if-titre"></div>
             <div><label>L'idée</label><textarea id="if-note"></textarea></div>
