@@ -9,12 +9,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg: #F3EFE6; --bg-2: #EAE4D6; --card: #FFFFFF;
-    --line: rgba(27,36,54,0.14);
-    --text: #1B2436; --text-dim: #6B7280;
+    --bg: #FFFFFF; --bg-2: #F6F3FB; --card: #FFFFFF;
+    --line: rgba(124,92,191,0.18);
+    --text: #2B2140; --text-dim: #7A7290;
     --lavender: #8C7FB0; --lavender-deep: #5E5286;
     --wine: #7A3B4A;
-    --accent: #C9A227;
+    --accent: #7C5CBF;
   }
   *{box-sizing:border-box;}
   body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora', serif; line-height:1.6; }
@@ -204,7 +204,7 @@
       { key:'sagas', label:'Sagas', real:true },
       { key:'personnages', label:'Personnages', real:true },
       { key:'univers-lore', label:'Univers & Lore', real:false },
-      { key:'poesie', label:'Poésie', real:false },
+      { key:'poesie', label:'Poésie', real:true },
       { key:'chapitres', label:'Chapitres', real:false },
       { key:'plans', label:'Plans', real:false },
       { key:'relecture', label:'Relecture', real:true },
@@ -239,6 +239,11 @@
       ${personnageOeuvreModalHtml()}
       ${planModalHtml()}
       ${correctionModalHtml()}
+      ${luModalHtml()}
+      ${chronoModalHtml()}
+      ${ssPlanModalHtml()}
+      ${recueilModalHtml()}
+      ${poemeModalHtml()}
       <div class="side-overlay" id="memo-overlay" onclick="closeMemoPanel()"></div>
       <div class="side-panel" id="memo-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -273,6 +278,7 @@
     if (key === 'idees') renderIdees();
     if (key === 'relecture') renderRelecture();
     if (key === 'bureau-editorial') renderBureauEditorial();
+    if (key === 'poesie') renderPoesie();
   }
 
   // ============================================================
@@ -579,8 +585,8 @@
     { key:'sous-sagas', label:'Sous-sagas', real:true },
     { key:'oeuvres', label:'Œuvres', real:true },
     { key:'personnages', label:'Personnages', real:false },
-    { key:'univers-lore', label:'Univers & Lore', real:false },
-    { key:'chronologie', label:'Chronologie', real:false },
+    { key:'univers-lore', label:'Univers & Lore', real:true },
+    { key:'chronologie', label:'Chronologie', real:true },
     { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
     { key:'parametres', label:'Paramètres', real:true },
   ];
@@ -630,6 +636,8 @@
     if (key === 'apercu') await renderSagaApercu(zone);
     if (key === 'sous-sagas') await renderSagaSousSagas(zone);
     if (key === 'oeuvres') await renderSagaOeuvres(zone);
+    if (key === 'univers-lore') await renderSagaUniversLore(zone);
+    if (key === 'chronologie') await renderSagaChronologie(zone);
     if (key === 'fiche-detaillee') await renderSagaFicheDetaillee(zone);
     if (key === 'parametres') await renderSagaParametres(zone);
   }
@@ -670,10 +678,10 @@
   const SOUS_SAGA_TABS = [
     { key:'apercu', label:'Aperçu', real:true },
     { key:'oeuvres', label:'Œuvres', real:true },
-    { key:'personnages', label:'Personnages', real:false },
-    { key:'plan-global', label:'Plan global', real:false },
-    { key:'univers-lore', label:'Univers & Lore', real:false },
-    { key:'chronologie', label:'Chronologie', real:false },
+    { key:'personnages', label:'Personnages', real:true },
+    { key:'plan-global', label:'Plan global', real:true },
+    { key:'univers-lore', label:'Univers & Lore', real:true },
+    { key:'chronologie', label:'Chronologie', real:true },
     { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
     { key:'parametres', label:'Paramètres', real:true },
   ];
@@ -721,6 +729,10 @@
     }
     if (key === 'apercu') await renderSousSagaApercu(zone);
     if (key === 'oeuvres') await renderSousSagaOeuvres(zone);
+    if (key === 'personnages') await renderSousSagaPersonnages(zone);
+    if (key === 'plan-global') await renderSousSagaPlanGlobal(zone);
+    if (key === 'univers-lore') await renderSousSagaUniversLore(zone);
+    if (key === 'chronologie') await renderSousSagaChronologie(zone);
     if (key === 'fiche-detaillee') await renderSousSagaFicheDetaillee(zone);
     if (key === 'parametres') await renderSousSagaParametres(zone);
   }
@@ -755,6 +767,102 @@
   async function openOeuvreModalForSousSaga(){
     await openOeuvreModal(null, currentSousSagaParentSagaId);
     await loadSousSagaOptions(currentSousSagaParentSagaId, currentSousSagaId);
+  }
+
+  // ---- Personnages (agrégés depuis les œuvres de cette sous-saga) ----
+  async function renderSousSagaPersonnages(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: oeuvresList } = await db().from('oeuvres').select('id').eq('sous_saga_id', currentSousSagaId);
+    const ids = (oeuvresList||[]).map(o=>o.id);
+    if (!ids.length) { zone.innerHTML = `<div class="empty">Aucune œuvre dans cette sous-saga pour l'instant.</div>`; return; }
+    const { data, error } = await db().from('personnages_oeuvres').select('personnage_id, role, personnages(nom, favori)').in('oeuvre_id', ids);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    const uniq = {};
+    (data||[]).forEach(d => { if (d.personnage_id) uniq[d.personnage_id] = d; });
+    const list = Object.values(uniq);
+    zone.innerHTML = list.length ? `<div class="gallery">${list.map(d => `
+      <div class="char-card">
+        ${d.personnages?.favori ? '<span class="fav-heart">♥</span>' : ''}
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(d.personnages?.nom)}</div>
+        <div class="char-name">${d.personnages?.nom||'—'}</div>
+        <div class="char-role">${d.role||'—'}</div>
+      </div>`).join('')}</div>` : `<div class="empty">Aucun personnage pour l'instant.</div>`;
+  }
+
+  // ---- Plan global (plans.sous_saga_id, transversaux à toute la trilogie) ----
+  let ssPlansData = [];
+  async function renderSousSagaPlanGlobal(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('plans').select('*').eq('sous_saga_id', currentSousSagaId).order('ordre');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    ssPlansData = data;
+    zone.innerHTML = `
+      <div class="head-row"><div></div><button class="btn-primary" onclick="openSsPlanModal()">+ Nouvel arc transversal</button></div>
+      ${data.length ? renderPlansTable(data) : `<div class="empty">Aucun plan transversal pour cette sous-saga pour l'instant.</div>`}
+    `;
+  }
+  function ssPlanModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-ssplan-overlay" onclick="if(event.target===this) closeSsPlanModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2>Nouvel arc transversal</h2><button onclick="closeSsPlanModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Type</label><select id="ssp-type"><option>Arc transversal</option><option>Intrigue principale</option><option>Arc personnage</option></select></div>
+            <div><label>Titre</label><input id="ssp-titre"></div>
+            <div><label>Statut</label><input id="ssp-plan-statut"></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeSsPlanModal()">Annuler</button><button class="btn-primary" onclick="saveSsPlan()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  function openSsPlanModal(){ document.getElementById('modal-ssplan-overlay').classList.add('open'); }
+  function closeSsPlanModal(){ document.getElementById('modal-ssplan-overlay').classList.remove('open'); }
+  async function saveSsPlan(){
+    const payload = { type: document.getElementById('ssp-type').value, titre: document.getElementById('ssp-titre').value.trim()||'Sans titre', statut: document.getElementById('ssp-plan-statut').value.trim(), sous_saga_id: currentSousSagaId, user_id: currentUser.id };
+    const { error } = await db().from('plans').insert(payload);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeSsPlanModal();
+    await renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'));
+  }
+
+  // ---- Univers & Lore (filtré via elements_univers_sous_sagas) ----
+  async function renderSousSagaUniversLore(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: links, error } = await db().from('elements_univers_sous_sagas').select('element_id, elements_univers(*)').eq('sous_saga_id', currentSousSagaId);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    const items = (links||[]).map(l=>l.elements_univers).filter(Boolean);
+    luData = items; luCategorieActive = 'Tout';
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="head-row"><input class="search-input" id="lu-search" placeholder="Rechercher..." oninput="renderLuGrid()"><button class="btn-primary" onclick="alert('Pour lier un élément existant, ouvre-le depuis Univers & Lore de la saga et associe-le à cette sous-saga.')">+ Lier une entrée</button></div>
+          <div id="lu-cat-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;"></div>
+          <div class="gallery" id="lu-grid"></div>
+        </div>
+        <div class="panel" id="lu-detail"><div class="empty">Sélectionne un élément à gauche.</div></div>
+      </div>
+    `;
+    renderLuGrid();
+  }
+
+  // ---- Chronologie (mêmes éléments, filtrés via la même jonction) ----
+  async function renderSousSagaChronologie(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: links, error } = await db().from('elements_univers_sous_sagas').select('elements_univers(*)').eq('sous_saga_id', currentSousSagaId);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    const items = (links||[]).map(l=>l.elements_univers).filter(e=>e && e.periode_label).sort((a,b)=>(a.periode_ordre||0)-(b.periode_ordre||0));
+    chronoData = items;
+    let lastEre = null, html = '';
+    items.forEach(e => {
+      if (e.ere !== lastEre) { html += `<div style="margin:16px 0 6px; font-size:11px; text-transform:uppercase; color:var(--text-dim);">${e.periode_label||''} · ${e.ere||''}</div>`; lastEre = e.ere; }
+      html += `<div class="panel" style="cursor:pointer; margin-bottom:10px;" onclick="showChronoDetail('${e.id}')"><div style="font-size:15px; font-weight:500;">${e.nom}</div></div>`;
+    });
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
+        <div>${items.length ? html : `<div class="empty">Aucun événement lié à cette sous-saga pour l'instant.</div>`}</div>
+        <div class="panel" id="chrono-detail"><div class="empty">Sélectionne un événement à gauche.</div></div>
+      </div>
+    `;
   }
 
   async function renderSousSagaFicheDetaillee(zone){
@@ -905,6 +1013,226 @@
     const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
     if (error) { alert('Erreur : ' + error.message); return; }
     alert('Enregistré.');
+  }
+
+  // ============================================================
+  // Onglet Univers & Lore d'une saga
+  // ============================================================
+  let luData = [];
+  let luCategorieActive = 'Tout';
+
+  async function renderSagaUniversLore(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('elements_univers').select('*').eq('saga_id', currentSagaId).order('ordre');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    luData = data;
+    luCategorieActive = 'Tout';
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="head-row">
+            <input class="search-input" id="lu-search" placeholder="Rechercher dans le lore..." oninput="renderLuGrid()">
+            <button class="btn-primary" onclick="openLuModal()">+ Nouvelle entrée</button>
+          </div>
+          <div id="lu-cat-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;"></div>
+          <div class="gallery" id="lu-grid"></div>
+        </div>
+        <div class="panel" id="lu-detail" style="position:sticky; top:16px;">
+          <div class="empty">Sélectionne un élément à gauche.</div>
+        </div>
+      </div>
+    `;
+    renderLuGrid();
+  }
+
+  function renderLuGrid(){
+    const q = (document.getElementById('lu-search').value||'').toLowerCase();
+    const categories = ['Tout', ...new Set(luData.map(e=>e.categorie))];
+    document.getElementById('lu-cat-tabs').innerHTML = categories.map(c => `<button onclick="setLuCategorie('${c}')" style="background:${c===luCategorieActive?'var(--accent)':'var(--bg-2)'}; color:${c===luCategorieActive?'#fff':'var(--text)'}; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:12px; cursor:pointer;">${c}</button>`).join('');
+
+    let filtered = luData.filter(e => e.nom.toLowerCase().includes(q));
+    if (luCategorieActive !== 'Tout') filtered = filtered.filter(e => e.categorie === luCategorieActive);
+
+    document.getElementById('lu-grid').innerHTML = filtered.length ? filtered.map(e => `
+      <div class="char-card" onclick="showLuDetail('${e.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(e.nom)}</div>
+        <div class="char-name">${e.nom}</div>
+        <div class="char-role">${e.categorie}</div>
+      </div>`).join('') : `<div class="empty">Aucune entrée pour l'instant.</div>`;
+  }
+  function setLuCategorie(c){ luCategorieActive = c; renderLuGrid(); }
+
+  async function showLuDetail(id){
+    const el = luData.find(e=>e.id===id);
+    const detail = document.getElementById('lu-detail');
+    const [{ count: nbPerso }, { count: nbOeuvres }, { count: nbRelations }] = await Promise.all([
+      db().from('elements_univers_personnages').select('*', { count:'exact', head:true }).eq('element_id', id),
+      db().from('elements_univers_oeuvres').select('*', { count:'exact', head:true }).eq('element_id', id),
+      db().from('elements_univers_relations').select('*', { count:'exact', head:true }).eq('element_id', id),
+    ]);
+    const contenu = el.contenu || {};
+    detail.innerHTML = `
+      <div class="head-row" style="margin-bottom:10px;">
+        <h2 style="margin:0;">${el.nom}</h2>
+        <button class="btn-secondary" onclick="openLuModal('${el.id}')">Modifier</button>
+      </div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">${el.categorie}</div>
+      <p style="font-size:14px;">${el.description || 'Pas de description.'}</p>
+      ${contenu.infos?.length ? `<div style="margin-top:14px;">${contenu.infos.map(i=>`<div class="info-line"><span>${i.label}</span><span>${i.valeur}</span></div>`).join('')}</div>` : ''}
+      ${contenu.en_bref?.length ? `<div style="margin-top:14px;"><div style="font-size:12px; color:var(--lavender); margin-bottom:6px;">En bref</div>${contenu.en_bref.map(t=>`<div style="font-size:13px; padding:4px 0;">• ${t}</div>`).join('')}</div>` : ''}
+      <div class="stat-cards-row" style="grid-template-columns:1fr 1fr 1fr; margin-top:16px;">
+        <div class="stat-card"><h3>Personnages liés</h3><div class="stat-big" style="font-size:1.2rem;">${nbPerso??0}</div></div>
+        <div class="stat-card"><h3>Œuvres concernées</h3><div class="stat-big" style="font-size:1.2rem;">${nbOeuvres??0}</div></div>
+        <div class="stat-card"><h3>Éléments liés</h3><div class="stat-big" style="font-size:1.2rem;">${nbRelations??0}</div></div>
+      </div>
+    `;
+  }
+
+  function luModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-lu-overlay" onclick="if(event.target===this) closeLuModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-lu-title">Nouvelle entrée</h2><button onclick="closeLuModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Nom</label><input id="luf-nom"></div>
+            <div><label>Catégorie</label><input id="luf-categorie" placeholder="Espèce, Organisation, Lieu, Concept..."></div>
+            <div><label>Description</label><textarea id="luf-description"></textarea></div>
+            <div><label>En bref (un point par ligne)</label><textarea id="luf-enbref"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" onclick="closeLuModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveLu()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingLuId = null;
+  function openLuModal(id){
+    editingLuId = id || null;
+    document.getElementById('modal-lu-title').textContent = id ? 'Modifier' : 'Nouvelle entrée';
+    document.getElementById('luf-nom').value=''; document.getElementById('luf-categorie').value='';
+    document.getElementById('luf-description').value=''; document.getElementById('luf-enbref').value='';
+    if (id) {
+      const el = luData.find(e=>e.id===id);
+      if (el) { document.getElementById('luf-nom').value=el.nom||''; document.getElementById('luf-categorie').value=el.categorie||''; document.getElementById('luf-description').value=el.description||''; document.getElementById('luf-enbref').value=(el.contenu?.en_bref||[]).join('\n'); }
+    }
+    document.getElementById('modal-lu-overlay').classList.add('open');
+  }
+  function closeLuModal(){ document.getElementById('modal-lu-overlay').classList.remove('open'); }
+  async function saveLu(){
+    const enbrefRaw = document.getElementById('luf-enbref').value.trim();
+    const payload = {
+      nom: document.getElementById('luf-nom').value.trim()||'Sans titre',
+      categorie: document.getElementById('luf-categorie').value.trim()||'Concept',
+      description: document.getElementById('luf-description').value.trim(),
+      contenu: { en_bref: enbrefRaw ? enbrefRaw.split('\n').map(t=>t.trim()).filter(Boolean) : [] },
+    };
+    let error;
+    if (editingLuId) ({ error } = await db().from('elements_univers').update(payload).eq('id', editingLuId));
+    else { payload.saga_id = currentSagaId; ({ error } = await db().from('elements_univers').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeLuModal();
+    await renderSagaUniversLore(document.getElementById('saga-tab-content'));
+  }
+
+  // ============================================================
+  // Onglet Chronologie d'une saga
+  // ============================================================
+  let chronoData = [];
+
+  async function renderSagaChronologie(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('elements_univers').select('*').eq('saga_id', currentSagaId).not('periode_label', 'is', null).order('periode_ordre');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    chronoData = data;
+
+    let lastEre = null, timelineHtml = '';
+    data.forEach(e => {
+      if (e.ere !== lastEre) { timelineHtml += `<div style="margin:16px 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim);">${e.periode_label||''} · ${e.ere||''}</div>`; lastEre = e.ere; }
+      timelineHtml += `<div class="panel" style="cursor:pointer; margin-bottom:10px;" onclick="showChronoDetail('${e.id}')">
+        <div style="font-size:15px; font-weight:500;">${e.nom}</div>
+        <div style="font-size:13px; color:var(--text-dim); margin-top:4px;">${(e.description||'').slice(0,140)}</div>
+      </div>`;
+    });
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="head-row"><div></div><button class="btn-primary" onclick="openChronoModal()">+ Ajouter un événement</button></div>
+          ${data.length ? timelineHtml : '<div class="empty">Aucun événement pour le moment.</div>'}
+        </div>
+        <div class="panel" id="chrono-detail" style="position:sticky; top:16px;">
+          <div class="empty">Sélectionne un événement à gauche.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function showChronoDetail(id){
+    const e = chronoData.find(x=>x.id===id);
+    document.getElementById('chrono-detail').innerHTML = `
+      <div class="head-row" style="margin-bottom:10px;"><h2 style="margin:0;">${e.nom}</h2><button class="btn-secondary" onclick="openChronoModal('${e.id}')">Modifier</button></div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">${e.periode_label||''} · ${e.ere||''}</div>
+      <p style="font-size:14px;">${e.description||''}</p>
+      ${e.importance ? `<div style="margin-top:10px; font-size:13px;">Importance : ${'★'.repeat(e.importance)}${'☆'.repeat(5-e.importance)}</div>` : ''}
+    `;
+  }
+
+  function chronoModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-chrono-overlay" onclick="if(event.target===this) closeChronoModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-chrono-title">Nouvel événement</h2><button onclick="closeChronoModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Nom</label><input id="cef-nom"></div>
+            <div class="row2">
+              <div><label>Période (affichée)</label><input id="cef-periode" placeholder="ex : -1100, Années 30+"></div>
+              <div><label>Ordre chronologique (nombre)</label><input type="number" id="cef-ordre"></div>
+            </div>
+            <div class="row2">
+              <div><label>Ère (regroupement)</label><input id="cef-ere" placeholder="ex : Ère du Schisme"></div>
+              <div><label>Importance (1-5)</label><input type="number" min="1" max="5" id="cef-importance"></div>
+            </div>
+            <div><label>Description</label><textarea id="cef-description"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" onclick="closeChronoModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveChronoEvent()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingChronoId = null;
+  function openChronoModal(id){
+    editingChronoId = id || null;
+    document.getElementById('modal-chrono-title').textContent = id ? 'Modifier' : 'Nouvel événement';
+    document.getElementById('cef-nom').value=''; document.getElementById('cef-periode').value='';
+    document.getElementById('cef-ordre').value=''; document.getElementById('cef-ere').value='';
+    document.getElementById('cef-importance').value=''; document.getElementById('cef-description').value='';
+    if (id) {
+      const e = chronoData.find(x=>x.id===id);
+      if (e) { document.getElementById('cef-nom').value=e.nom||''; document.getElementById('cef-periode').value=e.periode_label||''; document.getElementById('cef-ordre').value=e.periode_ordre||''; document.getElementById('cef-ere').value=e.ere||''; document.getElementById('cef-importance').value=e.importance||''; document.getElementById('cef-description').value=e.description||''; }
+    }
+    document.getElementById('modal-chrono-overlay').classList.add('open');
+  }
+  function closeChronoModal(){ document.getElementById('modal-chrono-overlay').classList.remove('open'); }
+  async function saveChronoEvent(){
+    const payload = {
+      nom: document.getElementById('cef-nom').value.trim()||'Sans titre',
+      categorie: 'Histoire & Mythologie',
+      periode_label: document.getElementById('cef-periode').value.trim(),
+      periode_ordre: parseFloat(document.getElementById('cef-ordre').value)||0,
+      ere: document.getElementById('cef-ere').value.trim(),
+      importance: parseInt(document.getElementById('cef-importance').value)||null,
+      description: document.getElementById('cef-description').value.trim(),
+    };
+    let error;
+    if (editingChronoId) ({ error } = await db().from('elements_univers').update(payload).eq('id', editingChronoId));
+    else { payload.saga_id = currentSagaId; ({ error } = await db().from('elements_univers').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeChronoModal();
+    await renderSagaChronologie(document.getElementById('saga-tab-content'));
   }
 
   async function renderSagaParametres(zone){
@@ -2179,13 +2507,290 @@
     closeIdeeModal(); await renderIdees();
   }
 
+  // ============================================================
+  // POÉSIE
+  // ============================================================
+  const RECUEIL_TABS = [
+    { key:'apercu', label:'Aperçu' },
+    { key:'poemes', label:'Poèmes' },
+    { key:'structure', label:'Structure' },
+    { key:'fiche-detaillee', label:'Fiche détaillée' },
+    { key:'parametres', label:'Paramètres' },
+  ];
+  let currentRecueilId = null;
+
+  async function renderPoesie(){
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="head-row"><h2>Poésie</h2><button class="btn-primary" onclick="openRecueilModal()">+ Nouveau recueil</button></div>
+      <div id="recueils-zone"><div class="status-line">Chargement…</div></div>
+    `;
+    const { data, error } = await db().from('recueils').select('id, titre, type_recueil, statut, theme_principal').order('created_at', { ascending:false });
+    const zone = document.getElementById('recueils-zone');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucun recueil pour l'instant.<br><br><button class="btn-primary" onclick="openRecueilModal()">Créer ton premier recueil</button></div>`; return; }
+    zone.innerHTML = `<div class="gallery">${data.map(r => `
+      <div class="char-card" onclick="openRecueilDetail('${r.id}')">
+        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(r.titre)}</div>
+        <div class="char-name">${r.titre}</div>
+        <div class="char-role">${r.type_recueil||'—'} · ${r.statut||'Sans statut'}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  function recueilModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-recueil-overlay" onclick="if(event.target===this) closeRecueilModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2>Nouveau recueil</h2><button onclick="closeRecueilModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Titre</label><input id="rf-titre"></div>
+            <div class="row2">
+              <div><label>Type</label><select id="rf-type"><option value="original">Recueil original</option><option value="anthologie">Anthologie</option></select></div>
+              <div><label>Thème principal</label><input id="rf-theme"></div>
+            </div>
+            <div><label>Objectif de poèmes</label><input type="number" id="rf-objectif"></div>
+            <div><label>Résumé</label><textarea id="rf-resume"></textarea></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeRecueilModal()">Annuler</button><button class="btn-primary" onclick="saveRecueil()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  function openRecueilModal(){
+    document.getElementById('rf-titre').value=''; document.getElementById('rf-theme').value='';
+    document.getElementById('rf-objectif').value=''; document.getElementById('rf-resume').value='';
+    document.getElementById('modal-recueil-overlay').classList.add('open');
+  }
+  function closeRecueilModal(){ document.getElementById('modal-recueil-overlay').classList.remove('open'); }
+  async function saveRecueil(){
+    const payload = { titre: document.getElementById('rf-titre').value.trim()||'Sans titre', type_recueil: document.getElementById('rf-type').value, theme_principal: document.getElementById('rf-theme').value.trim(), objectif_poemes: parseInt(document.getElementById('rf-objectif').value)||null, resume: document.getElementById('rf-resume').value.trim(), user_id: currentUser.id };
+    const { data, error } = await db().from('recueils').insert(payload).select('id').single();
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeRecueilModal();
+    openRecueilDetail(data.id);
+  }
+
+  async function openRecueilDetail(id){
+    currentRecueilId = id;
+    setActiveNav('poesie');
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: r, error } = await db().from('recueils').select('*').eq('id', id).single();
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+
+    content.innerHTML = `
+      <div class="back-link" onclick="navigate('poesie')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à mes recueils</div>
+      <div class="oeuvre-head">
+        <div class="cover-block">${initials(r.titre)}</div>
+        <div class="oeuvre-info">
+          <h1>${r.titre}</h1>
+          <div class="oeuvre-sub">${r.type_recueil||''} · ${r.theme_principal||''}</div>
+          <span class="status-badge">${r.statut||'Sans statut'}</span>
+        </div>
+      </div>
+      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+        ${RECUEIL_TABS.map(t => `<button id="rtab-${t.key}" onclick="showRecueilTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+      </div>
+      <div id="recueil-tab-content"></div>
+    `;
+    showRecueilTab('apercu');
+  }
+
+  async function showRecueilTab(key){
+    document.querySelectorAll('[id^="rtab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    const btn = document.getElementById('rtab-'+key);
+    if (btn) { btn.style.color='var(--accent)'; btn.style.borderBottomColor='var(--accent)'; btn.style.fontWeight='500'; }
+    const zone = document.getElementById('recueil-tab-content');
+    if (key === 'apercu') await renderRecueilApercu(zone);
+    else if (key === 'poemes') await renderRecueilPoemes(zone);
+    else if (key === 'parametres') await renderRecueilParametres(zone);
+    else zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.</div>`;
+  }
+
+  async function renderRecueilApercu(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ data: r }, { data: poemes }] = await Promise.all([
+      db().from('recueils').select('*').eq('id', currentRecueilId).single(),
+      db().from('poemes').select('titre, statut, statut_selection, updated_at').eq('recueil_id', currentRecueilId),
+    ]);
+    const total = r.objectif_poemes || 0;
+    const aEcrire = (poemes||[]).filter(p=>p.statut==='à écrire' || !p.statut).length;
+    const brouillons = (poemes||[]).filter(p=>p.statut==='brouillon').length;
+    const termines = (poemes||[]).filter(p=>p.statut==='terminé').length;
+    const selectionnes = (poemes||[]).filter(p=>p.statut_selection==='sélectionné').length;
+    const ecrits = brouillons + termines;
+    const pct = total ? Math.round(ecrits/total*100) : 0;
+    const derniers = [...(poemes||[])].filter(p=>p.updated_at).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).slice(0,5);
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="panel">
+            <h2>Progression du recueil</h2>
+            <div class="progress-bar-outer" style="max-width:none;"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
+            <div style="font-size:12px; color:var(--text-dim); margin-top:6px;">${ecrits} / ${total} poèmes écrits — ${pct}%</div>
+          </div>
+          <div class="panel"><h2>À propos</h2><p style="font-size:14px;">${r.a_propos || r.resume || 'Pas encore de description.'}</p></div>
+          <div class="stat-cards-row">
+            <div class="stat-card"><h3>À écrire</h3><div class="stat-big">${aEcrire}</div></div>
+            <div class="stat-card"><h3>Brouillons</h3><div class="stat-big">${brouillons}</div></div>
+            <div class="stat-card"><h3>Terminés</h3><div class="stat-big">${termines}</div></div>
+            <div class="stat-card"><h3>Sélectionnés</h3><div class="stat-big">${selectionnes}</div></div>
+          </div>
+          <div class="panel">
+            <h2>Derniers poèmes modifiés</h2>
+            ${derniers.length ? derniers.map(p=>`<div class="info-line"><span>${p.titre}</span><span style="color:var(--text-dim);">${new Date(p.updated_at).toLocaleDateString('fr-FR')}</span></div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Rien pour le moment.</div>'}
+          </div>
+          ${r.ambiance?.length ? `<div class="panel"><h2>Ambiance & ton</h2>${r.ambiance.map(a=>`<span class="etat-pill" style="margin:0 6px 6px 0; display:inline-block;">${a}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="panel">
+          <h2>En un clin d'œil</h2>
+          <div class="info-line"><span>Objectif de poèmes</span><span>${total||'—'}</span></div>
+          <div class="info-line"><span>Poèmes écrits</span><span>${ecrits}</span></div>
+          <div class="info-line"><span>Terminés</span><span>${termines}</span></div>
+          <div class="info-line"><span>Statut</span><span>${r.statut||'—'}</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  let recueilPoemesData = [];
+  async function renderRecueilPoemes(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('poemes').select('*').eq('recueil_id', currentRecueilId).order('ordre');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    recueilPoemesData = data;
+    zone.innerHTML = `
+      <div class="head-row">
+        <input class="search-input" id="poeme-search" placeholder="Rechercher un poème..." oninput="renderPoemesTable()">
+        <button class="btn-primary" onclick="openPoemeModal()">+ Nouveau poème</button>
+      </div>
+      <div id="poemes-table-zone"></div>
+    `;
+    renderPoemesTable();
+  }
+  function renderPoemesTable(){
+    const q = (document.getElementById('poeme-search').value||'').toLowerCase();
+    const data = recueilPoemesData.filter(p=>p.titre.toLowerCase().includes(q));
+    document.getElementById('poemes-table-zone').innerHTML = data.length ? `<table class="ch-table"><thead><tr><th>#</th><th>Titre</th><th>Statut</th><th>Thème</th><th>Date d'écriture</th></tr></thead><tbody>
+      ${data.map(p => `<tr onclick="openPoemeModal('${p.id}')"><td>${p.numero??'—'}</td><td>${p.titre}</td><td><span class="etat-pill">${p.statut||'—'}</span></td><td>${p.theme_principal||'—'}</td><td>${p.date_ecriture||'—'}</td></tr>`).join('')}
+    </tbody></table>` : `<div class="empty">Aucun poème pour l'instant.</div>`;
+  }
+
+  function poemeModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-poeme-overlay" onclick="if(event.target===this) closePoemeModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-poeme-title">Nouveau poème</h2><button onclick="closePoemeModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Titre</label><input id="pmf-titre"></div>
+            <div class="row2">
+              <div><label>Statut</label><select id="pmf-statut"><option value="à écrire">À écrire</option><option value="brouillon">Brouillon</option><option value="terminé">Terminé</option></select></div>
+              <div><label>Sélection</label><select id="pmf-selection"><option value="">—</option><option value="sélectionné">Sélectionné</option><option value="non sélectionné">Non sélectionné</option></select></div>
+            </div>
+            <div class="row2">
+              <div><label>Thème principal</label><input id="pmf-theme"></div>
+              <div><label>Date d'écriture</label><input type="date" id="pmf-date"></div>
+            </div>
+            <div><label>Mots-clés (séparés par des virgules)</label><input id="pmf-motscles"></div>
+            <div><label>Extrait</label><textarea id="pmf-extrait"></textarea></div>
+            <div><label>Texte complet</label><textarea id="pmf-texte" style="min-height:140px;"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" id="pmf-delete" style="margin-right:auto; display:none; color:#e88;" onclick="deletePoeme()">Supprimer</button>
+            <button class="btn-secondary" onclick="closePoemeModal()">Annuler</button>
+            <button class="btn-primary" onclick="savePoeme()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingPoemeId = null;
+  function openPoemeModal(id){
+    editingPoemeId = id || null;
+    document.getElementById('modal-poeme-title').textContent = id ? 'Modifier le poème' : 'Nouveau poème';
+    document.getElementById('pmf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('pmf-titre').value=''; document.getElementById('pmf-statut').value='à écrire';
+    document.getElementById('pmf-selection').value=''; document.getElementById('pmf-theme').value='';
+    document.getElementById('pmf-date').value=''; document.getElementById('pmf-motscles').value='';
+    document.getElementById('pmf-extrait').value=''; document.getElementById('pmf-texte').value='';
+    if (id) {
+      const p = recueilPoemesData.find(x=>x.id===id);
+      if (p) {
+        document.getElementById('pmf-titre').value=p.titre||''; document.getElementById('pmf-statut').value=p.statut||'à écrire';
+        document.getElementById('pmf-selection').value=p.statut_selection||''; document.getElementById('pmf-theme').value=p.theme_principal||'';
+        document.getElementById('pmf-date').value=p.date_ecriture||''; document.getElementById('pmf-motscles').value=(p.mots_cles||[]).join(', ');
+        document.getElementById('pmf-extrait').value=p.extrait||''; document.getElementById('pmf-texte').value=p.texte||'';
+      }
+    }
+    document.getElementById('modal-poeme-overlay').classList.add('open');
+  }
+  function closePoemeModal(){ document.getElementById('modal-poeme-overlay').classList.remove('open'); }
+  async function savePoeme(){
+    const motsClesRaw = document.getElementById('pmf-motscles').value.trim();
+    const maxOrdre = recueilPoemesData.reduce((m,p)=>Math.max(m, p.ordre||0), 0);
+    const payload = {
+      titre: document.getElementById('pmf-titre').value.trim()||'Sans titre',
+      statut: document.getElementById('pmf-statut').value,
+      statut_selection: document.getElementById('pmf-selection').value || null,
+      theme_principal: document.getElementById('pmf-theme').value.trim(),
+      date_ecriture: document.getElementById('pmf-date').value || null,
+      mots_cles: motsClesRaw ? motsClesRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
+      extrait: document.getElementById('pmf-extrait').value.trim(),
+      texte: document.getElementById('pmf-texte').value.trim(),
+    };
+    let error;
+    if (editingPoemeId) ({ error } = await db().from('poemes').update(payload).eq('id', editingPoemeId));
+    else { payload.user_id = currentUser.id; payload.recueil_id = currentRecueilId; payload.ordre = maxOrdre + 1; ({ error } = await db().from('poemes').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePoemeModal();
+    await renderRecueilPoemes(document.getElementById('recueil-tab-content'));
+  }
+  async function deletePoeme(){
+    if (!confirm('Supprimer ce poème ?')) return;
+    const { error } = await db().from('poemes').delete().eq('id', editingPoemeId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePoemeModal();
+    await renderRecueilPoemes(document.getElementById('recueil-tab-content'));
+  }
+
+  async function renderRecueilParametres(zone){
+    const { data: r } = await db().from('recueils').select('*').eq('id', currentRecueilId).single();
+    zone.innerHTML = `
+      <div class="panel">
+        <h2>Informations générales</h2>
+        <label>Titre</label><input id="rp-titre" value="${r.titre||''}">
+        <div class="row2" style="margin-top:12px;">
+          <div><label>Type</label><select id="rp-type"><option value="original" ${r.type_recueil==='original'?'selected':''}>Recueil original</option><option value="anthologie" ${r.type_recueil==='anthologie'?'selected':''}>Anthologie</option></select></div>
+          <div><label>Statut</label><input id="rp-statut" value="${r.statut||''}"></div>
+        </div>
+        <label style="margin-top:12px;">Objectif de poèmes</label><input type="number" id="rp-objectif" value="${r.objectif_poemes||''}">
+        <label style="margin-top:12px;">Résumé</label><textarea id="rp-resume">${r.resume||''}</textarea>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveRecueilParametres()">Enregistrer</button>
+      </div>
+      <div class="panel">
+        <h2>Archivage</h2>
+        <button class="btn-secondary" onclick="toggleArchiveRecueil(${r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button>
+      </div>
+    `;
+  }
+  async function saveRecueilParametres(){
+    const payload = { titre: document.getElementById('rp-titre').value.trim()||'Sans titre', type_recueil: document.getElementById('rp-type').value, statut: document.getElementById('rp-statut').value.trim(), objectif_poemes: parseInt(document.getElementById('rp-objectif').value)||null, resume: document.getElementById('rp-resume').value.trim() };
+    const { error } = await db().from('recueils').update(payload).eq('id', currentRecueilId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openRecueilDetail(currentRecueilId);
+  }
+  async function toggleArchiveRecueil(currentlyArchived){
+    const { error } = await db().from('recueils').update({ archive: !currentlyArchived }).eq('id', currentRecueilId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    navigate('poesie');
+  }
+
   function initials(str){ return (str||'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase(); }
 
   // ============================================================
   // Apparence par fiche (theme_base + accent_color, appliqués pour de vrai)
   // ============================================================
-  const DEFAULT_ACCENT = '#C9A227';
-  const LIGHT_PALETTE = { '--bg':'#F3EFE6', '--bg-2':'#EAE4D6', '--card':'#FFFFFF', '--line':'rgba(27,36,54,0.14)', '--text':'#1B2436', '--text-dim':'#6B7280' };
+  const DEFAULT_ACCENT = '#7C5CBF';
+  const LIGHT_PALETTE = { '--bg':'#FFFFFF', '--bg-2':'#F6F3FB', '--card':'#FFFFFF', '--line':'rgba(124,92,191,0.18)', '--text':'#2B2140', '--text-dim':'#7A7290' };
   const DARK_PALETTE = { '--bg':'#161513', '--bg-2':'#1E1C19', '--card':'#161513', '--line':'rgba(255,255,255,0.08)', '--text':'#F3EFE6', '--text-dim':'#8A8780' };
 
   function applyTheme(themeBase, accentColor){
