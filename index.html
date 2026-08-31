@@ -63,6 +63,8 @@
 
   .panel{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:22px 24px; margin-bottom:20px; }
   .panel h2{ font-size:1.1rem; color:var(--lavender); margin-bottom:14px; font-family:'Lora',serif; font-weight:500; }
+  .info-line{ display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .info-line:last-child{ border-bottom:none; }
 
   .head-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:10px; }
   .btn-primary{ background:var(--accent); color:var(--bg); border:none; padding:10px 18px; border-radius:5px; cursor:pointer; font-family:'Lora',serif; font-size:13px; font-weight:500; }
@@ -107,6 +109,28 @@
   .modal-body{ padding:22px 26px; display:flex; flex-direction:column; gap:14px; max-height:65vh; overflow-y:auto; }
   .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:18px 26px; border-top:1px solid var(--line); }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+  table.ch-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.ch-table th{ text-align:left; color:var(--text-dim); font-weight:400; padding:8px 10px; border-bottom:1px solid var(--line); font-size:12px; }
+  table.ch-table td{ padding:10px 10px; border-bottom:1px solid var(--line); }
+  table.ch-table tbody tr{ cursor:pointer; }
+  table.ch-table tbody tr:hover{ background:var(--bg-2); }
+  .etat-pill{ font-size:11px; padding:3px 10px; border-radius:20px; display:inline-block; background:var(--line); color:var(--text-dim); }
+  .cards-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .ch-card{ cursor:pointer; border:1px solid var(--line); border-radius:6px; padding:14px; background:var(--bg-2); }
+  .ch-card:hover{ border-color:var(--accent); }
+  .kanban-row{ display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; }
+  .kanban-col{ min-width:200px; flex:1; background:var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:12px; }
+  .kanban-col h4{ font-size:12px; color:var(--text-dim); text-transform:uppercase; margin-bottom:10px; }
+  .kanban-card{ cursor:pointer; background:var(--card); border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+  .kanban-card:hover{ border-color:var(--accent); }
+
+  .side-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; z-index:150; }
+  .side-overlay.open{ display:block; }
+  .side-panel{ position:fixed; top:0; right:-380px; width:360px; max-width:90vw; height:100%; background:var(--card); border-left:1px solid var(--line); z-index:151; transition:right .25s ease; padding:22px; overflow-y:auto; }
+  .side-panel.open{ right:0; }
+  .memo-item{ border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-bottom:10px; font-size:13px; }
+  .memo-date{ font-size:11px; color:var(--text-dim); margin-bottom:4px; }
 </style>
 </head>
 <body>
@@ -185,7 +209,7 @@
       { key:'plans', label:'Plans', real:false },
       { key:'relecture', label:'Relecture', real:true },
       { key:'idees', label:'Idées', real:true },
-      { key:'bureau-editorial', label:'Bureau éditorial', real:false },
+      { key:'bureau-editorial', label:'Bureau éditorial', real:true },
       { key:'archives', label:'Archives', real:false },
     ]}
   ];
@@ -211,7 +235,20 @@
       ${oeuvreModalHtml()}
       ${personnageModalHtml()}
       ${ideeModalHtml()}
-    `;
+      ${chapitreModalHtml()}
+      ${personnageOeuvreModalHtml()}
+      ${planModalHtml()}
+      ${correctionModalHtml()}
+      <div class="side-overlay" id="memo-overlay" onclick="closeMemoPanel()"></div>
+      <div class="side-panel" id="memo-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 id="memo-panel-title" style="font-size:1.1rem;">Notes</h2>
+          <button onclick="closeMemoPanel()" style="background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer;">✕</button>
+        </div>
+        <div id="memo-list"></div>
+        <textarea id="memo-new" placeholder="Ajouter une note..." style="margin-top:14px;"></textarea>
+        <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="addMemo()">Ajouter</button>
+      </div>`;
   }
 
   function setActiveNav(key){
@@ -235,6 +272,7 @@
     if (key === 'personnages') renderPersonnages();
     if (key === 'idees') renderIdees();
     if (key === 'relecture') renderRelecture();
+    if (key === 'bureau-editorial') renderBureauEditorial();
   }
 
   // ============================================================
@@ -347,8 +385,108 @@
   }
 
   // ============================================================
-  // RELECTURE — centre de contrôle, dérivé du statut éditorial
+  // BUREAU ÉDITORIAL
   // ============================================================
+  const DESTINATIONS = ['Découverte','Exclusivité abonnement','Passerelle','Librairie'];
+  const NIVEAUX = ['V1','V1.5','V2'];
+  const BE_TABS = [
+    { key:'catalogue', label:'Catalogue' },
+    { key:'destinations', label:'Destinations' },
+    { key:'niveau', label:'Niveau éditorial cible' },
+    { key:'pipeline', label:'Pipeline éditorial' },
+    { key:'a-decider', label:'À décider' },
+  ];
+  let beData = [];
+
+  async function renderBureauEditorial(){
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('oeuvres').select('id, titre, statut, destination_editoriale, niveau_editorial_cible, statut_editorial_actuel, date_publication_prevue, sagas(nom)').eq('archive', false);
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    beData = data;
+
+    const parDestination = {};
+    DESTINATIONS.forEach(d => parDestination[d] = 0);
+    let sansDestination = 0;
+    data.forEach(o => o.destination_editoriale ? (parDestination[o.destination_editoriale] = (parDestination[o.destination_editoriale]||0)+1) : sansDestination++);
+
+    content.innerHTML = `
+      <h2 style="margin-bottom:6px;">Bureau éditorial</h2>
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:20px;">Le cockpit de ton catalogue et de tes décisions éditoriales.</p>
+
+      <div class="stat-cards-row" style="grid-template-columns:repeat(6,1fr);">
+        <div class="stat-card"><h3>Œuvres au total</h3><div class="stat-big">${data.length}</div></div>
+        ${DESTINATIONS.map(d => `<div class="stat-card"><h3>${d}</h3><div class="stat-big" style="font-size:1.4rem;">${parDestination[d]}</div></div>`).join('')}
+        <div class="stat-card"><h3>À décider</h3><div class="stat-big" style="font-size:1.4rem;">${sansDestination}</div></div>
+      </div>
+
+      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; flex-wrap:wrap;">
+        ${BE_TABS.map(t => `<button id="betab-${t.key}" onclick="showBeTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+      </div>
+      <div id="be-tab-content"></div>
+    `;
+    showBeTab('catalogue');
+  }
+
+  function showBeTab(key){
+    document.querySelectorAll('[id^="betab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    const btn = document.getElementById('betab-'+key);
+    if (btn) { btn.style.color='var(--accent)'; btn.style.borderBottomColor='var(--accent)'; btn.style.fontWeight='500'; }
+    const zone = document.getElementById('be-tab-content');
+    if (key === 'catalogue') renderBeCatalogue(zone);
+    if (key === 'destinations') renderBeGroupe(zone, 'destination_editoriale', DESTINATIONS);
+    if (key === 'niveau') renderBeGroupe(zone, 'niveau_editorial_cible', NIVEAUX);
+    if (key === 'pipeline') renderBeGroupe(zone, 'statut_editorial_actuel', ['V1 à écrire','V1 en cours','V1 terminée','V1.5 à faire','V1.5 en cours','V1.5 terminée','V2 à écrire','V2 en cours','V2 terminée']);
+    if (key === 'a-decider') renderBeADecider(zone);
+  }
+
+  function renderBeCatalogue(zone){
+    zone.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead><tr style="text-align:left; color:var(--text-dim); border-bottom:1px solid var(--line);">
+          <th style="padding:8px;">Œuvre</th><th style="padding:8px;">Saga</th><th style="padding:8px;">Manuscrit</th>
+          <th style="padding:8px;">Destination</th><th style="padding:8px;">Cible</th><th style="padding:8px;">Éditorial actuel</th><th style="padding:8px;">Publication prévue</th>
+        </tr></thead>
+        <tbody>
+          ${beData.map(o => `
+            <tr style="border-bottom:1px solid var(--line); cursor:pointer;" onclick="openOeuvreDetail('${o.id}')">
+              <td style="padding:10px 8px;">${o.titre}</td>
+              <td style="padding:10px 8px; color:var(--text-dim);">${o.sagas?.nom || '—'}</td>
+              <td style="padding:10px 8px;">${o.statut||'—'}</td>
+              <td style="padding:10px 8px;">${o.destination_editoriale||'—'}</td>
+              <td style="padding:10px 8px;">${o.niveau_editorial_cible||'—'}</td>
+              <td style="padding:10px 8px;">${o.statut_editorial_actuel||'—'}</td>
+              <td style="padding:10px 8px;">${o.date_publication_prevue||'—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderBeGroupe(zone, champ, valeurs){
+    const groupes = {}; valeurs.forEach(v => groupes[v]=[]);
+    const sansValeur = [];
+    beData.forEach(o => { const v = o[champ]; if (v && groupes[v]) groupes[v].push(o); else sansValeur.push(o); });
+    zone.innerHTML = `<div style="display:grid; grid-template-columns:repeat(${valeurs.length},1fr); gap:14px;">
+      ${valeurs.map(v => `<div><h3 style="font-size:12px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;">${v} (${groupes[v].length})</h3>
+        ${groupes[v].map(o => `<div class="panel" style="padding:10px 12px; cursor:pointer; margin-bottom:8px;" onclick="openOeuvreDetail('${o.id}')">${o.titre}</div>`).join('')}
+      </div>`).join('')}
+      ${sansValeur.length ? `<div><h3 style="font-size:12px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;">Non défini (${sansValeur.length})</h3>
+        ${sansValeur.map(o => `<div class="panel" style="padding:10px 12px; cursor:pointer; margin-bottom:8px;" onclick="openOeuvreDetail('${o.id}')">${o.titre}</div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }
+
+  async function renderBeADecider(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('oeuvres_a_decider').select('id, titre, raison_a_decider');
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune décision en attente — tout est à jour ✨</div>`; return; }
+    zone.innerHTML = data.map(o => `
+      <div class="info-line" style="cursor:pointer;" onclick="openOeuvreDetail('${o.id}')">
+        <span>${o.titre}</span><span style="color:var(--text-dim);">${o.raison_a_decider}</span>
+      </div>`).join('');
+  }
   async function renderRelecture(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
@@ -934,10 +1072,10 @@
   // ============================================================
   const OEUVRE_TABS = [
     { key:'apercu', label:'Aperçu', real:true },
-    { key:'ecriture', label:'Écriture', real:false },
-    { key:'personnages', label:'Personnages', real:false },
-    { key:'plans', label:'Plans', real:false },
-    { key:'relecture', label:'Relecture', real:false },
+    { key:'ecriture', label:'Écriture', real:true },
+    { key:'personnages', label:'Personnages', real:true },
+    { key:'plans', label:'Plans', real:true },
+    { key:'relecture', label:'Relecture', real:true },
     { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
     { key:'parametres', label:'Paramètres', real:true },
   ];
@@ -984,8 +1122,619 @@
       return;
     }
     if (key === 'apercu') await renderOeuvreApercu(zone);
+    if (key === 'ecriture') await renderOeuvreEcriture(zone);
+    if (key === 'personnages') await renderOeuvrePersonnages(zone);
+    if (key === 'plans') await renderOeuvrePlans(zone);
+    if (key === 'relecture') await renderOeuvreRelecture(zone);
     if (key === 'fiche-detaillee') await renderOeuvreFicheDetaillee(zone);
     if (key === 'parametres') await renderOeuvreParametres(zone);
+  }
+
+  // ============================================================
+  // Onglet Écriture d'une œuvre
+  // ============================================================
+  let ecritureChapitres = [];
+  let ecritureViewMode = 'table';
+
+  async function renderOeuvreEcriture(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ data: chaps }, { data: sessions }] = await Promise.all([
+      db().from('chapitres').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre'),
+      db().from('sessions_ecriture').select('mots_ecrits, date').eq('oeuvre_id', currentOeuvreId).order('date', { ascending:false }).limit(30),
+    ]);
+    ecritureChapitres = chaps || [];
+
+    const ecrits = ecritureChapitres.filter(c => (c.nb_mots||0) > 0).length;
+    const aEcrire = ecritureChapitres.length - ecrits;
+    const totalMots = ecritureChapitres.reduce((s,c)=>s+(c.nb_mots||0), 0);
+    const povCounts = {};
+    ecritureChapitres.forEach(c => { if (c.pov) povCounts[c.pov] = (povCounts[c.pov]||0)+1; });
+    const moyMotsJour = sessions?.length ? Math.round(sessions.reduce((s,r)=>s+(r.mots_ecrits||0),0)/sessions.length) : null;
+    const derniereSession = sessions?.[0]?.date;
+
+    zone.innerHTML = `
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Chapitres écrits</h3><div class="stat-big">${ecrits} / ${ecritureChapitres.length}</div><div style="font-size:12px; color:var(--text-dim);">${aEcrire} à écrire</div></div>
+        <div class="stat-card"><h3>Total mots</h3><div class="stat-big">${totalMots.toLocaleString('fr-FR')}</div></div>
+        <div class="stat-card"><h3>Mots / jour (moy.)</h3><div class="stat-big">${moyMotsJour ?? '—'}</div><div style="font-size:12px; color:var(--text-dim);">${derniereSession ? 'Dernière session : '+derniereSession : 'Aucune session enregistrée'}</div></div>
+        <div class="stat-card"><h3>POV utilisés</h3>${Object.entries(povCounts).map(([k,v])=>`<div class="info-line" style="padding:3px 0; border:none;"><span>${k}</span><span>${v}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">—</div>'}</div>
+      </div>
+
+      <div class="head-row">
+        <div class="row2" style="grid-template-columns:auto auto auto; gap:8px;">
+          <button class="btn-secondary" id="ev-table" onclick="setEcritureView('table')">Table</button>
+          <button class="btn-secondary" id="ev-cards" onclick="setEcritureView('cards')">Cartes</button>
+          <button class="btn-secondary" id="ev-kanban" onclick="setEcritureView('kanban')">Kanban</button>
+        </div>
+        <button class="btn-primary" onclick="openChapitreModal()">+ Nouveau chapitre</button>
+      </div>
+
+      <div id="ecriture-view-zone"></div>
+    `;
+    setEcritureView(ecritureViewMode);
+  }
+
+  function setEcritureView(mode){
+    ecritureViewMode = mode;
+    ['table','cards','kanban'].forEach(m => { const b = document.getElementById('ev-'+m); if (b) b.style.background = (m===mode) ? 'var(--accent)' : 'var(--bg-2)'; if (b) b.style.color = (m===mode) ? 'var(--bg)' : 'var(--text)'; });
+    const zone = document.getElementById('ecriture-view-zone');
+    if (!zone) return;
+    if (mode === 'table') zone.innerHTML = renderChapitresTable(ecritureChapitres);
+    if (mode === 'cards') zone.innerHTML = renderChapitresCards(ecritureChapitres);
+    if (mode === 'kanban') zone.innerHTML = renderChapitresKanban(ecritureChapitres);
+  }
+
+  function renderChapitresTable(chaps){
+    if (!chaps.length) return `<div class="empty">Aucun chapitre pour l'instant.</div>`;
+    return `<table class="ch-table"><thead><tr><th>N°</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th><th>Mots</th><th>Objectif</th><th></th></tr></thead><tbody>
+      ${chaps.map(c => `<tr onclick="openChapitreModal('${c.id}')">
+        <td>${c.numero ?? '—'}</td><td>${c.titre}</td><td>${c.acte||'—'}</td><td>${c.pov||'—'}</td>
+        <td><span class="etat-pill">${c.etat||'—'}</span></td><td>${c.nb_mots||0}</td><td>${c.objectif_mots||'—'}</td>
+        <td onclick="event.stopPropagation(); openMemoPanel('${c.id}','${(c.titre||'').replace(/'/g,"\\'")}')" style="color:var(--text-dim); cursor:pointer;">💬</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+  function renderChapitresCards(chaps){
+    if (!chaps.length) return `<div class="empty">Aucun chapitre pour l'instant.</div>`;
+    return `<div class="cards-grid">${chaps.map(c => `
+      <div class="ch-card" onclick="openChapitreModal('${c.id}')">
+        <div style="font-size:11px; color:var(--text-dim);">N°${c.numero ?? '—'} · ${c.acte||'—'}</div>
+        <div style="font-size:14px; font-weight:500; margin:4px 0 8px;">${c.titre}</div>
+        <span class="etat-pill">${c.etat||'—'}</span>
+        <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">POV ${c.pov||'—'} · ${c.nb_mots||0} mots</div>
+      </div>`).join('')}</div>`;
+  }
+  function renderChapitresKanban(chaps){
+    const etats = [...new Set(chaps.map(c=>c.etat).filter(Boolean))];
+    if (!etats.length) return `<div class="empty">Aucun chapitre pour l'instant.</div>`;
+    return `<div class="kanban-row">${etats.map(e => `
+      <div class="kanban-col"><h4>${e} (${chaps.filter(c=>c.etat===e).length})</h4>
+        ${chaps.filter(c=>c.etat===e).map(c => `<div class="kanban-card" onclick="openChapitreModal('${c.id}')">${c.titre}<div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${c.acte||''} · ${c.nb_mots||0} mots</div></div>`).join('')}
+      </div>`).join('')}</div>`;
+  }
+
+  function chapitreModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-chapitre-overlay" onclick="if(event.target===this) closeChapitreModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-chapitre-title">Nouveau chapitre</h2><button onclick="closeChapitreModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Titre</label><input id="cf-titre"></div>
+            <div class="row2">
+              <div><label>Numéro</label><input type="number" id="cf-numero"></div>
+              <div><label>Acte</label><input id="cf-acte"></div>
+            </div>
+            <div class="row2">
+              <div><label>POV</label><input id="cf-pov"></div>
+              <div><label>Statut</label><select id="cf-etat"><option>à écrire</option><option>en cours</option><option>à relire</option><option>relu</option><option>écrit</option></select></div>
+            </div>
+            <div class="row2">
+              <div><label>Mots écrits</label><input type="number" id="cf-mots"></div>
+              <div><label>Objectif de mots</label><input type="number" id="cf-objectif"></div>
+            </div>
+            <div><label>Résumé</label><textarea id="cf-resume"></textarea></div>
+            <div><label>Plan</label><textarea id="cf-plan"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            ${'<button class="btn-secondary" id="cf-delete" style="margin-right:auto; display:none; color:#e88;" onclick="deleteChapitre()">Supprimer</button>'}
+            <button class="btn-secondary" onclick="closeChapitreModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveChapitre()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingChapitreId = null;
+  async function openChapitreModal(id){
+    editingChapitreId = id || null;
+    document.getElementById('modal-chapitre-title').textContent = id ? 'Modifier le chapitre' : 'Nouveau chapitre';
+    document.getElementById('cf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('cf-titre').value=''; document.getElementById('cf-numero').value='';
+    document.getElementById('cf-acte').value=''; document.getElementById('cf-pov').value='';
+    document.getElementById('cf-etat').value='à écrire'; document.getElementById('cf-mots').value='';
+    document.getElementById('cf-objectif').value=''; document.getElementById('cf-resume').value=''; document.getElementById('cf-plan').value='';
+    if (id) {
+      const c = ecritureChapitres.find(x=>x.id===id);
+      if (c) {
+        document.getElementById('cf-titre').value=c.titre||''; document.getElementById('cf-numero').value=c.numero||'';
+        document.getElementById('cf-acte').value=c.acte||''; document.getElementById('cf-pov').value=c.pov||'';
+        document.getElementById('cf-etat').value=c.etat||'à écrire'; document.getElementById('cf-mots').value=c.nb_mots||'';
+        document.getElementById('cf-objectif').value=c.objectif_mots||''; document.getElementById('cf-resume').value=c.resume||''; document.getElementById('cf-plan').value=c.plan||'';
+      }
+    }
+    document.getElementById('modal-chapitre-overlay').classList.add('open');
+  }
+  function closeChapitreModal(){ document.getElementById('modal-chapitre-overlay').classList.remove('open'); }
+  async function saveChapitre(){
+    const maxOrdre = ecritureChapitres.reduce((m,c)=>Math.max(m, c.ordre||0), 0);
+    const payload = {
+      titre: document.getElementById('cf-titre').value.trim()||'Sans titre',
+      numero: parseInt(document.getElementById('cf-numero').value)||null,
+      acte: document.getElementById('cf-acte').value.trim(),
+      pov: document.getElementById('cf-pov').value.trim(),
+      etat: document.getElementById('cf-etat').value,
+      nb_mots: parseInt(document.getElementById('cf-mots').value)||0,
+      objectif_mots: parseInt(document.getElementById('cf-objectif').value)||null,
+      resume: document.getElementById('cf-resume').value.trim(),
+      plan: document.getElementById('cf-plan').value.trim(),
+    };
+    let error;
+    if (editingChapitreId) ({ error } = await db().from('chapitres').update(payload).eq('id', editingChapitreId));
+    else { payload.user_id = currentUser.id; payload.oeuvre_id = currentOeuvreId; payload.ordre = maxOrdre + 1; ({ error } = await db().from('chapitres').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeChapitreModal();
+    await renderOeuvreEcriture(document.getElementById('oeuvre-tab-content'));
+  }
+  async function deleteChapitre(){
+    if (!confirm('Supprimer ce chapitre ?')) return;
+    const { error } = await db().from('chapitres').delete().eq('id', editingChapitreId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeChapitreModal();
+    await renderOeuvreEcriture(document.getElementById('oeuvre-tab-content'));
+  }
+
+  // ---- Panneau de notes (chapitre_memos) ----
+  let currentMemoChapitreId = null;
+  async function openMemoPanel(chapitreId, titre){
+    currentMemoChapitreId = chapitreId;
+    document.getElementById('memo-panel-title').textContent = 'Notes — ' + titre;
+    document.getElementById('memo-overlay').classList.add('open');
+    document.getElementById('memo-panel').classList.add('open');
+    await loadMemos();
+  }
+  function closeMemoPanel(){
+    document.getElementById('memo-overlay').classList.remove('open');
+    document.getElementById('memo-panel').classList.remove('open');
+  }
+  async function loadMemos(){
+    const { data, error } = await db().from('chapitre_memos').select('*').eq('chapitre_id', currentMemoChapitreId).order('created_at', { ascending:false });
+    const list = document.getElementById('memo-list');
+    if (error) { list.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    list.innerHTML = data.length ? data.map(m => `<div class="memo-item"><div class="memo-date">${new Date(m.created_at).toLocaleDateString('fr-FR')}</div>${m.contenu}</div>`).join('') : `<div style="font-size:13px; color:var(--text-dim);">Aucune note pour ce chapitre.</div>`;
+  }
+  async function addMemo(){
+    const val = document.getElementById('memo-new').value.trim();
+    if (!val) return;
+    const { error } = await db().from('chapitre_memos').insert({ chapitre_id: currentMemoChapitreId, contenu: val });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    document.getElementById('memo-new').value = '';
+    await loadMemos();
+  }
+
+  // ============================================================
+  // Onglet Personnages d'une œuvre
+  // ============================================================
+  let opoLinks = [];
+
+  async function renderOeuvrePersonnages(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('personnages_oeuvres').select('personnage_id, role, importance, pov, faction, etat, personnages(id, nom, favori)').eq('oeuvre_id', currentOeuvreId);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    opoLinks = data;
+
+    const total = data.length;
+    const principaux = data.filter(d=>d.importance==='principal').length;
+    const secondaires = data.filter(d=>d.importance==='secondaire').length;
+    const figurations = data.filter(d=>d.importance==='figuration').length;
+    const povCount = data.filter(d=>d.pov).length;
+    const parFaction = {};
+    data.forEach(d => { if (d.faction) parFaction[d.faction] = (parFaction[d.faction]||0)+1; });
+
+    let autresOeuvres = 0;
+    if (data.length) {
+      const ids = data.map(d=>d.personnage_id);
+      const { data: ailleurs } = await db().from('personnages_oeuvres').select('personnage_id, oeuvre_id').in('personnage_id', ids).neq('oeuvre_id', currentOeuvreId);
+      autresOeuvres = new Set((ailleurs||[]).map(a=>a.personnage_id)).size;
+    }
+
+    zone.innerHTML = `
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Résumé</h3><div class="stat-big">${total}</div><div style="font-size:12px; color:var(--text-dim);">${principaux} principaux · ${secondaires} secondaires · ${figurations} figurations</div></div>
+        <div class="stat-card"><h3>POV utilisés</h3><div class="stat-big">${povCount}</div></div>
+        <div class="stat-card"><h3>Répartition par faction</h3>${Object.entries(parFaction).map(([k,v])=>`<div class="info-line" style="padding:3px 0; border:none;"><span>${k}</span><span>${v}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">—</div>'}</div>
+        <div class="stat-card"><h3>Autres œuvres</h3><div class="stat-big">${autresOeuvres}</div><div style="font-size:12px; color:var(--text-dim);">personnages présents ailleurs</div></div>
+      </div>
+
+      <div class="head-row">
+        <input class="search-input" placeholder="Rechercher..." style="max-width:240px;">
+        <button class="btn-primary" onclick="openPersonnageOeuvreModal()">+ Ajouter un personnage</button>
+      </div>
+
+      ${!total ? `<div class="empty">Aucun personnage lié à cette œuvre pour l'instant.</div>` : `
+      <div class="gallery">${data.map(d => `
+        <div class="char-card" onclick="openPersonnageOeuvreModal('${d.personnage_id}')">
+          ${d.personnages?.favori ? '<span class="fav-heart">♥</span>' : ''}
+          ${d.pov ? `<span style="position:absolute; top:8px; left:10px; font-size:10px; padding:2px 8px; border-radius:20px; background:var(--accent); color:var(--bg);">POV ${d.pov}</span>` : ''}
+          <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(d.personnages?.nom)}</div>
+          <div class="char-name">${d.personnages?.nom || '—'}</div>
+          <div class="char-role">${d.role || '—'}${d.faction ? ' · '+d.faction : ''}</div>
+        </div>`).join('')}</div>`}
+    `;
+  }
+
+  function personnageOeuvreModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-po-overlay" onclick="if(event.target===this) closePersonnageOeuvreModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-po-title">Ajouter un personnage</h2><button onclick="closePersonnageOeuvreModal()">✕</button></div>
+          <div class="modal-body">
+            <div id="po-select-zone">
+              <label>Personnage</label>
+              <select id="po-personnage-select"><option value="">— Sélectionner —</option><option value="__new__">+ Créer un nouveau personnage</option></select>
+              <input id="po-nouveau-nom" placeholder="Nom du nouveau personnage" style="display:none; margin-top:8px;">
+            </div>
+            <div class="row2" style="margin-top:12px;">
+              <div><label>Rôle narratif</label><input id="po-role" placeholder="Héroïne, Antagoniste..."></div>
+              <div><label>Importance</label><select id="po-importance"><option value="">—</option><option value="principal">Principal</option><option value="secondaire">Secondaire</option><option value="figuration">Figuration</option></select></div>
+            </div>
+            <div class="row2" style="margin-top:12px;">
+              <div><label>POV</label><select id="po-pov"><option value="">Aucun</option><option value="principal">Principal</option><option value="secondaire">Secondaire</option></select></div>
+              <div><label>Faction</label><input id="po-faction"></div>
+            </div>
+            <div style="margin-top:12px;"><label>État (dans ce tome)</label><input id="po-etat" placeholder="vivant, mort, blessé..."></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" id="po-delete" style="margin-right:auto; display:none; color:#e88;" onclick="removePersonnageOeuvre()">Retirer de cette œuvre</button>
+            <button class="btn-secondary" onclick="closePersonnageOeuvreModal()">Annuler</button>
+            <button class="btn-primary" onclick="savePersonnageOeuvre()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingPoPersonnageId = null;
+  async function openPersonnageOeuvreModal(personnageId){
+    editingPoPersonnageId = personnageId || null;
+    document.getElementById('modal-po-title').textContent = personnageId ? 'Modifier le lien' : 'Ajouter un personnage';
+    document.getElementById('po-delete').style.display = personnageId ? 'block' : 'none';
+
+    const { data: allPersonnages } = await db().from('personnages').select('id, nom').order('nom');
+    const sel = document.getElementById('po-personnage-select');
+    sel.innerHTML = '<option value="">— Sélectionner —</option>' + (allPersonnages||[]).map(p=>`<option value="${p.id}">${p.nom}</option>`).join('') + '<option value="__new__">+ Créer un nouveau personnage</option>';
+    document.getElementById('po-nouveau-nom').style.display = 'none';
+    document.getElementById('po-role').value=''; document.getElementById('po-importance').value='';
+    document.getElementById('po-pov').value=''; document.getElementById('po-faction').value=''; document.getElementById('po-etat').value='';
+
+    if (personnageId) {
+      sel.value = personnageId; sel.disabled = true;
+      document.getElementById('po-select-zone').style.opacity = '0.6';
+      const link = opoLinks.find(l=>l.personnage_id===personnageId);
+      if (link) {
+        document.getElementById('po-role').value = link.role||'';
+        document.getElementById('po-importance').value = link.importance||'';
+        document.getElementById('po-pov').value = link.pov||'';
+        document.getElementById('po-faction').value = link.faction||'';
+        document.getElementById('po-etat').value = link.etat||'';
+      }
+    } else {
+      sel.disabled = false;
+      document.getElementById('po-select-zone').style.opacity = '1';
+    }
+    document.getElementById('modal-po-overlay').classList.add('open');
+  }
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'po-personnage-select') {
+      document.getElementById('po-nouveau-nom').style.display = (e.target.value === '__new__') ? 'block' : 'none';
+    }
+  });
+  function closePersonnageOeuvreModal(){ document.getElementById('modal-po-overlay').classList.remove('open'); }
+  async function savePersonnageOeuvre(){
+    let personnageId = editingPoPersonnageId;
+    if (!personnageId) {
+      const selVal = document.getElementById('po-personnage-select').value;
+      if (!selVal) { alert('Choisis un personnage.'); return; }
+      if (selVal === '__new__') {
+        const nom = document.getElementById('po-nouveau-nom').value.trim();
+        if (!nom) { alert('Donne un nom au nouveau personnage.'); return; }
+        const { data, error } = await db().from('personnages').insert({ user_id: currentUser.id, nom }).select('id').single();
+        if (error) { alert('Erreur : ' + error.message); return; }
+        personnageId = data.id;
+      } else {
+        personnageId = selVal;
+      }
+    }
+    const linkPayload = {
+      role: document.getElementById('po-role').value.trim(),
+      importance: document.getElementById('po-importance').value || null,
+      pov: document.getElementById('po-pov').value || null,
+      faction: document.getElementById('po-faction').value.trim(),
+      etat: document.getElementById('po-etat').value.trim(),
+    };
+    let error;
+    if (editingPoPersonnageId) {
+      ({ error } = await db().from('personnages_oeuvres').update(linkPayload).eq('oeuvre_id', currentOeuvreId).eq('personnage_id', personnageId));
+    } else {
+      ({ error } = await db().from('personnages_oeuvres').insert({ oeuvre_id: currentOeuvreId, personnage_id: personnageId, ...linkPayload }));
+    }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePersonnageOeuvreModal();
+    await renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'));
+  }
+  async function removePersonnageOeuvre(){
+    if (!confirm('Retirer ce personnage de cette œuvre ? (la fiche du personnage elle-même est conservée)')) return;
+    const { error } = await db().from('personnages_oeuvres').delete().eq('oeuvre_id', currentOeuvreId).eq('personnage_id', editingPoPersonnageId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePersonnageOeuvreModal();
+    await renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'));
+  }
+
+  // ============================================================
+  // Onglet Plans d'une œuvre
+  // ============================================================
+  let plansData = [];
+  let plansGroupBy = 'acte';
+  let plansView = 'table';
+
+  async function renderOeuvrePlans(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ data: plans, error }, { data: notes }] = await Promise.all([
+      db().from('plans').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre'),
+      db().from('oeuvre_notes').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false }),
+    ]);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    plansData = plans;
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="head-row">
+            <div class="row2" style="grid-template-columns:auto auto auto; gap:8px;">
+              <button class="btn-secondary" id="pv-table" onclick="setPlansView('table')">Table</button>
+              <button class="btn-secondary" id="pv-kanban" onclick="setPlansView('kanban')">Kanban</button>
+              <select class="search-input" id="plans-groupby" onchange="onPlansGroupByChange()">
+                <option value="acte" ${plansGroupBy==='acte'?'selected':''}>Grouper par acte</option>
+                <option value="type" ${plansGroupBy==='type'?'selected':''}>Grouper par type</option>
+                <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button>
+          </div>
+          <div id="plans-view-zone"></div>
+        </div>
+        <div>
+          <div class="panel">
+            <h2>Notes de l'autrice</h2>
+            <textarea id="on-new" placeholder="Notes globales sur la structure, les thèmes, les enjeux..."></textarea>
+            <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="addOeuvreNote()">Ajouter</button>
+            <div style="margin-top:14px;">${(notes||[]).map(n => `<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">Aucune note pour l\\'instant.</div>'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    setPlansView(plansView);
+  }
+
+  function onPlansGroupByChange(){ plansGroupBy = document.getElementById('plans-groupby').value; setPlansView(plansView); }
+  function setPlansView(mode){
+    plansView = mode;
+    ['table','kanban'].forEach(m => { const b = document.getElementById('pv-'+m); if (b) { b.style.background = (m===mode)?'var(--accent)':'var(--bg-2)'; b.style.color = (m===mode)?'var(--bg)':'var(--text)'; } });
+    const zone = document.getElementById('plans-view-zone');
+    if (!zone) return;
+    zone.innerHTML = mode === 'table' ? renderPlansTable(plansData) : renderPlansKanban(plansData, plansGroupBy);
+  }
+  function renderPlansTable(plans){
+    if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
+    return `<table class="ch-table"><thead><tr><th>Type</th><th>Titre</th><th>Acte</th><th>Statut</th></tr></thead><tbody>
+      ${plans.map(p => `<tr onclick="openPlanModal('${p.id}')"><td>${p.type}</td><td>${p.titre}</td><td>${p.acte||'—'}</td><td><span class="etat-pill">${p.statut||'—'}</span></td></tr>`).join('')}
+    </tbody></table>`;
+  }
+  function renderPlansKanban(plans, groupBy){
+    const groupes = [...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];
+    if (!groupes.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
+    return `<div class="kanban-row">${groupes.map(g => `
+      <div class="kanban-col"><h4>${g} (${plans.filter(p=>p[groupBy]===g).length})</h4>
+        ${plans.filter(p=>p[groupBy]===g).map(p => `<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px; color:var(--text-dim);">${p.type}</div>${p.titre}</div>`).join('')}
+      </div>`).join('')}</div>`;
+  }
+
+  function planModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-plan-overlay" onclick="if(event.target===this) closePlanModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-plan-title">Nouveau plan</h2><button onclick="closePlanModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Type</label><select id="pf-type"><option>Intrigue principale</option><option>Arc personnage</option><option>Sous-intrigue</option><option>Romance</option></select></div>
+            <div><label>Titre</label><input id="pf-titre"></div>
+            <div class="row2">
+              <div><label>Acte</label><input id="pf-acte"></div>
+              <div><label>Statut</label><input id="pf-statut" placeholder="En cours, À venir..."></div>
+            </div>
+            <div><label>Transformation / résumé</label><textarea id="pf-transformation"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" id="pf-delete" style="margin-right:auto; display:none; color:#e88;" onclick="deletePlan()">Supprimer</button>
+            <button class="btn-secondary" onclick="closePlanModal()">Annuler</button>
+            <button class="btn-primary" onclick="savePlan()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingPlanId = null;
+  function openPlanModal(id){
+    editingPlanId = id || null;
+    document.getElementById('modal-plan-title').textContent = id ? 'Modifier le plan' : 'Nouveau plan';
+    document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('pf-type').value='Intrigue principale'; document.getElementById('pf-titre').value='';
+    document.getElementById('pf-acte').value=''; document.getElementById('pf-statut').value=''; document.getElementById('pf-transformation').value='';
+    if (id) {
+      const p = plansData.find(x=>x.id===id);
+      if (p) { document.getElementById('pf-type').value=p.type; document.getElementById('pf-titre').value=p.titre||''; document.getElementById('pf-acte').value=p.acte||''; document.getElementById('pf-statut').value=p.statut||''; document.getElementById('pf-transformation').value=p.transformation||''; }
+    }
+    document.getElementById('modal-plan-overlay').classList.add('open');
+  }
+  function closePlanModal(){ document.getElementById('modal-plan-overlay').classList.remove('open'); }
+  async function savePlan(){
+    const payload = { type: document.getElementById('pf-type').value, titre: document.getElementById('pf-titre').value.trim()||'Sans titre', acte: document.getElementById('pf-acte').value.trim(), statut: document.getElementById('pf-statut').value.trim(), transformation: document.getElementById('pf-transformation').value.trim() };
+    let error;
+    if (editingPlanId) ({ error } = await db().from('plans').update(payload).eq('id', editingPlanId));
+    else { payload.user_id = currentUser.id; payload.oeuvre_id = currentOeuvreId; ({ error } = await db().from('plans').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePlanModal();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+  async function deletePlan(){
+    if (!confirm('Supprimer ce plan ?')) return;
+    const { error } = await db().from('plans').delete().eq('id', editingPlanId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePlanModal();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+  async function addOeuvreNote(){
+    const val = document.getElementById('on-new').value.trim();
+    if (!val) return;
+    const { error } = await db().from('oeuvre_notes').insert({ oeuvre_id: currentOeuvreId, contenu: val });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+
+  // ============================================================
+  // Onglet Relecture d'une œuvre
+  // ============================================================
+  let currentRelectureId = null;
+  let relectureChapitres = [];
+
+  async function renderOeuvreRelecture(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    let { data: relectures } = await db().from('relectures').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false });
+    if (!relectures || !relectures.length) {
+      zone.innerHTML = `<div class="empty">Aucune relecture démarrée pour cette œuvre.<br><br><button class="btn-primary" onclick="startRelecture()">Démarrer une relecture</button></div>`;
+      return;
+    }
+    const relecture = relectures[0];
+    currentRelectureId = relecture.id;
+
+    const [{ data: chaps }, { data: corrections }] = await Promise.all([
+      db().from('chapitres').select('id, numero, titre').eq('oeuvre_id', currentOeuvreId).order('ordre'),
+      db().from('corrections').select('*').eq('relecture_id', currentRelectureId).order('created_at', { ascending:false }),
+    ]);
+    relectureChapitres = chaps || [];
+
+    const corrByChapitre = {};
+    (corrections||[]).forEach(c => { if (c.chapitre_id) corrByChapitre[c.chapitre_id] = c; });
+    const relus = (corrections||[]).filter(c=>c.resolu).length;
+    const enCours = (corrections||[]).filter(c=>!c.resolu && c.etat==='en cours').length;
+    const bloque = (corrections||[]).filter(c=>c.etat==='bloqué').length;
+    const total = relectureChapitres.length;
+    const pct = total ? Math.round(relus/total*100) : 0;
+
+    zone.innerHTML = `
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Type de relecture</h3><div class="stat-big" style="font-size:1.3rem;">${relecture.type||'—'}</div><div style="font-size:12px; color:var(--text-dim);">${relecture.statut||''}</div></div>
+        <div class="stat-card"><h3>Chapitres relus</h3><div class="stat-big">${relus} / ${total}</div></div>
+        <div class="stat-card"><h3>En cours</h3><div class="stat-big">${enCours}</div></div>
+        <div class="stat-card"><h3>Bloqués</h3><div class="stat-big">${bloque}</div></div>
+      </div>
+      <div class="panel">
+        <h2>Avancement</h2>
+        <div class="progress-bar-outer" style="max-width:none;"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
+        <div style="font-size:12px; color:var(--text-dim); margin-top:6px;">${pct}%</div>
+      </div>
+
+      <div class="row2" style="grid-template-columns:1.4fr 1fr; gap:20px; align-items:start;">
+        <div class="panel">
+          <h2>Suivi des chapitres</h2>
+          <table class="ch-table"><thead><tr><th>N°</th><th>Titre</th><th>Statut</th><th></th></tr></thead><tbody>
+            ${relectureChapitres.map(c => {
+              const cor = corrByChapitre[c.id];
+              return `<tr onclick="openCorrectionModal('${c.id}', '${(c.titre||'').replace(/'/g,"\\'")}')">
+                <td>${c.numero ?? '—'}</td><td>${c.titre}</td>
+                <td><span class="etat-pill">${cor ? (cor.resolu?'Relu':cor.etat||'—') : 'À relire'}</span></td>
+                <td style="color:var(--text-dim);">${cor?.point_a_corriger ? '📝' : ''}</td>
+              </tr>`;
+            }).join('')}
+          </tbody></table>
+        </div>
+        <div class="panel">
+          <h2>Journal des corrections</h2>
+          ${(corrections||[]).length ? corrections.slice(0,10).map(c => `
+            <div class="memo-item">
+              <div class="memo-date">${new Date(c.created_at).toLocaleDateString('fr-FR')} — ${c.resolu?'✅ Résolu':'⚠️ '+ (c.etat||'à traiter')}</div>
+              ${c.point_a_corriger || '—'}
+            </div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune correction enregistrée.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  async function startRelecture(){
+    const type = prompt('Type de relecture (ex : Structurelle, Orthographe & grammaire) ?', 'Structurelle');
+    if (!type) return;
+    const { error } = await db().from('relectures').insert({ user_id: currentUser.id, oeuvre_id: currentOeuvreId, type, statut: 'en cours', date_debut: new Date().toISOString().slice(0,10) });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'));
+  }
+
+  function correctionModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-correction-overlay" onclick="if(event.target===this) closeCorrectionModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-correction-title">Correction</h2><button onclick="closeCorrectionModal()">✕</button></div>
+          <div class="modal-body">
+            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+              ${['orthographe','continuite','repetition','mise_en_page','longueur'].map(c => `
+                <label style="display:flex; align-items:center; gap:6px; margin:0; font-size:13px; color:var(--text);"><input type="checkbox" id="cor-${c}" style="width:auto;"> ${c.replace('_',' ')}</label>
+              `).join('')}
+            </div>
+            <div><label>Point à corriger</label><textarea id="cor-point"></textarea></div>
+            <div class="row2">
+              <div><label>Statut</label><select id="cor-etat"><option>à relire</option><option>en cours</option><option>bloqué</option></select></div>
+              <div><label>Durée (minutes)</label><input type="number" id="cor-duree"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="cor-resolu" style="width:auto;"><label style="margin:0;" for="cor-resolu">Résolu / chapitre relu</label></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" onclick="closeCorrectionModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveCorrection()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let currentCorrectionChapitreId = null;
+  function openCorrectionModal(chapitreId, titre){
+    currentCorrectionChapitreId = chapitreId;
+    document.getElementById('modal-correction-title').textContent = 'Correction — ' + titre;
+    ['orthographe','continuite','repetition','mise_en_page','longueur'].forEach(c => document.getElementById('cor-'+c).checked = false);
+    document.getElementById('cor-point').value=''; document.getElementById('cor-etat').value='à relire';
+    document.getElementById('cor-duree').value=''; document.getElementById('cor-resolu').checked=false;
+    document.getElementById('modal-correction-overlay').classList.add('open');
+  }
+  function closeCorrectionModal(){ document.getElementById('modal-correction-overlay').classList.remove('open'); }
+  async function saveCorrection(){
+    const payload = {
+      relecture_id: currentRelectureId,
+      chapitre_id: currentCorrectionChapitreId,
+      orthographe: document.getElementById('cor-orthographe').checked,
+      continuite: document.getElementById('cor-continuite').checked,
+      repetition: document.getElementById('cor-repetition').checked,
+      mise_en_page: document.getElementById('cor-mise_en_page').checked,
+      longueur: document.getElementById('cor-longueur').checked,
+      point_a_corriger: document.getElementById('cor-point').value.trim(),
+      etat: document.getElementById('cor-etat').value,
+      duree_minutes: parseInt(document.getElementById('cor-duree').value)||null,
+      resolu: document.getElementById('cor-resolu').checked,
+    };
+    const { error } = await db().from('corrections').insert(payload);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeCorrectionModal();
+    await renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'));
   }
 
   async function renderOeuvreApercu(zone){
@@ -998,7 +1747,16 @@
 
   async function renderOeuvreFicheDetaillee(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data: o } = await db().from('oeuvres').select('pitch, genre, public_cible, a_propos, intentions, tient_a_coeur, tropes, enjeu_principal, tonalite, temporalite, lieu_principal, sous_genre').eq('id', currentOeuvreId).single();
+    const [{ data: o }, { data: plans }, { data: inspirations }] = await Promise.all([
+      db().from('oeuvres').select('pitch, genre, public_cible, a_propos, intentions, tient_a_coeur, tropes, enjeu_principal, enjeux_secondaires, tonalite, temporalite, lieu_principal, sous_genre, ambiance').eq('id', currentOeuvreId).single(),
+      db().from('plans').select('type, titre, acte').eq('oeuvre_id', currentOeuvreId).eq('type', 'Intrigue principale').order('ordre'),
+      db().from('oeuvre_inspirations').select('*').eq('oeuvre_id', currentOeuvreId).order('categorie, ordre'),
+    ]);
+    const ambiance = o.ambiance || {};
+    const axes = ['Sombre','Intense','Mystérieux','Romantique'];
+    const insByCategorie = {};
+    (inspirations||[]).forEach(i => { (insByCategorie[i.categorie] = insByCategorie[i.categorie]||[]).push(i); });
+
     zone.innerHTML = `
       <div class="panel">
         <h2>Pitch & intentions</h2>
@@ -1022,13 +1780,50 @@
         <select id="ofd-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(opt=>`<option ${o.public_cible===opt?'selected':''}>${opt}</option>`).join('')}</select>
         <label style="margin-top:10px;">Tropes / mots-clés (séparés par des virgules)</label>
         <input id="ofd-tropes" value="${(o.tropes||[]).join(', ')}">
-        <label style="margin-top:10px;">Enjeu principal</label><textarea id="ofd-enjeu">${o.enjeu_principal||''}</textarea>
+      </div>
+      <div class="panel">
+        <h2>Enjeux narratifs</h2>
+        <label>Enjeu principal</label><textarea id="ofd-enjeu">${o.enjeu_principal||''}</textarea>
+        <label style="margin-top:10px;">Enjeux secondaires (un par ligne)</label>
+        <textarea id="ofd-enjeux-secondaires" style="min-height:90px;">${(o.enjeux_secondaires||[]).join('\n')}</textarea>
+      </div>
+      <div class="panel">
+        <h2>Ambiance & tonalité</h2>
+        ${axes.map(a => `
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <span style="width:100px; font-size:13px; color:var(--text-dim);">${a}</span>
+            <input type="range" min="0" max="5" id="ofd-amb-${a}" value="${ambiance[a]||0}" style="flex:1;">
+          </div>`).join('')}
       </div>
       <button class="btn-primary" onclick="saveOeuvreFicheDetaillee()">Enregistrer</button>
+
+      <div class="panel" style="margin-top:20px;">
+        <h2>Structure narrative</h2>
+        ${plans?.length ? plans.map(p => `<div class="info-line"><span>${p.acte||'—'}</span><span>${p.titre}</span></div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune intrigue principale renseignée dans Plans pour l\\'instant — cette section se remplit automatiquement depuis là-bas.</div>'}
+      </div>
+
+      <div class="panel">
+        <div class="head-row" style="margin-bottom:10px;"><h2 style="margin:0;">Inspirations & références</h2><button class="btn-secondary" onclick="addInspiration()">+ Ajouter</button></div>
+        ${Object.keys(insByCategorie).length ? Object.entries(insByCategorie).map(([cat, items]) => `
+          <div style="margin-bottom:10px;"><div style="font-size:12px; color:var(--lavender); margin-bottom:4px;">${cat}</div>${items.map(i=>i.titre).join(', ')}</div>
+        `).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune inspiration renseignée.</div>'}
+      </div>
     `;
+  }
+  async function addInspiration(){
+    const categorie = prompt('Catégorie (ex : Séries / Livres, Films / Séries, Musique) ?');
+    if (!categorie) return;
+    const titre = prompt('Titre de la référence ?');
+    if (!titre) return;
+    const { error } = await db().from('oeuvre_inspirations').insert({ oeuvre_id: currentOeuvreId, categorie, titre });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvreFicheDetaillee(document.getElementById('oeuvre-tab-content'));
   }
   async function saveOeuvreFicheDetaillee(){
     const tropesRaw = document.getElementById('ofd-tropes').value.trim();
+    const enjeuxSecRaw = document.getElementById('ofd-enjeux-secondaires').value.trim();
+    const ambiance = {};
+    ['Sombre','Intense','Mystérieux','Romantique'].forEach(a => { ambiance[a] = parseInt(document.getElementById('ofd-amb-'+a).value) || 0; });
     const payload = {
       pitch: document.getElementById('ofd-pitch').value.trim(),
       a_propos: document.getElementById('ofd-a-propos').value.trim(),
@@ -1042,6 +1837,8 @@
       public_cible: document.getElementById('ofd-public').value || null,
       tropes: tropesRaw ? tropesRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
       enjeu_principal: document.getElementById('ofd-enjeu').value.trim(),
+      enjeux_secondaires: enjeuxSecRaw ? enjeuxSecRaw.split('\n').map(t=>t.trim()).filter(Boolean) : null,
+      ambiance,
     };
     const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
     if (error) { alert('Erreur : ' + error.message); return; }
@@ -1051,6 +1848,8 @@
   async function renderOeuvreParametres(zone){
     const { data: o } = await db().from('oeuvres').select('*').eq('id', currentOeuvreId).single();
     const { data: sagasList } = await db().from('sagas').select('id, nom').order('ordre');
+    const { data: statuts } = await db().from('statuts_chapitre').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre');
+    const { data: echeances } = await db().from('oeuvre_echeances').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre');
     let sousSagasHtml = '<option value="">—</option>';
     if (o.saga_id) {
       const { data: ssList } = await db().from('sous_sagas').select('id, nom').eq('saga_id', o.saga_id).order('ordre');
@@ -1102,10 +1901,38 @@
         <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Appliquer</button>
       </div>
       <div class="panel">
+        <h2>Statuts de chapitres personnalisés</h2>
+        ${(statuts||[]).map(s => `<div class="info-line"><span><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${s.couleur||'#888'}; margin-right:8px;"></span>${s.nom}</span><span style="color:var(--text-dim);">${s.description||''}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Aucun statut personnalisé — les statuts libres par défaut sont utilisés.</div>'}
+        <button class="btn-secondary" style="margin-top:10px;" onclick="addStatutChapitre()">+ Ajouter un statut</button>
+      </div>
+      <div class="panel">
+        <h2>Échéances versionnées</h2>
+        ${(echeances||[]).map(e => `<div class="info-line"><span>${e.version_label} — ${e.type||''}</span><span style="color:var(--text-dim);">${e.date_prevue||'—'} · ${e.statut||''}</span></div>`).join('') || '<div style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Aucune échéance versionnée pour l\\'instant.</div>'}
+        <button class="btn-secondary" style="margin-top:10px;" onclick="addEcheance()">+ Ajouter une échéance</button>
+      </div>
+      <div class="panel">
         <h2>Archivage</h2>
         <button class="btn-secondary" onclick="toggleArchiveOeuvre(${o.archive})">${o.archive ? 'Désarchiver' : 'Archiver cette œuvre'}</button>
       </div>
     `;
+  }
+  async function addStatutChapitre(){
+    const nom = prompt('Nom du statut (ex : Bloqué) ?');
+    if (!nom) return;
+    const couleur = prompt('Couleur (code hex, ex : #C9A227) ?', '#C9A227');
+    const description = prompt('Description ?', '');
+    const { error } = await db().from('statuts_chapitre').insert({ oeuvre_id: currentOeuvreId, nom, couleur, description });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
+  }
+  async function addEcheance(){
+    const version_label = prompt('Version (ex : V1.5) ?');
+    if (!version_label) return;
+    const type = prompt('Type (ex : Correction légère) ?', '');
+    const date_prevue = prompt('Date prévue (AAAA-MM-JJ) ?', '');
+    const { error } = await db().from('oeuvre_echeances').insert({ oeuvre_id: currentOeuvreId, version_label, type, date_prevue: date_prevue||null });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
   }
   async function onOpSagaChange(){
     const sagaId = document.getElementById('op-saga').value;
