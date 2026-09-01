@@ -203,7 +203,6 @@
       { key:'oeuvres', label:'Œuvres', real:true },
       { key:'sagas', label:'Sagas', real:true },
       { key:'personnages', label:'Personnages', real:true },
-      { key:'univers-lore', label:'Univers & Lore', real:false },
       { key:'poesie', label:'Poésie', real:true },
       { key:'chapitres', label:'Chapitres', real:false },
       { key:'plans', label:'Plans', real:false },
@@ -2654,15 +2653,20 @@
   }
 
   let recueilPoemesData = [];
+  let currentRecueilType = 'original';
   async function renderRecueilPoemes(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data, error } = await db().from('poemes').select('*').eq('recueil_id', currentRecueilId).order('ordre');
+    const [{ data, error }, { data: r }] = await Promise.all([
+      db().from('poemes').select('*').eq('recueil_id', currentRecueilId).order('ordre'),
+      db().from('recueils').select('type_recueil').eq('id', currentRecueilId).single(),
+    ]);
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     recueilPoemesData = data;
+    currentRecueilType = r?.type_recueil || 'original';
     zone.innerHTML = `
       <div class="head-row">
         <input class="search-input" id="poeme-search" placeholder="Rechercher un poème..." oninput="renderPoemesTable()">
-        <button class="btn-primary" onclick="openPoemeModal()">+ Nouveau poème</button>
+        <button class="btn-primary" onclick="openPoemeModal()">+ ${currentRecueilType==='anthologie' ? 'Compiler un poème' : 'Nouveau poème'}</button>
       </div>
       <div id="poemes-table-zone"></div>
     `;
@@ -2671,8 +2675,9 @@
   function renderPoemesTable(){
     const q = (document.getElementById('poeme-search').value||'').toLowerCase();
     const data = recueilPoemesData.filter(p=>p.titre.toLowerCase().includes(q));
-    document.getElementById('poemes-table-zone').innerHTML = data.length ? `<table class="ch-table"><thead><tr><th>#</th><th>Titre</th><th>Statut</th><th>Thème</th><th>Date d'écriture</th></tr></thead><tbody>
-      ${data.map(p => `<tr onclick="openPoemeModal('${p.id}')"><td>${p.numero??'—'}</td><td>${p.titre}</td><td><span class="etat-pill">${p.statut||'—'}</span></td><td>${p.theme_principal||'—'}</td><td>${p.date_ecriture||'—'}</td></tr>`).join('')}
+    const isAnth = currentRecueilType === 'anthologie';
+    document.getElementById('poemes-table-zone').innerHTML = data.length ? `<table class="ch-table"><thead><tr><th>#</th><th>Titre</th><th>Statut</th><th>Thème</th>${isAnth ? '<th>Emplacement</th>' : `<th>Date d'écriture</th>`}</tr></thead><tbody>
+      ${data.map(p => `<tr onclick="openPoemeModal('${p.id}')"><td>${p.numero??'—'}</td><td>${p.titre}</td><td><span class="etat-pill">${p.statut||'—'}</span></td><td>${p.theme_principal||'—'}</td><td>${isAnth ? (p.emplacement||'—') : (p.date_ecriture||'—')}</td></tr>`).join('')}
     </tbody></table>` : `<div class="empty">Aucun poème pour l'instant.</div>`;
   }
 
@@ -2692,6 +2697,15 @@
               <div><label>Date d'écriture</label><input type="date" id="pmf-date"></div>
             </div>
             <div><label>Mots-clés (séparés par des virgules)</label><input id="pmf-motscles"></div>
+            <div id="pmf-anthologie-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px; margin-top:6px;">
+              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Compilation (anthologie)</div>
+              <label>Recueil d'origine</label><select id="pmf-recueil-origine"><option value="">—</option></select>
+              <div class="row2" style="margin-top:10px;">
+                <div><label>Emplacement</label><select id="pmf-emplacement"><option value="">—</option><option>Début</option><option>Fin</option></select></div>
+                <div><label>Action</label><select id="pmf-action"><option value="">—</option><option>À corriger</option></select></div>
+              </div>
+              <label style="margin-top:10px;">Remarque</label><textarea id="pmf-remarque"></textarea>
+            </div>
             <div><label>Extrait</label><textarea id="pmf-extrait"></textarea></div>
             <div><label>Texte complet</label><textarea id="pmf-texte" style="min-height:140px;"></textarea></div>
           </div>
@@ -2704,14 +2718,23 @@
       </div>`;
   }
   let editingPoemeId = null;
-  function openPoemeModal(id){
+  async function openPoemeModal(id){
     editingPoemeId = id || null;
-    document.getElementById('modal-poeme-title').textContent = id ? 'Modifier le poème' : 'Nouveau poème';
+    document.getElementById('modal-poeme-title').textContent = id ? 'Modifier le poème' : (currentRecueilType==='anthologie' ? 'Compiler un poème' : 'Nouveau poème');
     document.getElementById('pmf-delete').style.display = id ? 'block' : 'none';
     document.getElementById('pmf-titre').value=''; document.getElementById('pmf-statut').value='à écrire';
     document.getElementById('pmf-selection').value=''; document.getElementById('pmf-theme').value='';
     document.getElementById('pmf-date').value=''; document.getElementById('pmf-motscles').value='';
     document.getElementById('pmf-extrait').value=''; document.getElementById('pmf-texte').value='';
+    document.getElementById('pmf-emplacement').value=''; document.getElementById('pmf-action').value=''; document.getElementById('pmf-remarque').value='';
+
+    const anthZone = document.getElementById('pmf-anthologie-zone');
+    anthZone.style.display = currentRecueilType === 'anthologie' ? 'block' : 'none';
+    if (currentRecueilType === 'anthologie') {
+      const { data: autresRecueils } = await db().from('recueils').select('id, titre').neq('id', currentRecueilId).order('titre');
+      document.getElementById('pmf-recueil-origine').innerHTML = '<option value="">—</option>' + (autresRecueils||[]).map(r=>`<option value="${r.id}">${r.titre}</option>`).join('');
+    }
+
     if (id) {
       const p = recueilPoemesData.find(x=>x.id===id);
       if (p) {
@@ -2719,6 +2742,10 @@
         document.getElementById('pmf-selection').value=p.statut_selection||''; document.getElementById('pmf-theme').value=p.theme_principal||'';
         document.getElementById('pmf-date').value=p.date_ecriture||''; document.getElementById('pmf-motscles').value=(p.mots_cles||[]).join(', ');
         document.getElementById('pmf-extrait').value=p.extrait||''; document.getElementById('pmf-texte').value=p.texte||'';
+        document.getElementById('pmf-recueil-origine').value = p.recueil_origine_id || '';
+        document.getElementById('pmf-emplacement').value = p.emplacement || '';
+        document.getElementById('pmf-action').value = (p.actions||[])[0] || '';
+        document.getElementById('pmf-remarque').value = p.remarque || '';
       }
     }
     document.getElementById('modal-poeme-overlay').classList.add('open');
@@ -2737,6 +2764,13 @@
       extrait: document.getElementById('pmf-extrait').value.trim(),
       texte: document.getElementById('pmf-texte').value.trim(),
     };
+    if (currentRecueilType === 'anthologie') {
+      payload.recueil_origine_id = document.getElementById('pmf-recueil-origine').value || null;
+      payload.emplacement = document.getElementById('pmf-emplacement').value || null;
+      const action = document.getElementById('pmf-action').value;
+      payload.actions = action ? [action] : null;
+      payload.remarque = document.getElementById('pmf-remarque').value.trim();
+    }
     let error;
     if (editingPoemeId) ({ error } = await db().from('poemes').update(payload).eq('id', editingPoemeId));
     else { payload.user_id = currentUser.id; payload.recueil_id = currentRecueilId; payload.ordre = maxOrdre + 1; ({ error } = await db().from('poemes').insert(payload)); }
