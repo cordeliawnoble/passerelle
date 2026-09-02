@@ -24,8 +24,19 @@
 
   /* ---- structure générale : sidebar + contenu ---- */
   .shell{ display:flex; min-height:100vh; }
-  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:22px 0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
-  .sidebar-brand{ font-family:'Cormorant Garamond',serif; font-size:1.35rem; padding:0 22px 18px; border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:0 0 18px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+  .sidebar::-webkit-scrollbar{ width:7px; }
+  .sidebar::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
+  .sidebar-brand-wrap{ position:sticky; top:0; z-index:20; background:var(--bg-2); border-bottom:1px solid var(--line); margin-bottom:10px; padding:14px 12px 10px; }
+  .sidebar-brand{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:'Cormorant Garamond',serif; font-size:1.35rem; padding:8px 10px; border:none; border-radius:7px; background:transparent; color:var(--text); cursor:pointer; text-align:left; }
+  .sidebar-brand:hover{ background:rgba(124,92,191,.07); }
+  .sidebar-brand-chevron{ font-family:'Lora',serif; font-size:12px; color:var(--text-dim); transition:transform .15s ease; }
+  .sidebar-brand-chevron.open{ transform:rotate(180deg); }
+  .space-menu{ display:none; margin:6px 4px 0; padding:5px; border:1px solid var(--line); border-radius:7px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.08); }
+  .space-menu.open{ display:block; }
+  .space-menu-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 9px; border-radius:5px; font-size:12px; color:var(--text-dim); cursor:pointer; }
+  .space-menu-item:hover{ background:rgba(124,92,191,.07); color:var(--text); }
+  .space-menu-item.active{ color:var(--accent); font-weight:500; }
   .nav-group{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-dim); padding:16px 22px 6px; }
   .nav-link{ display:block; padding:9px 22px; font-size:14px; color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; }
   .nav-link:hover{ color:var(--text); background:rgba(255,255,255,0.03); }
@@ -131,6 +142,25 @@
   .side-panel.open{ right:0; }
   .memo-item{ border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-bottom:10px; font-size:13px; }
   .memo-date{ font-size:11px; color:var(--text-dim); margin-bottom:4px; }
+
+
+  /* ---- Accueil Passerelle : grille de cockpit ---- */
+  .home-two-col{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+  .home-two-col > .panel{ margin-bottom:20px; height:calc(100% - 20px); box-sizing:border-box; }
+  .home-stats-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .home-stats-grid .stat-card{ padding:16px; }
+  .home-horizon-list{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .home-horizon-item{ border:1px solid var(--line); border-radius:6px; background:var(--bg-2); padding:12px; cursor:pointer; transition:border-color .15s ease, transform .15s ease; }
+  .home-horizon-item:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .home-horizon-item strong{ display:block; font-size:13px; margin-bottom:3px; }
+  .home-horizon-item span{ font-size:11px; color:var(--text-dim); }
+  .home-quick-list{ display:grid; gap:8px; }
+  .home-quick-link{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; background:var(--bg-2); font-size:12px; color:var(--text-dim); }
+  .home-quick-link:hover{ border-color:var(--accent); color:var(--text); }
+  .home-quick-link-left{ display:flex; align-items:center; gap:9px; min-width:0; }
+  .home-quick-link-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media(max-width:930px){ .home-two-col{ grid-template-columns:1fr; } .home-two-col > .panel{ height:auto; } }
+  @media(max-width:560px){ .home-stats-grid,.home-horizon-list{ grid-template-columns:1fr; } }
 
 
   /* ---- Passerelle · Back-office V1 ---- */
@@ -261,7 +291,15 @@
     app.innerHTML = `
       <div class="shell">
         <div class="sidebar">
-          <div class="sidebar-brand">✒️ Passerelle</div>
+          <div class="sidebar-brand-wrap">
+            <button class="sidebar-brand" type="button" onclick="toggleSpaceMenu(event)" aria-expanded="false">
+              <span>✒️ Passerelle</span><span class="sidebar-brand-chevron" id="space-chevron">⌄</span>
+            </button>
+            <div class="space-menu" id="space-menu">
+              <div class="space-menu-item active" onclick="closeSpaceMenu();navigate('accueil')"><span>✒️ Passerelle</span><span>Actif</span></div>
+              <div class="space-menu-item" onclick="closeSpaceMenu();openPasseAiles()"><span>🪽 Passe-Ailes</span><span>↗</span></div>
+            </div>
+          </div>
           ${NAV.map(g => `
             <div class="nav-group">${g.group}</div>
             ${g.items.map(it => `<div class="nav-link" id="nav-${it.key}" onclick="navigate('${it.key}')">${it.label}</div>`).join('')}
@@ -270,7 +308,6 @@
             <div class="sidebar-quick-title">Liens rapides</div>
             <div id="sidebar-quick-links"><div class="quick-link-empty">Chargement…</div></div>
           </div>
-          <div class="switch-space" onclick="openPasseAiles()">🪽 Passer à Passe-Ailes</div>
           <div class="sidebar-foot">
             ${currentUser.email}
             <button onclick="doLogout()">Déconnexion</button>
@@ -304,6 +341,31 @@
       </div>`;
     loadSidebarQuickLinks();
   }
+
+  function toggleSpaceMenu(event){
+    if (event) event.stopPropagation();
+    const menu = document.getElementById('space-menu');
+    const chevron = document.getElementById('space-chevron');
+    if (!menu) return;
+    const opening = !menu.classList.contains('open');
+    menu.classList.toggle('open', opening);
+    if (chevron) chevron.classList.toggle('open', opening);
+    const button = document.querySelector('.sidebar-brand');
+    if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+  }
+
+  function closeSpaceMenu(){
+    const menu = document.getElementById('space-menu');
+    const chevron = document.getElementById('space-chevron');
+    if (menu) menu.classList.remove('open');
+    if (chevron) chevron.classList.remove('open');
+    const button = document.querySelector('.sidebar-brand');
+    if (button) button.setAttribute('aria-expanded','false');
+  }
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.sidebar-brand-wrap')) closeSpaceMenu();
+  });
 
   function setActiveNav(key){
     document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
@@ -518,7 +580,7 @@
     const horizonQuery = await db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,horizon_annee').eq('archive',false).eq('horizon_annee',now.getFullYear()).order('titre',{ascending:true}).limit(6);
 
     const [
-      enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle
+      enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle, homeQuickLinks
     ] = await Promise.all([
       db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
       db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
@@ -530,6 +592,7 @@
       ]),
       db().from('objectifs_annuels').select('objectif_mots').eq('annee', now.getFullYear()).maybeSingle(),
       db().from('sessions_ecriture').select('mots_ecrits').gte('date', startOfYear),
+      db().from('liens_rapides').select('id,nom,url,icone,slug,ordre,actif').eq('actif',true).order('ordre',{ascending:true}).limit(6),
     ]);
 
     const [{ count: nbEnEcriture }, { count: nbChapitresMois }, { count: nbRelecturesEnCours }] = atelierStats;
@@ -560,26 +623,35 @@
         }).join('')}</div>`}
       </div>
 
-      <div class="panel">
-        <h2>L’atelier en un regard</h2>
-        <div class="stat-cards-row" style="margin-bottom:0;">
-          <div class="stat-card"><h3>Œuvres en écriture</h3><div class="stat-big">${nbEnEcriture ?? 0}</div></div>
-          <div class="stat-card"><h3>Chapitres ce mois</h3><div class="stat-big">${nbChapitresMois ?? 0}</div></div>
-          <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${nbRelecturesEnCours ?? 0}</div></div>
-          <div class="stat-card"><h3>Graines à explorer</h3><div class="stat-big">${pepiniere.count ?? 0}</div></div>
+      <div class="home-two-col">
+        <div class="panel">
+          <h2>L’atelier en un regard</h2>
+          <div class="home-stats-grid">
+            <div class="stat-card"><h3>Œuvres en écriture</h3><div class="stat-big">${nbEnEcriture ?? 0}</div></div>
+            <div class="stat-card"><h3>Chapitres ce mois</h3><div class="stat-big">${nbChapitresMois ?? 0}</div></div>
+            <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${nbRelecturesEnCours ?? 0}</div></div>
+            <div class="stat-card"><h3>Graines à explorer</h3><div class="stat-big">${pepiniere.count ?? 0}</div></div>
+          </div>
+          ${objectifAnnee ? `<div style="margin-top:16px;font-size:12px;color:var(--text-dim);">Progression annuelle · ${motsAnnee.toLocaleString('fr-FR')} / ${objectifAnnee.toLocaleString('fr-FR')} mots · ${pctAnnee}%</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pctAnnee}%;"></div></div>` : ''}
         </div>
-        ${objectifAnnee ? `<div style="margin-top:16px;font-size:12px;color:var(--text-dim);">Progression annuelle · ${motsAnnee.toLocaleString('fr-FR')} / ${objectifAnnee.toLocaleString('fr-FR')} mots · ${pctAnnee}%</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pctAnnee}%;"></div></div>` : ''}
+
+        <div class="panel">
+          <h2>🔭 Horizon Y · ${now.getFullYear()}</h2>
+          ${horizonQuery.error ? `<div class="empty">Configure les horizons depuis Administration → Configuration.</div>` : !horizonQuery.data?.length ? `<div class="empty">Aucune œuvre n’est encore assignée à l’horizon ${now.getFullYear()}.</div>` : `<div class="home-horizon-list">${horizonQuery.data.map(o=>`<div class="home-horizon-item" onclick="openOeuvreDetail('${o.id}')"><strong>${safeText(o.titre)}</strong><span>Horizon Y · ${now.getFullYear()}</span></div>`).join('')}</div>`}
+        </div>
       </div>
 
-      <div class="panel">
-        <h2>🌱 La pépinière frémit</h2>
-        ${dernierGraine.data ? `<p style="font-size:13px; color:var(--text-dim);">Dernière graine capturée : <strong style="color:var(--text);">${safeText(dernierGraine.data.titre)}</strong></p>` : '<p style="font-size:13px;color:var(--text-dim);">Aucune graine récente.</p>'}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-primary" onclick="openIdeeModal()">+ Capturer une idée</button><button class="btn-secondary" onclick="navigate('idees')">Voir la Pépinière</button></div>
-      </div>
+      <div class="home-two-col">
+        <div class="panel">
+          <h2>🌱 La pépinière frémit</h2>
+          ${dernierGraine.data ? `<p style="font-size:13px; color:var(--text-dim);">Dernière graine capturée : <strong style="color:var(--text);">${safeText(dernierGraine.data.titre)}</strong></p>` : '<p style="font-size:13px;color:var(--text-dim);">Aucune graine récente.</p>'}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-primary" onclick="openIdeeModal()">+ Capturer une idée</button><button class="btn-secondary" onclick="navigate('idees')">Voir la Pépinière</button></div>
+        </div>
 
-      <div class="panel">
-        <h2>🔭 Horizon Y · ${now.getFullYear()}</h2>
-        ${horizonQuery.error ? `<div class="empty">Configure les horizons depuis Administration → Configuration.</div>` : !horizonQuery.data?.length ? `<div class="empty">Aucune œuvre n’est encore assignée à l’horizon ${now.getFullYear()}.</div>` : `<div class="gallery">${horizonQuery.data.map(o=>`<div class="char-card" onclick="openOeuvreDetail('${o.id}')"><div class="char-portrait" style="background:linear-gradient(160deg,var(--lavender)33,var(--bg-2));">${initials(o.titre)}</div><div class="char-name">${safeText(o.titre)}</div><div class="char-role">Horizon Y · ${now.getFullYear()}</div></div>`).join('')}</div>`}
+        <div class="panel">
+          <h2>🔗 Liens rapides</h2>
+          ${homeQuickLinks.error ? `<div class="empty">Configure tes liens depuis Administration → Configuration.</div>` : !homeQuickLinks.data?.length ? `<div class="empty">Aucun lien rapide configuré.</div>` : `<div class="home-quick-list">${homeQuickLinks.data.map(l=>`<a class="home-quick-link" href="${safeText(l.url)}" target="_blank" rel="noopener"><span class="home-quick-link-left"><span>${safeText(l.icone||'↗')}</span><span class="home-quick-link-name">${safeText(l.nom)}</span></span><span>↗</span></a>`).join('')}</div>`}
+        </div>
       </div>
 
       <div class="head-row" style="margin-top:10px;">
