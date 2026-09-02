@@ -131,6 +131,44 @@
   .side-panel.open{ right:0; }
   .memo-item{ border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-bottom:10px; font-size:13px; }
   .memo-date{ font-size:11px; color:var(--text-dim); margin-bottom:4px; }
+
+
+  /* ---- Passerelle · Back-office V1 ---- */
+  .sidebar-quick{ padding:14px 14px 8px; border-top:1px solid var(--line); margin-top:auto; }
+  .sidebar-quick-title{ font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim); padding:0 8px 8px; }
+  .quick-link{ display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:5px; color:var(--text-dim); font-size:12px; cursor:pointer; }
+  .quick-link:hover{ background:rgba(124,92,191,.08); color:var(--accent); }
+  .quick-link-empty{ padding:4px 8px 10px; font-size:11px; color:var(--text-dim); font-style:italic; }
+  .switch-space{ margin:8px 14px 12px; padding:9px 11px; border:1px solid var(--line); border-radius:6px; text-align:center; font-size:12px; cursor:pointer; color:var(--lavender-deep); background:var(--card); }
+  .switch-space:hover{ border-color:var(--accent); color:var(--accent); }
+  .admin-hero{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:24px; }
+  .admin-hero h1{ font-size:2rem; }
+  .admin-hero p{ margin:6px 0 0; color:var(--text-dim); font-size:13px; }
+  .admin-tabs{ display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:22px; flex-wrap:wrap; }
+  .admin-tab{ border:none; background:none; color:var(--text-dim); font-family:'Lora',serif; padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent; }
+  .admin-tab.active{ color:var(--accent); border-bottom-color:var(--accent); font-weight:500; }
+  .admin-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+  @media(max-width:900px){ .admin-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:620px){ .admin-grid{ grid-template-columns:1fr; } }
+  .admin-card{ border:1px solid var(--line); background:var(--card); border-radius:7px; padding:18px; }
+  .admin-card h3{ font-size:1.05rem; margin-bottom:5px; }
+  .admin-card p{ font-size:12px; color:var(--text-dim); margin:0 0 14px; min-height:38px; }
+  .admin-card-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .admin-section{ border:1px solid var(--line); border-radius:7px; background:var(--card); padding:20px; margin-bottom:18px; }
+  .admin-section-head{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+  .admin-section-head h2{ font-size:1.15rem; color:var(--lavender-deep); }
+  .admin-table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .admin-table th{ text-align:left; font-weight:400; color:var(--text-dim); border-bottom:1px solid var(--line); padding:8px; }
+  .admin-table td{ border-bottom:1px solid var(--line); padding:9px 8px; vertical-align:middle; }
+  .admin-table tr:last-child td{ border-bottom:none; }
+  .admin-inline-form{ display:grid; grid-template-columns:1fr 2fr 80px auto; gap:8px; align-items:end; margin-bottom:14px; }
+  @media(max-width:780px){ .admin-inline-form{ grid-template-columns:1fr; } }
+  .admin-inline-form label{ margin:0 0 4px; }
+  .tiny-btn{ border:1px solid var(--line); background:var(--bg-2); color:var(--text); border-radius:4px; padding:6px 9px; cursor:pointer; font-family:'Lora',serif; font-size:11px; }
+  .tiny-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .danger-btn{ color:#9b4554; }
+  .admin-notice{ border:1px dashed var(--line); background:var(--bg-2); border-radius:6px; padding:12px 14px; color:var(--text-dim); font-size:12px; margin-bottom:16px; }
+
 </style>
 </head>
 <body>
@@ -198,18 +236,24 @@
   async function doLogout(){ await sb.auth.signOut(); currentUser = null; renderAuth(); }
 
   const NAV = [
-    { group: 'Écriture', items: [
+    { group: 'Passerelle', items: [
       { key:'accueil', label:'Accueil', real:true },
+    ]},
+    { group: 'Bibliothèque', items: [
       { key:'oeuvres', label:'Œuvres', real:true },
       { key:'sagas', label:'Sagas', real:true },
+      { key:'poesie', label:'Recueils de poésie', real:true },
       { key:'personnages', label:'Personnages', real:true },
-      { key:'poesie', label:'Poésie', real:true },
-      { key:'chapitres', label:'Chapitres', real:false },
-      { key:'plans', label:'Plans', real:false },
+    ]},
+    { group: 'Atelier', items: [
       { key:'relecture', label:'Relecture', real:true },
-      { key:'idees', label:'Idées', real:true },
+      { key:'planning', label:'Planning', real:true, special:'todum' },
+      { key:'idees', label:'Pépinière', real:true },
+    ]},
+    { group: 'Pilotage', items: [
       { key:'bureau-editorial', label:'Bureau éditorial', real:true },
       { key:'archives', label:'Archives', real:false },
+      { key:'administration', label:'⚙ Administration', real:true },
     ]}
   ];
 
@@ -222,6 +266,11 @@
             <div class="nav-group">${g.group}</div>
             ${g.items.map(it => `<div class="nav-link" id="nav-${it.key}" onclick="navigate('${it.key}')">${it.label}</div>`).join('')}
           `).join('')}
+          <div class="sidebar-quick">
+            <div class="sidebar-quick-title">Liens rapides</div>
+            <div id="sidebar-quick-links"><div class="quick-link-empty">Chargement…</div></div>
+          </div>
+          <div class="switch-space" onclick="openPasseAiles()">🪽 Passer à Passe-Ailes</div>
           <div class="sidebar-foot">
             ${currentUser.email}
             <button onclick="doLogout()">Déconnexion</button>
@@ -253,6 +302,7 @@
         <textarea id="memo-new" placeholder="Ajouter une note..." style="margin-top:14px;"></textarea>
         <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="addMemo()">Ajouter</button>
       </div>`;
+    loadSidebarQuickLinks();
   }
 
   function setActiveNav(key){
@@ -266,6 +316,7 @@
     setActiveNav(key);
     const item = NAV.flatMap(g=>g.items).find(i=>i.key===key);
     const content = document.getElementById('content');
+    if (item && item.special === 'todum'){ openQuickLinkBySlug('todum'); return; }
     if (!item.real){
       content.innerHTML = `<h2 style="margin-bottom:20px;">${item.label}</h2><div class="empty">Cette page n'est pas encore branchée à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà pour elle — on la construit dès qu'on y arrive dans l'ordre.</span></div>`;
       return;
@@ -278,6 +329,177 @@
     if (key === 'relecture') renderRelecture();
     if (key === 'bureau-editorial') renderBureauEditorial();
     if (key === 'poesie') renderPoesie();
+    if (key === 'administration') renderAdministration();
+  }
+
+
+  // ============================================================
+  // LIENS RAPIDES + BASCULE PASSE-AILES
+  // ============================================================
+  function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function loadSidebarQuickLinks(){
+    const zone = document.getElementById('sidebar-quick-links');
+    if (!zone) return;
+    const { data, error } = await db().from('liens_rapides').select('id, nom, url, icone, slug, ordre, actif').eq('actif', true).order('ordre', { ascending:true });
+    if (error){
+      zone.innerHTML = `<div class="quick-link-empty">À configurer dans Administration</div>`;
+      return;
+    }
+    if (!data?.length){ zone.innerHTML = `<div class="quick-link-empty">Aucun lien configuré</div>`; return; }
+    zone.innerHTML = data.map(l => `<a class="quick-link" href="${safeText(l.url)}" target="_blank" rel="noopener"><span>${safeText(l.icone||'↗')}</span><span>${safeText(l.nom)}</span></a>`).join('');
+  }
+
+  async function openQuickLinkBySlug(slug){
+    const { data, error } = await db().from('liens_rapides').select('url').eq('slug',slug).eq('actif',true).maybeSingle();
+    if (error || !data?.url){
+      alert('Ce lien rapide n’est pas encore configuré. Va dans Administration → Liens rapides.');
+      navigate('administration');
+      return;
+    }
+    window.open(data.url, '_blank', 'noopener');
+  }
+
+  function openPasseAiles(){
+    alert('Passe-Ailes sera branché ici pendant son propre audit. Le bouton est déjà réservé dans la navigation.');
+  }
+
+  // ============================================================
+  // ADMINISTRATION / BACK-OFFICE V1
+  // ============================================================
+  let adminTab = 'catalogue';
+  async function renderAdministration(tab){
+    adminTab = tab || adminTab || 'catalogue';
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement du back-office…</div>`;
+    const counts = await Promise.all([
+      db().from('univers').select('*',{count:'exact',head:true}),
+      db().from('sagas').select('*',{count:'exact',head:true}),
+      db().from('sous_sagas').select('*',{count:'exact',head:true}),
+      db().from('oeuvres').select('*',{count:'exact',head:true}),
+      db().from('recueils').select('*',{count:'exact',head:true}),
+      db().from('personnages').select('*',{count:'exact',head:true}),
+      db().from('idees').select('*',{count:'exact',head:true}),
+    ]);
+    const n = counts.map(r => r.count ?? 0);
+    content.innerHTML = `
+      <div class="admin-hero">
+        <div><h1>⚙ Administration</h1><p>Le local technique de Passerelle. On y règle les données, pas les paillettes.</p></div>
+        <button class="btn-secondary" onclick="navigate('accueil')">← Retour à Passerelle</button>
+      </div>
+      <div class="admin-tabs">
+        <button class="admin-tab ${adminTab==='catalogue'?'active':''}" onclick="showAdminTab('catalogue')">Catalogue</button>
+        <button class="admin-tab ${adminTab==='configuration'?'active':''}" onclick="showAdminTab('configuration')">Configuration</button>
+      </div>
+      <div id="admin-zone"></div>`;
+    window.__adminCounts = n;
+    showAdminTab(adminTab);
+  }
+
+  function showAdminTab(tab){
+    adminTab = tab;
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab==='catalogue'?'catalogue':'configuration')));
+    const zone = document.getElementById('admin-zone');
+    if (!zone) return;
+    if (tab === 'catalogue') renderAdminCatalogue(zone);
+    else renderAdminConfiguration(zone);
+  }
+
+  function renderAdminCatalogue(zone){
+    const n = window.__adminCounts || [0,0,0,0,0,0,0];
+    const cards = [
+      ['Collections', n[0], 'La grande famille éditoriale, par exemple Arcana Mundi.', "renderAdminCollections()", '+ Nouvelle collection'],
+      ['Sagas', n[1], 'Créer et modifier les sagas.', "openSagaModal()", '+ Nouvelle saga'],
+      ['Sous-sagas', n[2], 'Elles se gèrent dans le contexte de leur saga.', "navigate('sagas')", 'Ouvrir les sagas'],
+      ['Œuvres', n[3], 'Créer les romans, novellas et tomes.', "openOeuvreModal()", '+ Nouvelle œuvre'],
+      ['Recueils de poésie', n[4], 'Créer et organiser les recueils.', "openRecueilModal()", '+ Nouveau recueil'],
+      ['Personnages', n[5], 'Une seule base canonique de personnages.', "openPersonnageModal()", '+ Nouveau personnage'],
+      ['Pépinière', n[6], 'Capturer les graines avant leur promotion.', "openIdeeModal()", '+ Nouvelle graine'],
+    ];
+    zone.innerHTML = `<div class="admin-grid">${cards.map(c=>`<div class="admin-card"><h3>${c[0]} <span style="color:var(--accent);font-size:.85rem;">${c[1]}</span></h3><p>${c[2]}</p><div class="admin-card-actions"><button class="btn-secondary" onclick="${c[3]}">${c[4]}</button></div></div>`).join('')}</div>
+      <div class="admin-notice">Les formulaires existants de Passerelle sont réutilisés ici. À chaque audit, on complète ce back-office au même moment que la page publique de l’atelier.</div>`;
+  }
+
+  async function renderAdminConfiguration(zone){
+    zone.innerHTML = `<div class="status-line">Chargement de la configuration…</div>`;
+    const [links, works] = await Promise.all([
+      db().from('liens_rapides').select('*').order('ordre',{ascending:true}),
+      db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true})
+    ]);
+    const linksOk = !links.error;
+    const horizonsOk = !works.error || !String(works.error?.message||'').includes('horizon_annee');
+    zone.innerHTML = `
+      ${(!linksOk || !horizonsOk) ? `<div class="admin-notice"><strong>Une petite migration Supabase est nécessaire.</strong><br>Le fichier SQL fourni avec cette version crée les Liens rapides et ajoute Horizon aux œuvres. Une fois exécuté, recharge la page.</div>` : ''}
+      <div class="admin-section">
+        <div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
+        ${linksOk ? `
+          <div class="admin-inline-form">
+            <div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div>
+            <div><label>URL</label><input id="ql-url" placeholder="https://..."></div>
+            <div><label>Icône</label><input id="ql-icone" placeholder="✓"></div>
+            <button class="btn-primary" onclick="saveQuickLink()">Ajouter</button>
+          </div>
+          <table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>
+          ${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5">Aucun lien rapide.</td></tr>'}
+          </tbody></table>` : `<div class="empty">Table Liens rapides non installée.</div>`}
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-head"><h2>🔭 Horizons d’écriture</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>
+        ${!works.error ? `<table class="admin-table"><thead><tr><th>Œuvre</th><th>Année cible</th><th>Lecture dans l’accueil</th></tr></thead><tbody>
+          ${(works.data||[]).map(o=>`<tr><td>${safeText(o.titre)}</td><td><input type="number" value="${o.horizon_annee||''}" placeholder="${new Date().getFullYear()}" style="max-width:110px;padding:6px 8px;" onchange="saveHorizon('${o.id}',this.value)"></td><td>${o.horizon_annee ? (o.horizon_annee===new Date().getFullYear()?'Horizon Y':o.horizon_annee===new Date().getFullYear()+1?'Horizon Y+1':o.horizon_annee) : '—'}</td></tr>`).join('') || '<tr><td colspan="3">Aucune œuvre.</td></tr>'}
+          </tbody></table>` : `<div class="empty">La colonne Horizon n’est pas encore installée.</div>`}
+      </div>`;
+  }
+
+  async function saveQuickLink(){
+    const nom=document.getElementById('ql-nom')?.value.trim();
+    const url=document.getElementById('ql-url')?.value.trim();
+    const icone=document.getElementById('ql-icone')?.value.trim() || '↗';
+    if(!nom || !url){ alert('Nom et URL sont nécessaires.'); return; }
+    let parsed; try{ parsed=new URL(url); }catch(e){ alert('L’URL doit commencer par http:// ou https://'); return; }
+    const slug = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    const { data:maxRows } = await db().from('liens_rapides').select('ordre').order('ordre',{ascending:false}).limit(1);
+    const ordre=(maxRows?.[0]?.ordre||0)+10;
+    const { error }=await db().from('liens_rapides').insert({user_id:currentUser.id,nom,url:parsed.href,icone,slug,ordre,actif:true});
+    if(error){ alert('Erreur : '+error.message); return; }
+    await loadSidebarQuickLinks(); renderAdministration('configuration');
+  }
+
+  async function deleteQuickLink(id){
+    if(!confirm('Supprimer ce lien rapide ?')) return;
+    const { error }=await db().from('liens_rapides').delete().eq('id',id);
+    if(error){ alert('Erreur : '+error.message); return; }
+    await loadSidebarQuickLinks(); renderAdministration('configuration');
+  }
+
+  async function saveHorizon(id,value){
+    const year=value ? parseInt(value,10) : null;
+    const { error }=await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);
+    if(error) alert('Erreur : '+error.message);
+  }
+
+  async function renderAdminCollections(){
+    const zone=document.getElementById('admin-zone');
+    if(!zone){ navigate('administration'); return; }
+    zone.innerHTML='<div class="status-line">Chargement des collections…</div>';
+    const {data,error}=await db().from('univers').select('id,nom,sous_titre,ordre,publie_site').order('ordre',{ascending:true});
+    if(error){ zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`; return; }
+    zone.innerHTML=`<div class="admin-section"><div class="admin-section-head"><h2>Collections</h2><button class="btn-primary" onclick="openAdminCollectionForm()">+ Nouvelle collection</button></div><div id="admin-collection-form"></div>
+      <table class="admin-table"><thead><tr><th>Nom</th><th>Sous-titre</th><th>Ordre</th><th></th></tr></thead><tbody>${(data||[]).map(c=>`<tr><td>${safeText(c.nom)}</td><td>${safeText(c.sous_titre||'')}</td><td>${c.ordre||0}</td><td><button class="tiny-btn" onclick="openAdminCollectionForm('${c.id}')">Modifier</button></td></tr>`).join('')||'<tr><td colspan="4">Aucune collection.</td></tr>'}</tbody></table></div>`;
+  }
+
+  async function openAdminCollectionForm(id){
+    const host=document.getElementById('admin-collection-form'); if(!host) return;
+    let c={};
+    if(id){ const {data}=await db().from('univers').select('*').eq('id',id).single(); c=data||{}; }
+    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;"><button class="btn-secondary" onclick="renderAdminCollections()">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
+  }
+
+  async function saveAdminCollection(id){
+    const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10)};
+    if(!payload.nom){alert('Le nom est obligatoire.');return;}
+    let q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});
+    const {error}=await q; if(error){alert('Erreur : '+error.message);return;} renderAdministration('catalogue');
   }
 
   // ============================================================
@@ -291,8 +513,12 @@
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
     const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().slice(0,10);
 
+    // horizon_annee est ajouté par la migration Back-office V1. Si elle n'est pas encore
+    // installée, l'accueil reste utilisable et affiche simplement une invitation à la configurer.
+    const horizonQuery = await db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,horizon_annee').eq('archive',false).eq('horizon_annee',now.getFullYear()).order('titre',{ascending:true}).limit(6);
+
     const [
-      enBureau, pepiniere, dernierGraine, atelierStats, aReprendre, objectifAnnuel, sommeAnnuelle
+      enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle
     ] = await Promise.all([
       db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
       db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
@@ -302,26 +528,22 @@
         db().from('chapitres').select('*', { count:'exact', head:true }).gte('date_ecriture', startOfMonth),
         db().from('relectures').select('*', { count:'exact', head:true }).is('date_terminee', null),
       ]),
-      db().from('oeuvres').select('id, titre, statut, updated_at').eq('statut','En pause').order('updated_at', { ascending:true }).limit(3),
       db().from('objectifs_annuels').select('objectif_mots').eq('annee', now.getFullYear()).maybeSingle(),
       db().from('sessions_ecriture').select('mots_ecrits').gte('date', startOfYear),
     ]);
 
     const [{ count: nbEnEcriture }, { count: nbChapitresMois }, { count: nbRelecturesEnCours }] = atelierStats;
-    const motsAnnee = (sommeAnnuelle.data||[]).reduce((s,r)=>s+(r.mots_ecrits||0), 0);
+    const motsAnnee = (sommeAnnuelle.data||[]).reduce((sum,r)=>sum+(r.mots_ecrits||0), 0);
     const objectifAnnee = objectifAnnuel.data?.objectif_mots;
     const pctAnnee = objectifAnnee ? Math.min(100, Math.round(motsAnnee/objectifAnnee*100)) : 0;
-
-    function joursDepuis(dateStr){
-      const diff = Math.floor((now - new Date(dateStr)) / 86400000);
-      return diff <= 0 ? "aujourd'hui" : `il y a ${diff} jour${diff>1?'s':''}`;
-    }
+    const hour = now.getHours();
+    const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
     content.innerHTML = `
       <div class="banner">
         <div>
-          <h1>Bonjour, ${currentUser.email.split('@')[0]} ✨</h1>
-          <div class="sub">Que va-t-on raconter aujourd'hui ?</div>
+          <h1>${salutation} Cordélia ✨</h1>
+          <div class="sub"><span class="quote-hand">Écrire · imaginer · relier · faire grandir</span></div>
         </div>
       </div>
 
@@ -332,54 +554,40 @@
           const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
           return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
             <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
-            <div class="char-name">${o.titre}</div>
+            <div class="char-name">${safeText(o.titre)}</div>
             <div class="char-role">${pct!==null ? pct+'% · '+(o.mots_ecrits||0)+' / '+o.objectif_mots+' mots' : 'En écriture'}</div>
           </div>`;
         }).join('')}</div>`}
       </div>
 
-      <div class="stat-cards-row">
-        <div class="stat-card"><h3>Œuvres en écriture</h3><div class="stat-big">${nbEnEcriture ?? 0}</div></div>
-        <div class="stat-card"><h3>Chapitres écrits ce mois</h3><div class="stat-big">${nbChapitresMois ?? 0}</div></div>
-        <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${nbRelecturesEnCours ?? 0}</div></div>
-        <div class="stat-card"><h3>Idées à explorer</h3><div class="stat-big">${pepiniere.count ?? 0}</div></div>
-      </div>
-
       <div class="panel">
-        <h2>Progression annuelle</h2>
-        ${objectifAnnee ? `
-          <div style="font-size:13px; color:var(--text-dim); margin-bottom:6px;">${motsAnnee.toLocaleString('fr-FR')} / ${objectifAnnee.toLocaleString('fr-FR')} mots — ${pctAnnee}%</div>
-          <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pctAnnee}%;"></div></div>
-        ` : `
-          <p style="font-size:13px; color:var(--text-dim); margin-bottom:10px;">Aucun objectif défini pour ${now.getFullYear()}.</p>
-          <input type="number" id="objectif-annuel-input" placeholder="Objectif de mots pour ${now.getFullYear()}" style="max-width:260px; display:inline-block;">
-          <button class="btn-primary" onclick="saveObjectifAnnuel()">Définir</button>
-        `}
+        <h2>L’atelier en un regard</h2>
+        <div class="stat-cards-row" style="margin-bottom:0;">
+          <div class="stat-card"><h3>Œuvres en écriture</h3><div class="stat-big">${nbEnEcriture ?? 0}</div></div>
+          <div class="stat-card"><h3>Chapitres ce mois</h3><div class="stat-big">${nbChapitresMois ?? 0}</div></div>
+          <div class="stat-card"><h3>Relectures en cours</h3><div class="stat-big">${nbRelecturesEnCours ?? 0}</div></div>
+          <div class="stat-card"><h3>Graines à explorer</h3><div class="stat-big">${pepiniere.count ?? 0}</div></div>
+        </div>
+        ${objectifAnnee ? `<div style="margin-top:16px;font-size:12px;color:var(--text-dim);">Progression annuelle · ${motsAnnee.toLocaleString('fr-FR')} / ${objectifAnnee.toLocaleString('fr-FR')} mots · ${pctAnnee}%</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pctAnnee}%;"></div></div>` : ''}
       </div>
 
       <div class="panel">
         <h2>🌱 La pépinière frémit</h2>
-        ${dernierGraine.data ? `<p style="font-size:13px; color:var(--text-dim);">Dernière graine capturée : <strong style="color:var(--text);">${dernierGraine.data.titre}</strong></p>` : ''}
-        <button class="btn-primary" style="margin-top:10px;" onclick="openIdeeModal()">+ Capturer une idée</button>
+        ${dernierGraine.data ? `<p style="font-size:13px; color:var(--text-dim);">Dernière graine capturée : <strong style="color:var(--text);">${safeText(dernierGraine.data.titre)}</strong></p>` : '<p style="font-size:13px;color:var(--text-dim);">Aucune graine récente.</p>'}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-primary" onclick="openIdeeModal()">+ Capturer une idée</button><button class="btn-secondary" onclick="navigate('idees')">Voir la Pépinière</button></div>
       </div>
 
       <div class="panel">
-        <h2>À reprendre</h2>
-        ${!aReprendre.data?.length ? `<div class="empty">Aucun projet en pause en ce moment.</div>` : aReprendre.data.map(o => `
-          <div class="info-line" style="cursor:pointer;" onclick="openOeuvreDetail('${o.id}')">
-            <span>${o.titre}</span>
-            <span>Dernière activité : ${joursDepuis(o.updated_at)}</span>
-          </div>
-        `).join('')}
+        <h2>🔭 Horizon Y · ${now.getFullYear()}</h2>
+        ${horizonQuery.error ? `<div class="empty">Configure les horizons depuis Administration → Configuration.</div>` : !horizonQuery.data?.length ? `<div class="empty">Aucune œuvre n’est encore assignée à l’horizon ${now.getFullYear()}.</div>` : `<div class="gallery">${horizonQuery.data.map(o=>`<div class="char-card" onclick="openOeuvreDetail('${o.id}')"><div class="char-portrait" style="background:linear-gradient(160deg,var(--lavender)33,var(--bg-2));">${initials(o.titre)}</div><div class="char-name">${safeText(o.titre)}</div><div class="char-role">Horizon Y · ${now.getFullYear()}</div></div>`).join('')}</div>`}
       </div>
 
       <div class="head-row" style="margin-top:10px;">
-        <button class="btn-secondary" onclick="openIdeeModal()">+ Nouvelle idée</button>
-        <button class="btn-secondary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>
-        <button class="btn-secondary" onclick="navigate('oeuvres')">Écrire</button>
-        <button class="btn-secondary" onclick="navigate('bureau-editorial')">Bureau éditorial</button>
-      </div>
-    `;
+        <button class="btn-secondary" onclick="openIdeeModal()">🌱 Nouvelle graine</button>
+        <button class="btn-secondary" onclick="navigate('oeuvres')">✍️ Écrire</button>
+        <button class="btn-secondary" onclick="navigate('relecture')">🔎 Relecture</button>
+        <button class="btn-secondary" onclick="navigate('bureau-editorial')">🗂 Bureau éditorial</button>
+      </div>`;
   }
   async function saveObjectifAnnuel(){
     const val = parseInt(document.getElementById('objectif-annuel-input').value);
@@ -2449,22 +2657,75 @@
   // ============================================================
   // IDÉES ("la pépinière")
   // ============================================================
+  let ideesData = [];
+  const IDEE_STATUT_COLOR = { 'Graine':'#5B9B6E', 'À creuser':'#4A90D9', 'Prometteuse':'#8C7FB0', 'En sommeil':'#8A8780', 'Abandonnée':'#B0525E' };
   async function renderIdees(){
     const content = document.getElementById('content');
+    content.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data, error } = await db().from('idees').select('*').order('created_at', { ascending:false });
+    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    ideesData = data;
+
+    const statuts = ['Graine','À creuser','Prometteuse','En sommeil','Abandonnée'];
+    const counts = {}; statuts.forEach(s => counts[s] = data.filter(i=>i.statut===s).length);
+    const types = [...new Set(data.map(i=>i.type).filter(Boolean))];
+    const genres = [...new Set(data.map(i=>i.genre).filter(Boolean))];
+
     content.innerHTML = `
       <div class="head-row"><h2>🌱 La pépinière</h2><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
-      <div id="idees-zone"><div class="status-line">Chargement…</div></div>
+      <div class="stat-cards-row" style="grid-template-columns:repeat(6,1fr);">
+        <div class="stat-card"><h3>Total</h3><div class="stat-big">${data.length}</div></div>
+        ${statuts.map(s => `<div class="stat-card"><h3>${s}</h3><div class="stat-big" style="font-size:1.4rem;">${counts[s]}</div></div>`).join('')}
+      </div>
+      <div class="head-row">
+        <input class="search-input" id="idee-search" placeholder="Rechercher une idée..." oninput="renderIdeesGrid()">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <select class="search-input" id="idee-filtre-statut" onchange="renderIdeesGrid()"><option value="">Statut : Tous</option>${statuts.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+          <select class="search-input" id="idee-filtre-type" onchange="renderIdeesGrid()"><option value="">Type : Tous</option>${types.map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
+          <select class="search-input" id="idee-filtre-genre" onchange="renderIdeesGrid()"><option value="">Genre : Tous</option>${genres.map(g=>`<option value="${g}">${g}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="gallery" id="idees-grid"></div>
     `;
-    const { data, error } = await db().from('idees').select('id, titre, note, statut, potentiel').order('created_at', { ascending:false });
-    const zone = document.getElementById('idees-zone');
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    if (!data.length) { zone.innerHTML = `<div class="empty">Ta pépinière est vide pour l'instant.<br><br><button class="btn-primary" onclick="openIdeeModal()">Capturer ta première idée</button></div>`; return; }
-    zone.innerHTML = `<div class="gallery">${data.map(i => `
-      <div class="char-card" onclick="openIdeeModal('${i.id}')">
-        <div class="char-portrait" style="background:linear-gradient(160deg, #5B9B6E33, var(--bg-2));">🌱</div>
-        <div class="char-name">${i.titre}</div>
-        <div class="char-role">${i.statut||'Graine'}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div>
-      </div>`).join('')}</div>`;
+    renderIdeesGrid();
+  }
+  function joursDepuisGeneric(dateStr){
+    const diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+    return diff <= 0 ? "aujourd'hui" : `il y a ${diff} j`;
+  }
+  function renderIdeesGrid(){
+    const q = (document.getElementById('idee-search').value||'').toLowerCase();
+    const statutFiltre = document.getElementById('idee-filtre-statut').value;
+    const typeFiltre = document.getElementById('idee-filtre-type').value;
+    const genreFiltre = document.getElementById('idee-filtre-genre').value;
+    let data = ideesData.filter(i => i.titre.toLowerCase().includes(q));
+    if (statutFiltre) data = data.filter(i => i.statut === statutFiltre);
+    if (typeFiltre) data = data.filter(i => i.type === typeFiltre);
+    if (genreFiltre) data = data.filter(i => i.genre === genreFiltre);
+    const zone = document.getElementById('idees-grid');
+    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune idée ne correspond.</div>`; return; }
+    zone.innerHTML = data.map(i => {
+      const color = IDEE_STATUT_COLOR[i.statut] || 'var(--text-dim)';
+      const tags = [i.genre, ...(i.ambiance||[]).slice(0,2)].filter(Boolean);
+      return `
+      <div class="char-card" onclick="openIdeeModal('${i.id}')" style="padding-bottom:2px;">
+        <span onclick="event.stopPropagation(); toggleFavoriIdee('${i.id}', ${!!i.favori})" style="position:absolute; top:8px; right:10px; font-size:16px; cursor:pointer; color:${i.favori?'var(--accent)':'var(--text-dim)'};">${i.favori?'★':'☆'}</span>
+        <div style="padding:12px 14px 0;">
+          <span style="font-size:10px; padding:3px 10px; border-radius:20px; background:${color}22; color:${color}; font-weight:600; text-transform:uppercase; letter-spacing:0.03em;">${i.statut||'Graine'}</span>
+        </div>
+        <div style="padding:10px 14px 0; font-size:15px; font-weight:500;">${i.titre}</div>
+        <div style="padding:6px 14px 0; font-size:12px; color:var(--text-dim); line-height:1.5;">${(i.note||'').slice(0,90)}${(i.note||'').length>90?'…':''}</div>
+        <div style="padding:10px 14px 0;">${tags.map(t=>`<span class="etat-pill" style="margin:0 5px 5px 0; display:inline-block;">${t}</span>`).join('')}</div>
+        <div style="padding:8px 14px 12px; font-size:11px; color:var(--text-dim);">${joursDepuisGeneric(i.created_at)}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div>
+      </div>`;
+    }).join('');
+  }
+  async function toggleFavoriIdee(id, currentlyFavori){
+    const { error } = await db().from('idees').update({ favori: !currentlyFavori }).eq('id', id);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    const idx = ideesData.findIndex(i=>i.id===id);
+    if (idx>-1) ideesData[idx].favori = !currentlyFavori;
+    renderIdeesGrid();
   }
 
   function ideeModalHtml(){
@@ -2476,11 +2737,41 @@
             <div><label>Titre</label><input id="if-titre"></div>
             <div><label>L'idée</label><textarea id="if-note"></textarea></div>
             <div class="row2">
+              <div><label>Type</label><input id="if-type" placeholder="Roman, Nouvelle..."></div>
+              <div><label>Genre</label><input id="if-genre"></div>
+            </div>
+            <div class="row2">
               <div><label>Statut</label><select id="if-statut"><option>Graine</option><option>À creuser</option><option>Prometteuse</option><option>En sommeil</option><option>Abandonnée</option></select></div>
               <div><label>Potentiel (1 à 5)</label><input type="number" min="1" max="5" id="if-potentiel"></div>
             </div>
+            <div><label>Ambiance (séparée par des virgules)</label><input id="if-ambiance"></div>
+            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="if-favori" style="width:auto;"><label style="margin:0;" for="if-favori">Idée favorite</label></div>
+
+            <div id="if-transform-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
+              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Devenue</div>
+              <div id="if-transform-info" style="font-size:13px;"></div>
+            </div>
+            <div id="if-transform-actions" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
+              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Transformer en projet</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-secondary" onclick="transformerIdee('oeuvre')">→ Œuvre</button>
+                <button class="btn-secondary" onclick="transformerIdee('saga')">→ Saga</button>
+                <button class="btn-secondary" onclick="transformerIdee('recueil')">→ Recueil</button>
+              </div>
+            </div>
+
+            <div id="if-notes-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
+              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Notes rapides</div>
+              <div id="if-notes-list"></div>
+              <textarea id="if-note-new" placeholder="Ajouter une note..." style="margin-top:8px;"></textarea>
+              <button class="btn-secondary" style="margin-top:6px; width:100%;" onclick="addIdeeNote()">Ajouter</button>
+            </div>
           </div>
-          <div class="modal-foot"><button class="btn-secondary" onclick="closeIdeeModal()">Annuler</button><button class="btn-primary" onclick="saveIdee()">Enregistrer</button></div>
+          <div class="modal-foot">
+            <button class="btn-secondary" id="if-abandon" style="margin-right:auto; display:none; color:#e88;" onclick="abandonnerIdee()">Abandonner cette idée</button>
+            <button class="btn-secondary" onclick="closeIdeeModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveIdee()">Enregistrer</button>
+          </div>
         </div>
       </div>`;
   }
@@ -2489,21 +2780,93 @@
     editingIdeeId = id || null;
     document.getElementById('modal-idee-title').textContent = id ? "Modifier l'idée" : 'Nouvelle idée';
     document.getElementById('if-titre').value=''; document.getElementById('if-note').value='';
+    document.getElementById('if-type').value=''; document.getElementById('if-genre').value='';
     document.getElementById('if-statut').value='Graine'; document.getElementById('if-potentiel').value='';
+    document.getElementById('if-ambiance').value=''; document.getElementById('if-favori').checked=false;
+    document.getElementById('if-abandon').style.display = id ? 'block' : 'none';
+    document.getElementById('if-notes-zone').style.display = id ? 'block' : 'none';
+    document.getElementById('if-transform-zone').style.display = 'none';
+    document.getElementById('if-transform-actions').style.display = 'none';
+
     if (id) {
-      const { data } = await db().from('idees').select('titre, note, statut, potentiel').eq('id', id).single();
-      if (data) { document.getElementById('if-titre').value=data.titre||''; document.getElementById('if-note').value=data.note||''; document.getElementById('if-statut').value=data.statut||'Graine'; document.getElementById('if-potentiel').value=data.potentiel||''; }
+      const idee = ideesData.find(x=>x.id===id) || (await db().from('idees').select('*').eq('id', id).single()).data;
+      if (idee) {
+        document.getElementById('if-titre').value=idee.titre||''; document.getElementById('if-note').value=idee.note||'';
+        document.getElementById('if-type').value=idee.type||''; document.getElementById('if-genre').value=idee.genre||'';
+        document.getElementById('if-statut').value=idee.statut||'Graine'; document.getElementById('if-potentiel').value=idee.potentiel||'';
+        document.getElementById('if-ambiance').value=(idee.ambiance||[]).join(', '); document.getElementById('if-favori').checked=!!idee.favori;
+        if (idee.transforme_en_type) {
+          document.getElementById('if-transform-zone').style.display = 'block';
+          document.getElementById('if-transform-info').textContent = 'Transformée en ' + idee.transforme_en_type;
+        } else {
+          document.getElementById('if-transform-actions').style.display = 'block';
+        }
+      }
+      await loadIdeeNotes(id);
     }
     document.getElementById('modal-idee-overlay').classList.add('open');
   }
   function closeIdeeModal(){ document.getElementById('modal-idee-overlay').classList.remove('open'); }
   async function saveIdee(){
-    const payload = { titre: document.getElementById('if-titre').value.trim()||'Sans titre', note: document.getElementById('if-note').value.trim(), statut: document.getElementById('if-statut').value, potentiel: parseInt(document.getElementById('if-potentiel').value)||null };
+    const ambianceRaw = document.getElementById('if-ambiance').value.trim();
+    const payload = {
+      titre: document.getElementById('if-titre').value.trim()||'Sans titre',
+      note: document.getElementById('if-note').value.trim(),
+      type: document.getElementById('if-type').value.trim(),
+      genre: document.getElementById('if-genre').value.trim(),
+      statut: document.getElementById('if-statut').value,
+      potentiel: parseInt(document.getElementById('if-potentiel').value)||null,
+      ambiance: ambianceRaw ? ambianceRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
+      favori: document.getElementById('if-favori').checked,
+    };
     let error;
     if (editingIdeeId) ({ error } = await db().from('idees').update(payload).eq('id', editingIdeeId));
     else { payload.user_id = currentUser.id; ({ error } = await db().from('idees').insert(payload)); }
     if (error) { alert('Erreur : ' + error.message); return; }
     closeIdeeModal(); await renderIdees();
+  }
+  async function abandonnerIdee(){
+    if (!confirm('Marquer cette idée comme abandonnée ?')) return;
+    const { error } = await db().from('idees').update({ statut: 'Abandonnée' }).eq('id', editingIdeeId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeIdeeModal(); await renderIdees();
+  }
+  async function loadIdeeNotes(ideeId){
+    const { data } = await db().from('idee_notes').select('*').eq('idee_id', ideeId).order('created_at', { ascending:false });
+    document.getElementById('if-notes-list').innerHTML = (data||[]).length ? data.map(n=>`<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune note.</div>';
+  }
+  async function addIdeeNote(){
+    const val = document.getElementById('if-note-new').value.trim();
+    if (!val || !editingIdeeId) return;
+    const { error } = await db().from('idee_notes').insert({ idee_id: editingIdeeId, contenu: val });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    document.getElementById('if-note-new').value = '';
+    await loadIdeeNotes(editingIdeeId);
+  }
+  async function transformerIdee(type){
+    const idee = ideesData.find(x=>x.id===editingIdeeId);
+    if (!idee) return;
+    if (!confirm(`Transformer « ${idee.titre} » en ${type} ?`)) return;
+    let newId, tableName, updatePayload = { transforme_en_type: type };
+    if (type === 'oeuvre') {
+      tableName = 'oeuvres';
+      const { data, error } = await db().from('oeuvres').insert({ titre: idee.titre, resume: idee.note, user_id: currentUser.id }).select('id').single();
+      if (error) { alert('Erreur : ' + error.message); return; }
+      newId = data.id; updatePayload.transforme_en_oeuvre_id = newId;
+    } else if (type === 'saga') {
+      const { data, error } = await db().from('sagas').insert({ nom: idee.titre, description: idee.note, user_id: currentUser.id }).select('id').single();
+      if (error) { alert('Erreur : ' + error.message); return; }
+      newId = data.id; updatePayload.transforme_en_saga_id = newId;
+    } else if (type === 'recueil') {
+      const { data, error } = await db().from('recueils').insert({ titre: idee.titre, resume: idee.note, user_id: currentUser.id }).select('id').single();
+      if (error) { alert('Erreur : ' + error.message); return; }
+      newId = data.id; updatePayload.transforme_en_recueil_id = newId;
+    }
+    await db().from('idees').update(updatePayload).eq('id', editingIdeeId);
+    closeIdeeModal();
+    if (type === 'oeuvre') openOeuvreDetail(newId);
+    else if (type === 'saga') openSagaDetail(newId);
+    else if (type === 'recueil') openRecueilDetail(newId);
   }
 
   // ============================================================
@@ -2578,11 +2941,11 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('poesie')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à mes recueils</div>
-      <div class="oeuvre-head">
-        <div class="cover-block">${initials(r.titre)}</div>
+      <div class="oeuvre-head" style="${r.banniere ? `position:relative; padding:28px; border-radius:8px; overflow:hidden; background-image:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.15) 60%), url('${r.banniere}'); background-size:cover; background-position:center;` : ''}">
+        ${r.couverture ? `<img src="${r.couverture}" style="width:100px; height:140px; object-fit:cover; border-radius:6px; flex-shrink:0; box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);">` : `<div class="cover-block">${initials(r.titre)}</div>`}
         <div class="oeuvre-info">
-          <h1>${r.titre}</h1>
-          <div class="oeuvre-sub">${r.type_recueil||''} · ${r.theme_principal||''}</div>
+          <h1 style="${r.banniere ? 'color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.6);' : ''}">${r.titre}</h1>
+          <div class="oeuvre-sub" style="${r.banniere ? 'color:rgba(255,255,255,0.85);' : ''}">${r.type_recueil||''} · ${r.theme_principal||''}</div>
           <span class="status-badge">${r.statut||'Sans statut'}</span>
         </div>
       </div>
@@ -2594,13 +2957,16 @@
     showRecueilTab('apercu');
   }
 
+  let activeRecueilTab = 'apercu';
   async function showRecueilTab(key){
+    activeRecueilTab = key;
     document.querySelectorAll('[id^="rtab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
     const btn = document.getElementById('rtab-'+key);
     if (btn) { btn.style.color='var(--accent)'; btn.style.borderBottomColor='var(--accent)'; btn.style.fontWeight='500'; }
     const zone = document.getElementById('recueil-tab-content');
     if (key === 'apercu') await renderRecueilApercu(zone);
     else if (key === 'poemes') await renderRecueilPoemes(zone);
+    else if (key === 'structure') await renderRecueilStructure(zone);
     else if (key === 'parametres') await renderRecueilParametres(zone);
     else zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.</div>`;
   }
@@ -2697,6 +3063,7 @@
               <div><label>Date d'écriture</label><input type="date" id="pmf-date"></div>
             </div>
             <div><label>Mots-clés (séparés par des virgules)</label><input id="pmf-motscles"></div>
+            <div><label>Section</label><select id="pmf-section"><option value="">— Sans section —</option></select></div>
             <div id="pmf-anthologie-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px; margin-top:6px;">
               <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Compilation (anthologie)</div>
               <label>Recueil d'origine</label><select id="pmf-recueil-origine"><option value="">—</option></select>
@@ -2728,6 +3095,9 @@
     document.getElementById('pmf-extrait').value=''; document.getElementById('pmf-texte').value='';
     document.getElementById('pmf-emplacement').value=''; document.getElementById('pmf-action').value=''; document.getElementById('pmf-remarque').value='';
 
+    const { data: sectionsList } = await db().from('sections_recueil').select('id, nom').eq('recueil_id', currentRecueilId).order('ordre');
+    document.getElementById('pmf-section').innerHTML = '<option value="">— Sans section —</option>' + (sectionsList||[]).map(s=>`<option value="${s.id}">${s.nom}</option>`).join('');
+
     const anthZone = document.getElementById('pmf-anthologie-zone');
     anthZone.style.display = currentRecueilType === 'anthologie' ? 'block' : 'none';
     if (currentRecueilType === 'anthologie') {
@@ -2746,6 +3116,7 @@
         document.getElementById('pmf-emplacement').value = p.emplacement || '';
         document.getElementById('pmf-action').value = (p.actions||[])[0] || '';
         document.getElementById('pmf-remarque').value = p.remarque || '';
+        document.getElementById('pmf-section').value = p.section_id || '';
       }
     }
     document.getElementById('modal-poeme-overlay').classList.add('open');
@@ -2763,6 +3134,7 @@
       mots_cles: motsClesRaw ? motsClesRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
       extrait: document.getElementById('pmf-extrait').value.trim(),
       texte: document.getElementById('pmf-texte').value.trim(),
+      section_id: document.getElementById('pmf-section').value || null,
     };
     if (currentRecueilType === 'anthologie') {
       payload.recueil_origine_id = document.getElementById('pmf-recueil-origine').value || null;
@@ -2776,14 +3148,121 @@
     else { payload.user_id = currentUser.id; payload.recueil_id = currentRecueilId; payload.ordre = maxOrdre + 1; ({ error } = await db().from('poemes').insert(payload)); }
     if (error) { alert('Erreur : ' + error.message); return; }
     closePoemeModal();
-    await renderRecueilPoemes(document.getElementById('recueil-tab-content'));
+    const zone = document.getElementById('recueil-tab-content');
+    if (activeRecueilTab === 'structure') await renderRecueilStructure(zone); else await renderRecueilPoemes(zone);
   }
   async function deletePoeme(){
     if (!confirm('Supprimer ce poème ?')) return;
     const { error } = await db().from('poemes').delete().eq('id', editingPoemeId);
     if (error) { alert('Erreur : ' + error.message); return; }
     closePoemeModal();
-    await renderRecueilPoemes(document.getElementById('recueil-tab-content'));
+    const zone = document.getElementById('recueil-tab-content');
+    if (activeRecueilTab === 'structure') await renderRecueilStructure(zone); else await renderRecueilPoemes(zone);
+  }
+
+  // ---- Structure du recueil ----
+  let structureSections = [];
+  let structurePoemesBySection = {};
+
+  async function renderRecueilStructure(zone){
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const { data: rInfo } = await db().from('recueils').select('type_recueil').eq('id', currentRecueilId).single();
+    currentRecueilType = rInfo?.type_recueil || 'original';
+    const [{ data: sections, error }, { data: poemes }] = await Promise.all([
+      db().from('sections_recueil').select('*').eq('recueil_id', currentRecueilId).order('ordre'),
+      db().from('poemes').select('*').eq('recueil_id', currentRecueilId).order('ordre'),
+    ]);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    structureSections = sections;
+    recueilPoemesData = poemes || [];
+    structurePoemesBySection = {};
+    (poemes||[]).forEach(p => { const k = p.section_id||'__sans__'; (structurePoemesBySection[k] = structurePoemesBySection[k]||[]).push(p); });
+
+    const totalEcrits = (poemes||[]).filter(p=>p.statut!=='à écrire').length;
+    const totalTermines = (poemes||[]).filter(p=>p.statut==='terminé').length;
+    const romain = (n) => ['','I','II','III','IV','V','VI','VII','VIII','IX','X'][n] || n;
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:1fr 2fr 1fr; gap:20px; align-items:start;">
+        <div class="panel">
+          <h2>Sections du recueil</h2>
+          ${structureSections.length ? structureSections.map((s,i) => `
+            <div class="info-line" style="cursor:pointer;" onclick="scrollToSection('${s.id}')">
+              <span>${romain(i+1)} · ${s.nom}</span>
+              <span style="color:var(--text-dim);">${(structurePoemesBySection[s.id]||[]).length} poème(s)</span>
+            </div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune section pour l\u2019instant.</div>'}
+          <button class="btn-secondary" style="margin-top:12px; width:100%;" onclick="openSectionModal()">+ Ajouter une section</button>
+        </div>
+
+        <div id="structure-sections-zone">
+          ${structureSections.map((s,i) => `
+            <div class="panel" id="section-${s.id}">
+              <div class="head-row" style="margin-bottom:10px;">
+                <h2 style="margin:0;">SECTION ${romain(i+1)} · ${s.nom.toUpperCase()}</h2>
+                <span style="font-size:12px; color:var(--text-dim);">${(structurePoemesBySection[s.id]||[]).length}${s.objectif_poemes ? ' / '+s.objectif_poemes : ''} poèmes</span>
+              </div>
+              ${(structurePoemesBySection[s.id]||[]).length ? `<table class="ch-table"><thead><tr><th>Ordre</th><th>Titre</th><th>Statut</th><th>Date</th><th>Mots-clés</th></tr></thead><tbody>
+                ${(structurePoemesBySection[s.id]||[]).map(p => `<tr onclick="openPoemeModal('${p.id}')"><td>${p.numero??'—'}</td><td>${p.titre}</td><td><span class="etat-pill">${p.statut||'—'}</span></td><td>${p.date_ecriture||'—'}</td><td>${(p.mots_cles||[]).join(', ')||'—'}</td></tr>`).join('')}
+              </tbody></table>` : '<div class="empty">Aucun poème dans cette section.</div>'}
+              <button class="btn-secondary" style="margin-top:10px; width:100%;" onclick="openPoemeModalForSection('${s.id}')">+ Ajouter un poème à cette section</button>
+            </div>`).join('')}
+          ${(structurePoemesBySection['__sans__']||[]).length ? `
+            <div class="panel">
+              <h2>Sans section</h2>
+              <table class="ch-table"><thead><tr><th>Titre</th><th>Statut</th></tr></thead><tbody>
+                ${structurePoemesBySection['__sans__'].map(p => `<tr onclick="openPoemeModal('${p.id}')"><td>${p.titre}</td><td><span class="etat-pill">${p.statut||'—'}</span></td></tr>`).join('')}
+              </tbody></table>
+            </div>` : ''}
+        </div>
+
+        <div>
+          <div class="panel">
+            <h2>Résumé de la structure</h2>
+            <div class="info-line"><span>Sections</span><span>${structureSections.length}</span></div>
+            <div class="info-line"><span>Poèmes écrits</span><span>${totalEcrits}</span></div>
+            <div class="info-line"><span>Poèmes terminés</span><span>${totalTermines}</span></div>
+          </div>
+          <div class="panel">
+            <h2>Conseils d'organisation</h2>
+            <div style="font-size:13px; color:var(--text-dim); line-height:1.8;">
+              • Commence par les poèmes qui posent l'ambiance.<br>
+              • Place les plus marquants au cœur du recueil.<br>
+              • Termine sur une montée ou une ouverture.<br>
+              • Relis l'ensemble pour vérifier le rythme.
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  function scrollToSection(id){ document.getElementById('section-'+id)?.scrollIntoView({ behavior:'smooth' }); }
+  function openPoemeModalForSection(sectionId){
+    openPoemeModal();
+    setTimeout(() => { const sel = document.getElementById('pmf-section'); if (sel) sel.value = sectionId; }, 0);
+  }
+
+  function sectionModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-section-overlay" onclick="if(event.target===this) closeSectionModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2>Nouvelle section</h2><button onclick="closeSectionModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Nom de la section</label><input id="sef-nom" placeholder="ex : Les fêlures"></div>
+            <div><label>Objectif de poèmes pour cette section</label><input type="number" id="sef-objectif"></div>
+          </div>
+          <div class="modal-foot"><button class="btn-secondary" onclick="closeSectionModal()">Annuler</button><button class="btn-primary" onclick="saveSection()">Enregistrer</button></div>
+        </div>
+      </div>`;
+  }
+  function openSectionModal(){ document.getElementById('sef-nom').value=''; document.getElementById('sef-objectif').value=''; document.getElementById('modal-section-overlay').classList.add('open'); }
+  function closeSectionModal(){ document.getElementById('modal-section-overlay').classList.remove('open'); }
+  async function saveSection(){
+    const maxOrdre = structureSections.reduce((m,s)=>Math.max(m, s.ordre||0), 0);
+    const payload = { recueil_id: currentRecueilId, nom: document.getElementById('sef-nom').value.trim()||'Sans titre', objectif_poemes: parseInt(document.getElementById('sef-objectif').value)||null, ordre: maxOrdre+1 };
+    const { error } = await db().from('sections_recueil').insert(payload);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeSectionModal();
+    await renderRecueilStructure(document.getElementById('recueil-tab-content'));
   }
 
   async function renderRecueilParametres(zone){
@@ -2801,10 +3280,23 @@
         <button class="btn-primary" style="margin-top:16px;" onclick="saveRecueilParametres()">Enregistrer</button>
       </div>
       <div class="panel">
+        <h2>Images</h2>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Colle l'URL d'une image déjà hébergée quelque part (pas encore d'upload direct).</p>
+        <label>URL de la couverture</label><input id="rp-couverture" value="${r.couverture||''}" placeholder="https://...">
+        <label style="margin-top:10px;">URL de la bannière</label><input id="rp-banniere" value="${r.banniere||''}" placeholder="https://...">
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveRecueilImages()">Enregistrer les images</button>
+      </div>
+      <div class="panel">
         <h2>Archivage</h2>
         <button class="btn-secondary" onclick="toggleArchiveRecueil(${r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button>
       </div>
     `;
+  }
+  async function saveRecueilImages(){
+    const payload = { couverture: document.getElementById('rp-couverture').value.trim()||null, banniere: document.getElementById('rp-banniere').value.trim()||null };
+    const { error } = await db().from('recueils').update(payload).eq('id', currentRecueilId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    openRecueilDetail(currentRecueilId);
   }
   async function saveRecueilParametres(){
     const payload = { titre: document.getElementById('rp-titre').value.trim()||'Sans titre', type_recueil: document.getElementById('rp-type').value, statut: document.getElementById('rp-statut').value.trim(), objectif_poemes: parseInt(document.getElementById('rp-objectif').value)||null, resume: document.getElementById('rp-resume').value.trim() };
