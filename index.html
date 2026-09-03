@@ -267,16 +267,6 @@
     .be-kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:12px;overflow:auto;padding-bottom:8px}.be-kanban-col{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:10px;min-height:180px}.be-kanban-col h3{font-size:11px;text-transform:uppercase;color:var(--text-dim);margin:0 0 9px}.be-kanban-col h3 span{color:var(--accent)}.be-kanban-card{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;background:var(--bg)}.be-kanban-card img{width:28px;height:40px;object-fit:cover;border-radius:4px}.be-kanban-card strong{font-size:11px;display:block}.be-kanban-card small{font-size:9px;color:var(--text-dim)}.be-kanban-empty{font-size:10px;color:var(--text-dim);padding:10px 2px}
     @media(max-width:1100px){.be-top-grid{grid-template-columns:1fr}.be-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.be-title-row{align-items:flex-start;flex-direction:column}.be-filters{grid-template-columns:1fr}.be-destination-card{grid-template-columns:100px 1fr}.be-donut{width:92px;height:92px}.be-donut-hole{width:56px;height:56px}}
 
-
-/* ŒUVRE V6 */
-.work-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.work-toolbar .spacer{flex:1}
-.view-switch{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px}.view-switch button{border:0;background:transparent;padding:7px 10px;border-radius:6px;cursor:pointer;color:var(--text-dim)}.view-switch button.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.editable-table td[contenteditable=true]{outline:none}.editable-table td[contenteditable=true]:focus{box-shadow:inset 0 0 0 1px var(--accent)}
-.plan-kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;align-items:start}.plan-act{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}.plan-card{border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;background:var(--bg);cursor:grab}.plan-card small{display:block;color:var(--text-dim);margin-top:5px}
-.memo-dot{cursor:pointer}.drawer{position:fixed;inset:0;background:#0004;z-index:80;display:none}.drawer.open{display:block}.drawer>aside{position:absolute;right:0;top:0;height:100%;width:min(560px,92vw);background:var(--surface);padding:24px;overflow:auto;box-shadow:-10px 0 30px #0002}.drawer-head{display:flex;justify-content:space-between;align-items:center}.drawer textarea{min-height:55vh}
-.relecture-progress{padding:18px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:18px}.relecture-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-dim);margin-top:8px}.relecture-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:18px;align-items:start}.check-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
-.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}.media-card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}.media-card img{width:100%;aspect-ratio:4/3;object-fit:cover}.media-card-body{padding:10px}.media-card-body small{display:block;color:var(--text-dim)}
-@media(max-width:900px){.relecture-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -510,7 +500,7 @@
   let adminTab = 'collections';
   const ADMIN_NAV = [
     ['collections','Collections'], ['sagas','Sagas'], ['sous-sagas','Sous-sagas'],
-    ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'], ['medias','Médias'], ['modeles-personnages','Modèles de fiches Personnage'],
+    ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'],
     ['pepiniere','Pépinière'], ['configuration','Configuration']
   ];
 
@@ -522,7 +512,7 @@
       <div class="admin-back-link" onclick="leaveAdministration()">← Retour à Passerelle</div>
       <div class="nav-group">Catalogue</div>
       <nav class="admin-mode-nav">
-        ${ADMIN_NAV.filter(([k])=>k!=='configuration').map(([k,l])=>`<div class="nav-link admin-nav-link ${adminTab===k?'active':''}" data-admin-key="${k}" onclick="adminNavigate('${k}')">${l}</div>`).join('')}
+        ${ADMIN_NAV.slice(0,7).map(([k,l])=>`<div class="nav-link admin-nav-link ${adminTab===k?'active':''}" data-admin-key="${k}" onclick="adminNavigate('${k}')">${l}</div>`).join('')}
       </nav>
       <div class="nav-group">Réglages</div>
       <nav class="admin-mode-nav">
@@ -553,8 +543,6 @@
     if(tab==='oeuvres') return renderAdminOeuvresPage();
     if(tab==='recueils') return renderAdminRecueilsPage();
     if(tab==='personnages') return renderAdminPersonnagesPage();
-    if(tab==='medias') return renderAdminMediasPage();
-    if(tab==='modeles-personnages') return renderAdminModelesPersonnagesPage();
     if(tab==='pepiniere') return renderAdminPepinierePage();
     if(tab==='configuration') return renderAdminConfiguration(content);
   }
@@ -622,9 +610,6 @@
     content.innerHTML=adminPageHead('Pépinière','Capturez et modifiez les graines avant leur promotion.',`<button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle graine</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une graine…" oninput="filterAdminCards('admin-ideas-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ideas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText(((x.titre||'')+' '+(x.genre||'')+' '+(x.type||'')).toLowerCase())}" onclick="openIdeeModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🌱</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.type||'Idée')} · ${safeText(x.genre||'Genre non défini')}<br>${safeText(x.statut||'Graine')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune graine pour le moment.')}</div>`;
   }
 
-  async function renderAdminMediasPage(){const content=document.getElementById('content');let {data,error}=await db().from('medias').select('*').order('created_at',{ascending:false}).limit(300);if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return}content.innerHTML=adminPageHead('Médias','Catalogue central des illustrations, promotions et couvertures.')+`<div class="admin-catalog-grid">${(data||[]).map(m=>`<article class="admin-catalog-card"><div class="admin-catalog-visual">${m.url?`<img src="${safeText(m.url)}">`:'<div class="admin-catalog-placeholder">🖼</div>'}</div><div class="admin-catalog-body"><h3>${safeText(m.titre||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(m.type||'Média')} · ${safeText(m.storage_provider||'non branché')}</div></div></article>`).join('')||adminEmpty('Aucun média.')}</div>`}
-  async function renderAdminModelesPersonnagesPage(){const content=document.getElementById('content');let {data,error}=await db().from('modeles_fiches_personnages').select('*').order('nom');if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return}content.innerHTML=adminPageHead('Modèles de fiches Personnage','Réservation du futur constructeur de pages par blocs.',`<button class="btn-primary" onclick="createModelePersonnage()">+ Nouveau modèle</button>`)+`<div class="admin-catalog-grid">${(data||[]).map(x=>`<article class="admin-catalog-card"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🧱</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.description||'Page Builder à venir')}</div></div></article>`).join('')||adminEmpty('Aucun modèle.')}</div>`}
-  async function createModelePersonnage(){let nom=prompt('Nom du modèle :');if(!nom)return;let {error}=await db().from('modeles_fiches_personnages').insert({user_id:currentUser.id,nom,layout:{version:1,blocks:[]}});if(error)alert(error.message);else renderAdminModelesPersonnagesPage()}
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
     const [links, works] = await Promise.all([
@@ -1895,14 +1880,15 @@
   // ŒUVRE — page détail, avec onglets
   // ============================================================
   const OEUVRE_TABS = [
-    { key:'apercu', label:'Aperçu', real:true }, { key:'ecriture', label:'Écriture', real:true },
-    { key:'personnages', label:'Personnages', real:true }, { key:'plans', label:'Plan', real:true },
-    { key:'relecture', label:'Relecture', real:true }, { key:'medias', label:'Médias', real:true },
-    { key:'lore', label:'Univers & Lore', real:true, optional:'module_lore' },
-    { key:'chronologie', label:'Chronologie', real:true, optional:'module_chronologie' },
-    { key:'fiche-detaillee', label:'Fiche détaillée', real:true }, { key:'parametres', label:'Paramètres', real:true },
+    { key:'apercu', label:'Aperçu', real:true },
+    { key:'ecriture', label:'Écriture', real:true },
+    { key:'personnages', label:'Personnages', real:true },
+    { key:'plans', label:'Plans', real:true },
+    { key:'relecture', label:'Relecture', real:true },
+    { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
+    { key:'parametres', label:'Paramètres', real:true },
   ];
-  let currentOeuvreId = null; let currentOeuvreRecord=null;
+  let currentOeuvreId = null;
 
   async function openOeuvreDetail(id){
     currentOeuvreId = id;
@@ -1911,7 +1897,6 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
     const { data: o, error } = await db().from('oeuvres').select('*, sagas(nom)').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    currentOeuvreRecord=o;
     applyTheme(o.theme_base, o.accent_color);
 
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
@@ -1927,7 +1912,7 @@
         </div>
       </div>
       <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
-        ${OEUVRE_TABS.filter(t=>!t.optional||o[t.optional]).map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+        ${OEUVRE_TABS.map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
       </div>
       <div id="oeuvre-tab-content"></div>
     `;
@@ -1950,9 +1935,6 @@
     if (key === 'personnages') await renderOeuvrePersonnages(zone);
     if (key === 'plans') await renderOeuvrePlans(zone);
     if (key === 'relecture') await renderOeuvreRelecture(zone);
-    if (key === 'medias') await renderOeuvreMedias(zone);
-    if (key === 'lore') await renderOptionalModule(zone,'Univers & Lore');
-    if (key === 'chronologie') await renderOptionalModule(zone,'Chronologie');
     if (key === 'fiche-detaillee') await renderOeuvreFicheDetaillee(zone);
     if (key === 'parametres') await renderOeuvreParametres(zone);
   }
@@ -2304,52 +2286,266 @@
   }
 
   // ============================================================
-  // Onglet Plan V6
+  // Onglet Plans d'une œuvre
   // ============================================================
-  let planChapitres=[], planView='table', memoChapterId=null;
+  let plansData = [];
+  let plansGroupBy = 'acte';
+  let plansView = 'table';
+
   async function renderOeuvrePlans(zone){
-    const {data,error}=await db().from('chapitres').select('id,numero,ordre,titre,pov,nb_mots,statut,acte,plan_initial,memo').eq('oeuvre_id',currentOeuvreId).order('ordre');
-    if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return} planChapitres=data||[];
-    zone.innerHTML=`<div class="work-toolbar"><button class="btn-primary" onclick="insertPlanChapter()">+ Insérer un chapitre</button><button class="btn-secondary" onclick="document.getElementById('plan-csv').click()">Importer CSV</button><input id="plan-csv" type="file" accept=".csv" hidden onchange="importPlanCsv(this.files[0])"><button class="btn-secondary" onclick="exportPlanCsv()">Exporter CSV</button><button class="btn-secondary" onclick="renumberPlan()">Réorganiser</button><span class="spacer"></span><div class="view-switch"><button class="${planView==='table'?'active':''}" onclick="planView='table';renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))">Table</button><button class="${planView==='kanban'?'active':''}" onclick="planView='kanban';renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))">Kanban par acte</button></div></div>${planView==='table'?planTable():planKanban()}${memoDrawer()}`;
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    const [{ data: plans, error }, { data: notes }] = await Promise.all([
+      db().from('plans').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre'),
+      db().from('oeuvre_notes').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false }),
+    ]);
+    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    plansData = plans;
+
+    zone.innerHTML = `
+      <div class="row2" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start;">
+        <div>
+          <div class="head-row">
+            <div class="row2" style="grid-template-columns:auto auto auto; gap:8px;">
+              <button class="btn-secondary" id="pv-table" onclick="setPlansView('table')">Table</button>
+              <button class="btn-secondary" id="pv-kanban" onclick="setPlansView('kanban')">Kanban</button>
+              <select class="search-input" id="plans-groupby" onchange="onPlansGroupByChange()">
+                <option value="acte" ${plansGroupBy==='acte'?'selected':''}>Grouper par acte</option>
+                <option value="type" ${plansGroupBy==='type'?'selected':''}>Grouper par type</option>
+                <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button>
+          </div>
+          <div id="plans-view-zone"></div>
+        </div>
+        <div>
+          <div class="panel">
+            <h2>Notes de l'autrice</h2>
+            <textarea id="on-new" placeholder="Notes globales sur la structure, les thèmes, les enjeux..."></textarea>
+            <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="addOeuvreNote()">Ajouter</button>
+            <div style="margin-top:14px;">${(notes||[]).map(n => `<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">Aucune note pour le moment.</div>'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    setPlansView(plansView);
   }
-  function planTable(){return `<div class="panel" style="overflow:auto"><table class="ch-table editable-table"><thead><tr><th>Ordre</th><th>Chapitre</th><th>Acte</th><th>POV</th><th>Plan initial</th><th>État</th><th>Mots</th><th>Mémo</th><th></th></tr></thead><tbody>${planChapitres.map(c=>`<tr><td contenteditable=true onblur="planCell('${c.id}','ordre',this.innerText,true)">${c.ordre??''}</td><td contenteditable=true onblur="planCell('${c.id}','titre',this.innerText)">${safeText(c.titre||'')}</td><td contenteditable=true onblur="planCell('${c.id}','acte',this.innerText)">${safeText(c.acte||'')}</td><td contenteditable=true onblur="planCell('${c.id}','pov',this.innerText)">${safeText(c.pov||'')}</td><td contenteditable=true onblur="planCell('${c.id}','plan_initial',this.innerText)">${safeText(c.plan_initial||'')}</td><td contenteditable=true onblur="planCell('${c.id}','statut',this.innerText)">${safeText(c.statut||'À écrire')}</td><td>${Number(c.nb_mots||0).toLocaleString('fr-FR')}</td><td><span class="memo-dot" onclick="openMemo('${c.id}')">${c.memo?'📝':'＋'}</span></td><td><button class="tiny-btn" onclick="insertPlanChapter('${c.id}')">+ après</button></td></tr>`).join('')}</tbody></table></div>`}
-  function planKanban(){let acts=[...new Set(planChapitres.map(c=>c.acte||'Sans acte'))];return `<div class="plan-kanban">${acts.map(act=>`<section class="plan-act" ondragover="event.preventDefault()" ondrop="dropPlan(event,'${String(act).replace(/'/g,"\\'")}')"><h3>${safeText(act)}</h3>${planChapitres.filter(c=>(c.acte||'Sans acte')===act).map(c=>`<article class="plan-card" draggable=true ondragstart="event.dataTransfer.setData('text/plain','${c.id}')"><strong>${c.numero?`Ch. ${c.numero} · `:''}${safeText(c.titre||'')}</strong><small>${safeText(c.pov||'')} · ${safeText(c.statut||'À écrire')}</small>${c.plan_initial?`<small>${safeText(c.plan_initial).slice(0,140)}</small>`:''}<small>${Number(c.nb_mots||0).toLocaleString('fr-FR')} mots · <span onclick="openMemo('${c.id}')">${c.memo?'📝 Mémo':'＋ Mémo'}</span></small></article>`).join('')}</section>`).join('')}</div>`}
-  async function planCell(id,f,v,n=false){let value=n?Number(v):(v||'').trim();let {error}=await db().from('chapitres').update({[f]:value}).eq('id',id);if(error)alert(error.message)}
-  async function insertPlanChapter(afterId=null){let after=afterId?planChapitres.find(c=>c.id===afterId):planChapitres.at(-1), title=prompt('Titre provisoire ?','Nouveau chapitre');if(title===null)return;let target=Number(after?.ordre||0)+1;for(const c of [...planChapitres].filter(x=>Number(x.ordre)>=target).sort((x,y)=>y.ordre-x.ordre))await db().from('chapitres').update({ordre:Number(c.ordre)+1,numero:Number(c.numero||c.ordre)+1}).eq('id',c.id);let {error}=await db().from('chapitres').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,titre:title||'Nouveau chapitre',ordre:target,numero:target,statut:'À écrire',acte:after?.acte||null});if(error)alert(error.message);else renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))}
-  async function renumberPlan(){for(let [i,c] of [...planChapitres].sort((a,b)=>a.ordre-b.ordre).entries())await db().from('chapitres').update({ordre:i+1,numero:i+1}).eq('id',c.id);renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))}
-  async function dropPlan(e,act){let id=e.dataTransfer.getData('text/plain');await db().from('chapitres').update({acte:act==='Sans acte'?null:act}).eq('id',id);renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))}
-  function escCsv(v){v=String(v??'');return /[;"\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v}
-  function exportPlanCsv(){let rows=[['Ordre','Chapitre','Acte','POV','Plan initial','État','Nb de mots écrits'],...planChapitres.map(c=>[c.ordre,c.titre,c.acte,c.pov,c.plan_initial,c.statut,c.nb_mots])];let blob=new Blob(['\ufeff'+rows.map(r=>r.map(escCsv).join(';')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plan.csv';a.click()}
-  function csvLine(s,sep){let o=[],c='',q=false;for(let i=0;i<s.length;i++){let x=s[i];if(x==='"'){if(q&&s[i+1]==='"'){c+='"';i++}else q=!q}else if(x===sep&&!q){o.push(c);c=''}else c+=x}o.push(c);return o}
-  async function importPlanCsv(file){if(!file)return;let text=await file.text(),lines=text.replace(/^\ufeff/,'').split(/\r?\n/).filter(Boolean),sep=lines[0].includes(';')?';':',',head=csvLine(lines[0],sep).map(x=>x.trim().toLowerCase()),ix=(...n)=>head.findIndex(h=>n.includes(h));let rows=lines.slice(1).map((l,i)=>{let r=csvLine(l,sep),ord=Number(r[ix('ordre')]||i+1);return{user_id:currentUser.id,oeuvre_id:currentOeuvreId,ordre:ord,numero:ord,titre:r[ix('chapitre','titre')]||`Chapitre ${ord}`,acte:r[ix('acte')]||null,pov:r[ix('pov')]||null,plan_initial:r[ix('plan initial','résumé','resume')]||null,statut:r[ix('état','etat','statut')]||'À écrire',nb_mots:Number(r[ix('nb de mots écrits','nb de mots ecrits','mots')]||0)}});if(confirm(`Importer ${rows.length} lignes ?`)){let {error}=await db().from('chapitres').insert(rows);if(error)alert(error.message);else renderOeuvrePlans(document.getElementById('oeuvre-tab-content'))}}
-  function memoDrawer(){return `<div class="drawer" id="memo-drawer" onclick="if(event.target===this)this.classList.remove('open')"><aside><div class="drawer-head"><h2>Mémo du chapitre</h2><button class="btn-secondary" onclick="document.getElementById('memo-drawer').classList.remove('open')">✕</button></div><textarea id="memo-text"></textarea><button class="btn-primary" onclick="saveMemo()">Enregistrer</button></aside></div>`}
-  function openMemo(id){memoChapterId=id;let c=planChapitres.find(x=>x.id===id)||relectureChapitres.find(x=>x.id===id);document.getElementById('memo-text').value=c?.memo||'';document.getElementById('memo-drawer').classList.add('open')}
-  async function saveMemo(){await db().from('chapitres').update({memo:document.getElementById('memo-text').value}).eq('id',memoChapterId);document.getElementById('memo-drawer').classList.remove('open')}
+
+  function onPlansGroupByChange(){ plansGroupBy = document.getElementById('plans-groupby').value; setPlansView(plansView); }
+  function setPlansView(mode){
+    plansView = mode;
+    ['table','kanban'].forEach(m => { const b = document.getElementById('pv-'+m); if (b) { b.style.background = (m===mode)?'var(--accent)':'var(--bg-2)'; b.style.color = (m===mode)?'var(--bg)':'var(--text)'; } });
+    const zone = document.getElementById('plans-view-zone');
+    if (!zone) return;
+    zone.innerHTML = mode === 'table' ? renderPlansTable(plansData) : renderPlansKanban(plansData, plansGroupBy);
+  }
+  function renderPlansTable(plans){
+    if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
+    return `<table class="ch-table"><thead><tr><th>Type</th><th>Titre</th><th>Acte</th><th>Statut</th></tr></thead><tbody>
+      ${plans.map(p => `<tr onclick="openPlanModal('${p.id}')"><td>${p.type}</td><td>${p.titre}</td><td>${p.acte||'—'}</td><td><span class="etat-pill">${p.statut||'—'}</span></td></tr>`).join('')}
+    </tbody></table>`;
+  }
+  function renderPlansKanban(plans, groupBy){
+    const groupes = [...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];
+    if (!groupes.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
+    return `<div class="kanban-row">${groupes.map(g => `
+      <div class="kanban-col"><h4>${g} (${plans.filter(p=>p[groupBy]===g).length})</h4>
+        ${plans.filter(p=>p[groupBy]===g).map(p => `<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px; color:var(--text-dim);">${p.type}</div>${p.titre}</div>`).join('')}
+      </div>`).join('')}</div>`;
+  }
+
+  function planModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-plan-overlay" onclick="if(event.target===this) closePlanModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-plan-title">Nouveau plan</h2><button onclick="closePlanModal()">✕</button></div>
+          <div class="modal-body">
+            <div><label>Type</label><select id="pf-type"><option>Intrigue principale</option><option>Arc personnage</option><option>Sous-intrigue</option><option>Romance</option></select></div>
+            <div><label>Titre</label><input id="pf-titre"></div>
+            <div class="row2">
+              <div><label>Acte</label><input id="pf-acte"></div>
+              <div><label>Statut</label><input id="pf-statut" placeholder="En cours, À venir..."></div>
+            </div>
+            <div><label>Transformation / résumé</label><textarea id="pf-transformation"></textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" id="pf-delete" style="margin-right:auto; display:none; color:#e88;" onclick="deletePlan()">Supprimer</button>
+            <button class="btn-secondary" onclick="closePlanModal()">Annuler</button>
+            <button class="btn-primary" onclick="savePlan()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let editingPlanId = null;
+  function openPlanModal(id){
+    editingPlanId = id || null;
+    document.getElementById('modal-plan-title').textContent = id ? 'Modifier le plan' : 'Nouveau plan';
+    document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('pf-type').value='Intrigue principale'; document.getElementById('pf-titre').value='';
+    document.getElementById('pf-acte').value=''; document.getElementById('pf-statut').value=''; document.getElementById('pf-transformation').value='';
+    if (id) {
+      const p = plansData.find(x=>x.id===id);
+      if (p) { document.getElementById('pf-type').value=p.type; document.getElementById('pf-titre').value=p.titre||''; document.getElementById('pf-acte').value=p.acte||''; document.getElementById('pf-statut').value=p.statut||''; document.getElementById('pf-transformation').value=p.transformation||''; }
+    }
+    document.getElementById('modal-plan-overlay').classList.add('open');
+  }
+  function closePlanModal(){ document.getElementById('modal-plan-overlay').classList.remove('open'); }
+  async function savePlan(){
+    const payload = { type: document.getElementById('pf-type').value, titre: document.getElementById('pf-titre').value.trim()||'Sans titre', acte: document.getElementById('pf-acte').value.trim(), statut: document.getElementById('pf-statut').value.trim(), transformation: document.getElementById('pf-transformation').value.trim() };
+    let error;
+    if (editingPlanId) ({ error } = await db().from('plans').update(payload).eq('id', editingPlanId));
+    else { payload.user_id = currentUser.id; payload.oeuvre_id = currentOeuvreId; ({ error } = await db().from('plans').insert(payload)); }
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePlanModal();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+  async function deletePlan(){
+    if (!confirm('Supprimer ce plan ?')) return;
+    const { error } = await db().from('plans').delete().eq('id', editingPlanId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closePlanModal();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+  async function addOeuvreNote(){
+    const val = document.getElementById('on-new').value.trim();
+    if (!val) return;
+    const { error } = await db().from('oeuvre_notes').insert({ oeuvre_id: currentOeuvreId, contenu: val });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+
   // ============================================================
-  // Onglet Relecture V6
+  // Onglet Relecture d'une œuvre
   // ============================================================
-  let currentRelectureId=null,relectureChapitres=[],relectureCorrections=[],currentRelecture=null,checkChapterId=null;
+  let currentRelectureId = null;
+  let relectureChapitres = [];
+
   async function renderOeuvreRelecture(zone){
-    let {data:rs,error}=await db().from('relectures').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">${safeText(error.message)}</div>`;return}
-    if(!rs?.length){zone.innerHTML=`<div class="empty">Aucune relecture.<br><br><button class="btn-primary" onclick="startRelecture()">Démarrer une relecture</button></div>`;return}
-    currentRelecture=rs[0];currentRelectureId=currentRelecture.id;
-    let [{data:ch},{data:co},{data:ck}]=await Promise.all([db().from('chapitres').select('id,numero,ordre,titre,pov,nb_mots,memo').eq('oeuvre_id',currentOeuvreId).order('ordre'),db().from('corrections').select('*').eq('relecture_id',currentRelectureId).order('created_at',{ascending:false}),db().from('relecture_checklist').select('*').eq('relecture_id',currentRelectureId).order('ordre')]);relectureChapitres=ch||[];relectureCorrections=co||[];let st={};relectureCorrections.filter(x=>x.chapitre_id).forEach(x=>st[x.chapitre_id]=x);let relus=relectureChapitres.filter(c=>st[c.id]?.resolu||st[c.id]?.etat==='Relu').length,pct=relectureChapitres.length?Math.round(relus/relectureChapitres.length*100):0;
-    zone.innerHTML=`<div class="relecture-progress"><div style="display:flex;justify-content:space-between;gap:10px"><div><h2 style="margin:0">Progression</h2><strong>${relus}/${relectureChapitres.length} chapitres relus · ${pct}%</strong></div><button class="btn-secondary" onclick="insertRelectureChapter()">+ Chapitre à écrire</button></div><div class="progress-bar-outer" style="max-width:none;margin-top:12px"><div class="progress-bar-inner" style="width:${pct}%"></div></div><div class="relecture-meta"><span>${relectureChapitres.filter(c=>(st[c.id]?.etat||(!c.nb_mots?'À écrire':'À relire'))==='À écrire').length} à écrire</span><span>${relectureChapitres.filter(c=>st[c.id]?.etat==='En cours').length} en cours</span><span>${relectureChapitres.filter(c=>st[c.id]?.etat==='Bloqué').length} bloqué(s)</span></div></div>
-    <div class="panel" style="overflow:auto;margin-bottom:18px"><h2>Suivi des chapitres</h2><table class="ch-table"><thead><tr><th>N°</th><th>Titre</th><th>POV</th><th>Mots</th><th>Statut</th><th>Contrôles</th><th>Retour bêta-lecture</th><th>Mémo</th></tr></thead><tbody>${relectureChapitres.map(c=>{let s=st[c.id],arr=(ck||[]).filter(x=>x.chapitre_id===c.id),status=s?.resolu?'Relu':(s?.etat||(!c.nb_mots?'À écrire':'À relire'));return`<tr><td>${c.numero??'—'}</td><td>${safeText(c.titre||'')}</td><td>${safeText(c.pov||'—')}</td><td>${Number(c.nb_mots||0).toLocaleString('fr-FR')}</td><td><select onchange="setRelStatus('${c.id}',this.value)">${['À écrire','À relire','En cours','Bloqué','Relu'].map(v=>`<option ${status===v?'selected':''}>${v}</option>`).join('')}</select></td><td><button class="tiny-btn" onclick="openChecklist('${c.id}')">${arr.length?`${arr.filter(x=>x.fait).length}/${arr.length}`:'Checklist'}</button></td><td><div style="font-size:12px;max-width:300px">${safeText(s?.retour_beta||'')}</div><button class="tiny-btn" onclick="editBeta('${c.id}')">${s?.retour_beta?'Modifier':'Ajouter'}</button></td><td><span class="memo-dot" onclick="openMemo('${c.id}')">${c.memo?'📝':'＋'}</span></td></tr>`}).join('')}</tbody></table></div>
-    <div class="relecture-grid"><div class="panel"><div style="display:flex;justify-content:space-between"><h2>Journal des corrections</h2><button class="btn-primary" onclick="addCorrection()">+ Ajouter</button></div>${relectureCorrections.filter(x=>x.point_a_corriger).map(x=>`<div class="memo-item"><div class="memo-date">${safeText(x.categorie||'Correction')} · ${x.resolu?'✅ Résolu':safeText(x.etat||'À traiter')}</div>${safeText(x.point_a_corriger)}</div>`).join('')||'<div class="empty">Aucune correction.</div>'}</div><div><div class="panel" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between"><h2>Rappels</h2><button class="tiny-btn" onclick="addReminder()">+ Ajouter</button></div>${(currentRelecture.rappels||[]).map((x,i)=>`<label class="check-row"><input type=checkbox ${x.fait?'checked':''} onchange="toggleReminder(${i},this.checked)"><span>${safeText(x.texte)}</span></label>`).join('')||'<small>Aucun rappel.</small>'}</div><div class="panel"><h2>Bloc-notes de relecture</h2><textarea id="rel-notes">${safeText(currentRelecture.notes||'')}</textarea><button class="btn-primary" onclick="saveRelNotes()">Enregistrer</button></div></div></div>${memoDrawer()}${checkDrawer()}`;
+    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
+    let { data: relectures } = await db().from('relectures').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false });
+    if (!relectures || !relectures.length) {
+      zone.innerHTML = `<div class="empty">Aucune relecture démarrée pour cette œuvre.<br><br><button class="btn-primary" onclick="startRelecture()">Démarrer une relecture</button></div>`;
+      return;
+    }
+    const relecture = relectures[0];
+    currentRelectureId = relecture.id;
+
+    const [{ data: chaps }, { data: corrections }] = await Promise.all([
+      db().from('chapitres').select('id, numero, titre').eq('oeuvre_id', currentOeuvreId).order('ordre'),
+      db().from('corrections').select('*').eq('relecture_id', currentRelectureId).order('created_at', { ascending:false }),
+    ]);
+    relectureChapitres = chaps || [];
+
+    const corrByChapitre = {};
+    (corrections||[]).forEach(c => { if (c.chapitre_id) corrByChapitre[c.chapitre_id] = c; });
+    const relus = (corrections||[]).filter(c=>c.resolu).length;
+    const enCours = (corrections||[]).filter(c=>!c.resolu && c.etat==='en cours').length;
+    const bloque = (corrections||[]).filter(c=>c.etat==='bloqué').length;
+    const total = relectureChapitres.length;
+    const pct = total ? Math.round(relus/total*100) : 0;
+
+    zone.innerHTML = `
+      <div class="stat-cards-row">
+        <div class="stat-card"><h3>Type de relecture</h3><div class="stat-big" style="font-size:1.3rem;">${relecture.type||'—'}</div><div style="font-size:12px; color:var(--text-dim);">${relecture.statut||''}</div></div>
+        <div class="stat-card"><h3>Chapitres relus</h3><div class="stat-big">${relus} / ${total}</div></div>
+        <div class="stat-card"><h3>En cours</h3><div class="stat-big">${enCours}</div></div>
+        <div class="stat-card"><h3>Bloqués</h3><div class="stat-big">${bloque}</div></div>
+      </div>
+      <div class="panel">
+        <h2>Avancement</h2>
+        <div class="progress-bar-outer" style="max-width:none;"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
+        <div style="font-size:12px; color:var(--text-dim); margin-top:6px;">${pct}%</div>
+      </div>
+
+      <div class="row2" style="grid-template-columns:1.4fr 1fr; gap:20px; align-items:start;">
+        <div class="panel">
+          <h2>Suivi des chapitres</h2>
+          <table class="ch-table"><thead><tr><th>N°</th><th>Titre</th><th>Statut</th><th></th></tr></thead><tbody>
+            ${relectureChapitres.map(c => {
+              const cor = corrByChapitre[c.id];
+              return `<tr onclick="openCorrectionModal('${c.id}', '${(c.titre||'').replace(/'/g,"\\'")}')">
+                <td>${c.numero ?? '—'}</td><td>${c.titre}</td>
+                <td><span class="etat-pill">${cor ? (cor.resolu?'Relu':cor.etat||'—') : 'À relire'}</span></td>
+                <td style="color:var(--text-dim);">${cor?.point_a_corriger ? '📝' : ''}</td>
+              </tr>`;
+            }).join('')}
+          </tbody></table>
+        </div>
+        <div class="panel">
+          <h2>Journal des corrections</h2>
+          ${(corrections||[]).length ? corrections.slice(0,10).map(c => `
+            <div class="memo-item">
+              <div class="memo-date">${new Date(c.created_at).toLocaleDateString('fr-FR')} — ${c.resolu?'✅ Résolu':'⚠️ '+ (c.etat||'à traiter')}</div>
+              ${c.point_a_corriger || '—'}
+            </div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune correction enregistrée.</div>'}
+        </div>
+      </div>
+    `;
   }
-  async function startRelecture(){let type=prompt('Cible / type de relecture ?','V1.5');if(!type)return;let {error}=await db().from('relectures').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,type,statut:'en cours',date_debut:new Date().toISOString().slice(0,10),rappels:[]});if(error)alert(error.message);else renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}
-  async function setRelStatus(id,etat){let x=relectureCorrections.find(c=>c.chapitre_id===id),p={etat,resolu:etat==='Relu'},q=x?db().from('corrections').update(p).eq('id',x.id):db().from('corrections').insert({user_id:currentUser.id,relecture_id:currentRelectureId,chapitre_id:id,...p});let {error}=await q;if(error)alert(error.message);else renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}
-  async function editBeta(id){let x=relectureCorrections.find(c=>c.chapitre_id===id),v=prompt('Synthèse des retours bêta-lecteurs :',x?.retour_beta||'');if(v===null)return;let q=x?db().from('corrections').update({retour_beta:v}).eq('id',x.id):db().from('corrections').insert({user_id:currentUser.id,relecture_id:currentRelectureId,chapitre_id:id,etat:'À relire',retour_beta:v,resolu:false});await q;renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}
-  async function insertRelectureChapter(){let n=prompt('Insérer après quel numéro ?',String(relectureChapitres.at(-1)?.numero||0));if(n===null)return;let after=relectureChapitres.find(c=>Number(c.numero)===Number(n))||relectureChapitres.at(-1),t=prompt('Titre provisoire ?','Nouveau chapitre');if(t===null)return;let target=Number(after?.ordre||0)+1;for(const c of [...relectureChapitres].filter(x=>Number(x.ordre)>=target).sort((x,y)=>y.ordre-x.ordre))await db().from('chapitres').update({ordre:Number(c.ordre)+1,numero:Number(c.numero||c.ordre)+1}).eq('id',c.id);let {data,error}=await db().from('chapitres').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,titre:t||'Nouveau chapitre',ordre:target,numero:target,statut:'À écrire'}).select('id').single();if(error)alert(error.message);else{await db().from('corrections').insert({user_id:currentUser.id,relecture_id:currentRelectureId,chapitre_id:data.id,etat:'À écrire',resolu:false});renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}}
-  async function addCorrection(){let p=prompt('Point à corriger :');if(!p)return;let c=prompt('Catégorie (libre) :','Cohérence')||'Correction';await db().from('corrections').insert({user_id:currentUser.id,relecture_id:currentRelectureId,point_a_corriger:p,categorie:c,etat:'À traiter',resolu:false});renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}
-  async function saveRelNotes(){await db().from('relectures').update({notes:document.getElementById('rel-notes').value}).eq('id',currentRelectureId)}
-  async function addReminder(){let t=prompt('Nouveau rappel :');if(!t)return;let a=[...(currentRelecture.rappels||[]),{texte:t,fait:false}];await db().from('relectures').update({rappels:a}).eq('id',currentRelectureId);renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'))}
-  async function toggleReminder(i,f){let a=[...(currentRelecture.rappels||[])];a[i].fait=f;await db().from('relectures').update({rappels:a}).eq('id',currentRelectureId)}
-  function checkDrawer(){return`<div class="drawer" id="check-drawer" onclick="if(event.target===this)this.classList.remove('open')"><aside><div class="drawer-head"><h2>Checklist du chapitre</h2><button class="btn-secondary" onclick="document.getElementById('check-drawer').classList.remove('open')">✕</button></div><div id="check-body"></div><button class="btn-secondary" onclick="addCheck()">+ Ajouter un contrôle</button></aside></div>`}
-  async function openChecklist(id){checkChapterId=id;document.getElementById('check-drawer').classList.add('open');refreshChecks()}
-  async function refreshChecks(){let {data}=await db().from('relecture_checklist').select('*').eq('relecture_id',currentRelectureId).eq('chapitre_id',checkChapterId).order('ordre');document.getElementById('check-body').innerHTML=(data||[]).map(x=>`<label class="check-row"><input type=checkbox ${x.fait?'checked':''} onchange="db().from('relecture_checklist').update({fait:this.checked}).eq('id','${x.id}')"><span>${safeText(x.libelle)}</span></label>`).join('')||'<div class="empty">Aucun contrôle.</div>'}
-  async function addCheck(){let l=prompt('Contrôle à ajouter :');if(!l)return;await db().from('relecture_checklist').insert({user_id:currentUser.id,relecture_id:currentRelectureId,chapitre_id:checkChapterId,libelle:l});refreshChecks()}
+
+  async function startRelecture(){
+    const type = prompt('Type de relecture (ex : Structurelle, Orthographe & grammaire) ?', 'Structurelle');
+    if (!type) return;
+    const { error } = await db().from('relectures').insert({ user_id: currentUser.id, oeuvre_id: currentOeuvreId, type, statut: 'en cours', date_debut: new Date().toISOString().slice(0,10) });
+    if (error) { alert('Erreur : ' + error.message); return; }
+    await renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'));
+  }
+
+  function correctionModalHtml(){
+    return `
+      <div class="modal-overlay" id="modal-correction-overlay" onclick="if(event.target===this) closeCorrectionModal()">
+        <div class="modal-box">
+          <div class="modal-head"><h2 id="modal-correction-title">Correction</h2><button onclick="closeCorrectionModal()">✕</button></div>
+          <div class="modal-body">
+            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+              ${['orthographe','continuite','repetition','mise_en_page','longueur'].map(c => `
+                <label style="display:flex; align-items:center; gap:6px; margin:0; font-size:13px; color:var(--text);"><input type="checkbox" id="cor-${c}" style="width:auto;"> ${c.replace('_',' ')}</label>
+              `).join('')}
+            </div>
+            <div><label>Point à corriger</label><textarea id="cor-point"></textarea></div>
+            <div class="row2">
+              <div><label>Statut</label><select id="cor-etat"><option>à relire</option><option>en cours</option><option>bloqué</option></select></div>
+              <div><label>Durée (minutes)</label><input type="number" id="cor-duree"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="cor-resolu" style="width:auto;"><label style="margin:0;" for="cor-resolu">Résolu / chapitre relu</label></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn-secondary" onclick="closeCorrectionModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveCorrection()">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  let currentCorrectionChapitreId = null;
+  function openCorrectionModal(chapitreId, titre){
+    currentCorrectionChapitreId = chapitreId;
+    document.getElementById('modal-correction-title').textContent = 'Correction — ' + titre;
+    ['orthographe','continuite','repetition','mise_en_page','longueur'].forEach(c => document.getElementById('cor-'+c).checked = false);
+    document.getElementById('cor-point').value=''; document.getElementById('cor-etat').value='à relire';
+    document.getElementById('cor-duree').value=''; document.getElementById('cor-resolu').checked=false;
+    document.getElementById('modal-correction-overlay').classList.add('open');
+  }
+  function closeCorrectionModal(){ document.getElementById('modal-correction-overlay').classList.remove('open'); }
+  async function saveCorrection(){
+    const payload = {
+      relecture_id: currentRelectureId,
+      chapitre_id: currentCorrectionChapitreId,
+      orthographe: document.getElementById('cor-orthographe').checked,
+      continuite: document.getElementById('cor-continuite').checked,
+      repetition: document.getElementById('cor-repetition').checked,
+      mise_en_page: document.getElementById('cor-mise_en_page').checked,
+      longueur: document.getElementById('cor-longueur').checked,
+      point_a_corriger: document.getElementById('cor-point').value.trim(),
+      etat: document.getElementById('cor-etat').value,
+      duree_minutes: parseInt(document.getElementById('cor-duree').value)||null,
+      resolu: document.getElementById('cor-resolu').checked,
+    };
+    const { error } = await db().from('corrections').insert(payload);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    closeCorrectionModal();
+    await renderOeuvreRelecture(document.getElementById('oeuvre-tab-content'));
+  }
+
   async function renderOeuvreApercu(zone){
     const { data: o } = await db().from('oeuvres').select('resume, pitch').eq('id', currentOeuvreId).single();
     zone.innerHTML = `
@@ -2358,11 +2554,6 @@
     `;
   }
 
-  let mediaType='Tout';
-  async function renderOeuvreMedias(zone){let {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">${safeText(error.message)}</div>`;return}let all=data||[],shown=mediaType==='Tout'?all:all.filter(x=>x.type===mediaType);zone.innerHTML=`<div class="work-toolbar"><button class="btn-primary" onclick="openMediaForm()">+ Ajouter un média</button><span class="spacer"></span><div class="view-switch">${['Tout','Illustration','Promotion','Couverture'].map(v=>`<button class="${mediaType===v?'active':''}" onclick="mediaType='${v}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${v}</button>`).join('')}</div></div><div id="media-form"></div>${shown.length?`<div class="media-grid">${shown.map(m=>`<article class="media-card">${m.url?`<img src="${safeText(m.url)}">`:''}<div class="media-card-body"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type)}${m.est_couverture_actuelle?' · ⭐ actuelle':''}</small></div></article>`).join('')}</div>`:'<div class="empty">Aucun média. La médiathèque est prête pour le futur multi-téléversement vers le stockage européen.</div>'}`}
-  function openMediaForm(){document.getElementById('media-form').innerHTML=`<div class="panel"><h2>Ajouter une référence média</h2><div class="row2"><div><label>Titre</label><input id="m-title"></div><div><label>Type</label><select id="m-type"><option>Illustration</option><option>Promotion</option><option>Couverture</option></select></div></div><label>URL temporaire</label><input id="m-url"><p style="font-size:12px;color:var(--text-dim)">Le vrai multi-téléversement OVHcloud/Scaleway sera branché lors du chantier stockage.</p><button class="btn-primary" onclick="saveMedia()">Enregistrer</button></div>`}
-  async function saveMedia(){let {error}=await db().from('medias').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,titre:document.getElementById('m-title').value||'Sans titre',type:document.getElementById('m-type').value,url:document.getElementById('m-url').value||null,storage_provider:'external'});if(error)alert(error.message);else renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))}
-  async function renderOptionalModule(zone,name){zone.innerHTML=`<div class="panel"><h2>${name}</h2><p>Module facultatif activé pour cette œuvre. Son contenu détaillé sera audité dans son propre chantier.</p></div>`}
   async function renderOeuvreFicheDetaillee(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
     const [{ data: o }, { data: plans }, { data: inspirations }] = await Promise.all([
