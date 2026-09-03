@@ -50,6 +50,10 @@
   .wrap{ max-width:1080px; margin:0 auto; padding:36px 32px 100px; }
 
   /* ---- bannière décorative ---- */
+  /* ---- bannières des fiches catalogue ---- */
+  .catalog-entity-banner{width:100%;height:220px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block;margin:0 0 18px;box-shadow:0 8px 24px rgba(0,0,0,.08);}
+  @media (max-width:800px){.catalog-entity-banner{height:150px;border-radius:9px;}}
+
   .banner{ position:relative; border:1px solid var(--line); background:var(--bg-2); border-radius:6px; padding:36px 40px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:28px; }
   .banner::before, .banner::after{ content:"✦"; position:absolute; color:var(--accent); opacity:0.5; font-size:14px; }
   .banner::before{ top:16px; left:28px; } .banner::after{ bottom:16px; right:30px; }
@@ -529,6 +533,10 @@
   // LIENS RAPIDES + BASCULE PASSE-AILES
   // ============================================================
   function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function renderCatalogEntityBanner(url,title=''){
+    if(!url) return '';
+    return `<img class="catalog-entity-banner" src="${safeText(url)}" alt="Bannière ${safeText(title)}">`;
+  }
 
   async function loadSidebarQuickLinks(){
     const zone = document.getElementById('sidebar-quick-links');
@@ -754,7 +762,7 @@
               <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Univers & Lore</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
             </section>
-            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit uniquement son fond et son accent.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"></section>
+            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><small style="color:var(--text-dim);">Image horizontale affichée en haut de la fiche Œuvre.</small></section>
             <section class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></section>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
@@ -828,6 +836,7 @@
       notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
       couverture:document.getElementById('aow-couverture').value.trim()||null,
       page_color:document.getElementById('aow-page-color').value||null,
+      banniere:document.getElementById('aow-banniere')?.value.trim()||null,
       module_lore:document.getElementById('aow-module-lore').checked,
       module_chronologie:document.getElementById('aow-module-chrono').checked,
       accent_color:document.getElementById('aow-accent').value,
@@ -1359,6 +1368,7 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
+      ${renderCatalogEntityBanner(s.banniere||s.image_couverture,s.nom)}
       <div class="oeuvre-head">
         <div class="cover-block">${initials(s.nom)}</div>
         <div class="oeuvre-info">
@@ -1454,6 +1464,7 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="openSagaDetail('${ss.saga_id}')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à ${ss.sagas?.nom || 'la saga'}</div>
+      ${renderCatalogEntityBanner(ss.banniere||ss.image_url,ss.nom)}
       <div class="oeuvre-head">
         <div class="cover-block">${initials(ss.nom)}</div>
         <div class="oeuvre-info">
@@ -2043,6 +2054,7 @@
               <div><label>Statut</label><select id="sf-statut"><option>Saga en cours</option><option>En pause</option><option>Terminée</option></select></div>
             </div>
             <div><label>Résumé / à propos</label><textarea id="sf-description"></textarea></div>
+            <div><label>Bannière de la fiche</label><input id="sf-banniere" placeholder="https://…"></div>
           </div>
           <div class="modal-foot"><button class="btn-secondary" onclick="closeSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSaga()">Enregistrer</button></div>
         </div>
@@ -2053,16 +2065,16 @@
     editingSagaId = id || null;
     document.getElementById('modal-saga-title').textContent = id ? 'Modifier la saga' : 'Nouvelle saga';
     document.getElementById('sf-nom').value = ''; document.getElementById('sf-genre').value = '';
-    document.getElementById('sf-statut').value = 'Saga en cours'; document.getElementById('sf-description').value = '';
+    document.getElementById('sf-statut').value = 'Saga en cours'; document.getElementById('sf-description').value = ''; document.getElementById('sf-banniere').value='';
     if (id) {
-      const { data } = await db().from('sagas').select('nom, genre, statut, description').eq('id', id).single();
-      if (data) { document.getElementById('sf-nom').value = data.nom||''; document.getElementById('sf-genre').value = data.genre||''; document.getElementById('sf-statut').value = data.statut||'Saga en cours'; document.getElementById('sf-description').value = data.description||''; }
+      const { data } = await db().from('sagas').select('nom, genre, statut, description, banniere, image_couverture').eq('id', id).single();
+      if (data) { document.getElementById('sf-nom').value = data.nom||''; document.getElementById('sf-genre').value = data.genre||''; document.getElementById('sf-statut').value = data.statut||'Saga en cours'; document.getElementById('sf-description').value = data.description||''; document.getElementById('sf-banniere').value=data.banniere||data.image_couverture||''; }
     }
     document.getElementById('modal-saga-overlay').classList.add('open');
   }
   function closeSagaModal(){ document.getElementById('modal-saga-overlay').classList.remove('open'); }
   async function saveSaga(){
-    const payload = { nom: document.getElementById('sf-nom').value.trim()||'Sans titre', genre: document.getElementById('sf-genre').value.trim(), statut: document.getElementById('sf-statut').value, description: document.getElementById('sf-description').value.trim() };
+    const payload = { nom: document.getElementById('sf-nom').value.trim()||'Sans titre', genre: document.getElementById('sf-genre').value.trim(), statut: document.getElementById('sf-statut').value, description: document.getElementById('sf-description').value.trim(), banniere:document.getElementById('sf-banniere').value.trim()||null };
     let error, newId;
     if (editingSagaId) ({ error } = await db().from('sagas').update(payload).eq('id', editingSagaId));
     else { payload.user_id = currentUser.id; const res = await db().from('sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
@@ -2084,6 +2096,7 @@
               <div><label>Statut</label><select id="ssf-statut"><option>En cours</option><option>À venir</option><option>Terminée</option></select></div>
             </div>
             <div><label>Description</label><textarea id="ssf-description"></textarea></div>
+            <div><label>Bannière de la fiche</label><input id="ssf-banniere" placeholder="https://…"></div>
           </div>
           <div class="modal-foot"><button class="btn-secondary" onclick="closeSousSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSousSaga()">Enregistrer</button></div>
         </div>
@@ -2094,16 +2107,16 @@
     editingSousSagaId = id || null;
     document.getElementById('modal-soussaga-title').textContent = id ? 'Modifier la sous-saga' : 'Nouvelle sous-saga';
     document.getElementById('ssf-nom').value=''; document.getElementById('ssf-format').value='';
-    document.getElementById('ssf-statut').value='En cours'; document.getElementById('ssf-description').value='';
+    document.getElementById('ssf-statut').value='En cours'; document.getElementById('ssf-description').value=''; document.getElementById('ssf-banniere').value='';
     if (id) {
-      const { data } = await db().from('sous_sagas').select('nom, format, statut, description').eq('id', id).single();
-      if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; }
+      const { data } = await db().from('sous_sagas').select('nom, format, statut, description, banniere, image_url').eq('id', id).single();
+      if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; document.getElementById('ssf-banniere').value=data.banniere||data.image_url||''; }
     }
     document.getElementById('modal-soussaga-overlay').classList.add('open');
   }
   function closeSousSagaModal(){ document.getElementById('modal-soussaga-overlay').classList.remove('open'); }
   async function saveSousSaga(){
-    const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim() };
+    const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim(), banniere:document.getElementById('ssf-banniere').value.trim()||null };
     let error, newId;
     if (editingSousSagaId) ({ error } = await db().from('sous_sagas').update(payload).eq('id', editingSousSagaId));
     else { payload.user_id = currentUser.id; payload.saga_id = currentSagaId; const res = await db().from('sous_sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
@@ -2164,6 +2177,7 @@
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
     content.innerHTML = `
       <div class="back-link" onclick="navigate('oeuvres')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux œuvres</div>
+      ${renderCatalogEntityBanner(o.banniere,o.titre)}
       <div class="oeuvre-head">
         ${o.couverture ? `<img src="${safeText(o.couverture)}" alt="Couverture de ${safeText(o.titre)}" style="width:100px;height:130px;object-fit:cover;border-radius:6px;border:1px solid var(--line);flex-shrink:0;">` : `<div class="cover-block">${initials(o.titre)}</div>`}
         <div class="oeuvre-info">
@@ -3526,11 +3540,12 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('poesie')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à mes recueils</div>
-      <div class="oeuvre-head" style="${r.banniere ? `position:relative; padding:28px; border-radius:8px; overflow:hidden; background-image:linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.15) 60%), url('${r.banniere}'); background-size:cover; background-position:center;` : ''}">
+      ${renderCatalogEntityBanner(r.banniere,r.titre)}
+      <div class="oeuvre-head">
         ${r.couverture ? `<img src="${r.couverture}" style="width:100px; height:140px; object-fit:cover; border-radius:6px; flex-shrink:0; box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);">` : `<div class="cover-block">${initials(r.titre)}</div>`}
         <div class="oeuvre-info">
-          <h1 style="${r.banniere ? 'color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.6);' : ''}">${r.titre}</h1>
-          <div class="oeuvre-sub" style="${r.banniere ? 'color:rgba(255,255,255,0.85);' : ''}">${r.type_recueil||''} · ${r.theme_principal||''}</div>
+          <h1>${r.titre}</h1>
+          <div class="oeuvre-sub">${r.type_recueil||''} · ${r.theme_principal||''}</div>
           <span class="status-badge">${r.statut||'Sans statut'}</span>
         </div>
       </div>
