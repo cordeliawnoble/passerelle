@@ -267,6 +267,37 @@
     .be-kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:12px;overflow:auto;padding-bottom:8px}.be-kanban-col{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:10px;min-height:180px}.be-kanban-col h3{font-size:11px;text-transform:uppercase;color:var(--text-dim);margin:0 0 9px}.be-kanban-col h3 span{color:var(--accent)}.be-kanban-card{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;background:var(--bg)}.be-kanban-card img{width:28px;height:40px;object-fit:cover;border-radius:4px}.be-kanban-card strong{font-size:11px;display:block}.be-kanban-card small{font-size:9px;color:var(--text-dim)}.be-kanban-empty{font-size:10px;color:var(--text-dim);padding:10px 2px}
     @media(max-width:1100px){.be-top-grid{grid-template-columns:1fr}.be-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.be-title-row{align-items:flex-start;flex-direction:column}.be-filters{grid-template-columns:1fr}.be-destination-card{grid-template-columns:100px 1fr}.be-donut{width:92px;height:92px}.be-donut-hole{width:56px;height:56px}}
 
+
+  /* ---- Back-office Œuvres · fiche d’administration V5.1 ---- */
+  .admin-work-editor{max-width:1180px;margin:0 auto;padding-bottom:60px}
+  .admin-work-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+  .admin-work-topbar h1{margin:2px 0 5px;font-size:2rem}
+  .admin-work-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--lavender-deep)}
+  .admin-work-top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .admin-work-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:start}
+  .admin-work-main{display:grid;gap:16px}
+  .admin-work-side{display:grid;gap:16px;position:sticky;top:18px}
+  .admin-section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .admin-section h2{font-size:1.08rem;margin:0 0 4px}
+  .admin-section-sub{font-size:12px;color:var(--text-dim);margin:0 0 16px;line-height:1.5}
+  .admin-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .admin-section-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .admin-field-full{grid-column:1/-1}
+  .admin-check-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+  .admin-check-row:last-child{border-bottom:none;padding-bottom:0}
+  .admin-check-row input{width:auto;margin-top:3px}
+  .admin-check-row strong{display:block;font-size:13px}
+  .admin-check-row small{display:block;color:var(--text-dim);font-size:11px;margin-top:2px;line-height:1.45}
+  .admin-savebar{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .admin-cover-preview{width:100%;aspect-ratio:2/3;border:1px dashed var(--line);border-radius:9px;overflow:hidden;background:var(--bg-2);display:grid;place-items:center;color:var(--text-dim);margin-bottom:10px}
+  .admin-cover-preview img{width:100%;height:100%;object-fit:cover}
+  .admin-work-note{padding:10px 12px;border-radius:8px;background:rgba(124,92,191,.07);font-size:11px;color:var(--text-dim);line-height:1.5;margin-top:10px}
+  .admin-danger{border-color:rgba(190,80,95,.25)}
+  .admin-danger h2{color:#a95763}
+  .admin-inline-status{font-size:11px;color:var(--text-dim);min-height:16px;margin-top:8px}
+  @media(max-width:980px){.admin-work-layout{grid-template-columns:1fr}.admin-work-side{position:static}.admin-section-grid.three{grid-template-columns:1fr 1fr}}
+  @media(max-width:680px){.admin-work-topbar{flex-direction:column}.admin-work-top-actions{justify-content:flex-start}.admin-section-grid,.admin-section-grid.three{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -583,10 +614,191 @@
 
   async function renderAdminOeuvresPage(){
     const content=document.getElementById('content');
-    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,sagas(nom),sous_sagas(nom)').order('created_at',{ascending:false});
+    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,saga_id,sous_saga_id,univers_id,sagas(nom,univers_id),sous_sagas(nom)').order('created_at',{ascending:false});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Œuvres','Gérez vos œuvres, leurs rattachements et leurs informations canoniques.',`<button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une œuvre…" oninput="filterAdminCards('admin-works-grid',this.value)"><select onchange="filterAdminWorksStatus(this.value)"><option value="">Tous les statuts</option>${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(v=>`<option>${safeText(v)}</option>`).join('')}</select></div><div class="admin-catalog-grid" id="admin-works-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-status="${safeText(x.statut||'')}" data-search="${safeText((x.titre+' '+(x.genre||'')+' '+(x.sagas?.nom||'')+' '+(x.sous_sagas?.nom||'')).toLowerCase())}" onclick="openOeuvreModal('${x.id}')"><div class="admin-catalog-visual">${x.couverture?`<img src="${safeText(x.couverture)}" alt="">`:`<div class="admin-catalog-placeholder">${initials(x.titre)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(x.titre)}</h3><div class="admin-catalog-meta">${safeText(x.sagas?.nom||'Œuvre indépendante')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''}<br>${safeText(x.genre||'—')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune œuvre pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Œuvres','Le catalogue canonique. Un clic ouvre maintenant la fiche d’administration complète de l’œuvre.',`<button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une œuvre…" oninput="filterAdminCards('admin-works-grid',this.value)"><select onchange="filterAdminWorksStatus(this.value)"><option value="">Tous les statuts</option>${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(v=>`<option>${safeText(v)}</option>`).join('')}</select></div><div class="admin-catalog-grid" id="admin-works-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-status="${safeText(x.statut||'')}" data-search="${safeText((x.titre+' '+(x.genre||'')+' '+(x.sagas?.nom||'')+' '+(x.sous_sagas?.nom||'')).toLowerCase())}" onclick="openAdminOeuvreEditor('${x.id}')"><div class="admin-catalog-visual">${x.couverture?`<img src="${safeText(x.couverture)}" alt="">`:`<div class="admin-catalog-placeholder">${initials(x.titre)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(x.titre)}</h3><div class="admin-catalog-meta">${safeText(x.sagas?.nom||'Œuvre indépendante')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''}<br>${safeText(x.genre||'—')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminOeuvreEditor('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune œuvre pour le moment.')}</div>`;
   }
+
+  let adminEditingOeuvreId=null;
+  let adminOeuvreSagas=[];
+
+  async function openAdminOeuvreEditor(id){
+    adminEditingOeuvreId=id;
+    const content=document.getElementById('content');
+    if(!content) return;
+    content.innerHTML='<div class="status-line">Chargement de la fiche d’administration…</div>';
+    const [workRes, collectionsRes, sagasRes]=await Promise.all([
+      db().from('oeuvres').select('*').eq('id',id).single(),
+      db().from('univers').select('id,nom').order('ordre',{ascending:true}),
+      db().from('sagas').select('id,nom,univers_id').order('ordre',{ascending:true})
+    ]);
+    if(workRes.error){ content.innerHTML=adminEmpty('Erreur : '+safeText(workRes.error.message)); return; }
+    const o=workRes.data;
+    adminOeuvreSagas=sagasRes.data||[];
+    let ss=[];
+    if(o.saga_id){ const r=await db().from('sous_sagas').select('id,nom').eq('saga_id',o.saga_id).order('ordre'); ss=r.data||[]; }
+    const inheritedCollection=adminOeuvreSagas.find(s=>s.id===o.saga_id)?.univers_id||null;
+    const selectedCollection=o.saga_id?inheritedCollection:(o.univers_id||null);
+    const thisYear=new Date().getFullYear();
+    const editorialDest=['Découverte','Exclusivité abonnement','Passerelle','Librairie'];
+    const editorialTargets=['V1','V1.5','V2'];
+    const editorialStatuses=['V1 à écrire','V1 en cours','V1 terminée','V1.5 à faire','V1.5 en cours','V1.5 terminée','V2 à écrire','V2 en cours','V2 terminée'];
+    const manuscriptStatuses=['En écriture','En pause','Terminée'];
+    const tropes=(o.tropes||[]).join(', ');
+    const enjeux=(o.enjeux_secondaires||[]).join('\n');
+    content.innerHTML=`
+      <div class="admin-work-editor">
+        <div class="admin-work-topbar">
+          <div><div class="admin-work-kicker">Administration · Œuvres</div><h1>${safeText(o.titre||'Sans titre')}</h1><p style="margin:0;color:var(--text-dim);font-size:12px;">Ici on renseigne et configure. La fiche Passerelle, elle, affichera et fera travailler ces données.</p></div>
+          <div class="admin-work-top-actions"><button class="btn-secondary" onclick="renderAdminOeuvresPage()">← Catalogue</button><button class="btn-secondary" onclick="openOeuvreDetail('${o.id}')">Ouvrir dans Passerelle ↗</button><button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer</button></div>
+        </div>
+        <div class="admin-work-layout">
+          <div class="admin-work-main">
+            <section class="admin-section"><h2>Identité & hiérarchie</h2><p class="admin-section-sub">Les informations canoniques qui situent l’œuvre dans le catalogue.</p>
+              <div class="admin-section-grid">
+                <div class="admin-field-full"><label>Titre</label><input id="aow-titre" value="${safeText(o.titre||'')}"></div>
+                <div><label>Sous-titre</label><input id="aow-sous-titre" value="${safeText(o.sous_titre||'')}"></div>
+                <div><label>Type / format</label><input id="aow-format" value="${safeText(o.format_cible||'')}" placeholder="Roman, Novella, Escale…"></div>
+                <div><label>Collection</label><select id="aow-collection" ${o.saga_id?'disabled':''}><option value="">— Aucune —</option>${(collectionsRes.data||[]).map(c=>`<option value="${c.id}" ${selectedCollection===c.id?'selected':''}>${safeText(c.nom)}</option>`).join('')}</select><small style="color:var(--text-dim);">${o.saga_id?'Héritée automatiquement de la saga.':'Pour une œuvre indépendante.'}</small></div>
+                <div><label>Saga</label><select id="aow-saga" onchange="onAdminOeuvreSagaChange()"><option value="">— Œuvre indépendante —</option>${adminOeuvreSagas.map(s=>`<option value="${s.id}" ${o.saga_id===s.id?'selected':''}>${safeText(s.nom)}</option>`).join('')}</select></div>
+                <div><label>Sous-saga</label><select id="aow-sous-saga" ${o.saga_id?'':'disabled'}><option value="">—</option>${ss.map(x=>`<option value="${x.id}" ${o.sous_saga_id===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div>
+                <div><label>Langue</label><input id="aow-langue" value="${safeText(o.langue||'Français')}"></div>
+              </div>
+            </section>
+
+            <section class="admin-section"><h2>Présentation de l’œuvre</h2><p class="admin-section-sub">Ces champs nourriront la future page Informations. Ils ne sont pas une seconde copie.</p>
+              <label>Pitch</label><textarea id="aow-pitch">${safeText(o.pitch||'')}</textarea>
+              <label style="margin-top:10px;">Résumé</label><textarea id="aow-resume">${safeText(o.resume||'')}</textarea>
+              <label style="margin-top:10px;">À propos</label><textarea id="aow-a-propos">${safeText(o.a_propos||'')}</textarea>
+              <label style="margin-top:10px;">Intentions</label><textarea id="aow-intentions">${safeText(o.intentions||'')}</textarea>
+              <div class="admin-check-row"><input type="checkbox" id="aow-coeur" ${o.tient_a_coeur?'checked':''}><div><strong>Projet qui me tient particulièrement à cœur</strong><small>Marqueur personnel, sans effet sur les priorités Liam.</small></div></div>
+            </section>
+
+            <section class="admin-section"><h2>Informations narratives</h2><p class="admin-section-sub">Le contenu qui appartenait jusque-là à la Fiche détaillée.</p>
+              <div class="admin-section-grid">
+                <div><label>Genre</label><input id="aow-genre" value="${safeText(o.genre||'')}"></div>
+                <div><label>Sous-genre</label><input id="aow-sous-genre" value="${safeText(o.sous_genre||'')}"></div>
+                <div><label>Tonalité</label><input id="aow-tonalite" value="${safeText(o.tonalite||'')}"></div>
+                <div><label>Temporalité</label><input id="aow-temporalite" value="${safeText(o.temporalite||'')}"></div>
+                <div><label>Lieu principal</label><input id="aow-lieu" value="${safeText(o.lieu_principal||'')}"></div>
+                <div><label>Public cible</label><select id="aow-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(x=>`<option ${o.public_cible===x?'selected':''}>${x}</option>`).join('')}</select></div>
+                <div class="admin-field-full"><label>Tropes / mots-clés</label><input id="aow-tropes" value="${safeText(tropes)}" placeholder="Séparés par des virgules"></div>
+                <div class="admin-field-full"><label>Enjeu principal</label><textarea id="aow-enjeu">${safeText(o.enjeu_principal||'')}</textarea></div>
+                <div class="admin-field-full"><label>Enjeux secondaires</label><textarea id="aow-enjeux">${safeText(enjeux)}</textarea></div>
+              </div>
+            </section>
+
+            <section class="admin-section"><h2>Manuscrit & Atelier</h2><p class="admin-section-sub">Configuration de la source manuscrit. Le nombre de mots réel a vocation à venir d’Atelier, pas à être ressaisi ici.</p>
+              <div class="admin-section-grid three">
+                <div><label>Statut manuscrit</label><select id="aow-statut">${manuscriptStatuses.map(x=>`<option ${o.statut===x?'selected':''}>${x}</option>`).join('')}</select></div>
+                <div><label>Objectif de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"></div>
+                <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.code_session||'')}" placeholder="ex. EC-T2"></div>
+              </div>
+              <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
+            </section>
+
+            <section class="admin-section"><h2>Pilotage éditorial</h2><p class="admin-section-sub">Les mêmes données que le Bureau éditorial, éditables ici sans créer de copie.</p>
+              <div class="admin-section-grid three">
+                <div><label>Destination</label><select id="aow-destination"><option value="">Non définie</option>${editorialDest.map(x=>`<option ${o.destination_editoriale===x?'selected':''}>${x}</option>`).join('')}</select></div>
+                <div><label>Cible éditoriale</label><select id="aow-cible"><option value="">Non définie</option>${editorialTargets.map(x=>`<option ${o.niveau_editorial_cible===x?'selected':''}>${x}</option>`).join('')}</select></div>
+                <div><label>Éditorial actuel</label><select id="aow-editorial"><option value="">Non défini</option>${editorialStatuses.map(x=>`<option ${o.statut_editorial_actuel===x?'selected':''}>${x}</option>`).join('')}</select></div>
+                <div><label>Horizon</label><select id="aow-horizon"><option value="">N/A</option><option value="${thisYear}" ${Number(o.horizon_annee)===thisYear?'selected':''}>Horizon Y · ${thisYear}</option><option value="${thisYear+1}" ${Number(o.horizon_annee)===thisYear+1?'selected':''}>Horizon Y+1 · ${thisYear+1}</option></select></div>
+                <div class="admin-field-full"><label>Publication envisagée</label><input id="aow-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="2029, T2 2030, printemps 2028…"></div>
+                <div class="admin-field-full"><label>Notes éditoriales</label><textarea id="aow-notes-editoriales">${safeText(o.notes_editoriales||'')}</textarea></div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="admin-work-side">
+            <section class="admin-section"><h2>Couverture canonique</h2><div class="admin-cover-preview" id="aow-cover-preview">${o.couverture?`<img src="${safeText(o.couverture)}" alt="Couverture">`:'✒'}</div><label>URL</label><input id="aow-couverture" value="${safeText(o.couverture||'')}" oninput="refreshAdminCoverPreview()"></section>
+            <section class="admin-section"><h2>Modules de la fiche</h2><p class="admin-section-sub">Afficher ou masquer les espaces optionnels sans supprimer leurs données.</p>
+              <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Univers & Lore</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
+              <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
+            </section>
+            <section class="admin-section"><h2>Apparence</h2><label>Thème</label><select id="aow-theme"><option value="clair" ${o.theme_base==='clair'?'selected':''}>Clair</option><option value="sombre" ${o.theme_base==='sombre'?'selected':''}>Sombre</option></select><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||'#7C5CBF')}"></section>
+            <section class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></section>
+            <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
+          </aside>
+        </div>
+      </div>`;
+  }
+
+  async function onAdminOeuvreSagaChange(){
+    const sagaId=document.getElementById('aow-saga')?.value||'';
+    const collection=document.getElementById('aow-collection');
+    const ss=document.getElementById('aow-sous-saga');
+    if(!collection||!ss) return;
+    if(!sagaId){ collection.disabled=false; ss.disabled=true; ss.innerHTML='<option value="">—</option>'; return; }
+    const saga=adminOeuvreSagas.find(s=>s.id===sagaId);
+    if(saga?.univers_id) collection.value=saga.univers_id;
+    collection.disabled=true;
+    ss.disabled=false;
+    const {data,error}=await db().from('sous_sagas').select('id,nom').eq('saga_id',sagaId).order('ordre');
+    ss.innerHTML='<option value="">—</option>'+(!error?(data||[]).map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join(''):'');
+  }
+
+  function refreshAdminCoverPreview(){
+    const url=document.getElementById('aow-couverture')?.value.trim();
+    const preview=document.getElementById('aow-cover-preview');
+    if(preview) preview.innerHTML=url?`<img src="${safeText(url)}" alt="Couverture">`:'✒';
+  }
+
+  async function saveAdminOeuvreEditor(){
+    if(!adminEditingOeuvreId) return;
+    const status=document.getElementById('aow-save-status');
+    if(status) status.textContent='Enregistrement…';
+    const sagaId=document.getElementById('aow-saga').value||null;
+    const tropesRaw=document.getElementById('aow-tropes').value.trim();
+    const enjeuxRaw=document.getElementById('aow-enjeux').value.trim();
+    const newEditorial=document.getElementById('aow-editorial').value||null;
+    const payload={
+      titre:document.getElementById('aow-titre').value.trim()||'Sans titre',
+      sous_titre:document.getElementById('aow-sous-titre').value.trim()||null,
+      format_cible:document.getElementById('aow-format').value.trim()||null,
+      univers_id:sagaId?null:(document.getElementById('aow-collection').value||null),
+      saga_id:sagaId,
+      sous_saga_id:sagaId?(document.getElementById('aow-sous-saga').value||null):null,
+      langue:document.getElementById('aow-langue').value.trim()||'Français',
+      pitch:document.getElementById('aow-pitch').value.trim()||null,
+      resume:document.getElementById('aow-resume').value.trim()||null,
+      a_propos:document.getElementById('aow-a-propos').value.trim()||null,
+      intentions:document.getElementById('aow-intentions').value.trim()||null,
+      tient_a_coeur:document.getElementById('aow-coeur').checked,
+      genre:document.getElementById('aow-genre').value.trim()||null,
+      sous_genre:document.getElementById('aow-sous-genre').value.trim()||null,
+      tonalite:document.getElementById('aow-tonalite').value.trim()||null,
+      temporalite:document.getElementById('aow-temporalite').value.trim()||null,
+      lieu_principal:document.getElementById('aow-lieu').value.trim()||null,
+      public_cible:document.getElementById('aow-public').value||null,
+      tropes:tropesRaw?tropesRaw.split(',').map(x=>x.trim()).filter(Boolean):null,
+      enjeu_principal:document.getElementById('aow-enjeu').value.trim()||null,
+      enjeux_secondaires:enjeuxRaw?enjeuxRaw.split('\n').map(x=>x.trim()).filter(Boolean):null,
+      statut:document.getElementById('aow-statut').value,
+      objectif_mots:document.getElementById('aow-objectif').value?Number(document.getElementById('aow-objectif').value):null,
+      code_session:document.getElementById('aow-code-session').value.trim()||null,
+      destination_editoriale:document.getElementById('aow-destination').value||null,
+      niveau_editorial_cible:document.getElementById('aow-cible').value||null,
+      statut_editorial_actuel:newEditorial,
+      horizon_annee:document.getElementById('aow-horizon').value?Number(document.getElementById('aow-horizon').value):null,
+      publication_envisagee:document.getElementById('aow-publication').value.trim()||null,
+      notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
+      couverture:document.getElementById('aow-couverture').value.trim()||null,
+      module_lore:document.getElementById('aow-module-lore').checked,
+      module_chronologie:document.getElementById('aow-module-chrono').checked,
+      theme_base:document.getElementById('aow-theme').value,
+      accent_color:document.getElementById('aow-accent').value,
+      archive:document.getElementById('aow-archive').checked,
+      updated_at:new Date().toISOString()
+    };
+    const {data:old}=await db().from('oeuvres').select('statut_editorial_actuel').eq('id',adminEditingOeuvreId).single();
+    if((old?.statut_editorial_actuel||null)!==newEditorial) payload.date_dernier_changement_editorial=new Date().toISOString();
+    const {error}=await db().from('oeuvres').update(payload).eq('id',adminEditingOeuvreId);
+    if(error){ if(status) status.textContent='Erreur : '+error.message; alert('Erreur : '+error.message); return; }
+    if(status) status.textContent='✓ Enregistré';
+    setTimeout(()=>{ if(status) status.textContent=''; },2200);
+    await openAdminOeuvreEditor(adminEditingOeuvreId);
+  }
+
   function filterAdminWorksStatus(v){ document.querySelectorAll('#admin-works-grid .admin-catalog-card').forEach(c=>c.style.display=!v||c.dataset.status===v?'':'none'); }
 
   async function renderAdminRecueilsPage(){
