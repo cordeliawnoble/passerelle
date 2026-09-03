@@ -15,6 +15,8 @@
     --lavender: #8C7FB0; --lavender-deep: #5E5286;
     --wine: #7A3B4A;
     --accent: #7C5CBF;
+    --global-bg:#FFFFFF; --global-bg-2:#F6F3FB; --global-card:#FFFFFF;
+    --global-line:rgba(124,92,191,0.18); --global-text:#2B2140; --global-text-dim:#7A7290; --global-accent:#7C5CBF;
   }
   *{box-sizing:border-box;}
   body{ margin:0; background:var(--bg); color:var(--text); font-family:'Lora', serif; line-height:1.6; }
@@ -24,7 +26,7 @@
 
   /* ---- structure générale : sidebar + contenu ---- */
   .shell{ display:flex; min-height:100vh; }
-  .sidebar{ width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:0 0 18px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+  .sidebar{ --bg:var(--global-bg); --bg-2:var(--global-bg-2); --card:var(--global-card); --line:var(--global-line); --text:var(--global-text); --text-dim:var(--global-text-dim); --accent:var(--global-accent); width:230px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--line); padding:0 0 18px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
   .sidebar::-webkit-scrollbar{ width:7px; }
   .sidebar::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
   .sidebar-brand-wrap{ position:sticky; top:0; z-index:20; background:var(--bg-2); border-bottom:1px solid var(--line); margin-bottom:10px; padding:14px 12px 10px; }
@@ -309,6 +311,15 @@
   .rich-toolbar{display:flex;gap:5px;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--bg-2)}.rich-toolbar button,.rich-toolbar select{width:auto;padding:6px 8px;margin:0;font-size:12px}.rich-editor{min-height:360px;border:1px solid var(--line);border-radius:0 0 8px 8px;padding:16px;background:var(--bg);font-size:14px;line-height:1.65;outline:none}.rich-editor img{max-width:100%;height:auto;border-radius:8px;margin:10px 0}
   .relecture-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(260px,3fr);gap:20px;align-items:start}.linked-note{padding:11px 0;border-bottom:1px solid var(--line)}.linked-note small{display:block;color:var(--text-dim);margin-bottom:4px}.walter-empty{text-align:center;padding:28px 12px;color:var(--text-dim)}.walter-empty .walter-placeholder{font-size:54px;margin-bottom:8px}
   .check-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--line)}.check-item input{width:auto;margin-top:3px}.check-add{display:flex;gap:8px;margin-top:10px}.check-add input{margin:0}.status-select{width:auto;min-width:120px;margin:0}
+  .admin-cover-picker{display:none;margin-top:10px;max-height:310px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg-2);}
+  .admin-cover-picker.open{display:block;}
+  .admin-cover-picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .admin-cover-choice{border:2px solid transparent;border-radius:9px;padding:5px;background:var(--card);cursor:pointer;text-align:left;color:var(--text);}
+  .admin-cover-choice.selected{border-color:var(--accent);}
+  .admin-cover-choice img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;display:block;margin-bottom:5px;}
+  .admin-cover-choice small{display:block;font-size:10px;color:var(--text-dim);line-height:1.25;}
+  details.admin-optional{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-top:12px;}
+  details.admin-optional summary{cursor:pointer;color:var(--accent);font-weight:600;}
   .media-grid{columns:4 210px;column-gap:14px}.media-card{break-inside:avoid;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg-2);cursor:pointer}.media-card img{display:block;width:100%;height:auto}.media-meta{padding:10px}.media-meta strong{display:block;font-size:13px}.media-meta small{color:var(--text-dim)}
   @media(max-width:900px){.work-info-grid,.character-layout,.relecture-grid{grid-template-columns:1fr}.relation-preview{position:static}.media-grid{columns:2 180px}}
 
@@ -328,9 +339,15 @@
   let currentUser = null;
 
   async function init(){
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) { currentUser = session.user; renderShell(); navigate('accueil'); }
-    else renderAuth();
+    try{
+      const { data: { session }, error } = await sb.auth.getSession();
+      if(error) throw error;
+      if (session) { currentUser = session.user; await loadGlobalAppearance(); renderShell(); navigate('accueil'); }
+      else renderAuth();
+    }catch(err){
+      console.error('Passerelle init error', err);
+      app.innerHTML = `<div class="auth-box"><h1>✒️ Passerelle</h1><div class="auth-msg">Erreur de démarrage : ${safeText(err?.message||err)}</div></div>`;
+    }
   }
 
   function renderAuth(mode){
@@ -641,10 +658,11 @@
     const content=document.getElementById('content');
     if(!content) return;
     content.innerHTML='<div class="status-line">Chargement de la fiche d’administration…</div>';
-    const [workRes, collectionsRes, sagasRes]=await Promise.all([
+    const [workRes, collectionsRes, sagasRes, mediaRes]=await Promise.all([
       db().from('oeuvres').select('*').eq('id',id).single(),
       db().from('univers').select('id,nom').order('ordre',{ascending:true}),
-      db().from('sagas').select('id,nom,univers_id').order('ordre',{ascending:true})
+      db().from('sagas').select('id,nom,univers_id').order('ordre',{ascending:true}),
+      db().from('medias').select('id,titre,url,type,est_couverture_actuelle').eq('oeuvre_id',id).eq('type','Couverture').order('created_at',{ascending:false})
     ]);
     if(workRes.error){ content.innerHTML=adminEmpty('Erreur : '+safeText(workRes.error.message)); return; }
     const o=workRes.data;
@@ -652,7 +670,10 @@
     let ss=[];
     if(o.saga_id){ const r=await db().from('sous_sagas').select('id,nom').eq('saga_id',o.saga_id).order('ordre'); ss=r.data||[]; }
     const inheritedCollection=adminOeuvreSagas.find(s=>s.id===o.saga_id)?.univers_id||null;
-    const selectedCollection=o.saga_id?inheritedCollection:(o.univers_id||null);
+    const selectedCollection=o.saga_id?(inheritedCollection||o.univers_id||null):(o.univers_id||null);
+    const adminCoverMedias=mediaRes.error?[]:(mediaRes.data||[]);
+    const currentCoverMedia=adminCoverMedias.find(m=>m.est_couverture_actuelle)||null;
+    const currentCoverUrl=currentCoverMedia?.url||o.couverture||'';
     const thisYear=new Date().getFullYear();
     const editorialDest=['Découverte','Exclusivité abonnement','Passerelle','Librairie'];
     const editorialTargets=['V1','V1.5','V2'];
@@ -673,7 +694,7 @@
                 <div class="admin-field-full"><label>Titre</label><input id="aow-titre" value="${safeText(o.titre||'')}"></div>
                 <div><label>Sous-titre</label><input id="aow-sous-titre" value="${safeText(o.sous_titre||'')}"></div>
                 <div><label>Type / format</label><input id="aow-format" value="${safeText(o.format_cible||'')}" placeholder="Roman, Novella, Escale…"></div>
-                <div><label>Collection</label><select id="aow-collection" ${o.saga_id?'disabled':''}><option value="">— Aucune —</option>${(collectionsRes.data||[]).map(c=>`<option value="${c.id}" ${selectedCollection===c.id?'selected':''}>${safeText(c.nom)}</option>`).join('')}</select><small style="color:var(--text-dim);">${o.saga_id?'Héritée automatiquement de la saga.':'Pour une œuvre indépendante.'}</small></div>
+                <div><label>Collection</label><select id="aow-collection"><option value="">— Aucune —</option>${(collectionsRes.data||[]).map(c=>`<option value="${c.id}" ${selectedCollection===c.id?'selected':''}>${safeText(c.nom)}</option>`).join('')}</select><small id="aow-collection-help" style="color:var(--text-dim);">${o.saga_id?'Cette collection est portée par la saga. La modifier ici mettra aussi la saga à jour.':'Rattachement direct pour une œuvre indépendante.'}</small></div>
                 <div><label>Saga</label><select id="aow-saga" onchange="onAdminOeuvreSagaChange()"><option value="">— Œuvre indépendante —</option>${adminOeuvreSagas.map(s=>`<option value="${s.id}" ${o.saga_id===s.id?'selected':''}>${safeText(s.nom)}</option>`).join('')}</select></div>
                 <div><label>Sous-saga</label><select id="aow-sous-saga" ${o.saga_id?'':'disabled'}><option value="">—</option>${ss.map(x=>`<option value="${x.id}" ${o.sous_saga_id===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div>
                 <div><label>Langue</label><input id="aow-langue" value="${safeText(o.langue||'Français')}"></div>
@@ -697,9 +718,13 @@
                 <div><label>Lieu principal</label><input id="aow-lieu" value="${safeText(o.lieu_principal||'')}"></div>
                 <div><label>Public cible</label><select id="aow-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(x=>`<option ${o.public_cible===x?'selected':''}>${x}</option>`).join('')}</select></div>
                 <div class="admin-field-full"><label>Tropes / mots-clés</label><input id="aow-tropes" value="${safeText(tropes)}" placeholder="Séparés par des virgules"></div>
-                <div class="admin-field-full"><label>Enjeu principal</label><textarea id="aow-enjeu">${safeText(o.enjeu_principal||'')}</textarea></div>
-                <div class="admin-field-full"><label>Enjeux secondaires</label><textarea id="aow-enjeux">${safeText(enjeux)}</textarea></div>
               </div>
+              <details class="admin-optional" ${(o.enjeu_principal||o.enjeux_secondaires?.length)?'open':''}>
+                <summary>Champs narratifs optionnels</summary>
+                <p class="admin-section-sub" style="margin-top:8px">À remplir seulement si ce modèle de fiche t’est utile.</p>
+                <label>Enjeu principal</label><textarea id="aow-enjeu">${safeText(o.enjeu_principal||'')}</textarea>
+                <label style="margin-top:10px">Enjeux secondaires</label><textarea id="aow-enjeux">${safeText(enjeux)}</textarea>
+              </details>
             </section>
 
             <section class="admin-section"><h2>Manuscrit & Atelier</h2><p class="admin-section-sub">Configuration de la source manuscrit. Le nombre de mots réel a vocation à venir d’Atelier, pas à être ressaisi ici.</p>
@@ -724,12 +749,12 @@
           </div>
 
           <aside class="admin-work-side">
-            <section class="admin-section"><h2>Couverture canonique</h2><div class="admin-cover-preview" id="aow-cover-preview">${o.couverture?`<img src="${safeText(o.couverture)}" alt="Couverture">`:'✒'}</div><label>URL</label><input id="aow-couverture" value="${safeText(o.couverture||'')}" oninput="refreshAdminCoverPreview()"></section>
+            <section class="admin-section"><h2>Couverture canonique</h2><p class="admin-section-sub">La couverture vient de Médias → Couvertures. Une seule image est marquée ★ actuelle.</p><div class="admin-cover-preview" id="aow-cover-preview">${currentCoverUrl?`<img src="${safeText(currentCoverUrl)}" alt="Couverture">`:'✒'}</div><input type="hidden" id="aow-cover-media-id" value="${safeText(currentCoverMedia?.id||'')}"><input type="hidden" id="aow-couverture" value="${safeText(currentCoverUrl)}"><button class="btn-secondary" style="width:100%;margin-top:10px" onclick="toggleAdminCoverPicker()">Choisir dans les médias</button><div class="admin-cover-picker" id="aow-cover-picker">${adminCoverMedias.length?`<div class="admin-cover-picker-grid">${adminCoverMedias.map(m=>`<button type="button" class="admin-cover-choice ${m.id===currentCoverMedia?.id?'selected':''}" data-cover-id="${m.id}" onclick="selectAdminCoverMedia('${m.id}','${safeText(m.url||'')}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="admin-catalog-placeholder">🖼</div>'}<small>${safeText(m.titre||'Couverture')}</small></button>`).join('')}</div>`:`<div class="empty" style="padding:18px">Aucune couverture dans Médias pour cette œuvre.</div>`}</div></section>
             <section class="admin-section"><h2>Modules de la fiche</h2><p class="admin-section-sub">Afficher ou masquer les espaces optionnels sans supprimer leurs données.</p>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Univers & Lore</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
             </section>
-            <section class="admin-section"><h2>Apparence</h2><label>Thème</label><select id="aow-theme"><option value="clair" ${o.theme_base==='clair'?'selected':''}>Clair</option><option value="sombre" ${o.theme_base==='sombre'?'selected':''}>Sombre</option></select><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||'#7C5CBF')}"></section>
+            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit uniquement son fond et son accent.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"></section>
             <section class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></section>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
@@ -742,19 +767,22 @@
     const collection=document.getElementById('aow-collection');
     const ss=document.getElementById('aow-sous-saga');
     if(!collection||!ss) return;
-    if(!sagaId){ collection.disabled=false; ss.disabled=true; ss.innerHTML='<option value="">—</option>'; return; }
+    const help=document.getElementById('aow-collection-help');
+    if(!sagaId){ ss.disabled=true; ss.innerHTML='<option value="">—</option>'; if(help) help.textContent='Rattachement direct pour une œuvre indépendante.'; return; }
     const saga=adminOeuvreSagas.find(s=>s.id===sagaId);
     if(saga?.univers_id) collection.value=saga.univers_id;
-    collection.disabled=true;
+    if(help) help.textContent='Cette collection est portée par la saga. La modifier ici mettra aussi la saga à jour.';
     ss.disabled=false;
     const {data,error}=await db().from('sous_sagas').select('id,nom').eq('saga_id',sagaId).order('ordre');
     ss.innerHTML='<option value="">—</option>'+(!error?(data||[]).map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join(''):'');
   }
 
-  function refreshAdminCoverPreview(){
-    const url=document.getElementById('aow-couverture')?.value.trim();
-    const preview=document.getElementById('aow-cover-preview');
+  function toggleAdminCoverPicker(){ document.getElementById('aow-cover-picker')?.classList.toggle('open'); }
+  function selectAdminCoverMedia(id,url){
+    const idField=document.getElementById('aow-cover-media-id'), urlField=document.getElementById('aow-couverture'), preview=document.getElementById('aow-cover-preview');
+    if(idField) idField.value=id||''; if(urlField) urlField.value=url||'';
     if(preview) preview.innerHTML=url?`<img src="${safeText(url)}" alt="Couverture">`:'✒';
+    document.querySelectorAll('.admin-cover-choice').forEach(x=>x.classList.toggle('selected',x.dataset.coverId===id));
   }
 
   async function saveAdminOeuvreEditor(){
@@ -762,6 +790,8 @@
     const status=document.getElementById('aow-save-status');
     if(status) status.textContent='Enregistrement…';
     const sagaId=document.getElementById('aow-saga').value||null;
+    const selectedCollectionId=document.getElementById('aow-collection').value||null;
+    const selectedCoverMediaId=document.getElementById('aow-cover-media-id')?.value||null;
     const tropesRaw=document.getElementById('aow-tropes').value.trim();
     const enjeuxRaw=document.getElementById('aow-enjeux').value.trim();
     const newEditorial=document.getElementById('aow-editorial').value||null;
@@ -769,7 +799,7 @@
       titre:document.getElementById('aow-titre').value.trim()||'Sans titre',
       sous_titre:document.getElementById('aow-sous-titre').value.trim()||null,
       format_cible:document.getElementById('aow-format').value.trim()||null,
-      univers_id:sagaId?null:(document.getElementById('aow-collection').value||null),
+      univers_id:sagaId?null:selectedCollectionId,
       saga_id:sagaId,
       sous_saga_id:sagaId?(document.getElementById('aow-sous-saga').value||null):null,
       langue:document.getElementById('aow-langue').value.trim()||'Français',
@@ -797,17 +827,23 @@
       publication_envisagee:document.getElementById('aow-publication').value.trim()||null,
       notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
       couverture:document.getElementById('aow-couverture').value.trim()||null,
+      page_color:document.getElementById('aow-page-color').value||null,
       module_lore:document.getElementById('aow-module-lore').checked,
       module_chronologie:document.getElementById('aow-module-chrono').checked,
-      theme_base:document.getElementById('aow-theme').value,
       accent_color:document.getElementById('aow-accent').value,
       archive:document.getElementById('aow-archive').checked,
       updated_at:new Date().toISOString()
     };
     const {data:old}=await db().from('oeuvres').select('statut_editorial_actuel').eq('id',adminEditingOeuvreId).single();
     if((old?.statut_editorial_actuel||null)!==newEditorial) payload.date_dernier_changement_editorial=new Date().toISOString();
+    if(sagaId){
+      const {error:sagaCollectionError}=await db().from('sagas').update({univers_id:selectedCollectionId}).eq('id',sagaId);
+      if(sagaCollectionError){ if(status) status.textContent='Erreur collection : '+sagaCollectionError.message; alert('Erreur collection : '+sagaCollectionError.message); return; }
+    }
     const {error}=await db().from('oeuvres').update(payload).eq('id',adminEditingOeuvreId);
     if(error){ if(status) status.textContent='Erreur : '+error.message; alert('Erreur : '+error.message); return; }
+    const resetCover=await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
+    if(!resetCover.error && selectedCoverMediaId) await db().from('medias').update({est_couverture_actuelle:true}).eq('id',selectedCoverMediaId);
     if(status) status.textContent='✓ Enregistré';
     setTimeout(()=>{ if(status) status.textContent=''; },2200);
     await openAdminOeuvreEditor(adminEditingOeuvreId);
@@ -838,15 +874,26 @@
 
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
-    const [links, works] = await Promise.all([
+    const [links, works, appearance] = await Promise.all([
       db().from('liens_rapides').select('*').order('ordre',{ascending:true}),
-      db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true})
+      db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true}),
+      db().from('configuration_utilisateur').select('*').eq('user_id',currentUser.id).maybeSingle()
     ]);
     const linksOk=!links.error;
+    const cfg=appearance.data||globalAppearance;
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`
+      <div class="admin-section"><div class="admin-section-head"><h2>🎨 Apparence globale</h2></div><p class="admin-section-sub">S’applique à l’accueil, au menu, au back-office et aux pages générales. Les œuvres, sagas, sous-sagas et recueils gardent leur propre couleur de page.</p><div class="admin-section-grid three"><div><label>Mode</label><select id="cfg-theme-mode"><option value="clair" ${(cfg.theme_mode||globalAppearance.mode)==='clair'?'selected':''}>Clair</option><option value="sombre" ${(cfg.theme_mode||globalAppearance.mode)==='sombre'?'selected':''}>Sombre</option></select></div><div><label>Couleur du thème</label><input type="color" id="cfg-theme-color" value="${safeText(cfg.theme_color||globalAppearance.themeColor)}"></div><div><label>Couleur d’accent</label><input type="color" id="cfg-accent-color" value="${safeText(cfg.accent_color||globalAppearance.accent)}"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveGlobalAppearance()">Appliquer l’apparence globale</button></div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
+  }
+
+  async function saveGlobalAppearance(){
+    const payload={user_id:currentUser.id,theme_mode:document.getElementById('cfg-theme-mode').value,theme_color:document.getElementById('cfg-theme-color').value,accent_color:document.getElementById('cfg-accent-color').value,updated_at:new Date().toISOString()};
+    const {error}=await db().from('configuration_utilisateur').upsert(payload,{onConflict:'user_id'});
+    if(error){alert('Erreur : '+error.message);return;}
+    globalAppearance={mode:payload.theme_mode,themeColor:payload.theme_color,accent:payload.accent_color};
+    applyGlobalTheme(); renderAdminSidebar(); renderAdminConfiguration(document.getElementById('content'));
   }
 
   async function saveQuickLink(){
@@ -1308,7 +1355,7 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
     const { data: s, error } = await db().from('sagas').select('*').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    applyTheme(s.theme_base, s.accent_color);
+    applyObjectTheme(s.page_color, s.accent_color);
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
@@ -1403,7 +1450,7 @@
     const { data: ss, error } = await db().from('sous_sagas').select('*, sagas(id, nom)').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     currentSousSagaParentSagaId = ss.saga_id;
-    applyTheme(ss.theme_base, ss.accent_color);
+    applyObjectTheme(ss.page_color, ss.accent_color);
 
     content.innerHTML = `
       <div class="back-link" onclick="openSagaDetail('${ss.saga_id}')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à ${ss.sagas?.nom || 'la saga'}</div>
@@ -1624,13 +1671,7 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <div class="row2">
-          <div><label>Thème</label><select id="ssp-theme">
-            <option value="sombre" ${ss.theme_base==='sombre'?'selected':''}>Sombre</option>
-            <option value="clair" ${ss.theme_base==='clair'?'selected':''}>Clair</option>
-          </select></div>
-          <div><label>Couleur d'accent</label><input type="color" id="ssp-accent" value="${ss.accent_color||'#8C7FB0'}" style="height:42px; padding:4px;"></div>
-        </div>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Le mode clair/sombre reste global. La sous-saga personnalise son fond et son accent.</p><div class="row2"><div><label>Couleur de page</label><input type="color" id="ssp-page-color" value="${ss.page_color||globalAppearance.themeColor}" style="height:42px; padding:4px;"></div><div><label>Couleur d'accent</label><input type="color" id="ssp-accent" value="${ss.accent_color||globalAppearance.accent}" style="height:42px; padding:4px;"></div></div>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveSousSagaApparence()">Appliquer</button>
       </div>
       <div class="panel">
@@ -1646,10 +1687,10 @@
     openSousSagaDetail(currentSousSagaId);
   }
   async function saveSousSagaApparence(){
-    const payload = { theme_base: document.getElementById('ssp-theme').value, accent_color: document.getElementById('ssp-accent').value };
+    const payload = { page_color: document.getElementById('ssp-page-color').value, accent_color: document.getElementById('ssp-accent').value };
     const { error } = await db().from('sous_sagas').update(payload).eq('id', currentSousSagaId);
     if (error) { alert('Erreur : ' + error.message); return; }
-    applyTheme(payload.theme_base, payload.accent_color);
+    applyObjectTheme(payload.page_color, payload.accent_color);
   }
   async function toggleArchiveSousSaga(currentlyArchived){
     const { error } = await db().from('sous_sagas').update({ archive: !currentlyArchived }).eq('id', currentSousSagaId);
@@ -1961,14 +2002,8 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le thème et la couleur choisis ici s'appliquent immédiatement à cette page (et à toutes les pages liées).</p>
-        <div class="row2">
-          <div><label>Thème</label><select id="sp-theme">
-            <option value="sombre" ${s.theme_base==='sombre'?'selected':''}>Sombre</option>
-            <option value="clair" ${s.theme_base==='clair'?'selected':''}>Clair</option>
-          </select></div>
-          <div><label>Couleur d'accent</label><input type="color" id="sp-accent" value="${s.accent_color||'#8C7FB0'}" style="height:42px; padding:4px;"></div>
-        </div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le mode clair/sombre reste global. La saga personnalise son fond et son accent.</p>
+        <div class="row2"><div><label>Couleur de page</label><input type="color" id="sp-page-color" value="${s.page_color||globalAppearance.themeColor}" style="height:42px; padding:4px;"></div><div><label>Couleur d'accent</label><input type="color" id="sp-accent" value="${s.accent_color||globalAppearance.accent}" style="height:42px; padding:4px;"></div></div>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaApparence()">Appliquer</button>
       </div>
       <div class="panel">
@@ -1979,10 +2014,10 @@
     `;
   }
   async function saveSagaApparence(){
-    const payload = { theme_base: document.getElementById('sp-theme').value, accent_color: document.getElementById('sp-accent').value };
+    const payload = { page_color: document.getElementById('sp-page-color').value, accent_color: document.getElementById('sp-accent').value };
     const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
     if (error) { alert('Erreur : ' + error.message); return; }
-    applyTheme(payload.theme_base, payload.accent_color);
+    applyObjectTheme(payload.page_color, payload.accent_color);
   }
   async function saveSagaParametres(){
     const payload = { nom: document.getElementById('sp-nom').value.trim()||'Sans titre', sous_titre: document.getElementById('sp-sous-titre').value.trim(), genre: document.getElementById('sp-genre').value.trim(), statut: document.getElementById('sp-statut').value, description: document.getElementById('sp-description').value.trim(), lore_complet: document.getElementById('sp-lore').value.trim() };
@@ -2124,7 +2159,7 @@
     const { data: o, error } = await db().from('oeuvres').select('*, sagas(nom)').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     currentOeuvre = o;
-    applyTheme(o.theme_base, o.accent_color);
+    applyObjectTheme(o.page_color, o.accent_color);
 
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
     content.innerHTML = `
@@ -2135,7 +2170,9 @@
           <h1>${o.titre}</h1>
           <div class="oeuvre-sub">${o.sagas?.nom || 'Œuvre indépendante'}</div>
           <span class="status-badge">${o.statut || 'Sans statut'}</span>
-          ${o.objectif_mots ? `<div style="font-size:14px;">${o.mots_ecrits||0} / ${o.objectif_mots} mots</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>` : ''}
+          <div id="oeuvre-head-progress" style="margin-top:10px;max-width:620px;">
+            ${o.objectif_mots ? `<div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:14px;"><strong id="oeuvre-head-words">${(o.mots_ecrits||0).toLocaleString('fr-FR')} / ${o.objectif_mots.toLocaleString('fr-FR')} mots</strong><span id="oeuvre-head-chapters">Chapitres : synchronisation…</span></div><div class="progress-bar-outer" style="max-width:none;margin-top:8px;"><div id="oeuvre-head-progress-bar" class="progress-bar-inner" style="width:${pct}%;"></div></div>` : `<div id="oeuvre-head-chapters" style="font-size:14px;">Chapitres : synchronisation…</div>`}
+          </div>
         </div>
       </div>
       <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
@@ -2784,9 +2821,19 @@
   async function renderOeuvreMedias(zone){const {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">Médias indisponibles : ${safeText(error.message)}</div>`;return;}const all=data||[];const rows=mediaFilter==='Tout'?all:all.filter(m=>m.type===mediaFilter);zone.innerHTML=`<div class="work-toolbar"><div class="segmented">${['Tout','Illustration','Promotion & Bonus','Couverture'].map(x=>`<button class="btn-secondary ${mediaFilter===x?'active':''}" onclick="mediaFilter='${x}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${x}</button>`).join('')}</div><button class="btn-primary" onclick="addMediaPrompt()">+ Ajouter des médias 🌸</button></div>${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaDrawer('${m.id}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="walter-empty">🖼</div>'}<div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}${m.est_couverture_actuelle?' · ★ Actuelle':''}</small></div></article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter examine le cadre vide.</strong><div>Aucun média ici pour le moment.</div></div>`}`;}
   async function addMediaPrompt(){const url=prompt('URL du média (le multi-upload OVH/Scaleway sera branché ensuite) :');if(!url)return;const titre=prompt('Titre :','')||'';const type=prompt('Type : Illustration, Promotion & Bonus ou Couverture','Illustration')||'Illustration';await db().from('medias').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,url,titre,type});renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
   async function openMediaDrawer(id){const {data:m}=await db().from('medias').select('*').eq('id',id).single();openDrawer(m?.titre||'Média',`${m?.url?`<img src="${safeText(m.url)}" style="max-width:100%;border-radius:10px;margin-bottom:16px">`:''}<label>Titre</label><input id="media-title" value="${safeText(m?.titre||'')}"><label>Type</label><select id="media-type">${['Illustration','Promotion & Bonus','Couverture'].map(x=>`<option ${x===m?.type?'selected':''}>${x}</option>`).join('')}</select><label>Chapitre lié</label><input id="media-chapter" value="${safeText(m?.chapitre_id||'')}" placeholder="ID chapitre (sélecteur visuel ensuite)"><label>Description / notes</label><div id="media-desc" class="rich-editor" contenteditable="true" style="min-height:220px">${m?.description||''}</div><label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="media-current" style="width:auto" ${m?.est_couverture_actuelle?'checked':''}> Couverture actuelle</label><button class="btn-primary" style="margin-top:14px" onclick="saveMedia('${id}')">Enregistrer</button>`);}
-  async function saveMedia(id){const payload={titre:document.getElementById('media-title').value,type:document.getElementById('media-type').value,chapitre_id:document.getElementById('media-chapter').value||null,description:document.getElementById('media-desc').innerHTML,est_couverture_actuelle:document.getElementById('media-current').checked};await db().from('medias').update(payload).eq('id',id);closeDrawer();renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
+  async function saveMedia(id){const payload={titre:document.getElementById('media-title').value,type:document.getElementById('media-type').value,chapitre_id:document.getElementById('media-chapter').value||null,description:document.getElementById('media-desc').innerHTML,est_couverture_actuelle:document.getElementById('media-current').checked};if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',currentOeuvreId).eq('type','Couverture');const {data:updated}=await db().from('medias').update(payload).eq('id',id).select('url').single();if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('oeuvres').update({couverture:updated?.url||null}).eq('id',currentOeuvreId);closeDrawer();renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
   function openDrawer(title,html){let ov=document.getElementById('passerelle-drawer');if(!ov){ov=document.createElement('div');ov.id='passerelle-drawer';ov.className='side-drawer-overlay';ov.innerHTML='<aside class="side-drawer"><div class="drawer-head"><h2 id="drawer-title"></h2><button class="drawer-close" onclick="closeDrawer()">✕</button></div><div class="drawer-body" id="drawer-body"></div></aside>';ov.addEventListener('click',e=>{if(e.target===ov)closeDrawer()});document.body.appendChild(ov);}document.getElementById('drawer-title').textContent=title;document.getElementById('drawer-body').innerHTML=html;ov.classList.add('open');}
   function closeDrawer(){document.getElementById('passerelle-drawer')?.classList.remove('open');}
+
+  function renderSimpleRichText(value){
+    const escaped = safeText(value || '');
+    return escaped
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/_(.+?)_/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+  }
 
   async function renderOeuvreInformations(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
@@ -2798,7 +2845,13 @@
     const written=(chaps||[]).filter(c=>(c.nb_mots||0)>0).length, words=(chaps||[]).reduce((a,c)=>a+(c.nb_mots||0),0), planned=(plans||[]).length || (chaps||[]).length;
     const pct=o?.objectif_mots?Math.min(100,Math.round(words/o.objectif_mots*100)):0;
     const kws=Array.isArray(o?.mots_cles)?o.mots_cles:(o?.mots_cles?String(o.mots_cles).split(',').map(x=>x.trim()).filter(Boolean):[]);
-    zone.innerHTML=`<div class="work-info-grid"><section class="panel"><h2>Résumé</h2><div style="font-size:14px;line-height:1.75;white-space:pre-wrap">${safeText(o?.resume||'Pas encore de résumé.')}</div></section><aside class="panel"><h2>Informations clés</h2>${[['Genre',o?.genre],['Type d’œuvre',o?.format],['Saga',o?.sagas?.nom],['Sous-saga',o?.sous_sagas?.nom],['Statut',o?.statut]].map(([k,v])=>`<div class="info-line"><span>${k}</span><strong>${safeText(v||'—')}</strong></div>`).join('')}<h3 style="margin-top:18px">Mots-clés</h3><div class="keyword-wrap">${kws.map(k=>`<span class="keyword-chip">${safeText(k)}</span>`).join('')||'<span style="font-size:12px;color:var(--text-dim)">Aucun mot-clé.</span>'}</div></aside></div><section class="panel"><h2>Progression générale</h2><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${words.toLocaleString('fr-FR')} / ${(o?.objectif_mots||0).toLocaleString('fr-FR')} mots</strong><span>${written} / ${planned} chapitres écrits</span></div><div class="progress-bar-outer" style="max-width:none;margin-top:10px"><div class="progress-bar-inner" style="width:${pct}%"></div></div></section>`;
+    const wordsEl=document.getElementById('oeuvre-head-words');
+    const chaptersEl=document.getElementById('oeuvre-head-chapters');
+    const barEl=document.getElementById('oeuvre-head-progress-bar');
+    if(wordsEl) wordsEl.textContent=`${words.toLocaleString('fr-FR')} / ${(o?.objectif_mots||0).toLocaleString('fr-FR')} mots`;
+    if(chaptersEl) chaptersEl.textContent=planned>0?`${written} / ${planned} chapitres écrits`:(written>0?`${written} chapitre${written>1?'s':''} écrit${written>1?'s':''}`:'Aucun chapitre synchronisé');
+    if(barEl) barEl.style.width=`${pct}%`;
+    zone.innerHTML=`<div class="work-info-grid"><section class="panel"><h2>Résumé</h2><div style="font-size:14px;line-height:1.75">${o?.resume?renderSimpleRichText(o.resume):'<span style="color:var(--text-dim)">Pas encore de résumé.</span>'}</div></section><aside class="panel"><h2>Informations clés</h2>${[['Genre',o?.genre],['Type d’œuvre',o?.format],['Saga',o?.sagas?.nom],['Sous-saga',o?.sous_sagas?.nom],['Statut',o?.statut]].map(([k,v])=>`<div class="info-line"><span>${k}</span><strong>${safeText(v||'—')}</strong></div>`).join('')}<h3 style="margin-top:18px">Mots-clés</h3><div class="keyword-wrap">${kws.map(k=>`<span class="keyword-chip">${safeText(k)}</span>`).join('')||'<span style="font-size:12px;color:var(--text-dim)">Aucun mot-clé.</span>'}</div></aside></div>`;
   }
 
   async function renderOeuvreFicheDetaillee(zone){
@@ -2951,14 +3004,8 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">S'applique immédiatement à cette page.</p>
-        <div class="row2">
-          <div><label>Thème</label><select id="op-theme">
-            <option value="sombre" ${o.theme_base==='sombre'?'selected':''}>Sombre</option>
-            <option value="clair" ${o.theme_base==='clair'?'selected':''}>Clair</option>
-          </select></div>
-          <div><label>Couleur d'accent</label><input type="color" id="op-accent" value="${o.accent_color||'#C9A227'}" style="height:42px; padding:4px;"></div>
-        </div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le mode clair/sombre est global. Cette œuvre personnalise son fond et son accent.</p>
+        <div class="row2"><div><label>Couleur de page</label><input type="color" id="op-page-color" value="${o.page_color||globalAppearance.themeColor}" style="height:42px;padding:4px"></div><div><label>Couleur d'accent</label><input type="color" id="op-accent" value="${o.accent_color||globalAppearance.accent}" style="height:42px;padding:4px"></div></div>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Appliquer</button>
       </div>
       <div class="panel">
@@ -3036,10 +3083,10 @@
     alert('Enregistré.');
   }
   async function saveOeuvreApparence(){
-    const payload = { theme_base: document.getElementById('op-theme').value, accent_color: document.getElementById('op-accent').value };
+    const payload = { page_color: document.getElementById('op-page-color').value, accent_color: document.getElementById('op-accent').value };
     const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
     if (error) { alert('Erreur : ' + error.message); return; }
-    applyTheme(payload.theme_base, payload.accent_color);
+    applyObjectTheme(payload.page_color, payload.accent_color);
   }
   async function toggleArchiveOeuvre(currentlyArchived){
     const { error } = await db().from('oeuvres').update({ archive: !currentlyArchived }).eq('id', currentOeuvreId);
@@ -3475,6 +3522,7 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
     const { data: r, error } = await db().from('recueils').select('*').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
+    applyObjectTheme(r.page_color, r.couleur_accent);
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('poesie')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à mes recueils</div>
@@ -3823,11 +3871,17 @@
         <label style="margin-top:10px;">URL de la bannière</label><input id="rp-banniere" value="${r.banniere||''}" placeholder="https://...">
         <button class="btn-primary" style="margin-top:16px;" onclick="saveRecueilImages()">Enregistrer les images</button>
       </div>
+      <div class="panel"><h2>Apparence</h2><p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Le mode clair/sombre reste global. Le recueil personnalise son fond et son accent.</p><div class="row2"><div><label>Couleur de page</label><input type="color" id="rp-page-color" value="${r.page_color||globalAppearance.themeColor}" style="height:42px;padding:4px"></div><div><label>Couleur d’accent</label><input type="color" id="rp-accent" value="${r.couleur_accent||globalAppearance.accent}" style="height:42px;padding:4px"></div></div><button class="btn-primary" style="margin-top:16px" onclick="saveRecueilApparence()">Appliquer</button></div>
       <div class="panel">
         <h2>Archivage</h2>
         <button class="btn-secondary" onclick="toggleArchiveRecueil(${r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button>
       </div>
     `;
+  }
+  async function saveRecueilApparence(){
+    const payload={page_color:document.getElementById('rp-page-color').value,couleur_accent:document.getElementById('rp-accent').value};
+    const {error}=await db().from('recueils').update(payload).eq('id',currentRecueilId);
+    if(error){alert('Erreur : '+error.message);return;} applyObjectTheme(payload.page_color,payload.couleur_accent);
   }
   async function saveRecueilImages(){
     const payload = { couverture: document.getElementById('rp-couverture').value.trim()||null, banniere: document.getElementById('rp-banniere').value.trim()||null };
@@ -3850,18 +3904,21 @@
   function initials(str){ return (str||'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase(); }
 
   // ============================================================
-  // Apparence par fiche (theme_base + accent_color, appliqués pour de vrai)
+  // Apparence : thème global + couleurs locales des objets
   // ============================================================
   const DEFAULT_ACCENT = '#7C5CBF';
-  const LIGHT_PALETTE = { '--bg':'#FFFFFF', '--bg-2':'#F6F3FB', '--card':'#FFFFFF', '--line':'rgba(124,92,191,0.18)', '--text':'#2B2140', '--text-dim':'#7A7290' };
-  const DARK_PALETTE = { '--bg':'#161513', '--bg-2':'#1E1C19', '--card':'#161513', '--line':'rgba(255,255,255,0.08)', '--text':'#F3EFE6', '--text-dim':'#8A8780' };
-
-  function applyTheme(themeBase, accentColor){
-    const palette = themeBase === 'clair' ? LIGHT_PALETTE : DARK_PALETTE;
-    Object.entries(palette).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
-    document.documentElement.style.setProperty('--accent', accentColor || DEFAULT_ACCENT);
-  }
-  function resetTheme(){ applyTheme('clair', DEFAULT_ACCENT); }
+  let globalAppearance={mode:'clair',themeColor:'#F6F3FB',accent:DEFAULT_ACCENT};
+  function hexToRgb(hex){const h=(hex||'').replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return null;return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
+  function rgbToHex({r,g,b}){return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');}
+  function mixHex(a,b,t){const A=hexToRgb(a),B=hexToRgb(b);if(!A||!B)return a||b;return rgbToHex({r:A.r+(B.r-A.r)*t,g:A.g+(B.g-A.g)*t,b:A.b+(B.b-A.b)*t});}
+  function luminance(hex){const c=hexToRgb(hex);if(!c)return 1;return (0.2126*c.r+0.7152*c.g+0.0722*c.b)/255;}
+  function makePalette(mode,themeColor){const base=themeColor||(mode==='sombre'?'#24202B':'#F6F3FB');if(mode==='sombre'){return {'--bg':mixHex(base,'#0D0D0F',.72),'--bg-2':mixHex(base,'#121116',.58),'--card':mixHex(base,'#111014',.66),'--line':'rgba(255,255,255,0.10)','--text':'#F5F1F8','--text-dim':'#AAA3B3'};}return {'--bg':mixHex(base,'#FFFFFF',.90),'--bg-2':mixHex(base,'#FFFFFF',.72),'--card':mixHex(base,'#FFFFFF',.94),'--line':'rgba(90,70,125,0.18)','--text':'#2B2140','--text-dim':'#7A7290'};}
+  function setRootPalette(palette,accent){Object.entries(palette).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));document.documentElement.style.setProperty('--accent',accent||DEFAULT_ACCENT);}
+  async function loadGlobalAppearance(){try{const {data,error}=await db().from('configuration_utilisateur').select('theme_mode,theme_color,accent_color').eq('user_id',currentUser.id).maybeSingle();if(!error&&data)globalAppearance={mode:data.theme_mode||'clair',themeColor:data.theme_color||'#F6F3FB',accent:data.accent_color||DEFAULT_ACCENT};}catch(e){console.warn('Configuration globale indisponible',e);}applyGlobalTheme();}
+  function applyGlobalTheme(){const p=makePalette(globalAppearance.mode,globalAppearance.themeColor);setRootPalette(p,globalAppearance.accent);Object.entries(p).forEach(([k,v])=>document.documentElement.style.setProperty('--global'+k.slice(1),v));document.documentElement.style.setProperty('--global-accent',globalAppearance.accent||DEFAULT_ACCENT);}
+  function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);setRootPalette(p,accentColor||globalAppearance.accent);}
+  function applyTheme(themeBase,accentColor){globalAppearance.mode=themeBase==='sombre'?'sombre':'clair';globalAppearance.accent=accentColor||globalAppearance.accent;applyGlobalTheme();}
+  function resetTheme(){applyGlobalTheme();}
 
   init();
 </script>
