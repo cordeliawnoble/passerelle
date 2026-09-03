@@ -199,6 +199,38 @@
   .danger-btn{ color:#9b4554; }
   .admin-notice{ border:1px dashed var(--line); background:var(--bg-2); border-radius:6px; padding:12px 14px; color:var(--text-dim); font-size:12px; margin-bottom:16px; }
 
+
+  /* ---- Back-office : mode administration dédié ---- */
+  .admin-mode-sidebar{ background:#fbf9f4; }
+  .admin-mode-brand{ padding:18px 18px 14px; border-bottom:1px solid var(--line); }
+  .admin-mode-brand strong{ display:block; font-family:'Cormorant Garamond',serif; font-size:1.35rem; color:var(--text); }
+  .admin-mode-brand span{ display:block; font-size:10px; color:var(--text-dim); margin-top:2px; }
+  .admin-back-link{ margin:10px 14px 8px; padding:9px 10px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; color:var(--lavender-deep); background:var(--card); }
+  .admin-back-link:hover{ border-color:var(--accent); color:var(--accent); }
+  .admin-mode-nav{ padding:4px 0 14px; }
+  .admin-mode-nav .nav-link{ padding:10px 20px; }
+  .admin-mode-footer{ margin-top:auto; border-top:1px solid var(--line); padding:14px 18px; font-size:11px; color:var(--text-dim); }
+  .admin-catalog-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:18px; padding-bottom:22px; margin-bottom:24px; border-bottom:1px solid var(--line); }
+  .admin-catalog-head h1{ font-size:2rem; }
+  .admin-catalog-head p{ margin:3px 0 0; color:var(--text-dim); font-size:13px; }
+  .admin-catalog-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .admin-filterbar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+  .admin-filterbar .search-input{ flex:1 1 280px; }
+  .admin-filterbar select{ width:auto; min-width:170px; }
+  .admin-catalog-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+  .admin-catalog-card{ border:1px solid var(--line); border-radius:10px; background:var(--card); overflow:hidden; cursor:pointer; transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease; }
+  .admin-catalog-card:hover{ transform:translateY(-2px); border-color:var(--accent); box-shadow:0 8px 24px rgba(80,57,120,.08); }
+  .admin-catalog-visual{ height:150px; background:var(--bg-2); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .admin-catalog-visual img{ width:100%; height:100%; object-fit:contain; }
+  .admin-catalog-placeholder{ font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--lavender-deep); }
+  .admin-catalog-body{ padding:16px; }
+  .admin-catalog-body h3{ font-size:1.25rem; margin-bottom:5px; }
+  .admin-catalog-meta{ color:var(--text-dim); font-size:11px; line-height:1.55; min-height:34px; }
+  .admin-catalog-card-actions{ display:flex; gap:8px; margin-top:13px; }
+  .admin-catalog-card-actions button{ flex:1; }
+  @media(max-width:900px){ .admin-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media(max-width:620px){ .admin-catalog-grid{grid-template-columns:1fr;} .admin-catalog-head{align-items:flex-start;flex-direction:column;} }
+
   /* ---- Relecture : vue de pilotage par horizons ---- */
   .relecture-page{ position:relative; }
   .relecture-banner-slot{ min-height:118px; border:1px dashed var(--line); border-radius:8px; background:linear-gradient(135deg, rgba(124,92,191,.05), rgba(246,243,251,.7)); margin-bottom:24px; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-dim); padding:22px; }
@@ -463,144 +495,150 @@
   }
 
   // ============================================================
-  // ADMINISTRATION / BACK-OFFICE V1
+  // ADMINISTRATION / BACK-OFFICE — MODE DÉDIÉ
   // ============================================================
-  let adminTab = 'catalogue';
+  let adminTab = 'collections';
+  const ADMIN_NAV = [
+    ['collections','Collections'], ['sagas','Sagas'], ['sous-sagas','Sous-sagas'],
+    ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'],
+    ['pepiniere','Pépinière'], ['configuration','Configuration']
+  ];
+
+  function renderAdminSidebar(){
+    const sidebar=document.querySelector('.sidebar'); if(!sidebar) return;
+    sidebar.classList.add('admin-mode-sidebar');
+    sidebar.innerHTML=`
+      <div class="admin-mode-brand"><strong>⚙ Back-office</strong><span>Administration de Passerelle</span></div>
+      <div class="admin-back-link" onclick="leaveAdministration()">← Retour à Passerelle</div>
+      <div class="nav-group">Catalogue</div>
+      <nav class="admin-mode-nav">
+        ${ADMIN_NAV.slice(0,7).map(([k,l])=>`<div class="nav-link admin-nav-link ${adminTab===k?'active':''}" data-admin-key="${k}" onclick="adminNavigate('${k}')">${l}</div>`).join('')}
+      </nav>
+      <div class="nav-group">Réglages</div>
+      <nav class="admin-mode-nav">
+        <div class="nav-link admin-nav-link ${adminTab==='configuration'?'active':''}" data-admin-key="configuration" onclick="adminNavigate('configuration')">Configuration</div>
+      </nav>
+      <div class="admin-mode-footer">${safeText(currentUser?.email||'')}<br><button class="tiny-btn" style="margin-top:8px" onclick="doLogout()">Déconnexion</button></div>`;
+  }
+
+  function leaveAdministration(){
+    renderShell();
+    navigate('accueil');
+  }
+
   async function renderAdministration(tab){
-    adminTab = tab || adminTab || 'catalogue';
-    const content = document.getElementById('content');
-    content.innerHTML = `<div class="status-line">Chargement du back-office…</div>`;
-    const counts = await Promise.all([
-      db().from('univers').select('*',{count:'exact',head:true}),
-      db().from('sagas').select('*',{count:'exact',head:true}),
-      db().from('sous_sagas').select('*',{count:'exact',head:true}),
-      db().from('oeuvres').select('*',{count:'exact',head:true}),
-      db().from('recueils').select('*',{count:'exact',head:true}),
-      db().from('personnages').select('*',{count:'exact',head:true}),
-      db().from('idees').select('*',{count:'exact',head:true}),
-    ]);
-    const n = counts.map(r => r.count ?? 0);
-    content.innerHTML = `
-      <div class="admin-hero">
-        <div><h1>⚙ Administration</h1><p>Le local technique de Passerelle. On y règle les données, pas les paillettes.</p></div>
-        <button class="btn-secondary" onclick="navigate('accueil')">← Retour à Passerelle</button>
-      </div>
-      <div class="admin-tabs">
-        <button class="admin-tab ${adminTab==='catalogue'?'active':''}" onclick="showAdminTab('catalogue')">Catalogue</button>
-        <button class="admin-tab ${adminTab==='configuration'?'active':''}" onclick="showAdminTab('configuration')">Configuration</button>
-      </div>
-      <div id="admin-zone"></div>`;
-    window.__adminCounts = n;
-    showAdminTab(adminTab);
+    adminTab=tab || adminTab || 'collections';
+    renderAdminSidebar();
+    await adminNavigate(adminTab);
   }
 
-  function showAdminTab(tab){
-    adminTab = tab;
-    document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab==='catalogue'?'catalogue':'configuration')));
-    const zone = document.getElementById('admin-zone');
-    if (!zone) return;
-    if (tab === 'catalogue') renderAdminCatalogue(zone);
-    else renderAdminConfiguration(zone);
+  async function adminNavigate(tab){
+    adminTab=tab;
+    document.querySelectorAll('.admin-nav-link').forEach(el=>el.classList.toggle('active',el.dataset.adminKey===tab));
+    const content=document.getElementById('content'); if(!content) return;
+    content.innerHTML='<div class="status-line">Chargement du back-office…</div>';
+    if(tab==='collections') return renderAdminCollectionsPage();
+    if(tab==='sagas') return renderAdminSagasPage();
+    if(tab==='sous-sagas') return renderAdminSousSagasPage();
+    if(tab==='oeuvres') return renderAdminOeuvresPage();
+    if(tab==='recueils') return renderAdminRecueilsPage();
+    if(tab==='personnages') return renderAdminPersonnagesPage();
+    if(tab==='pepiniere') return renderAdminPepinierePage();
+    if(tab==='configuration') return renderAdminConfiguration(content);
   }
 
-  function renderAdminCatalogue(zone){
-    const n = window.__adminCounts || [0,0,0,0,0,0,0];
-    const cards = [
-      ['Collections', n[0], 'La grande famille éditoriale, par exemple Arcana Mundi.', "renderAdminCollections()", '+ Nouvelle collection'],
-      ['Sagas', n[1], 'Créer et modifier les sagas.', "openSagaModal()", '+ Nouvelle saga'],
-      ['Sous-sagas', n[2], 'Elles se gèrent dans le contexte de leur saga.', "navigate('sagas')", 'Ouvrir les sagas'],
-      ['Œuvres', n[3], 'Créer les romans, novellas et tomes.', "openOeuvreModal()", '+ Nouvelle œuvre'],
-      ['Recueils de poésie', n[4], 'Créer et organiser les recueils.', "openRecueilModal()", '+ Nouveau recueil'],
-      ['Personnages', n[5], 'Une seule base canonique de personnages.', "openPersonnageModal()", '+ Nouveau personnage'],
-      ['Pépinière', n[6], 'Capturer les graines avant leur promotion.', "openIdeeModal()", '+ Nouvelle graine'],
-    ];
-    zone.innerHTML = `<div class="admin-grid">${cards.map(c=>`<div class="admin-card"><h3>${c[0]} <span style="color:var(--accent);font-size:.85rem;">${c[1]}</span></h3><p>${c[2]}</p><div class="admin-card-actions"><button class="btn-secondary" onclick="${c[3]}">${c[4]}</button></div></div>`).join('')}</div>
-      <div class="admin-notice">Les formulaires existants de Passerelle sont réutilisés ici. À chaque audit, on complète ce back-office au même moment que la page publique de l’atelier.</div>`;
+  function adminPageHead(title,desc,buttonHtml=''){
+    return `<div class="admin-catalog-head"><div><h1>${title}</h1><p>${desc}</p></div><div class="admin-catalog-actions">${buttonHtml}</div></div>`;
+  }
+  function adminEmpty(text){ return `<div class="empty">${text}</div>`; }
+
+  async function renderAdminCollectionsPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('univers').select('id,nom,sous_titre,description,ordre').order('ordre',{ascending:true});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Collections','Gérez les grandes familles éditoriales de Passerelle.',`<button class="btn-primary" onclick="openAdminCollectionForm()">+ Nouvelle collection</button>`)+
+      `<div class="admin-filterbar"><input class="search-input" id="admin-collection-search" placeholder="🔍 Rechercher une collection…" oninput="filterAdminCards('admin-collections-grid',this.value)"></div>
+      <div id="admin-collection-form"></div>
+      <div class="admin-catalog-grid" id="admin-collections-grid">${(data||[]).map(c=>`<article class="admin-catalog-card" data-search="${safeText((c.nom+' '+(c.sous_titre||'')).toLowerCase())}"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(c.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(c.nom)}</h3><div class="admin-catalog-meta">${safeText(c.sous_titre||'Collection éditoriale')}<br>Ordre : ${c.ordre||0}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminCollectionForm('${c.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune collection pour le moment.')}</div>`;
+  }
+
+  function filterAdminCards(gridId,q){
+    q=(q||'').toLowerCase().trim();
+    document.querySelectorAll(`#${gridId} .admin-catalog-card`).forEach(card=>card.style.display=!q||card.dataset.search.includes(q)?'':'none');
+  }
+
+  async function renderAdminSagasPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('sagas').select('id,nom,genre,statut,archive,ordre').order('ordre',{ascending:true});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" onclick="openSagaModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
+  }
+
+  async function renderAdminSousSagasPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('sous_sagas').select('id,nom,genre,statut,saga_id,sagas(nom)').order('created_at',{ascending:false});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Sous-sagas','Gérez les sous-sagas dans le contexte de leur saga.')+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une sous-saga…" oninput="filterAdminCards('admin-ss-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ss-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" onclick="openSousSagaModal('${x.saga_id}','${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">Saga : ${safeText(x.sagas?.nom||'—')}<br>${safeText(x.genre||x.statut||'')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune sous-saga pour le moment.')}</div>`;
+  }
+
+  async function renderAdminOeuvresPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,sagas(nom),sous_sagas(nom)').order('created_at',{ascending:false});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Œuvres','Gérez vos œuvres, leurs rattachements et leurs informations canoniques.',`<button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une œuvre…" oninput="filterAdminCards('admin-works-grid',this.value)"><select onchange="filterAdminWorksStatus(this.value)"><option value="">Tous les statuts</option>${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(v=>`<option>${safeText(v)}</option>`).join('')}</select></div><div class="admin-catalog-grid" id="admin-works-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-status="${safeText(x.statut||'')}" data-search="${safeText((x.titre+' '+(x.genre||'')+' '+(x.sagas?.nom||'')+' '+(x.sous_sagas?.nom||'')).toLowerCase())}" onclick="openOeuvreModal('${x.id}')"><div class="admin-catalog-visual">${x.couverture?`<img src="${safeText(x.couverture)}" alt="">`:`<div class="admin-catalog-placeholder">${initials(x.titre)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(x.titre)}</h3><div class="admin-catalog-meta">${safeText(x.sagas?.nom||'Œuvre indépendante')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''}<br>${safeText(x.genre||'—')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune œuvre pour le moment.')}</div>`;
+  }
+  function filterAdminWorksStatus(v){ document.querySelectorAll('#admin-works-grid .admin-catalog-card').forEach(c=>c.style.display=!v||c.dataset.status===v?'':'none'); }
+
+  async function renderAdminRecueilsPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('recueils').select('*').order('created_at',{ascending:false});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Recueils de poésie','Créez et organisez les recueils.',`<button class="btn-primary" onclick="openRecueilModal()">+ Nouveau recueil</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher un recueil…" oninput="filterAdminCards('admin-recueils-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-recueils-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.titre||x.nom||'').toLowerCase())}" onclick="openRecueilModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.titre||x.nom||'R')}</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||x.nom||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.description||x.sous_titre||'Recueil de poésie')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucun recueil pour le moment.')}</div>`;
+  }
+
+  async function renderAdminPersonnagesPage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('personnages').select('id,nom,resume,favori').order('created_at',{ascending:false});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Personnages','Une base canonique unique pour tous les personnages.',`<button class="btn-primary" onclick="openPersonnageModal()">+ Nouveau personnage</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher un personnage…" oninput="filterAdminCards('admin-char-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-char-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.resume||'')).toLowerCase())}" onclick="openPersonnageModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${x.favori?'♥ ':''}${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.resume||'Aucun résumé')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucun personnage pour le moment.')}</div>`;
+  }
+
+  async function renderAdminPepinierePage(){
+    const content=document.getElementById('content');
+    const {data,error}=await db().from('idees').select('*').order('created_at',{ascending:false});
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=adminPageHead('Pépinière','Capturez et modifiez les graines avant leur promotion.',`<button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle graine</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une graine…" oninput="filterAdminCards('admin-ideas-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ideas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText(((x.titre||'')+' '+(x.genre||'')+' '+(x.type||'')).toLowerCase())}" onclick="openIdeeModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🌱</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.type||'Idée')} · ${safeText(x.genre||'Genre non défini')}<br>${safeText(x.statut||'Graine')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune graine pour le moment.')}</div>`;
   }
 
   async function renderAdminConfiguration(zone){
-    zone.innerHTML = `<div class="status-line">Chargement de la configuration…</div>`;
+    zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
     const [links, works] = await Promise.all([
       db().from('liens_rapides').select('*').order('ordre',{ascending:true}),
       db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true})
     ]);
-    const linksOk = !links.error;
-    const horizonsOk = !works.error || !String(works.error?.message||'').includes('horizon_annee');
-    zone.innerHTML = `
-      ${(!linksOk || !horizonsOk) ? `<div class="admin-notice"><strong>Une petite migration Supabase est nécessaire.</strong><br>Le fichier SQL fourni avec cette version crée les Liens rapides et ajoute Horizon aux œuvres. Une fois exécuté, recharge la page.</div>` : ''}
-      <div class="admin-section">
-        <div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
-        ${linksOk ? `
-          <div class="admin-inline-form">
-            <div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div>
-            <div><label>URL</label><input id="ql-url" placeholder="https://..."></div>
-            <div><label>Icône</label><input id="ql-icone" placeholder="✓"></div>
-            <button class="btn-primary" onclick="saveQuickLink()">Ajouter</button>
-          </div>
-          <table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>
-          ${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5">Aucun lien rapide.</td></tr>'}
-          </tbody></table>` : `<div class="empty">Table Liens rapides non installée.</div>`}
-      </div>
-      <div class="admin-section">
-        <div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>
-        ${!works.error ? `<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle enregistrée</th></tr></thead><tbody>
-          ${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:180px;padding:6px 8px;" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('') || '<tr><td colspan="3">Aucune œuvre.</td></tr>'}
-          </tbody></table>` : `<div class="empty">La colonne Horizon n’est pas encore installée.</div>`}
-      </div>`;
+    const linksOk=!links.error;
+    zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`
+      <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
+      ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
+      <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
   }
 
   async function saveQuickLink(){
-    const nom=document.getElementById('ql-nom')?.value.trim();
-    const url=document.getElementById('ql-url')?.value.trim();
-    const icone=document.getElementById('ql-icone')?.value.trim() || '↗';
-    if(!nom || !url){ alert('Nom et URL sont nécessaires.'); return; }
-    let parsed; try{ parsed=new URL(url); }catch(e){ alert('L’URL doit commencer par http:// ou https://'); return; }
-    const slug = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-    const { data:maxRows } = await db().from('liens_rapides').select('ordre').order('ordre',{ascending:false}).limit(1);
-    const ordre=(maxRows?.[0]?.ordre||0)+10;
-    const { error }=await db().from('liens_rapides').insert({user_id:currentUser.id,nom,url:parsed.href,icone,slug,ordre,actif:true});
-    if(error){ alert('Erreur : '+error.message); return; }
-    await loadSidebarQuickLinks(); renderAdministration('configuration');
+    const nom=document.getElementById('ql-nom')?.value.trim(), url=document.getElementById('ql-url')?.value.trim(), icone=document.getElementById('ql-icone')?.value.trim()||'↗';
+    if(!nom||!url){alert('Nom et URL sont nécessaires.');return;} let parsed; try{parsed=new URL(url)}catch(e){alert('L’URL doit commencer par http:// ou https://');return;}
+    const slug=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    const {data:maxRows}=await db().from('liens_rapides').select('ordre').order('ordre',{ascending:false}).limit(1); const ordre=(maxRows?.[0]?.ordre||0)+10;
+    const {error}=await db().from('liens_rapides').insert({user_id:currentUser.id,nom,url:parsed.href,icone,slug,ordre,actif:true}); if(error){alert('Erreur : '+error.message);return;} adminNavigate('configuration');
   }
-
-  async function deleteQuickLink(id){
-    if(!confirm('Supprimer ce lien rapide ?')) return;
-    const { error }=await db().from('liens_rapides').delete().eq('id',id);
-    if(error){ alert('Erreur : '+error.message); return; }
-    await loadSidebarQuickLinks(); renderAdministration('configuration');
-  }
-
-  async function saveHorizon(id,value){
-    const y=new Date().getFullYear();
-    const year=value==='Y' ? y : value==='Y1' ? y+1 : null;
-    const { error }=await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);
-    if(error){ alert('Erreur : '+error.message); return; }
-    renderAdministration('configuration');
-  }
-
-  async function renderAdminCollections(){
-    const zone=document.getElementById('admin-zone');
-    if(!zone){ navigate('administration'); return; }
-    zone.innerHTML='<div class="status-line">Chargement des collections…</div>';
-    const {data,error}=await db().from('univers').select('id,nom,sous_titre,ordre,publie_site').order('ordre',{ascending:true});
-    if(error){ zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`; return; }
-    zone.innerHTML=`<div class="admin-section"><div class="admin-section-head"><h2>Collections</h2><button class="btn-primary" onclick="openAdminCollectionForm()">+ Nouvelle collection</button></div><div id="admin-collection-form"></div>
-      <table class="admin-table"><thead><tr><th>Nom</th><th>Sous-titre</th><th>Ordre</th><th></th></tr></thead><tbody>${(data||[]).map(c=>`<tr><td>${safeText(c.nom)}</td><td>${safeText(c.sous_titre||'')}</td><td>${c.ordre||0}</td><td><button class="tiny-btn" onclick="openAdminCollectionForm('${c.id}')">Modifier</button></td></tr>`).join('')||'<tr><td colspan="4">Aucune collection.</td></tr>'}</tbody></table></div>`;
-  }
+  async function deleteQuickLink(id){if(!confirm('Supprimer ce lien rapide ?'))return;const {error}=await db().from('liens_rapides').delete().eq('id',id);if(error){alert('Erreur : '+error.message);return;}adminNavigate('configuration');}
+  async function saveHorizon(id,value){const y=new Date().getFullYear(),year=value==='Y'?y:value==='Y1'?y+1:null;const {error}=await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);if(error){alert('Erreur : '+error.message);return;}adminNavigate('configuration');}
 
   async function openAdminCollectionForm(id){
-    const host=document.getElementById('admin-collection-form'); if(!host) return;
-    let c={};
-    if(id){ const {data}=await db().from('univers').select('*').eq('id',id).single(); c=data||{}; }
-    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;"><button class="btn-secondary" onclick="renderAdminCollections()">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
+    const host=document.getElementById('admin-collection-form'); if(!host)return; let c={}; if(id){const {data}=await db().from('univers').select('*').eq('id',id).single();c=data||{};}
+    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
+    host.scrollIntoView({behavior:'smooth',block:'center'});
   }
-
-  async function saveAdminCollection(id){
-    const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10)};
-    if(!payload.nom){alert('Le nom est obligatoire.');return;}
-    let q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});
-    const {error}=await q; if(error){alert('Erreur : '+error.message);return;} renderAdministration('catalogue');
-  }
+  async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10)};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});const {error}=await q;if(error){alert('Erreur : '+error.message);return;}adminNavigate('collections');}
 
   // ============================================================
   // ACCUEIL
