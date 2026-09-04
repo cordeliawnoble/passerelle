@@ -405,6 +405,7 @@
   .saga-info-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,.8fr);gap:16px}.saga-lower-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini-moodboard{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mini-moodboard img{width:100%;height:105px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
   .admin-tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0 18px}.admin-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 13px;color:var(--text-dim);cursor:pointer;font-family:'Lora',serif}.admin-tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
   .metadata-row{display:grid;grid-template-columns:48px 1fr 70px auto;gap:8px;align-items:center;margin-bottom:8px}.metadata-row input[type=color]{height:38px;padding:3px}
+.inline-create-panel{margin:12px 0 16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--accent) 5%,var(--card));display:none}.inline-create-panel.open{display:block}.inline-create-grid{display:grid;grid-template-columns:72px 1fr 90px auto;gap:9px;align-items:end}.inline-create-actions{display:flex;gap:7px;align-items:center}.admin-rich{margin:8px 0 14px}.admin-rich-toolbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}.admin-rich-toolbar button{padding:5px 8px;font-size:10px}.admin-rich-editor{min-height:130px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--card);outline:none;line-height:1.55}.admin-rich-editor:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent)}.admin-rich-editor h2,.admin-rich-editor h3{font-family:'Lora',serif}.admin-rich-editor ul,.admin-rich-editor ol{padding-left:22px}.admin-rich-editor blockquote{border-left:3px solid var(--accent);margin:8px 0;padding:5px 10px;color:var(--text-dim)}@media(max-width:800px){.inline-create-grid{grid-template-columns:1fr 1fr}.inline-create-actions{grid-column:1/-1}}
   @media(max-width:800px){.saga-info-layout,.saga-lower-grid{grid-template-columns:1fr}.entity-gallery{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
   /* V5.6.1 — contraste adaptatif des cartes galerie */
   .pep-card-inner,.entity-card-inner{color:var(--gallery-text,var(--text));}
@@ -787,6 +788,45 @@
   }
 
 
+
+  function adminRichToolbarV567(id){
+    return `<div class="admin-rich-toolbar">
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','bold')"><b>B</b></button>
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','italic')"><i>I</i></button>
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','underline')"><u>U</u></button>
+      <button class="btn-secondary" type="button" onclick="adminRichFormatV567('${id}','h2')">H2</button>
+      <button class="btn-secondary" type="button" onclick="adminRichFormatV567('${id}','h3')">H3</button>
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','insertUnorderedList')">• Liste</button>
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','insertOrderedList')">1. Liste</button>
+      <button class="btn-secondary" type="button" onclick="adminRichLinkV567('${id}')">🔗</button>
+      <button class="btn-secondary" type="button" onclick="adminRichExecV567('${id}','removeFormat')">Effacer format</button>
+    </div>`;
+  }
+  function adminRichFieldV567(id,html,minHeight=130){
+    const content=(html||'').trim();
+    const rendered=/</.test(content)?content:renderSimpleRichText(content);
+    return `<div class="admin-rich">${adminRichToolbarV567(id)}<div id="${id}" class="admin-rich-editor" contenteditable="true" style="min-height:${minHeight}px">${rendered}</div></div>`;
+  }
+  function adminRichExecV567(id,cmd,value=null){const e=document.getElementById(id);if(!e)return;e.focus();document.execCommand(cmd,false,value)}
+  function adminRichFormatV567(id,tag){const e=document.getElementById(id);if(!e)return;e.focus();document.execCommand('formatBlock',false,tag)}
+  function adminRichLinkV567(id){
+    const e=document.getElementById(id);if(!e)return;
+    const sel=window.getSelection(); const label=sel&&sel.toString()?sel.toString():'lien';
+    e.focus();
+    const span=document.createElement('span');
+    span.innerHTML=`<a href="#" data-pending-link="1">${safeText(label)}</a>`;
+    const range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+    if(range){range.deleteContents();range.insertNode(span.firstChild)}
+    const a=e.querySelector('[data-pending-link="1"]');
+    if(a){a.removeAttribute('data-pending-link');a.href='https://';a.title='Double-clique pour modifier le lien';}
+  }
+  function adminRichHtmlV567(id){return (document.getElementById(id)?.innerHTML||'').trim()}
+  function toggleSagaMetadataCreatorV567(show){
+    const p=document.getElementById('saga-meta-create-v567');if(!p)return;
+    p.classList.toggle('open',show!==false);
+    if(show!==false)setTimeout(()=>document.getElementById('saga-meta-name-v567')?.focus(),0);
+  }
+
   let adminSagaIdV56=null, adminSagaTabV56='information';
   async function openAdminSagaEditorV56(id){
     adminSagaIdV56=id;
@@ -799,13 +839,30 @@
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement…</div>';
     const [sr,mr]=await Promise.all([db().from('sagas').select('*').eq('id',adminSagaIdV56).single(),db().from('saga_metadonnees').select('*').eq('saga_id',adminSagaIdV56).order('ordre')]);const s=sr.data||{};window._adminSagaMetaV56=mr.data||[];
     content.innerHTML=`${adminPageHead(s.nom||'Saga','Administration de la saga.',`<button class="btn-secondary" onclick="openSagaDetail('${s.id}')">Voir la fiche ↗</button>`)}<div class="admin-tabs">${[['information','Informations'],['metadata','Métadonnées'],['configuration','Configuration']].map(([k,l])=>`<button class="${adminSagaTabV56===k?'active':''}" onclick="adminSagaTabV56='${k}';renderAdminSagaEditorV56()">${l}</button>`).join('')}</div><div id="admin-saga-tab-v56"></div>`;
-    const z=document.getElementById('admin-saga-tab-v56');if(adminSagaTabV56==='information')z.innerHTML=`<div class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div><label>Nom</label><input id="as56-nom" value="${safeText(s.nom||'')}"></div><div><label>Genre</label><input id="as56-genre" value="${safeText(s.genre||'')}"></div></div><label>À propos de la saga</label><textarea id="as56-description" style="min-height:160px">${safeText(s.description||'')}</textarea><label>Mots-clés (séparés par des virgules)</label><input id="as56-tags" value="${safeText((s.mots_cles||[]).join(', '))}"><label>Période couverte (facultatif, sinon calcul chronologie)</label><input id="as56-periode" value="${safeText(s.periode_couverte||'')}"><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaInfoV56()">Enregistrer</button></div>`;
-    if(adminSagaTabV56==='metadata')z.innerHTML=`<div class="admin-section"><div class="admin-section-head"><div><h2>Métadonnées de la saga</h2><p class="admin-section-sub">Vocabulaire héritable par les sous-sagas et les œuvres : Meute, Coven, Hockey, Basket…</p></div><button class="btn-primary" onclick="addSagaMetadataV56()">+ Ajouter</button></div><div>${window._adminSagaMetaV56.map(m=>`<div class="metadata-row"><input value="${safeText(m.emoji||'')}" maxlength="4" onchange="saveSagaMetadataFieldV56('${m.id}','emoji',this.value)"><input value="${safeText(m.nom)}" onchange="saveSagaMetadataFieldV56('${m.id}','nom',this.value)"><input type="color" value="${safeText(m.couleur||'#8C7FB0')}" onchange="saveSagaMetadataFieldV56('${m.id}','couleur',this.value)"><button class="btn-secondary" onclick="deleteSagaMetadataV56('${m.id}')">Supprimer</button></div>`).join('')||'<div class="empty">Aucune métadonnée.</div>'}</div></div>`;
+    const z=document.getElementById('admin-saga-tab-v56');if(adminSagaTabV56==='information')z.innerHTML=`<div class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div><label>Nom</label><input id="as56-nom" value="${safeText(s.nom||'')}"></div><div><label>Genre</label><input id="as56-genre" value="${safeText(s.genre||'')}"></div></div><label>À propos de la saga</label>${adminRichFieldV567('as56-description',s.description||'',170)}<label>Mots-clés (séparés par des virgules)</label><input id="as56-tags" value="${safeText((s.mots_cles||[]).join(', '))}"><label>Période couverte (facultatif, sinon calcul chronologie)</label><input id="as56-periode" value="${safeText(s.periode_couverte||'')}"><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaInfoV56()">Enregistrer</button></div>`;
+    if(adminSagaTabV56==='metadata')z.innerHTML=`<div class="admin-section"><div class="admin-section-head"><div><h2>Métadonnées de la saga</h2><p class="admin-section-sub">Vocabulaire héritable par les sous-sagas et les œuvres : Meute, Coven, Hockey, Basket…</p></div><button class="btn-primary" onclick="toggleSagaMetadataCreatorV567(true)">+ Ajouter</button></div>
+      <div id="saga-meta-create-v567" class="inline-create-panel">
+        <div class="inline-create-grid">
+          <div><label>Emoji</label><input id="saga-meta-emoji-v567" maxlength="4" placeholder="🐺"></div>
+          <div><label>Nom</label><input id="saga-meta-name-v567" placeholder="Meute"></div>
+          <div><label>Couleur</label><input id="saga-meta-color-v567" type="color" value="#8C7FB0" style="height:42px;padding:4px"></div>
+          <div class="inline-create-actions"><button class="btn-primary" onclick="saveNewSagaMetadataV567()">Créer</button><button class="btn-secondary" onclick="toggleSagaMetadataCreatorV567(false)">Annuler</button></div>
+        </div>
+      </div>
+      <div>${window._adminSagaMetaV56.map(m=>`<div class="metadata-row"><input value="${safeText(m.emoji||'')}" maxlength="4" onchange="saveSagaMetadataFieldV56('${m.id}','emoji',this.value)"><input value="${safeText(m.nom)}" onchange="saveSagaMetadataFieldV56('${m.id}','nom',this.value)"><input type="color" value="${safeText(m.couleur||'#8C7FB0')}" onchange="saveSagaMetadataFieldV56('${m.id}','couleur',this.value)"><button class="btn-secondary" onclick="deleteSagaMetadataV56('${m.id}')">Supprimer</button></div>`).join('')||'<div class="empty">Aucune métadonnée.</div>'}</div></div>`;
     if(adminSagaTabV56==='configuration')z.innerHTML=`<div class="admin-section"><h2>Configuration graphique</h2><div class="admin-section-grid three"><div><label>Couleur de fond</label><input type="color" id="as56-page" value="${safeText(s.page_color||'#F7F3FB')}"></div><div><label>Couleur d’accent</label><input type="color" id="as56-accent" value="${safeText(s.accent_color||'#8C7FB0')}"></div><div><label>Bannière</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'banniere').then(()=>renderAdminSagaEditorV56())"></label></div></div>${renderCatalogEntityBanner(s.banniere||s.image_couverture,s.nom)}<button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaConfigV56()">Appliquer les couleurs</button></div>`;
   }
-  async function saveAdminSagaInfoV56(){const payload={nom:document.getElementById('as56-nom').value.trim()||'Sans titre',genre:document.getElementById('as56-genre').value.trim(),description:document.getElementById('as56-description').value.trim(),mots_cles:document.getElementById('as56-tags').value.split(',').map(x=>x.trim()).filter(Boolean),periode_couverte:document.getElementById('as56-periode').value.trim()||null};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
+  async function saveAdminSagaInfoV56(){const payload={nom:document.getElementById('as56-nom').value.trim()||'Sans titre',genre:document.getElementById('as56-genre').value.trim(),description:adminRichHtmlV567('as56-description'),mots_cles:document.getElementById('as56-tags').value.split(',').map(x=>x.trim()).filter(Boolean),periode_couverte:document.getElementById('as56-periode').value.trim()||null};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
   async function saveAdminSagaConfigV56(){const payload={page_color:document.getElementById('as56-page').value,accent_color:document.getElementById('as56-accent').value};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
-  async function addSagaMetadataV56(){const nom=prompt('Nom de la métadonnée :');if(!nom)return;const {error}=await db().from('saga_metadonnees').insert({user_id:currentUser.id,saga_id:adminSagaIdV56,nom});if(error)return alert(error.message);renderAdminSagaEditorV56()}
+  async function addSagaMetadataV56(){toggleSagaMetadataCreatorV567(true)}
+  async function saveNewSagaMetadataV567(){
+    const nom=document.getElementById('saga-meta-name-v567')?.value.trim();
+    if(!nom){const e=document.getElementById('saga-meta-name-v567');if(e){e.focus();e.style.borderColor='var(--danger,#c45)'}return}
+    const payload={user_id:currentUser.id,saga_id:adminSagaIdV56,nom,emoji:document.getElementById('saga-meta-emoji-v567')?.value.trim()||null,couleur:document.getElementById('saga-meta-color-v567')?.value||'#8C7FB0'};
+    const {error}=await db().from('saga_metadonnees').insert(payload);
+    if(error){const p=document.getElementById('saga-meta-create-v567');if(p)p.insertAdjacentHTML('beforeend',`<div class="error-text" style="margin-top:8px">${safeText(error.message)}</div>`);return}
+    await renderAdminSagaEditorV56(); adminSagaTabV56='metadata'; await renderAdminSagaEditorV56();
+  }
   async function saveSagaMetadataFieldV56(id,key,val){await db().from('saga_metadonnees').update({[key]:val}).eq('id',id)}
   async function deleteSagaMetadataV56(id){if(!confirm('Supprimer cette métadonnée ?'))return;await db().from('saga_metadonnees').delete().eq('id',id);renderAdminSagaEditorV56()}
   async function renderAdminSousSagasPage(){
@@ -1085,7 +1142,7 @@
           <div><label>Statut</label><input id="ar565-statut" value="${safeText(r.statut||'')}"></div>
           <div><label>Thème principal</label><input id="ar565-theme" value="${safeText(r.theme_principal||'')}"></div>
           <div><label>Objectif de poèmes</label><input id="ar565-objectif" type="number" value="${safeText(r.objectif_poemes||'')}"></div>
-          <div class="admin-field-full"><label>À propos / résumé canonique</label><textarea id="ar565-resume" style="min-height:180px">${safeText(r.a_propos||r.resume||'')}</textarea></div>
+          <div class="admin-field-full"><label>À propos / résumé canonique</label>${adminRichFieldV567('ar565-resume',r.a_propos||r.resume||'',170)}</div>
         </div>
         <button class="btn-primary" onclick="saveAdminRecueilInfoV565()">Enregistrer</button>
       </section>`;
@@ -1113,7 +1170,7 @@
       statut:document.getElementById('ar565-statut').value.trim(),
       theme_principal:document.getElementById('ar565-theme').value.trim(),
       objectif_poemes:parseInt(document.getElementById('ar565-objectif').value)||null,
-      resume:document.getElementById('ar565-resume').value.trim()
+      resume:adminRichHtmlV567('ar565-resume')
     };
     const {error}=await db().from('recueils').update(payload).eq('id',adminRecueilIdV565);
     if(error)return alert('Erreur : '+error.message);
@@ -2183,7 +2240,7 @@
 
       zone.innerHTML=`<div class="work-toolbar">
         <div class="segmented">${filters.map(x=>`<button class="btn-secondary ${active===x?'active':''}" onclick="window._hierarchyMediaFilters['${filterKey}']='${x}';${level==='saga'?"renderSagaMediasV565(document.getElementById('saga-tab-content'))":"renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'))"}">${x}</button>`).join('')}</div>
-        <button class="btn-primary" onclick="addHierarchyMediaV565('${level}','${id}')">+ Ajouter un média 🌸</button>
+        <button class="btn-primary" onclick="openMediaUploadDrawerV566('${level}','${id}')">+ Ajouter des médias 🌸</button>
       </div>
       ${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaReadDrawerV565('${m.id}')">
         ${mediaImage(m)?`<img src="${safeText(mediaImage(m))}" alt="">`:'<div class="walter-empty">🖼</div>'}
@@ -2195,17 +2252,113 @@
   }
   function renderSagaMediasV565(zone){return renderHierarchyMediasV565(zone,{level:'saga',id:currentSagaId})}
   function renderSousSagaMediasV565(zone){return renderHierarchyMediasV565(zone,{level:'sous-saga',id:currentSousSagaId})}
-  async function addHierarchyMediaV565(level,id){
-    const url=prompt('URL du média :'); if(!url)return;
-    const titre=prompt('Titre :','')||'';
-    const type=prompt('Type : Illustration, Promotion & Bonus ou Couverture','Illustration')||'Illustration';
-    const payload={user_id:currentUser.id,url,titre,type};
-    if(level==='saga') payload.saga_id=id; else payload.sous_saga_id=id;
-    const {error}=await db().from('medias').insert(payload);
-    if(error)return alert('Erreur : '+error.message);
-    if(level==='saga') renderSagaMediasV565(document.getElementById('saga-tab-content'));
-    else renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
+  let mediaUploadBatchV566=[];
+  let mediaUploadContextV566=null;
+
+  function openMediaUploadDrawerV566(level,id){
+    mediaUploadContextV566={level,id};
+    mediaUploadBatchV566=[];
+    openDrawer('Ajouter des médias',`
+      <div class="media-upload-drawer-v566">
+        <div id="media-drop-v566" class="media-drop-v566" onclick="document.getElementById('media-files-v566').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleMediaDropV566(event)">
+          <div style="font-size:34px">🌸</div>
+          <strong>Glisse tes images ici</strong>
+          <span>ou clique pour parcourir · 20 images maximum</span>
+          <input id="media-files-v566" type="file" accept="image/*" multiple hidden onchange="prepareMediaFilesV566(this.files)">
+        </div>
+        <div id="media-batch-tools-v566"></div>
+        <div id="media-batch-list-v566"></div>
+      </div>`);
   }
+
+  function handleMediaDropV566(e){
+    e.preventDefault();e.currentTarget.classList.remove('drag');
+    prepareMediaFilesV566(e.dataTransfer.files);
+  }
+
+  function cleanMediaFilenameV566(name){
+    return (name||'').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function prepareMediaFilesV566(fileList){
+    const files=[...fileList].filter(f=>f.type.startsWith('image/')).slice(0,20);
+    if(!files.length)return;
+    if(fileList.length>20) alert('20 images maximum par envoi. Les 20 premières ont été retenues.');
+    mediaUploadBatchV566=files.map((file,i)=>({
+      key:`m${Date.now()}-${i}`,file,
+      preview:URL.createObjectURL(file),
+      titre:cleanMediaFilenameV566(file.name),
+      type:'Illustration',
+      current:false
+    }));
+    renderMediaBatchV566();
+  }
+
+  function renderMediaBatchV566(){
+    const tools=document.getElementById('media-batch-tools-v566');
+    const list=document.getElementById('media-batch-list-v566');
+    if(!tools||!list)return;
+    if(!mediaUploadBatchV566.length){tools.innerHTML='';list.innerHTML='';return}
+    tools.innerHTML=`<div class="media-batch-tools-v566">
+      <strong>${mediaUploadBatchV566.length} image${mediaUploadBatchV566.length>1?'s':''}</strong>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select id="media-bulk-cat-v566"><option>Illustration</option><option>Promotion & Bonus</option><option>Couverture</option></select>
+        <button class="btn-secondary" onclick="applyMediaBulkCategoryV566()">Appliquer à toutes</button>
+      </div>
+    </div>`;
+    list.innerHTML=mediaUploadBatchV566.map((m,i)=>`<div class="media-batch-item-v566">
+      <img src="${m.preview}" alt="">
+      <div class="media-batch-fields-v566">
+        <input value="${safeText(m.titre)}" oninput="mediaUploadBatchV566[${i}].titre=this.value">
+        <select onchange="mediaUploadBatchV566[${i}].type=this.value;renderMediaBatchV566()">
+          <option ${m.type==='Illustration'?'selected':''}>Illustration</option>
+          <option ${m.type==='Promotion & Bonus'?'selected':''}>Promotion & Bonus</option>
+          <option ${m.type==='Couverture'?'selected':''}>Couverture</option>
+        </select>
+        ${m.type==='Couverture'?`<label class="media-current-v566"><input type="checkbox" ${m.current?'checked':''} onchange="mediaUploadBatchV566[${i}].current=this.checked"> ★ Couverture actuelle</label>`:''}
+      </div>
+      <button class="btn-secondary" onclick="removeMediaBatchV566(${i})">✕</button>
+    </div>`).join('')+`<div class="media-upload-footer-v566"><button class="btn-primary" id="media-upload-go-v566" onclick="commitMediaBatchV566()">Importer les ${mediaUploadBatchV566.length} média${mediaUploadBatchV566.length>1?'s':''}</button></div>`;
+  }
+
+  function applyMediaBulkCategoryV566(){
+    const cat=document.getElementById('media-bulk-cat-v566').value;
+    mediaUploadBatchV566.forEach(m=>m.type=cat);
+    renderMediaBatchV566();
+  }
+  function removeMediaBatchV566(i){
+    const [m]=mediaUploadBatchV566.splice(i,1);if(m?.preview)URL.revokeObjectURL(m.preview);
+    renderMediaBatchV566();
+  }
+
+  async function commitMediaBatchV566(){
+    if(!mediaUploadContextV566||!mediaUploadBatchV566.length)return;
+    const btn=document.getElementById('media-upload-go-v566');if(btn){btn.disabled=true;btn.textContent='Téléversement…'}
+    try{
+      for(let i=0;i<mediaUploadBatchV566.length;i++){
+        const m=mediaUploadBatchV566[i];
+        if(btn)btn.textContent=`Téléversement ${i+1}/${mediaUploadBatchV566.length}…`;
+        const url=await uploadAssetFile(m.file,`medias/${mediaUploadContextV566.level}/${mediaUploadContextV566.id}`);
+        if(!url)throw new Error(`Échec du téléversement de ${m.file.name}`);
+        const payload={user_id:currentUser.id,url,titre:m.titre||cleanMediaFilenameV566(m.file.name),type:m.type};
+        if(mediaUploadContextV566.level==='saga')payload.saga_id=mediaUploadContextV566.id;
+        else payload.sous_saga_id=mediaUploadContextV566.id;
+        const {data,error}=await db().from('medias').insert(payload).select('id').single();
+        if(error)throw error;
+        if(m.type==='Couverture'&&m.current){
+          if(mediaUploadContextV566.level==='saga') await db().from('sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
+          else await db().from('sous_sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
+        }
+      }
+      closeDrawer();
+      if(mediaUploadContextV566.level==='saga')renderSagaMediasV565(document.getElementById('saga-tab-content'));
+      else renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
+    }catch(err){
+      alert('Erreur pendant l’import : '+(err?.message||err));
+      if(btn){btn.disabled=false;btn.textContent='Reprendre l’import'}
+    }
+  }
+
   async function openMediaReadDrawerV565(id){
     const {data:m,error}=await db().from('medias').select('*').eq('id',id).single();
     if(error)return alert(error.message);
@@ -4686,7 +4839,7 @@
     const [sr,wr]=await Promise.all([db().from('sous_sagas').select('*,sagas(nom)').eq('id',id).single(),db().from('oeuvres').select('id,titre,numero_sous_saga').eq('sous_saga_id',id).order('ordre_sous_saga')]);const ss=sr.data;if(!ss){content.innerHTML='<div class="empty">Sous-saga introuvable.</div>';return}
     const [md,selmd]=await Promise.all([db().from('saga_metadonnees').select('*').eq('saga_id',ss.saga_id).order('ordre'),db().from('sous_saga_metadonnees').select('metadata_id').eq('sous_saga_id',id)]);window._assMetaDefs=md.data||[];window._assMetaSelected=new Set((selmd.data||[]).map(x=>x.metadata_id));
     content.innerHTML=`<div class="admin-work-editor"><div class="admin-work-topbar"><div><div class="admin-work-kicker">Administration · Sous-sagas</div><h1>${safeText(ss.nom)}</h1></div><div class="admin-work-top-actions"><button class="btn-secondary" onclick="renderAdminSousSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSousSagaDetail('${id}')">Ouvrir dans Passerelle ↗</button><button class="btn-primary" onclick="saveAdminSousSagaEditor('${id}')">Enregistrer</button></div></div><div class="admin-editor-tabs"><button class="active" onclick="adminSsTab(this,'info')">Informations</button><button onclick="adminSsTab(this,'plan')">Plan global</button><button onclick="adminSsTab(this,'appearance')">Apparence</button><button onclick="adminSsTab(this,'archive')">Archivage</button></div>
-    <div id="ass-info"><section class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div class="admin-field-full"><label>Nom</label><input id="ass-nom" value="${safeText(ss.nom||'')}"></div><div><label>Saga parente</label><input value="${safeText(ss.sagas?.nom||'')}" disabled></div><div><label>Genre dominant</label><input id="ass-genre" value="${safeText(ss.genre||'')}"></div><div><label>Temporalité</label><input id="ass-temporalite" value="${safeText(ss.temporalite||'')}"></div><div><label>Cadre</label><input id="ass-lieu" value="${safeText(ss.lieu_principal||'')}" placeholder="Sélection parent Codex à brancher"></div><div><label>Trame principale</label><div class="admin-check-row"><input type="checkbox" id="ass-trame" ${ss.trame_principale?'checked':''}><div><strong>Trame principale de la saga</strong><small>Affichée en premier avec une pastille 👑.</small></div></div></div><div class="admin-field-full"><label>Mots-clés</label><input id="ass-tags" value="${safeText((ss.mots_cles||[]).join(', '))}"></div><div class="admin-field-full"><label>Métadonnées héritées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._assMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="ass-meta-check" value="${m.id}" style="width:auto" ${window._assMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Aucune métadonnée définie dans la saga.</small>'}</div></div></div><label>À propos / résumé canonique</label><textarea id="ass-description">${safeText(ss.description||'')}</textarea><label>Citation</label><textarea id="ass-citation">${safeText(ss.citation||'')}</textarea></section></div>
+    <div id="ass-info"><section class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div class="admin-field-full"><label>Nom</label><input id="ass-nom" value="${safeText(ss.nom||'')}"></div><div><label>Saga parente</label><input value="${safeText(ss.sagas?.nom||'')}" disabled></div><div><label>Genre dominant</label><input id="ass-genre" value="${safeText(ss.genre||'')}"></div><div><label>Temporalité</label><input id="ass-temporalite" value="${safeText(ss.temporalite||'')}"></div><div><label>Cadre</label><input id="ass-lieu" value="${safeText(ss.lieu_principal||'')}" placeholder="Sélection parent Codex à brancher"></div><div><label>Trame principale</label><div class="admin-check-row"><input type="checkbox" id="ass-trame" ${ss.trame_principale?'checked':''}><div><strong>Trame principale de la saga</strong><small>Affichée en premier avec une pastille 👑.</small></div></div></div><div class="admin-field-full"><label>Mots-clés</label><input id="ass-tags" value="${safeText((ss.mots_cles||[]).join(', '))}"></div><div class="admin-field-full"><label>Métadonnées héritées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._assMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="ass-meta-check" value="${m.id}" style="width:auto" ${window._assMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Aucune métadonnée définie dans la saga.</small>'}</div></div></div><label>À propos / résumé canonique</label>${adminRichFieldV567('ass-description',ss.description||'',160)}<label>Citation</label>${adminRichFieldV567('ass-citation',ss.citation||'',90)}</section></div>
     <div id="ass-plan" style="display:none"><section class="admin-section"><h2>Plan global</h2><p class="admin-section-sub">Les tomes/segments sont dynamiques. Ils peuvent exister avant d’être liés à une œuvre.</p><button class="btn-primary" onclick="addAdminSousSagaSegment('${id}')">+ Ajouter un tome</button><div id="ass-plan-list" style="margin-top:12px"></div></section></div>
     <div id="ass-appearance" style="display:none"><section class="admin-section"><h2>Apparence</h2><label>Couleur de page</label><input type="color" id="ass-page-color" value="${safeText(ss.page_color||globalAppearance.themeColor)}"><label>Couleur d’accent</label><input type="color" id="ass-accent" value="${safeText(ss.accent_color||globalAppearance.accent)}"><label>Bannière</label><input id="ass-banniere" value="${safeText(ss.banniere||'')}"><label class="btn-secondary upload-file-btn" style="margin-top:7px">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('sous_sagas','${id}',this,'ass-banniere')"></label></section></div>
     <div id="ass-archive" style="display:none"><section class="admin-section admin-danger"><h2>Archivage</h2><div class="admin-check-row"><input type="checkbox" id="ass-archive-check" ${ss.archive?'checked':''}><div><strong>Sous-saga archivée</strong><small>Masquée sans suppression.</small></div></div></section></div></div>`;
@@ -4702,7 +4855,7 @@
     openAdminSousSagaEditor(id);
   }
   function adminSsTab(btn,key){document.querySelectorAll('.admin-editor-tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['info','plan','appearance','archive'].forEach(k=>{const e=document.getElementById('ass-'+k);if(e)e.style.display=k===key?'block':'none'})}
-  async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),trame_principale:document.getElementById('ass-trame')?.checked||false,mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:document.getElementById('ass-description').value.trim(),citation:document.getElementById('ass-citation').value.trim(),page_color:document.getElementById('ass-page-color').value,accent_color:document.getElementById('ass-accent').value,banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {error}=await db().from('sous_sagas').update(payload).eq('id',id);if(error)return alert(error.message);await db().from('sous_saga_metadonnees').delete().eq('sous_saga_id',id);const mids=[...document.querySelectorAll('.ass-meta-check:checked')].map(x=>x.value);if(mids.length){const ins=await db().from('sous_saga_metadonnees').insert(mids.map(metadata_id=>({sous_saga_id:id,metadata_id})));if(ins.error)return alert(ins.error.message)}alert('Sous-saga enregistrée ✨')}
+  async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),trame_principale:document.getElementById('ass-trame')?.checked||false,mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:adminRichHtmlV567('ass-description'),citation:adminRichHtmlV567('ass-citation'),page_color:document.getElementById('ass-page-color').value,accent_color:document.getElementById('ass-accent').value,banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {error}=await db().from('sous_sagas').update(payload).eq('id',id);if(error)return alert(error.message);await db().from('sous_saga_metadonnees').delete().eq('sous_saga_id',id);const mids=[...document.querySelectorAll('.ass-meta-check:checked')].map(x=>x.value);if(mids.length){const ins=await db().from('sous_saga_metadonnees').insert(mids.map(metadata_id=>({sous_saga_id:id,metadata_id})));if(ins.error)return alert(ins.error.message)}alert('Sous-saga enregistrée ✨')}
 
   init();
 </script>
