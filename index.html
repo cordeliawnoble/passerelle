@@ -327,6 +327,28 @@
   .media-grid{columns:4 210px;column-gap:14px}.media-card{break-inside:avoid;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg-2);cursor:pointer}.media-card img{display:block;width:100%;height:auto}.media-meta{padding:10px}.media-meta strong{display:block;font-size:13px}.media-meta small{color:var(--text-dim)}
   @media(max-width:900px){.work-info-grid,.character-layout,.relecture-grid{grid-template-columns:1fr}.relation-preview{position:static}.media-grid{columns:2 180px}}
 
+
+
+  /* ---- Planning créatif V5.3 ---- */
+  .home-desk-planning{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(320px,.88fr);gap:20px;align-items:stretch;margin-bottom:20px}
+  .home-desk-planning>.panel{margin-bottom:0}
+  .desk-project-section+.desk-project-section{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .desk-project-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:9px}
+  .desk-project-list{display:grid;gap:8px}.desk-project{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--bg-2);border-radius:9px;padding:9px 10px;cursor:pointer}.desk-project:hover{border-color:var(--accent)}
+  .desk-project-cover{width:34px;height:46px;object-fit:cover;border-radius:5px;border:1px solid var(--line);background:var(--card)}.desk-project-cover.empty{display:grid;place-items:center;font-size:15px;color:var(--accent)}
+  .desk-project strong{display:block;font-size:12px}.desk-project small{display:block;color:var(--text-dim);font-size:10px;margin-top:2px}
+  .mini-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.mini-cal-head strong{font-size:12px}.mini-cal-week,.mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.mini-cal-week span{font-size:9px;text-align:center;color:var(--text-dim);padding:4px 0}.mini-cal-day{min-height:46px;border:1px solid transparent;border-radius:7px;padding:4px;position:relative}.mini-cal-day.muted{opacity:.3}.mini-cal-day.today{border-color:var(--accent)}.mini-cal-num{font-size:9px;color:var(--text-dim)}.mini-cal-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}.mini-cal-dot{width:7px;height:7px;border-radius:50%;display:block;cursor:help}.mini-cal-link{display:block;text-align:right;margin-top:10px;font-size:10px;color:var(--accent);cursor:pointer}
+  .planning-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.planning-head h1{margin:0}.planning-head p{margin:5px 0 0;color:var(--text-dim);font-size:12px}.planning-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .planning-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}.planning-nav{display:flex;gap:6px;align-items:center}.planning-period{font-weight:600;min-width:180px;text-align:center}.planning-views{display:flex;gap:4px}.planning-views button.active{background:var(--accent);color:var(--bg)}
+  .planning-legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:10px;color:var(--text-dim);margin-bottom:12px}.planning-legend span{display:flex;gap:5px;align-items:center}.planning-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .planning-month{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);overflow:auto}.planning-month-head{padding:8px;text-align:center;font-size:10px;color:var(--text-dim);border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-2);min-width:120px}.planning-day{min-height:118px;padding:7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card);min-width:120px}.planning-day.other{opacity:.42}.planning-day.today{box-shadow:inset 0 0 0 2px var(--accent)}.planning-day.drag-over{background:color-mix(in srgb,var(--accent) 9%,var(--card))}.planning-day-num{font-size:10px;color:var(--text-dim);margin-bottom:5px}.planning-event{border:1px solid var(--line);border-left:4px solid var(--event-color,var(--accent));background:var(--bg-2);border-radius:7px;padding:6px 7px;margin-bottom:5px;cursor:grab;font-size:10px}.planning-event:active{cursor:grabbing}.planning-event strong{display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.planning-event small{display:block;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .planning-week{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:10px;overflow:auto}.planning-week-col{min-height:420px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:10px;min-width:150px}.planning-week-col.drag-over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--card))}.planning-week-col h3{font-size:11px;margin:0 0 3px}.planning-week-col>small{display:block;color:var(--text-dim);font-size:9px;margin-bottom:10px}.planning-week-col.today{box-shadow:inset 0 0 0 2px var(--accent)}
+  .planning-list-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}.planning-list{width:100%;border-collapse:collapse;font-size:11px}.planning-list th,.planning-list td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.planning-list th{font-weight:500;color:var(--text-dim);background:var(--bg-2);white-space:nowrap}.planning-list tr:last-child td{border-bottom:0}.planning-list input[type=checkbox]{width:auto}.planning-bulk{display:none;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg-2);margin-bottom:10px}.planning-bulk.show{display:flex}.planning-bulk span{font-size:10px;color:var(--text-dim);margin-right:4px}
+  .planning-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.planning-modal-grid .full{grid-column:1/-1}.planning-days{display:flex;gap:6px;flex-wrap:wrap}.planning-day-check{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px}.planning-day-check input{width:auto;margin:0}.planning-link-preview{border:1px dashed var(--line);background:var(--bg-2);border-radius:8px;padding:10px;font-size:11px;color:var(--text-dim)}
+  .csv-map-grid{display:grid;grid-template-columns:150px 1fr;gap:7px 10px;align-items:center}.csv-map-grid label{margin:0}.csv-preview{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:10px;font-size:10px}
+  @media(max-width:950px){.home-desk-planning{grid-template-columns:1fr}.planning-month{grid-template-columns:repeat(7,minmax(105px,1fr))}.planning-week{grid-template-columns:repeat(7,minmax(135px,1fr))}}
+  @media(max-width:650px){.planning-head{flex-direction:column}.planning-actions{justify-content:flex-start}.planning-modal-grid{grid-template-columns:1fr}.planning-modal-grid .full{grid-column:auto}.csv-map-grid{grid-template-columns:1fr}.planning-period{min-width:auto}}
+
 </style>
 </head>
 <body>
@@ -411,7 +433,7 @@
     ]},
     { group: 'Atelier', items: [
       { key:'relecture', label:'Relecture', real:true },
-      { key:'planning', label:'Planning', real:true, special:'todum' },
+      { key:'planning', label:'Planning', real:true },
       { key:'idees', label:'Pépinière', real:true },
     ]},
     { group: 'Pilotage', items: [
@@ -523,6 +545,7 @@
     if (key === 'personnages') renderPersonnages();
     if (key === 'idees') renderIdees();
     if (key === 'relecture') renderRelecture();
+    if (key === 'planning') renderPlanning();
     if (key === 'bureau-editorial') renderBureauEditorial();
     if (key === 'poesie') renderPoesie();
     if (key === 'administration') renderAdministration();
@@ -940,7 +963,7 @@
     const [
       enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle, homeQuickLinks
     ] = await Promise.all([
-      db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
+      db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots, couverture').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
       db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
       db().from('idees').select('titre, note').order('created_at', { ascending:false }).limit(1).maybeSingle(),
       Promise.all([
@@ -952,6 +975,16 @@
       db().from('sessions_ecriture').select('mots_ecrits').gte('date', startOfYear),
       db().from('liens_rapides').select('id,nom,url,icone,slug,ordre,actif').eq('actif',true).order('ordre',{ascending:true}).limit(6),
     ]);
+
+    const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
+    const [homePlanning, homeRelectures] = await Promise.all([
+      db().from('planning_sessions').select('id,oeuvre_id,chapitre_id,type_session,titre,date,couleur,statut').gte('date',startOfMonth).lte('date',monthEnd).neq('statut','annulée').order('date',{ascending:true}),
+      db().from('relectures').select('id,oeuvre_id,statut,date_debut,date_fin_prevue').is('date_terminee',null).limit(3),
+    ]);
+    const relectureIds=[...new Set((homeRelectures.data||[]).map(r=>r.oeuvre_id).filter(Boolean))];
+    let homeRelectureWorks=[];
+    if(relectureIds.length){const rr=await db().from('oeuvres').select('id,titre,couverture').in('id',relectureIds);homeRelectureWorks=rr.data||[];}
+    const homeWorksMap=new Map([...(enBureau.data||[]),...homeRelectureWorks].map(o=>[o.id,o]));
 
     const [{ count: nbEnEcriture }, { count: nbChapitresMois }, { count: nbRelecturesEnCours }] = atelierStats;
     const motsAnnee = (sommeAnnuelle.data||[]).reduce((sum,r)=>sum+(r.mots_ecrits||0), 0);
@@ -968,17 +1001,23 @@
         </div>
       </div>
 
-      <div class="panel">
-        <h2>Sur le bureau</h2>
-        ${!enBureau.data?.length ? `<div class="empty">Aucune œuvre en écriture pour l'instant.</div>` : `
-        <div class="gallery">${enBureau.data.map(o => {
-          const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
-          return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
-            <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
-            <div class="char-name">${safeText(o.titre)}</div>
-            <div class="char-role">${pct!==null ? pct+'% · '+(o.mots_ecrits||0)+' / '+o.objectif_mots+' mots' : 'En écriture'}</div>
-          </div>`;
-        }).join('')}</div>`}
+      <div class="home-desk-planning">
+        <div class="panel">
+          <h2>Sur le bureau</h2>
+          <div class="desk-project-section">
+            <div class="desk-project-title">✍️ Écriture</div>
+            ${!enBureau.data?.length ? `<div class="empty" style="padding:22px 14px">Aucune œuvre en écriture.</div>` : `<div class="desk-project-list">${enBureau.data.map(o=>{const pct=o.objectif_mots?Math.min(100,Math.round((o.mots_ecrits||0)/o.objectif_mots*100)):null;return `<div class="desk-project" onclick="openOeuvreDetail('${o.id}')">${o.couverture?`<img class="desk-project-cover" src="${safeText(o.couverture)}" alt="">`:`<div class="desk-project-cover empty">${initials(o.titre)}</div>`}<div><strong>${safeText(o.titre)}</strong><small>${pct!==null?pct+'% · '+(o.mots_ecrits||0).toLocaleString('fr-FR')+' / '+o.objectif_mots.toLocaleString('fr-FR')+' mots':'En écriture'}</small></div></div>`}).join('')}</div>`}
+          </div>
+          <div class="desk-project-section">
+            <div class="desk-project-title">📖 Relecture</div>
+            ${!homeRelectures.data?.length?`<div class="empty" style="padding:22px 14px">Aucune relecture active.</div>`:`<div class="desk-project-list">${homeRelectures.data.map(r=>{const o=homeWorksMap.get(r.oeuvre_id);if(!o)return '';return `<div class="desk-project" onclick="openOeuvreDetail('${o.id}','relecture')">${o.couverture?`<img class="desk-project-cover" src="${safeText(o.couverture)}" alt="">`:`<div class="desk-project-cover empty">${initials(o.titre)}</div>`}<div><strong>${safeText(o.titre)}</strong><small>${safeText(r.statut||'Relecture en cours')}${r.date_fin_prevue?' · objectif '+formatDateFr(r.date_fin_prevue):''}</small></div></div>`}).join('')}</div>`}
+          </div>
+        </div>
+        <div class="panel">
+          <h2>📅 Mini planning</h2>
+          ${renderMiniPlanning(now,homePlanning.data||[],homeWorksMap)}
+          <span class="mini-cal-link" onclick="navigate('planning')">Voir le planning →</span>
+        </div>
       </div>
 
       <div class="home-two-col">
@@ -1026,6 +1065,105 @@
     if (error) { alert('Erreur : ' + error.message); return; }
     renderAccueil();
   }
+
+
+  // ============================================================
+  // PLANNING CRÉATIF
+  // ============================================================
+  let planningView='week';
+  let planningCursor=new Date();
+  let planningSessions=[];
+  let planningWorks=[];
+  let planningChapters=[];
+  let planningCsvRows=[];
+  let planningCsvHeaders=[];
+
+  function isoLocal(d){const x=new Date(d);const y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),day=String(x.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+  function formatDateFr(v){if(!v)return '';const d=new Date(v+'T12:00:00');return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});}
+  function addDaysIso(v,n){const d=new Date(v+'T12:00:00');d.setDate(d.getDate()+n);return isoLocal(d);}
+  function mondayOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(12,0,0,0);return x;}
+  function endOfWeek(d){const x=mondayOf(d);x.setDate(x.getDate()+6);return x;}
+  function startOfPlanningRange(){if(planningView==='month')return new Date(planningCursor.getFullYear(),planningCursor.getMonth(),1);if(planningView==='week')return mondayOf(planningCursor);const x=new Date();x.setMonth(x.getMonth()-2);return x;}
+  function endOfPlanningRange(){if(planningView==='month')return new Date(planningCursor.getFullYear(),planningCursor.getMonth()+1,0);if(planningView==='week')return endOfWeek(planningCursor);const x=new Date();x.setMonth(x.getMonth()+8);return x;}
+  function workById(id){return planningWorks.find(o=>o.id===id)||null;}
+  function chapterById(id){return planningChapters.find(c=>c.id===id)||null;}
+  function sessionLabel(s){const o=workById(s.oeuvre_id);const c=chapterById(s.chapitre_id);return s.titre||[o?.titre,c?`Chapitre ${c.numero}${c.titre?' · '+c.titre:''}`:''].filter(Boolean).join(' · ')||'Session';}
+  function sessionSubLabel(s){const o=workById(s.oeuvre_id);const c=chapterById(s.chapitre_id);return [s.type_session==='relecture'?'Relecture':'Écriture',o?.titre,c?`Ch. ${c.numero}`:''].filter(Boolean).join(' · ');}
+  function sessionColor(s){return s.couleur||(s.type_session==='relecture'?'#59A77A':'#7C5CBF');}
+
+  function renderMiniPlanning(now,sessions,worksMap){
+    const y=now.getFullYear(),m=now.getMonth();const first=new Date(y,m,1);const start=mondayOf(first);const cells=[];
+    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);const ds=sessions.filter(s=>s.date===iso);cells.push(`<div class="mini-cal-day ${d.getMonth()!==m?'muted':''} ${iso===isoLocal(now)?'today':''}"><div class="mini-cal-num">${d.getDate()}</div><div class="mini-cal-dots">${ds.slice(0,5).map(s=>{const o=worksMap.get(s.oeuvre_id);const title=[o?.titre,s.titre,s.type_session==='relecture'?'Relecture':'Écriture'].filter(Boolean).join(' · ');return `<span class="mini-cal-dot" style="background:${safeText(s.couleur|| (s.type_session==='relecture'?'#59A77A':'#7C5CBF'))}" title="${safeText(title)}"></span>`}).join('')}</div></div>`)}
+    return `<div class="mini-cal-head"><strong>${now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong><span style="font-size:10px;color:var(--text-dim)">${sessions.length} session${sessions.length>1?'s':''}</span></div><div class="mini-cal-week">${['L','M','M','J','V','S','D'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mini-cal-grid">${cells.join('')}</div>`;
+  }
+
+  async function renderPlanning(){
+    const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement du planning…</div>';
+    const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange());
+    const [worksRes,sessionsRes,chapRes]=await Promise.all([
+      db().from('oeuvres').select('id,titre,couverture,statut').eq('archive',false).order('titre',{ascending:true}),
+      db().from('planning_sessions').select('*').gte('date',start).lte('date',end).order('date',{ascending:true}).order('ordre',{ascending:true}),
+      db().from('chapitres').select('id,oeuvre_id,numero,titre,etat').order('numero',{ascending:true})
+    ]);
+    if(sessionsRes.error){content.innerHTML=`<div class="empty">Le Planning a besoin de sa migration SQL.<br><small>${safeText(sessionsRes.error.message)}</small></div>`;return;}
+    planningWorks=worksRes.data||[];planningSessions=sessionsRes.data||[];planningChapters=chapRes.data||[];
+    const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):planningView==='week'?`${formatDateFr(isoLocal(mondayOf(planningCursor)))} → ${formatDateFr(isoLocal(endOfWeek(planningCursor)))}`:'Toutes les sessions';
+    content.innerHTML=`<div class="planning-head"><div><h1>📅 Planning</h1><p>Sessions d’écriture et de relecture. Tu planifies, puis tu fais tatrat-glisser quand la vraie vie décide de jouer au bowling.</p></div><div class="planning-actions"><button class="btn-secondary" onclick="openPlanningCsv()">⇩ Import CSV</button><button class="btn-secondary" onclick="exportPlanningCsv()">⇧ Export CSV</button><button class="btn-primary" onclick="openPlanningSessionModal()">+ Nouvelle session</button><button class="btn-secondary" onclick="openPlanningSeriesModal()">✨ Créer une série</button></div></div>
+      <div class="planning-toolbar"><div class="planning-nav"><button class="tiny-btn" onclick="movePlanning(-1)">←</button><div class="planning-period">${safeText(title)}</div><button class="tiny-btn" onclick="movePlanning(1)">→</button><button class="tiny-btn" onclick="planningCursor=new Date();renderPlanning()">Aujourd’hui</button></div><div class="planning-views"><button class="tiny-btn ${planningView==='week'?'active':''}" onclick="setPlanningView('week')">Semaine</button><button class="tiny-btn ${planningView==='month'?'active':''}" onclick="setPlanningView('month')">Mois</button><button class="tiny-btn ${planningView==='list'?'active':''}" onclick="setPlanningView('list')">Liste</button></div></div>
+      <div class="planning-legend"><span><i style="background:#7C5CBF"></i>Écriture</span><span><i style="background:#59A77A"></i>Relecture</span><span>La couleur peut être personnalisée par session.</span></div>
+      <div id="planning-bulk" class="planning-bulk"><span id="planning-bulk-count">0 sélectionnée</span><button class="tiny-btn" onclick="bulkShiftPlanning(1)">+1 jour</button><button class="tiny-btn" onclick="bulkShiftPlanning(7)">+1 semaine</button><button class="tiny-btn" onclick="bulkSetPlanningDate()">Changer la date</button><button class="tiny-btn danger-btn" onclick="bulkDeletePlanning()">Supprimer</button></div>
+      <div id="planning-body">${planningView==='month'?renderPlanningMonth():planningView==='week'?renderPlanningWeek():renderPlanningList()}</div>
+      <input id="planning-csv-file" type="file" accept=".csv,text/csv" style="display:none" onchange="readPlanningCsvFile(event)">
+      <div id="planning-modal-host"></div>`;
+  }
+
+  function setPlanningView(v){planningView=v;renderPlanning();}
+  function movePlanning(dir){if(planningView==='month')planningCursor=new Date(planningCursor.getFullYear(),planningCursor.getMonth()+dir,1);else if(planningView==='week'){planningCursor=new Date(planningCursor);planningCursor.setDate(planningCursor.getDate()+dir*7)}renderPlanning();}
+
+  function renderPlanningMonth(){const y=planningCursor.getFullYear(),m=planningCursor.getMonth();const start=mondayOf(new Date(y,m,1));let html=['<div class="planning-month">',...['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d=>`<div class="planning-month-head">${d}</div>`)];for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);html.push(`<div class="planning-day ${d.getMonth()!==m?'other':''} ${iso===isoLocal(new Date())?'today':''}" data-date="${iso}" ondragover="planningDragOver(event)" ondragleave="planningDragLeave(event)" ondrop="planningDrop(event,'${iso}')"><div class="planning-day-num">${d.getDate()}</div>${planningSessions.filter(s=>s.date===iso).map(renderPlanningEvent).join('')}</div>`)}html.push('</div>');return html.join('');}
+  function renderPlanningWeek(){const start=mondayOf(planningCursor);let html='<div class="planning-week">';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);html+=`<div class="planning-week-col ${iso===isoLocal(new Date())?'today':''}" data-date="${iso}" ondragover="planningDragOver(event)" ondragleave="planningDragLeave(event)" ondrop="planningDrop(event,'${iso}')"><h3>${d.toLocaleDateString('fr-FR',{weekday:'long'})}</h3><small>${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</small>${planningSessions.filter(s=>s.date===iso).map(renderPlanningEvent).join('')}</div>`}return html+'</div>';}
+  function renderPlanningEvent(s){return `<div class="planning-event" draggable="true" data-id="${s.id}" style="--event-color:${safeText(sessionColor(s))}" ondragstart="planningDragStart(event,'${s.id}')" ondblclick="openPlanningSessionModal('${s.id}')" title="Double-cliquer pour modifier"><strong>${safeText(sessionLabel(s))}</strong><small>${safeText(sessionSubLabel(s))}</small></div>`;}
+  function renderPlanningList(){if(!planningSessions.length)return '<div class="empty">Aucune session dans cette période.</div>';return `<div class="planning-list-wrap"><table class="planning-list"><thead><tr><th><input type="checkbox" onchange="planningSelectAll(this.checked)"></th><th>Date</th><th>Type</th><th>Œuvre liée</th><th>Chapitre</th><th>Titre</th><th>Statut</th><th></th></tr></thead><tbody>${planningSessions.map(s=>{const o=workById(s.oeuvre_id),c=chapterById(s.chapitre_id);return `<tr><td><input class="planning-check" type="checkbox" value="${s.id}" onchange="refreshPlanningBulk()"></td><td>${formatDateFr(s.date)}</td><td><span style="display:inline-flex;align-items:center;gap:5px"><i style="width:8px;height:8px;border-radius:50%;background:${safeText(sessionColor(s))}"></i>${safeText(s.type_session)}</span></td><td>${safeText(o?.titre||'—')}</td><td>${c?`#${c.numero} ${safeText(c.titre||'')}`:'—'}</td><td>${safeText(s.titre||'')}</td><td>${safeText(s.statut||'planifiée')}</td><td><button class="tiny-btn" onclick="openPlanningSessionModal('${s.id}')">Modifier</button> <button class="tiny-btn" onclick="duplicatePlanningSession('${s.id}')">Dupliquer</button></td></tr>`}).join('')}</tbody></table></div>`;}
+
+  function planningDragStart(e,id){e.dataTransfer.setData('text/planning-id',id);e.dataTransfer.effectAllowed='move';}
+  function planningDragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+  function planningDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+  async function planningDrop(e,date){e.preventDefault();e.currentTarget.classList.remove('drag-over');const id=e.dataTransfer.getData('text/planning-id');if(!id)return;const {error}=await db().from('planning_sessions').update({date,updated_at:new Date().toISOString()}).eq('id',id);if(error){alert('Erreur : '+error.message);return;}renderPlanning();}
+
+  function planningWorkOptions(selected=''){return `<option value="">Choisir une œuvre…</option>${planningWorks.map(o=>`<option value="${o.id}" ${o.id===selected?'selected':''}>${safeText(o.titre)}</option>`).join('')}`;}
+  function planningChapterOptions(workId,selected=''){const arr=planningChapters.filter(c=>c.oeuvre_id===workId);return `<option value="">Aucun chapitre précis</option>${arr.map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>#${c.numero} ${safeText(c.titre||'Sans titre')}</option>`).join('')}`;}
+  function refreshPlanningChapterSelect(selected=''){const workId=document.getElementById('ps-work')?.value;const el=document.getElementById('ps-chapter');if(el)el.innerHTML=planningChapterOptions(workId,selected);const preview=document.getElementById('ps-link-preview');const o=workById(workId);if(preview)preview.innerHTML=o?`🔗 Cette session sera liée à <strong>${safeText(o.titre)}</strong>. Le chapitre reste facultatif.`:'Choisis une œuvre : la session sera liée à sa vraie fiche Passerelle.';}
+
+  function showPlanningModal(inner){document.getElementById('planning-modal-host').innerHTML=`<div class="modal-overlay open" id="planning-live-modal" onclick="if(event.target===this)closePlanningModal()"><div class="modal-box">${inner}</div></div>`;}
+  function closePlanningModal(){const h=document.getElementById('planning-modal-host');if(h)h.innerHTML='';}
+  function openPlanningSessionModal(id=''){
+    const s=id?planningSessions.find(x=>x.id===id):null;const date=s?.date||isoLocal(planningCursor);const color=s?.couleur|| (s?.type_session==='relecture'?'#59A77A':'#7C5CBF');
+    showPlanningModal(`<div class="modal-head"><h2>${s?'Modifier':'Nouvelle'} session</h2><button onclick="closePlanningModal()">✕</button></div><div class="modal-body"><div class="planning-modal-grid"><div><label>Type</label><select id="ps-type" onchange="document.getElementById('ps-color').value=this.value==='relecture'?'#59A77A':'#7C5CBF'"><option value="ecriture" ${s?.type_session!=='relecture'?'selected':''}>Écriture</option><option value="relecture" ${s?.type_session==='relecture'?'selected':''}>Relecture</option></select></div><div><label>Date</label><input type="date" id="ps-date" value="${date}"></div><div class="full"><label>Œuvre liée</label><select id="ps-work" onchange="refreshPlanningChapterSelect()">${planningWorkOptions(s?.oeuvre_id||'')}</select></div><div class="full"><label>Chapitre lié (facultatif)</label><select id="ps-chapter">${planningChapterOptions(s?.oeuvre_id||'',s?.chapitre_id||'')}</select></div><div class="full planning-link-preview" id="ps-link-preview"></div><div class="full"><label>Titre affiché (facultatif)</label><input id="ps-title" value="${safeText(s?.titre||'')}" placeholder="Ex. EC (14) — si vide, Passerelle utilise l’œuvre + le chapitre"></div><div><label>Couleur</label><input type="color" id="ps-color" value="${safeText(color)}" style="height:42px;padding:4px"></div><div><label>Statut</label><select id="ps-status"><option value="planifiée" ${s?.statut!=='réalisée'&&s?.statut!=='annulée'?'selected':''}>Planifiée</option><option value="réalisée" ${s?.statut==='réalisée'?'selected':''}>Réalisée</option><option value="annulée" ${s?.statut==='annulée'?'selected':''}>Annulée</option></select></div><div class="full"><label>Note</label><textarea id="ps-note">${safeText(s?.note||'')}</textarea></div></div></div><div class="modal-foot">${s?`<button class="btn-secondary danger-btn" onclick="deletePlanningSession('${s.id}')">Supprimer</button>`:''}<button class="btn-secondary" onclick="closePlanningModal()">Annuler</button><button class="btn-primary" onclick="savePlanningSession('${s?.id||''}')">Enregistrer</button></div>`);refreshPlanningChapterSelect(s?.chapitre_id||'');
+  }
+  async function savePlanningSession(id=''){const payload={oeuvre_id:document.getElementById('ps-work').value||null,chapitre_id:document.getElementById('ps-chapter').value||null,type_session:document.getElementById('ps-type').value,titre:document.getElementById('ps-title').value.trim()||null,date:document.getElementById('ps-date').value,couleur:document.getElementById('ps-color').value,statut:document.getElementById('ps-status').value,note:document.getElementById('ps-note').value.trim()||null,updated_at:new Date().toISOString()};if(!payload.oeuvre_id||!payload.date){alert('Choisis au moins une œuvre et une date.');return;}let q=id?db().from('planning_sessions').update(payload).eq('id',id):db().from('planning_sessions').insert({...payload,user_id:currentUser.id});const {error}=await q;if(error){alert('Erreur : '+error.message);return;}closePlanningModal();renderPlanning();}
+  async function deletePlanningSession(id){if(!confirm('Supprimer cette session ?'))return;const {error}=await db().from('planning_sessions').delete().eq('id',id);if(error){alert('Erreur : '+error.message);return;}closePlanningModal();renderPlanning();}
+  async function duplicatePlanningSession(id){const s=planningSessions.find(x=>x.id===id);if(!s)return;const title=s.titre?incrementPlanningTitle(s.titre):null;const payload={user_id:currentUser.id,oeuvre_id:s.oeuvre_id,chapitre_id:null,type_session:s.type_session,titre,date:addDaysIso(s.date,1),couleur:s.couleur,statut:'planifiée',note:s.note,ordre:s.ordre||0};const {error}=await db().from('planning_sessions').insert(payload);if(error){alert('Erreur : '+error.message);return;}renderPlanning();}
+  function incrementPlanningTitle(t){return String(t||'').replace(/(\d+)(?!.*\d)/,m=>String(Number(m)+1));}
+
+  function openPlanningSeriesModal(){showPlanningModal(`<div class="modal-head"><h2>✨ Créer une série</h2><button onclick="closePlanningModal()">✕</button></div><div class="modal-body"><div class="planning-modal-grid"><div><label>Type</label><select id="pser-type"><option value="ecriture">Écriture</option><option value="relecture">Relecture</option></select></div><div><label>Première date</label><input type="date" id="pser-date" value="${isoLocal(planningCursor)}"></div><div class="full"><label>Œuvre liée</label><select id="pser-work">${planningWorkOptions('')}</select></div><div><label>Premier numéro</label><input type="number" id="pser-start" value="1" min="0"></div><div><label>Nombre de sessions</label><input type="number" id="pser-count" value="10" min="1" max="200"></div><div class="full"><label>Modèle du titre</label><input id="pser-template" value="Chapitre ({n})" placeholder="EC ({n})"><small style="color:var(--text-dim)">Utilise {n}. Passerelle incrémente automatiquement : EC (1), EC (2), EC (3)…</small></div><div class="full"><label>Jours autorisés</label><div class="planning-days">${[['L',1],['M',2],['M',3],['J',4],['V',5],['S',6],['D',0]].map(([l,v])=>`<label class="planning-day-check"><input type="checkbox" class="pser-day" value="${v}" ${v>=1&&v<=5?'checked':''}>${l}</label>`).join('')}</div></div><div><label>Couleur</label><input type="color" id="pser-color" value="#7C5CBF" style="height:42px;padding:4px"></div></div></div><div class="modal-foot"><button class="btn-secondary" onclick="closePlanningModal()">Annuler</button><button class="btn-primary" onclick="createPlanningSeries()">Créer la série</button></div>`);}
+  async function createPlanningSeries(){const work=document.getElementById('pser-work').value,type=document.getElementById('pser-type').value,start=Number(document.getElementById('pser-start').value||1),count=Number(document.getElementById('pser-count').value||1),template=document.getElementById('pser-template').value||'Chapitre ({n})',color=document.getElementById('pser-color').value,days=[...document.querySelectorAll('.pser-day:checked')].map(x=>Number(x.value));if(!work||!days.length){alert('Choisis une œuvre et au moins un jour.');return;}let d=new Date(document.getElementById('pser-date').value+'T12:00:00');const rows=[];for(let i=0;i<count;i++){while(!days.includes(d.getDay()))d.setDate(d.getDate()+1);const n=start+i;const chapter=planningChapters.find(c=>c.oeuvre_id===work&&Number(c.numero)===n);rows.push({user_id:currentUser.id,oeuvre_id:work,chapitre_id:chapter?.id||null,type_session:type,titre:template.replaceAll('{n}',String(n)),date:isoLocal(d),couleur:color,statut:'planifiée',ordre:i});d.setDate(d.getDate()+1);}const {error}=await db().from('planning_sessions').insert(rows);if(error){alert('Erreur : '+error.message);return;}closePlanningModal();renderPlanning();}
+
+  function selectedPlanningIds(){return [...document.querySelectorAll('.planning-check:checked')].map(x=>x.value);}
+  function refreshPlanningBulk(){const ids=selectedPlanningIds();const bar=document.getElementById('planning-bulk');if(!bar)return;bar.classList.toggle('show',ids.length>0);document.getElementById('planning-bulk-count').textContent=`${ids.length} sélectionnée${ids.length>1?'s':''}`;}
+  function planningSelectAll(v){document.querySelectorAll('.planning-check').forEach(x=>x.checked=v);refreshPlanningBulk();}
+  async function bulkShiftPlanning(days){const ids=selectedPlanningIds();if(!ids.length)return;for(const id of ids){const s=planningSessions.find(x=>x.id===id);if(s){const {error}=await db().from('planning_sessions').update({date:addDaysIso(s.date,days),updated_at:new Date().toISOString()}).eq('id',id);if(error){alert(error.message);return;}}}renderPlanning();}
+  async function bulkSetPlanningDate(){const ids=selectedPlanningIds();if(!ids.length)return;const date=prompt('Nouvelle date (AAAA-MM-JJ) :',isoLocal(new Date()));if(!date)return;const {error}=await db().from('planning_sessions').update({date,updated_at:new Date().toISOString()}).in('id',ids);if(error){alert(error.message);return;}renderPlanning();}
+  async function bulkDeletePlanning(){const ids=selectedPlanningIds();if(!ids.length||!confirm(`Supprimer ${ids.length} session(s) ?`))return;const {error}=await db().from('planning_sessions').delete().in('id',ids);if(error){alert(error.message);return;}renderPlanning();}
+
+  function openPlanningCsv(){document.getElementById('planning-csv-file').click();}
+  function parseCsvLine(line,sep){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===sep&&!q){out.push(cur);cur=''}else cur+=c}out.push(cur);return out;}
+  function readPlanningCsvFile(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{const text=String(r.result||'').replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return;const sep=(lines[0].match(/;/g)||[]).length>(lines[0].match(/,/g)||[]).length?';':',';planningCsvHeaders=parseCsvLine(lines[0],sep);planningCsvRows=lines.slice(1).map(l=>parseCsvLine(l,sep));showPlanningCsvMapping();};r.readAsText(f,'utf-8');e.target.value='';}
+  function csvSelect(id,preferred=[]){const norm=x=>x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');const idx=planningCsvHeaders.findIndex(h=>preferred.includes(norm(h)));return `<select id="${id}"><option value="">Ignorer</option>${planningCsvHeaders.map((h,i)=>`<option value="${i}" ${i===idx?'selected':''}>${safeText(h)}</option>`).join('')}</select>`;}
+  function showPlanningCsvMapping(){showPlanningModal(`<div class="modal-head"><h2>⇩ Importer un planning CSV</h2><button onclick="closePlanningModal()">✕</button></div><div class="modal-body"><p style="font-size:11px;color:var(--text-dim)">Associe les colonnes de ton fichier. Seules Date et Œuvre sont obligatoires.</p><div class="csv-map-grid"><label>Date</label>${csvSelect('csv-date',['date','jour'])}<label>Œuvre</label>${csvSelect('csv-work',['oeuvre','projet','roman','work'])}<label>Chapitre</label>${csvSelect('csv-chapter',['chapitre','chapter','numero','n'])}<label>Type</label>${csvSelect('csv-type',['type','activite','session'])}<label>Titre</label>${csvSelect('csv-title',['titre','nom','libelle'])}<label>Couleur</label>${csvSelect('csv-color',['couleur','color'])}<label>Statut</label>${csvSelect('csv-status',['statut','status'])}</div><div class="csv-preview"><table class="planning-list"><tbody>${planningCsvRows.slice(0,5).map(r=>`<tr>${r.map(c=>`<td>${safeText(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div><div class="modal-foot"><button class="btn-secondary" onclick="closePlanningModal()">Annuler</button><button class="btn-primary" onclick="importPlanningCsv()">Importer ${planningCsvRows.length} ligne(s)</button></div>`);}
+  function csvVal(row,id){const v=document.getElementById(id).value;return v===''?'':(row[Number(v)]||'').trim();}
+  function findWorkFromCsv(v){const n=String(v||'').trim().toLowerCase();return planningWorks.find(o=>o.titre.toLowerCase()===n)||planningWorks.find(o=>o.titre.toLowerCase().includes(n)||n.includes(o.titre.toLowerCase()));}
+  async function importPlanningCsv(){const rows=[];let skipped=0;for(const r of planningCsvRows){const date=csvVal(r,'csv-date'),wv=csvVal(r,'csv-work');const work=findWorkFromCsv(wv);if(!date||!work){skipped++;continue;}const chv=csvVal(r,'csv-chapter');const num=Number(String(chv).match(/\d+/)?.[0]||0);const ch=num?planningChapters.find(c=>c.oeuvre_id===work.id&&Number(c.numero)===num):null;const typeRaw=csvVal(r,'csv-type').toLowerCase();rows.push({user_id:currentUser.id,oeuvre_id:work.id,chapitre_id:ch?.id||null,date,type_session:typeRaw.includes('rel')?'relecture':'ecriture',titre:csvVal(r,'csv-title')||null,couleur:csvVal(r,'csv-color')||null,statut:csvVal(r,'csv-status')||'planifiée',source:'csv'});}if(!rows.length){alert('Aucune ligne importable. Vérifie les correspondances Date / Œuvre.');return;}const {error}=await db().from('planning_sessions').insert(rows);if(error){alert('Erreur : '+error.message);return;}closePlanningModal();alert(`${rows.length} session(s) importée(s)${skipped?` · ${skipped} ligne(s) ignorée(s)`:''}.`);renderPlanning();}
+  function exportPlanningCsv(){const rows=[['Date','Type','Oeuvre','Chapitre','Titre','Couleur','Statut'],...planningSessions.map(s=>{const o=workById(s.oeuvre_id),c=chapterById(s.chapitre_id);return [s.date,s.type_session,o?.titre||'',c?.numero||'',s.titre||'',sessionColor(s),s.statut||'planifiée']})];const csv=rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`planning-passerelle-${isoLocal(new Date())}.csv`;a.click();URL.revokeObjectURL(a.href);}
 
   // ============================================================
   // BUREAU ÉDITORIAL
