@@ -788,7 +788,13 @@
 
 
   let adminSagaIdV56=null, adminSagaTabV56='information';
-  async function openAdminSagaEditorV56(id){adminSagaIdV56=id;adminSagaTabV56='information';setActiveAdminNav('sagas');await renderAdminSagaEditorV56()}
+  async function openAdminSagaEditorV56(id){
+    adminSagaIdV56=id;
+    adminSagaTabV56='information';
+    adminTab='sagas';
+    document.querySelectorAll('.admin-nav-link').forEach(el=>el.classList.toggle('active',el.dataset.adminKey==='sagas'));
+    await renderAdminSagaEditorV56();
+  }
   async function renderAdminSagaEditorV56(){
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement…</div>';
     const [sr,mr]=await Promise.all([db().from('sagas').select('*').eq('id',adminSagaIdV56).single(),db().from('saga_metadonnees').select('*').eq('saga_id',adminSagaIdV56).order('ordre')]);const s=sr.data||{};window._adminSagaMetaV56=mr.data||[];
