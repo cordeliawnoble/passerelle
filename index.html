@@ -1352,11 +1352,11 @@
     const [
       enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle, homeQuickLinks
     ] = await Promise.all([
-      db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots, couverture').eq('statut','En écriture').order('updated_at', { ascending:false }).limit(3),
+      db().from('oeuvres').select('id,titre,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,archive').eq('archive',false).or('statut.eq.En écriture,statut_editorial_actuel.eq.V1 en cours,statut_editorial_actuel.eq.V2 en cours').order('updated_at',{ascending:false}).limit(3),
       db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
       db().from('idees').select('titre, note').order('created_at', { ascending:false }).limit(1).maybeSingle(),
       Promise.all([
-        db().from('oeuvres').select('*', { count:'exact', head:true }).eq('statut','En écriture'),
+        db().from('oeuvres').select('*',{count:'exact',head:true}).eq('archive',false).or('statut.eq.En écriture,statut_editorial_actuel.eq.V1 en cours,statut_editorial_actuel.eq.V2 en cours'),
         db().from('chapitres').select('*', { count:'exact', head:true }).gte('date_ecriture', startOfMonth),
         db().from('relectures').select('*', { count:'exact', head:true }).is('date_terminee', null),
       ]),
