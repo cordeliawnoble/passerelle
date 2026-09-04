@@ -183,6 +183,10 @@
   .admin-tabs{ display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:22px; flex-wrap:wrap; }
   .admin-tab{ border:none; background:none; color:var(--text-dim); font-family:'Lora',serif; padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent; }
   .admin-tab.active{ color:var(--accent); border-bottom-color:var(--accent); font-weight:500; }
+  .admin-editor-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:14px 0 22px;flex-wrap:wrap;}
+  .admin-editor-tabs button{border:0;background:transparent;color:var(--text-dim);font-family:'Lora',serif;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;}
+  .admin-editor-tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+  .admin-editor-panel>.admin-section{margin-bottom:16px;}
   .admin-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
   @media(max-width:900px){ .admin-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:620px){ .admin-grid{ grid-template-columns:1fr; } }
@@ -1010,7 +1014,7 @@
       <div class="admin-section"><div class="admin-section-head"><h2>🎨 Apparence globale</h2></div><p class="admin-section-sub">S’applique à l’accueil, au menu, au back-office et aux pages générales. Les œuvres, sagas, sous-sagas et recueils gardent leur propre couleur de page.</p><div class="admin-section-grid three"><div><label>Mode</label><select id="cfg-theme-mode"><option value="clair" ${(cfg.theme_mode||globalAppearance.mode)==='clair'?'selected':''}>Clair</option><option value="sombre" ${(cfg.theme_mode||globalAppearance.mode)==='sombre'?'selected':''}>Sombre</option></select></div><div><label>Couleur du thème</label><input type="color" id="cfg-theme-color" value="${safeText(cfg.theme_color||globalAppearance.themeColor)}"></div><div><label>Couleur d’accent</label><input type="color" id="cfg-accent-color" value="${safeText(cfg.accent_color||globalAppearance.accent)}"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveGlobalAppearance()">Appliquer l’apparence globale</button></div>
       <div class="admin-section">
         <div class="admin-section-head"><div><h2>🖼️ Bannières des pages</h2><p class="admin-section-sub" style="margin:4px 0 0">Téléverse directement les bannières des pages générales. Les fiches Œuvre, Saga, Sous-saga et Recueil gardent leur bannière propre dans leur éditeur.</p></div></div>
-        ${pageBanners.error ? adminEmpty('La migration Bannières V5.4 doit être installée.') : `<div class="banner-admin-grid">${Object.entries(PAGE_BANNER_LABELS).map(([key,label])=>{const b=(pageBanners.data||[]).find(x=>x.page_key===key);return `<div class="banner-admin-card"><div class="banner-admin-preview">${b?.image_url?`<img src="${safeText(b.image_url)}" alt="">`:'Aucune bannière'}</div><div class="banner-admin-body"><strong>${safeText(label)}</strong><div class="banner-admin-actions"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadPageBanner('${key}',this)"></label>${b?.image_url?`<button class="tiny-btn danger-btn" onclick="removePageBanner('${key}')">Retirer</button>`:''}</div></div></div>`}).join('')}</div>`}
+        ${pageBanners.error ? adminEmpty('Bannières indisponibles : '+safeText(pageBanners.error?.message||'table non disponible')) : `<div class="banner-admin-grid">${Object.entries(PAGE_BANNER_LABELS).map(([key,label])=>{const b=(pageBanners.data||[]).find(x=>x.page_key===key);return `<div class="banner-admin-card"><div class="banner-admin-preview">${b?.image_url?`<img src="${safeText(b.image_url)}" alt="">`:'Aucune bannière'}</div><div class="banner-admin-body"><strong>${safeText(label)}</strong><div class="banner-admin-actions"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadPageBanner('${key}',this)"></label>${b?.image_url?`<button class="tiny-btn danger-btn" onclick="removePageBanner('${key}')">Retirer</button>`:''}</div></div></div>`}).join('')}</div>`}
       </div>
       <div class="admin-section">
         <div class="admin-section-head"><div><h2>🧪 Évolutions & V2</h2><p class="admin-section-sub" style="margin:4px 0 0">Parking produit de Passerelle : idées à tester après usage, adaptations multi-utilisatrices et améliorations volontairement repoussées.</p></div></div>
@@ -1028,6 +1032,7 @@
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
+    activateAdminConfigurationTabs(zone);
   }
 
   async function saveGlobalAppearance(){
@@ -1813,7 +1818,7 @@
     if(!ids.length){zone.innerHTML='<div class="empty">Aucune œuvre dans cette sous-saga.</div>';return}
     const {data,error}=await db().from('personnages_oeuvres').select('personnage_id,oeuvre_id,role,importance,etat,personnages(id,nom,favori)').in('oeuvre_id',ids);if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
     const map={};(data||[]).forEach(r=>{const k=r.personnage_id;if(!map[k])map[k]={p:r.personnages,rels:{},role:r.role,importance:r.importance};map[k].rels[r.oeuvre_id]=r});
-    zone.innerHTML=`<div class="head-row"><h2>Évolution des personnages</h2></div><div class="gallery">${Object.values(map).map(x=>`<article class="char-card"><div class="char-portrait">${initials(x.p?.nom)}</div><div class="char-name">${safeText(x.p?.nom||'—')}</div><div class="char-role">${safeText(x.role||x.importance||'—')}</div><div class="ss-tome-status">${works.map(w=>{const r=x.rels[w.id];return `<span><strong>T${w.numero_sous_saga??'?'}</strong> · ${r?safeText(r.etat||r.role||'Présent'):'Absent / non renseigné'}</span>`}).join('')}</div></article>`).join('')}</div>`;
+    zone.innerHTML=`<div class="head-row"><h2>Évolution des personnages</h2></div><div class="gallery">${Object.values(map).map(x=>`<article class="char-card"><div class="char-portrait">${initials(x.p?.nom)}</div><div class="char-name">${safeText(x.p?.nom||'—')}</div><div class="char-role">${safeText(x.role||x.importance||'—')}</div><div class="ss-tome-status">${works.map(w=>{const r=x.rels[w.id];return `<span><strong>T${w.numero_sous_saga??'?'}</strong> · ${r?safeText(r.etat||r.role||'Présent'):'Non renseigné'}</span>`}).join('')}</div></article>`).join('')}</div>`;
   }
 
   async function renderSousSagaPlanGlobal(zone){
@@ -4065,30 +4070,133 @@
   function resetTheme(){applyGlobalTheme();}
 
 
-  // ===== V5.5 Back-office : navigation par onglets =====
+  // ===== V5.5.2 Back-office : navigation par onglets =====
   function activateAdminWorkTabs(){
-    const root=document.querySelector('.admin-work-editor'); if(!root)return;
-    const sections=[...root.querySelectorAll('.admin-section')]; if(!sections.length)return;
-    const labels=sections.map(s=>s.querySelector('h2')?.textContent?.trim()).filter(Boolean);
-    const tabs=document.createElement('div');tabs.className='admin-editor-tabs';
-    labels.forEach((l,i)=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{sections.forEach((s,j)=>s.style.display=j===i?'block':'none');tabs.querySelectorAll('button').forEach((x,j)=>x.classList.toggle('active',j===i))};tabs.appendChild(b)});
-    root.querySelector('.admin-work-topbar')?.insertAdjacentElement('afterend',tabs);tabs.querySelector('button')?.click();
+    const root=document.querySelector('.admin-work-editor');
+    if(!root) return;
+    const topbar=root.querySelector('.admin-work-topbar');
+    const layout=root.querySelector('.admin-work-layout');
+    if(!topbar||!layout) return;
+
+    const groups=[
+      {key:'identity',label:'Identité',titles:['Identité & hiérarchie']},
+      {key:'presentation',label:'Présentation',titles:['Présentation de l’œuvre']},
+      {key:'narrative',label:'Narratif',titles:['Informations narratives']},
+      {key:'manuscript',label:'Manuscrit & Atelier',titles:['Manuscrit & Atelier']},
+      {key:'editorial',label:'Éditorial',titles:['Pilotage éditorial']},
+      {key:'configuration',label:'Configuration',titles:['Couverture canonique','Modules de la fiche','Apparence de la page']},
+      {key:'archive',label:'Archivage',titles:['Archivage']}
+    ];
+
+    const allSections=[...layout.querySelectorAll('.admin-section')];
+    const byTitle=new Map(allSections.map(section=>[section.querySelector('h2')?.textContent?.trim()||'',section]));
+    const tabs=document.createElement('div');
+    tabs.className='admin-editor-tabs';
+    const panels=document.createElement('div');
+    panels.className='admin-editor-panels';
+
+    const activate=(key)=>{
+      tabs.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn.dataset.key===key));
+      panels.querySelectorAll('.admin-editor-panel').forEach(panel=>panel.style.display=panel.dataset.key===key?'block':'none');
+    };
+
+    groups.forEach((group,index)=>{
+      const sections=group.titles.map(t=>byTitle.get(t)).filter(Boolean);
+      if(!sections.length) return;
+      const button=document.createElement('button');
+      button.type='button';
+      button.dataset.key=group.key;
+      button.textContent=group.label;
+      button.onclick=()=>activate(group.key);
+      tabs.appendChild(button);
+
+      const panel=document.createElement('div');
+      panel.className='admin-editor-panel';
+      panel.dataset.key=group.key;
+      panel.style.display='none';
+      sections.forEach(section=>panel.appendChild(section));
+      panels.appendChild(panel);
+    });
+
+    const saveStatus=layout.querySelector('#aow-save-status');
+    layout.remove();
+    topbar.insertAdjacentElement('afterend',tabs);
+    tabs.insertAdjacentElement('afterend',panels);
+    if(saveStatus){
+      const statusWrap=document.createElement('div');
+      statusWrap.style.marginTop='10px';
+      statusWrap.appendChild(saveStatus);
+      panels.insertAdjacentElement('afterend',statusWrap);
+    }else if(!document.getElementById('aow-save-status')){
+      const status=document.createElement('div');
+      status.id='aow-save-status';
+      status.className='admin-inline-status';
+      panels.insertAdjacentElement('afterend',status);
+    }
+    const first=tabs.querySelector('button');
+    if(first) activate(first.dataset.key);
+  }
+
+  function activateAdminConfigurationTabs(zone){
+    if(!zone) return;
+    const sections=[...zone.querySelectorAll(':scope > .admin-section')];
+    if(sections.length<2) return;
+    const tabs=document.createElement('div');
+    tabs.className='admin-editor-tabs';
+    const panels=document.createElement('div');
+    panels.className='admin-editor-panels';
+    const cleanLabel=(txt)=>String(txt||'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
+    sections.forEach((section,index)=>{
+      const key='cfg-'+index;
+      const label=cleanLabel(section.querySelector('h2')?.textContent)||`Réglage ${index+1}`;
+      const button=document.createElement('button');
+      button.type='button'; button.dataset.key=key; button.textContent=label;
+      const panel=document.createElement('div');
+      panel.className='admin-editor-panel'; panel.dataset.key=key; panel.style.display=index===0?'block':'none';
+      panel.appendChild(section); panels.appendChild(panel);
+      button.classList.toggle('active',index===0);
+      button.onclick=()=>{
+        tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+        panels.querySelectorAll('.admin-editor-panel').forEach(p=>p.style.display=p===panel?'block':'none');
+      };
+      tabs.appendChild(button);
+    });
+    const head=zone.querySelector('.admin-catalog-head');
+    if(head) head.insertAdjacentElement('afterend',tabs); else zone.prepend(tabs);
+    tabs.insertAdjacentElement('afterend',panels);
   }
   async function distributeWorkWordTarget(){
-    const total=Number(document.getElementById('aow-objectif')?.value||0);if(!total||!currentAdminOeuvreId)return alert('Renseigne d’abord un objectif global de mots.');
-    const {data,error}=await db().from('chapitres').select('id').eq('oeuvre_id',currentAdminOeuvreId).order('ordre');if(error)return alert(error.message);if(!data?.length)return alert('Aucun chapitre dans le Plan.');
-    const base=Math.floor(total/data.length),reste=total-base*data.length;for(let i=0;i<data.length;i++)await db().from('chapitres').update({objectif_mots:base+(i<reste?1:0)}).eq('id',data[i].id);alert(`Objectif réparti sur ${data.length} chapitres.`)
+    const total=Number(document.getElementById('aow-objectif')?.value||0);
+    if(!total||!adminEditingOeuvreId) return alert('Renseigne d’abord un objectif global de mots.');
+    const {data,error}=await db().from('chapitres').select('id,ordre').eq('oeuvre_id',adminEditingOeuvreId).order('ordre');
+    if(error) return alert('Erreur : '+error.message);
+    if(!data?.length) return alert('Aucun chapitre dans le Plan.');
+    const base=Math.floor(total/data.length), reste=total-(base*data.length);
+    const results=await Promise.all(data.map((chapitre,i)=>db().from('chapitres').update({objectif_mots:base+(i<reste?1:0)}).eq('id',chapitre.id)));
+    const failed=results.find(r=>r.error);
+    if(failed?.error) return alert('Erreur pendant la répartition : '+failed.error.message);
+    alert(`Objectif de ${total.toLocaleString('fr-FR')} mots réparti sur ${data.length} chapitres.`);
   }
 
   async function openAdminSousSagaEditor(id){
+    currentSousSagaId=id;
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement…</div>';
     const [sr,wr]=await Promise.all([db().from('sous_sagas').select('*,sagas(nom)').eq('id',id).single(),db().from('oeuvres').select('id,titre,numero_sous_saga').eq('sous_saga_id',id).order('ordre_sous_saga')]);const ss=sr.data;if(!ss){content.innerHTML='<div class="empty">Sous-saga introuvable.</div>';return}
     content.innerHTML=`<div class="admin-work-editor"><div class="admin-work-topbar"><div><div class="admin-work-kicker">Administration · Sous-sagas</div><h1>${safeText(ss.nom)}</h1></div><div class="admin-work-top-actions"><button class="btn-secondary" onclick="renderAdminSousSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSousSagaDetail('${id}')">Ouvrir dans Passerelle ↗</button><button class="btn-primary" onclick="saveAdminSousSagaEditor('${id}')">Enregistrer</button></div></div><div class="admin-editor-tabs"><button class="active" onclick="adminSsTab(this,'info')">Informations</button><button onclick="adminSsTab(this,'plan')">Plan global</button><button onclick="adminSsTab(this,'appearance')">Apparence</button><button onclick="adminSsTab(this,'archive')">Archivage</button></div>
     <div id="ass-info"><section class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div class="admin-field-full"><label>Nom</label><input id="ass-nom" value="${safeText(ss.nom||'')}"></div><div><label>Saga parente</label><input value="${safeText(ss.sagas?.nom||'')}" disabled></div><div><label>Genre dominant</label><input id="ass-genre" value="${safeText(ss.genre||'')}"></div><div><label>Temporalité</label><input id="ass-temporalite" value="${safeText(ss.temporalite||'')}"></div><div><label>Cadre</label><input id="ass-lieu" value="${safeText(ss.lieu_principal||'')}" placeholder="Sélection parent Codex à brancher"></div><div class="admin-field-full"><label>Mots-clés</label><input id="ass-tags" value="${safeText((ss.mots_cles||[]).join(', '))}"></div></div><label>À propos / résumé canonique</label><textarea id="ass-description">${safeText(ss.description||'')}</textarea><label>Citation</label><textarea id="ass-citation">${safeText(ss.citation||'')}</textarea></section></div>
-    <div id="ass-plan" style="display:none"><section class="admin-section"><h2>Plan global</h2><p class="admin-section-sub">Les tomes/segments sont dynamiques. Ils peuvent exister avant d’être liés à une œuvre.</p><button class="btn-primary" onclick="currentSousSagaId='${id}';addSousSagaSegment().then(()=>openAdminSousSagaEditor('${id}'))">+ Ajouter un tome</button><div id="ass-plan-list" style="margin-top:12px"></div></section></div>
+    <div id="ass-plan" style="display:none"><section class="admin-section"><h2>Plan global</h2><p class="admin-section-sub">Les tomes/segments sont dynamiques. Ils peuvent exister avant d’être liés à une œuvre.</p><button class="btn-primary" onclick="addAdminSousSagaSegment('${id}')">+ Ajouter un tome</button><div id="ass-plan-list" style="margin-top:12px"></div></section></div>
     <div id="ass-appearance" style="display:none"><section class="admin-section"><h2>Apparence</h2><label>Couleur de page</label><input type="color" id="ass-page-color" value="${safeText(ss.page_color||globalAppearance.themeColor)}"><label>Couleur d’accent</label><input type="color" id="ass-accent" value="${safeText(ss.accent_color||globalAppearance.accent)}"><label>Bannière</label><input id="ass-banniere" value="${safeText(ss.banniere||'')}"><label class="btn-secondary upload-file-btn" style="margin-top:7px">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('sous_sagas','${id}',this,'ass-banniere')"></label></section></div>
     <div id="ass-archive" style="display:none"><section class="admin-section admin-danger"><h2>Archivage</h2><div class="admin-check-row"><input type="checkbox" id="ass-archive-check" ${ss.archive?'checked':''}><div><strong>Sous-saga archivée</strong><small>Masquée sans suppression.</small></div></div></section></div></div>`;
     const seg=await db().from('sous_saga_segments').select('*').eq('sous_saga_id',id).order('ordre');const z=document.getElementById('ass-plan-list');if(z)z.innerHTML=(seg.data||[]).map(renderSsSegment).join('')||'<div class="empty">Aucun tome/segment.</div>';
+  }
+  async function addAdminSousSagaSegment(id){
+    currentSousSagaId=id;
+    const r=await db().from('sous_saga_segments').select('ordre').eq('sous_saga_id',id).order('ordre',{ascending:false}).limit(1);
+    if(r.error) return alert('Erreur : '+r.error.message);
+    const ord=(Number(r.data?.[0]?.ordre)||0)+1;
+    const {error}=await db().from('sous_saga_segments').insert({user_id:currentUser.id,sous_saga_id:id,libelle:'Tome '+ord,numero:ord,ordre:ord});
+    if(error) return alert('Erreur : '+error.message);
+    openAdminSousSagaEditor(id);
   }
   function adminSsTab(btn,key){document.querySelectorAll('.admin-editor-tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['info','plan','appearance','archive'].forEach(k=>{const e=document.getElementById('ass-'+k);if(e)e.style.display=k===key?'block':'none'})}
   async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:document.getElementById('ass-description').value.trim(),citation:document.getElementById('ass-citation').value.trim(),page_color:document.getElementById('ass-page-color').value,accent_color:document.getElementById('ass-accent').value,banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {error}=await db().from('sous_sagas').update(payload).eq('id',id);if(error)return alert(error.message);alert('Sous-saga enregistrée ✨')}
