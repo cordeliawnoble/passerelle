@@ -421,7 +421,7 @@
 .ss-info-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);gap:18px}.ss-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .ss-work-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}.ss-work-card{border:1px solid var(--line);background:var(--card);border-radius:16px;overflow:hidden;cursor:pointer}.ss-work-cover{height:245px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font:600 28px 'Lora',serif}.ss-work-cover img{width:100%;height:100%;object-fit:cover}.ss-work-body{padding:14px}.ss-pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,transparent);font-size:10px;margin:0 5px 5px 0}.ss-tome-status{display:grid;gap:4px;margin-top:10px}.ss-tome-status span{font-size:10px;padding:4px 7px;border:1px solid var(--line);border-radius:8px}
 .ss-segment{border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:10px;overflow:hidden}.ss-segment>summary{padding:14px 16px;cursor:pointer;font:600 15px 'Lora',serif}.ss-segment-body{padding:0 16px 16px}.ss-segment-body details{border-top:1px solid var(--line);padding:10px 0}.ss-segment-body summary{cursor:pointer;font-weight:600}.ss-rich{min-height:90px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);margin-top:8px}
-.codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px}.codex-card{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--card);cursor:pointer}.codex-card-visual{height:125px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 25%,var(--bg-2)),var(--bg-2));background-size:cover;background-position:center}.codex-card-body{padding:13px}.codex-toc{position:sticky;top:10px;display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}.codex-toc button{font-size:10px}.codex-block{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--card)}
+.codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px}.codex-card{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--card);cursor:pointer}.codex-card-visual{height:125px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 25%,var(--bg-2)),var(--bg-2));background-size:cover;background-position:center}.codex-card-body{padding:13px}.codex-toc{position:sticky;top:10px;display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;z-index:2}.codex-toc button{font-size:10px}.codex-builder{border-radius:18px;padding:16px;min-height:420px}.codex-builder-banner{height:260px;border-radius:16px;border:1px solid var(--line);background-size:cover;background-repeat:no-repeat;position:relative;overflow:hidden}.codex-builder-banner::after{content:'';position:absolute;inset:auto 0 0 0;height:48%;background:linear-gradient(transparent,var(--codex-page-bg,var(--bg)))}.codex-banner-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}.codex-palette{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.codex-blocks{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}.codex-block{border:1px solid var(--line);border-radius:14px;padding:12px;background:color-mix(in srgb,var(--card) 92%,transparent);box-sizing:border-box;position:relative;transition:.16s}.codex-block.dragging{opacity:.45}.codex-block.drag-over{outline:2px dashed var(--accent);outline-offset:3px}.codex-block[data-width="100"]{flex:0 0 100%}.codex-block[data-width="67"]{flex:0 0 calc(66.666% - 6px)}.codex-block[data-width="50"]{flex:0 0 calc(50% - 6px)}.codex-block[data-width="33"]{flex:0 0 calc(33.333% - 8px)}.codex-block-head{display:flex;gap:8px;align-items:center;margin-bottom:9px}.codex-drag{cursor:grab;color:var(--text-dim);user-select:none}.codex-block-title{flex:1;border:none!important;background:transparent!important;padding:4px 2px!important;font-weight:700}.codex-block-actions{display:flex;gap:5px;align-items:center}.codex-block-actions select{padding:5px 7px;font-size:10px}.codex-rich-toolbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}.codex-rich-toolbar button{padding:5px 8px;font-size:10px}.codex-rich-editor{min-height:110px;border:1px dashed color-mix(in srgb,var(--line) 80%,transparent);border-radius:10px;padding:11px;outline:none;line-height:1.55}.codex-rich-editor:focus{border-color:var(--accent)}.codex-rich-editor table,.codex-table-editor table{width:100%;border-collapse:collapse;margin:8px 0}.codex-rich-editor th,.codex-rich-editor td,.codex-table-editor th,.codex-table-editor td{border:1px solid var(--line);padding:7px 9px;vertical-align:top}.codex-table-editor{min-height:110px;border:1px dashed var(--line);border-radius:10px;padding:10px;outline:none;overflow:auto}.codex-image-preview{width:100%;max-height:420px;object-fit:contain;border-radius:10px;background:color-mix(in srgb,var(--card) 85%,transparent)}.codex-callout{border-left:4px solid var(--accent);padding:10px 12px;border-radius:9px;background:color-mix(in srgb,var(--accent) 9%,transparent)}.codex-separator{border:none;border-top:1px solid var(--line);margin:18px 0}.codex-page-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.codex-page-title-input{font-family:'Lora',serif;font-size:26px;font-weight:700;border:none!important;background:transparent!important;padding:4px 0!important;min-width:260px}.codex-nav-label{font-size:10px;color:var(--text-dim);margin-bottom:6px}.codex-empty-block{padding:24px;text-align:center;color:var(--text-dim);border:1px dashed var(--line);border-radius:12px}@media(max-width:900px){.codex-block[data-width="67"],.codex-block[data-width="50"],.codex-block[data-width="33"]{flex-basis:100%}.codex-banner-controls{grid-template-columns:1fr}}
 .timeline-row{display:grid;grid-template-columns:120px 22px minmax(0,1fr);gap:10px;position:relative}.timeline-date{font-size:11px;color:var(--text-dim);padding-top:14px;text-align:right}.timeline-axis{position:relative}.timeline-axis:before{content:'';position:absolute;left:10px;top:0;bottom:0;border-left:2px dashed var(--timeline-color,var(--accent))}.timeline-dot{position:absolute;top:18px;left:4px;width:14px;height:14px;border-radius:50%;background:var(--timeline-color,var(--accent));border:3px solid var(--card)}.timeline-card{display:grid;grid-template-columns:92px 1fr;gap:12px;border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:10px;background:var(--card);cursor:pointer}.timeline-thumb{width:92px;height:72px;border-radius:9px;background:var(--bg-2);object-fit:cover}.drawer-v55{position:fixed;right:0;top:0;width:min(520px,92vw);height:100vh;background:var(--bg);border-left:1px solid var(--line);z-index:1200;padding:22px;overflow:auto;box-shadow:-12px 0 35px rgba(0,0,0,.12)}
 @media(max-width:850px){.ss-info-grid{grid-template-columns:1fr}.ss-kpis{grid-template-columns:1fr}.timeline-row{grid-template-columns:80px 18px 1fr}.timeline-card{grid-template-columns:1fr}.timeline-thumb{width:100%;height:150px}}
 
@@ -1772,10 +1772,163 @@
     zone.innerHTML=`<div class="head-row"><h2>Personnages</h2><span>${by.size} personnage${by.size>1?'s':''}</span></div><div class="gallery">${[...by.values()].map(p=>`<article class="char-card" onclick="openPersonnageModal('${p.id}')">${p.portrait_url?`<img class="char-portrait" src="${safeText(p.portrait_url)}" alt="">`:`<div class="char-portrait">${initials(p.nom)}</div>`}<div class="char-name">${safeText(p.nom)}</div><div class="char-role">${safeText(p.role||p.importance||'Personnage')}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">${p.apps.map(o=>`<span class="tag">${safeText(o.sous_sagas?.nom?`${o.sous_sagas.nom} · ${o.numero_sous_saga!=null?'T'+o.numero_sous_saga:o.titre}`:`Indépendante · ${o.titre}`)}</span>`).join('')}</div></article>`).join('')||'<div class="empty">Aucun personnage relié aux œuvres de cette saga.</div>'}</div>`;
   }
 
-  async function renderSagaCodexV56(zone){const {data,error}=await db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre');if(error){zone.innerHTML=`<div class="empty">${safeText(error.message)}</div>`;return}zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les sous-sagas peuvent hériter de ces entrées sans les dupliquer.</p></div><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div><div class="entity-gallery">${(data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:[p.categorie],top:'Codex',onclick:`openSagaCodexPageV56('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`}
+
+  function codexToolbar(blockId){
+    return `<div class="codex-rich-toolbar">
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','bold')"><b>B</b></button>
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','italic')"><i>I</i></button>
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','underline')"><u>U</u></button>
+      <button class="btn-secondary" type="button" onclick="codexFormat('${blockId}','h2')">H2</button>
+      <button class="btn-secondary" type="button" onclick="codexFormat('${blockId}','h3')">H3</button>
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','insertUnorderedList')">• Liste</button>
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','insertOrderedList')">1. Liste</button>
+      <button class="btn-secondary" type="button" onclick="codexLink('${blockId}')">🔗</button>
+      <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','removeFormat')">Effacer format</button>
+    </div>`;
+  }
+
+  function codexExec(blockId,cmd,value=null){
+    const ed=document.getElementById(`codex-edit-${blockId}`); if(!ed)return;
+    ed.focus(); document.execCommand(cmd,false,value); saveCodexBlock(blockId,ed.innerHTML);
+  }
+  function codexFormat(blockId,tag){
+    const ed=document.getElementById(`codex-edit-${blockId}`); if(!ed)return;
+    ed.focus(); document.execCommand('formatBlock',false,tag); saveCodexBlock(blockId,ed.innerHTML);
+  }
+  function codexLink(blockId){
+    const url=prompt('Lien :','https://'); if(!url)return; codexExec(blockId,'createLink',url);
+  }
+
+  function codexTablePaste(e,blockId){
+    const html=e.clipboardData?.getData('text/html')||'';
+    if(html && /<table[\s>]/i.test(html)) return; // le navigateur conserve le vrai tableau
+    const plain=e.clipboardData?.getData('text/plain')||'';
+    if(!plain.includes('\t') && !plain.includes('\n')) return;
+    const rows=plain.trim().split(/\r?\n/).map(r=>r.split('\t'));
+    if(rows.length<2 && rows[0]?.length<2) return;
+    e.preventDefault();
+    const table=`<table><tbody>${rows.map((r,i)=>`<tr>${r.map(c=>`${i===0?'<th>':'<td>'}${safeText(c)}${i===0?'</th>':'</td>'}`).join('')}</tr>`).join('')}</tbody></table>`;
+    document.execCommand('insertHTML',false,table);
+    const ed=document.getElementById(`codex-edit-${blockId}`); if(ed)saveCodexBlock(blockId,ed.innerHTML);
+  }
+
+  function renderCodexBlockV564(x){
+    const type=x.type||'texte', width=Number(x.largeur)||100;
+    const title=x.titre||({texte:'Bloc texte',image:'Image',tableau:'Tableau',callout:'Encadré',separateur:'Séparateur'}[type]||type);
+    const head=`<div class="codex-block-head"><span class="codex-drag" title="Glisser pour déplacer">⠿</span><input class="codex-block-title" value="${safeText(title)}" onchange="updateCodexBlockMeta('${x.id}',{titre:this.value})"><div class="codex-block-actions"><select onchange="updateCodexBlockMeta('${x.id}',{largeur:Number(this.value)},true)"><option value="100" ${width===100?'selected':''}>1 colonne</option><option value="67" ${width===67?'selected':''}>⅔</option><option value="50" ${width===50?'selected':''}>½</option><option value="33" ${width===33?'selected':''}>⅓</option></select><button class="btn-secondary" onclick="deleteCodexBlockV564('${x.id}')">✕</button></div></div>`;
+    const nav=`<div class="codex-nav-label">Repère navigation : <input style="display:inline-block;width:180px;padding:4px 6px;font-size:10px" value="${safeText(x.navigation_label||'')}" placeholder="facultatif" onchange="updateCodexBlockMeta('${x.id}',{navigation_label:this.value||null})"></div>`;
+    let body='';
+    if(type==='texte'){
+      body=`${codexToolbar(x.id)}<div id="codex-edit-${x.id}" class="codex-rich-editor" contenteditable="true" onblur="saveCodexBlock('${x.id}',this.innerHTML)" onpaste="setTimeout(()=>saveCodexBlock('${x.id}',this.innerHTML),0)">${x.contenu?.html||''}</div>`;
+    }else if(type==='tableau'){
+      body=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">Colle ici un tableau depuis Notion, Google Sheets, Excel ou une page web. Les cellules et la mise en forme tabulaire sont conservées.</div><div id="codex-edit-${x.id}" class="codex-table-editor" contenteditable="true" onpaste="codexTablePaste(event,'${x.id}');setTimeout(()=>saveCodexBlock('${x.id}',this.innerHTML),0)" onblur="saveCodexBlock('${x.id}',this.innerHTML)">${x.contenu?.html||'<table><tbody><tr><th>Colonne 1</th><th>Colonne 2</th></tr><tr><td></td><td></td></tr></tbody></table>'}</div>`;
+    }else if(type==='image'){
+      body=`${x.contenu?.url?`<img class="codex-image-preview" src="${safeText(x.contenu.url)}" alt="">`:''}<div class="codex-page-tools" style="margin-top:8px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une image<input type="file" accept="image/*" onchange="uploadCodexBlockImageV564('${x.id}',this)"></label><input style="flex:1;min-width:220px" placeholder="ou URL d’image" value="${safeText(x.contenu?.url||'')}" onchange="saveCodexImageUrlV564('${x.id}',this.value)"></div><input style="margin-top:7px" placeholder="Légende (facultatif)" value="${safeText(x.contenu?.caption||'')}" onchange="saveCodexImageCaptionV564('${x.id}',this.value)">`;
+    }else if(type==='callout'){
+      body=`${codexToolbar(x.id)}<div id="codex-edit-${x.id}" class="codex-rich-editor codex-callout" contenteditable="true" onblur="saveCodexBlock('${x.id}',this.innerHTML)">${x.contenu?.html||''}</div>`;
+    }else if(type==='separateur'){
+      body=`<hr class="codex-separator">`;
+    }
+    return `<section class="codex-block" id="cb-${x.id}" data-block-id="${x.id}" data-width="${width}" draggable="true" ondragstart="codexDragStart(event)" ondragend="codexDragEnd(event)" ondragover="codexDragOver(event)" ondragleave="codexDragLeave(event)" ondrop="codexDrop(event)">${head}${nav}${body}</section>`;
+  }
+
+  async function updateCodexBlockMeta(id,patch,rerender=false){
+    const {error}=await db().from('codex_blocks').update({...patch,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error)return alert(error.message);
+    if(rerender && window._openCodexRefresh) window._openCodexRefresh();
+  }
+  async function deleteCodexBlockV564(id){
+    if(!confirm('Supprimer ce bloc ?'))return;
+    const {error}=await db().from('codex_blocks').delete().eq('id',id); if(error)return alert(error.message);
+    if(window._openCodexRefresh) window._openCodexRefresh();
+  }
+  let codexDraggedId=null;
+  function codexDragStart(e){codexDraggedId=e.currentTarget.dataset.blockId;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+  function codexDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.codex-block').forEach(x=>x.classList.remove('drag-over'))}
+  function codexDragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over');e.dataTransfer.dropEffect='move'}
+  function codexDragLeave(e){e.currentTarget.classList.remove('drag-over')}
+  async function codexDrop(e){
+    e.preventDefault(); const target=e.currentTarget.dataset.blockId; e.currentTarget.classList.remove('drag-over');
+    if(!codexDraggedId||codexDraggedId===target)return;
+    const cards=[...document.querySelectorAll('.codex-block')];
+    const ids=cards.map(x=>x.dataset.blockId).filter(id=>id!==codexDraggedId);
+    const idx=ids.indexOf(target); ids.splice(idx,0,codexDraggedId);
+    await Promise.all(ids.map((id,i)=>db().from('codex_blocks').update({ordre:i+1,updated_at:new Date().toISOString()}).eq('id',id)));
+    if(window._openCodexRefresh) window._openCodexRefresh();
+  }
+
+  async function addCodexBlockV564(pageId,type){
+    const r=await db().from('codex_blocks').select('ordre').eq('page_id',pageId).order('ordre',{ascending:false}).limit(1);
+    const defaults={texte:'Bloc texte',image:'Image',tableau:'Tableau',callout:'Encadré',separateur:'Séparateur'};
+    const contenu=type==='tableau'?{html:'<table><tbody><tr><th>Colonne 1</th><th>Colonne 2</th></tr><tr><td></td><td></td></tr></tbody></table>'}:type==='image'?{url:'',caption:''}:{html:''};
+    const {error}=await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pageId,type,titre:defaults[type]||type,largeur:100,ordre:(Number(r.data?.[0]?.ordre)||0)+1,contenu});
+    if(error)return alert(error.message); if(window._openCodexRefresh)window._openCodexRefresh();
+  }
+
+  async function uploadCodexBlockImageV564(id,input){
+    const file=input?.files?.[0];if(!file)return;
+    const url=await uploadAssetFile(file,`codex/blocks/${id}`);if(!url)return;
+    const {data}=await db().from('codex_blocks').select('contenu').eq('id',id).single();
+    await db().from('codex_blocks').update({contenu:{...(data?.contenu||{}),url},updated_at:new Date().toISOString()}).eq('id',id);
+    if(window._openCodexRefresh)window._openCodexRefresh();
+  }
+  async function saveCodexImageUrlV564(id,url){
+    const {data}=await db().from('codex_blocks').select('contenu').eq('id',id).single();
+    await db().from('codex_blocks').update({contenu:{...(data?.contenu||{}),url},updated_at:new Date().toISOString()}).eq('id',id);
+    if(window._openCodexRefresh)window._openCodexRefresh();
+  }
+  async function saveCodexImageCaptionV564(id,caption){
+    const {data}=await db().from('codex_blocks').select('contenu').eq('id',id).single();
+    await db().from('codex_blocks').update({contenu:{...(data?.contenu||{}),caption},updated_at:new Date().toISOString()}).eq('id',id);
+  }
+
+  async function saveCodexPageTitleV564(id,titre){const {error}=await db().from('codex_pages').update({titre:titre||'Sans titre',updated_at:new Date().toISOString()}).eq('id',id);if(error)alert(error.message)}
+  async function saveCodexBannerCropV564(id){
+    const x=Number(document.getElementById('codex-banner-x')?.value||50),y=Number(document.getElementById('codex-banner-y')?.value||50),zoom=Number(document.getElementById('codex-banner-zoom')?.value||100);
+    const {error}=await db().from('codex_pages').update({banniere_position_x:x,banniere_position_y:y,banniere_zoom:zoom,updated_at:new Date().toISOString()}).eq('id',id);if(error)return alert(error.message);
+    const el=document.querySelector('.codex-builder-banner');if(el){el.style.backgroundPosition=`${x}% ${y}%`;el.style.backgroundSize=`${zoom}% auto`}
+  }
+
+  function renderCodexBuilderV564(p,b,backFn){
+    const bg=p.page_color||window._codexInheritedPageColor||globalAppearance.themeColor||'#F6F3FB';
+    const accent=p.accent_color||window._codexInheritedAccent||globalAppearance.accent||'#7C5CBF';
+    const x=Number(p.banniere_position_x??50),y=Number(p.banniere_position_y??50),zoom=Number(p.banniere_zoom??100);
+    return `<button class="btn-secondary" onclick="${backFn}">← Codex</button>
+      <div class="codex-builder" style="--codex-page-bg:${safeText(bg)};background:${safeText(bg)};--accent:${safeText(accent)};margin-top:12px">
+        ${p.banniere?`<div class="codex-builder-banner" style="background-image:url('${safeText(p.banniere)}');background-position:${x}% ${y}%;background-size:${zoom}% auto"></div>`:''}
+        <div class="head-row" style="margin-top:12px">
+          <input class="codex-page-title-input" value="${safeText(p.titre)}" onchange="saveCodexPageTitleV564('${p.id}',this.value)">
+          <div class="codex-page-tools">
+            <label class="btn-secondary upload-file-btn">⇧ Bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('codex_pages','${p.id}',this,null).then(()=>window._openCodexRefresh&&window._openCodexRefresh())"></label>
+          </div>
+        </div>
+        ${p.banniere?`<details style="margin:8px 0 4px"><summary style="cursor:pointer;font-size:11px;color:var(--text-dim)">✂ Repositionner / recadrer la bannière</summary><div class="codex-banner-controls"><label>Horizontal <input id="codex-banner-x" type="range" min="0" max="100" value="${x}" oninput="saveCodexBannerCropV564('${p.id}')"></label><label>Vertical <input id="codex-banner-y" type="range" min="0" max="100" value="${y}" oninput="saveCodexBannerCropV564('${p.id}')"></label><label>Zoom <input id="codex-banner-zoom" type="range" min="100" max="220" value="${zoom}" oninput="saveCodexBannerCropV564('${p.id}')"></label></div></details>`:''}
+        <div class="codex-toc">${b.filter(x=>x.navigation_label).map(x=>`<button class="btn-secondary" onclick="document.getElementById('cb-${x.id}').scrollIntoView({behavior:'smooth'})">${safeText(x.navigation_label)}</button>`).join('')}</div>
+        <div class="codex-palette">
+          <button class="btn-primary" onclick="addCodexBlockV564('${p.id}','texte')">＋ Texte</button>
+          <button class="btn-secondary" onclick="addCodexBlockV564('${p.id}','image')">＋ Image</button>
+          <button class="btn-secondary" onclick="addCodexBlockV564('${p.id}','tableau')">＋ Tableau</button>
+          <button class="btn-secondary" onclick="addCodexBlockV564('${p.id}','callout')">＋ Encadré</button>
+          <button class="btn-secondary" onclick="addCodexBlockV564('${p.id}','separateur')">＋ Séparateur</button>
+        </div>
+        <div class="codex-blocks">${b.length?b.map(renderCodexBlockV564).join(''):'<div class="codex-empty-block">Ajoute un bloc, puis glisse-le où tu veux. Les largeurs ½, ⅓ et ⅔ permettent de construire des colonnes.</div>'}</div>
+      </div>`;
+  }
+
+  async function renderSagaCodexV56(zone){
+    const [pagesR,sagaR]=await Promise.all([db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre'),db().from('sagas').select('page_color,accent_color').eq('id',currentSagaId).single()]);
+    if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
+    const saga=sagaR.data||{};
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les sous-sagas peuvent hériter de ces entrées sans les dupliquer.</p></div><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||saga.page_color,tags:[p.categorie],top:'Codex',onclick:`openSagaCodexPageV56('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+  }
   async function createSagaCodexPageV56(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,saga_id:currentSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openSagaCodexPageV56(data.id)}
-  async function openSagaCodexPageV56(id){const [pr,br]=await Promise.all([db().from('codex_pages').select('*').eq('id',id).single(),db().from('codex_blocks').select('*').eq('page_id',id).order('ordre')]);const p=pr.data,b=br.data||[];const zone=document.getElementById('saga-tab-content');zone.innerHTML=`<button class="btn-secondary" onclick="renderSagaCodexV56(document.getElementById('saga-tab-content'))">← Codex</button><div style="margin-top:12px">${renderCatalogEntityBanner(p.banniere,p.titre)}<div class="head-row"><h2>${safeText(p.titre)}</h2><label class="btn-secondary upload-file-btn">⇧ Bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('codex_pages','${p.id}',this,null).then(()=>openSagaCodexPageV56('${p.id}'))"></label></div><div class="codex-toc">${b.filter(x=>x.navigation_label).map(x=>`<button class="btn-secondary" onclick="document.getElementById('cb-${x.id}').scrollIntoView({behavior:'smooth'})">${safeText(x.navigation_label)}</button>`).join('')}</div>${b.map(x=>`<div class="codex-block" id="cb-${x.id}"><small>${safeText(x.navigation_label||x.type)}</small><div contenteditable="true" onblur="saveCodexBlock('${x.id}',this.innerHTML)">${x.contenu?.html||''}</div></div>`).join('')}<button class="btn-primary" onclick="addSagaCodexBlockV56('${p.id}')">+ Ajouter un bloc texte</button></div>`}
-  async function addSagaCodexBlockV56(pageId){const label=prompt('Repère de navigation (facultatif) :','');const r=await db().from('codex_blocks').select('ordre').eq('page_id',pageId).order('ordre',{ascending:false}).limit(1);await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pageId,type:'texte',navigation_label:label||null,ordre:(Number(r.data?.[0]?.ordre)||0)+1,contenu:{html:''}});openSagaCodexPageV56(pageId)}
+  async function openSagaCodexPageV56(id){
+    const [pr,br,sr]=await Promise.all([db().from('codex_pages').select('*').eq('id',id).single(),db().from('codex_blocks').select('*').eq('page_id',id).order('ordre'),db().from('sagas').select('page_color,accent_color').eq('id',currentSagaId).single()]);
+    if(pr.error||br.error)return alert((pr.error||br.error).message);
+    window._codexInheritedPageColor=sr.data?.page_color||null;window._codexInheritedAccent=sr.data?.accent_color||null;window._openCodexRefresh=()=>openSagaCodexPageV56(id);
+    const zone=document.getElementById('saga-tab-content');zone.innerHTML=renderCodexBuilderV564(pr.data,br.data||[],`renderSagaCodexV56(document.getElementById('saga-tab-content'))`);
+  }
+
 
   async function renderSagaChronologieV56(zone){const ss=await db().from('sous_sagas').select('id').eq('saga_id',currentSagaId);const ids=(ss.data||[]).map(x=>x.id);const {data,error}=await db().from('chronologie_evenements').select('*').order('periode_ordre');if(error){zone.innerHTML=`<div class="empty">${safeText(error.message)}</div>`;return}const items=(data||[]).filter(e=>e.saga_id===currentSagaId||ids.includes(e.sous_saga_id));zone.innerHTML=`<div class="head-row"><h2>Chronologie</h2><button class="btn-primary" onclick="createSagaChronoEventV56()">+ Ajouter un événement</button></div>${items.map(e=>`<div class="timeline-row" style="--timeline-color:${safeText(e.couleur||'var(--accent)')}"><div class="timeline-date">${safeText(e.periode_label||e.date_evenement||'~')}</div><div class="timeline-axis"><span class="timeline-dot"></span></div><article class="timeline-card" onclick="openChronoDrawer('${e.id}')">${e.image_url?`<img class="timeline-thumb" src="${safeText(e.image_url)}" alt="">`:`<div class="timeline-thumb"></div>`}<div><span class="ss-pill">${safeText(e.categorie||'Événement')}</span>${e.repere_cle_saga?'<span class="ss-pill">⭐ Repère clé</span>':''}<h3>${safeText(e.titre)}</h3><p style="font-size:12px;color:var(--text-dim)">${safeText(e.resume||'')}</p></div><label style="margin-left:auto;font-size:10px" onclick="event.stopPropagation()"><input type="checkbox" style="width:auto" ${e.repere_cle_saga?'checked':''} onchange="toggleSagaKeyEventV56('${e.id}',this.checked)"> Repère clé</label></article></div>`).join('')||'<div class="empty">Aucun événement.</div>'}`}
   async function createSagaChronoEventV56(){const titre=prompt('Titre de l’événement :');if(!titre)return;const periode=prompt('Date ou période :','');const {error}=await db().from('chronologie_evenements').insert({user_id:currentUser.id,saga_id:currentSagaId,titre,periode_label:periode||null,couleur:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()});if(error)return alert(error.message);renderSagaChronologieV56(document.getElementById('saga-tab-content'))}
@@ -2011,14 +2164,23 @@
   async function saveSsSegmentField(id,key,val){await db().from('sous_saga_segments').update({[key]:val,updated_at:new Date().toISOString()}).eq('id',id)}
   async function deleteSsSegment(id){if(!confirm('Supprimer ce segment du plan global ?'))return;await db().from('sous_saga_segments').delete().eq('id',id);renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'))}
 
+
   async function renderSousSagaCodex(zone){
-    const {data,error}=await db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre');if(error){zone.innerHTML=`<div class="empty">Migration V5.5 requise : ${safeText(error.message)}</div>`;return}
-    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Le lore canonique de la saga parente reste hérité, pas dupliqué.</p></div><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div><div class="codex-grid">${(data||[]).map(p=>`<article class="codex-card" onclick="openCodexPage('${p.id}')"><div class="codex-card-visual" style="${p.banniere?`background-image:url('${safeText(p.banniere)}')`:''}"></div><div class="codex-card-body"><small>${safeText(p.categorie||'Codex')}</small><h3>${safeText(p.titre)}</h3></div></article>`).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+    const [pagesR,ssR]=await Promise.all([db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre'),db().from('sous_sagas').select('page_color,accent_color').eq('id',currentSousSagaId).single()]);
+    if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
+    const ss=ssR.data||{};
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Le lore canonique de la saga parente reste hérité, pas dupliqué.</p></div><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||ss.page_color,tags:[p.categorie],top:'Codex',onclick:`openCodexPage('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
   }
   async function createCodexPage(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openCodexPage(data.id)}
-  async function openCodexPage(id){const [pr,br]=await Promise.all([db().from('codex_pages').select('*').eq('id',id).single(),db().from('codex_blocks').select('*').eq('page_id',id).order('ordre')]);const p=pr.data,b=br.data||[];const zone=document.getElementById('soussaga-tab-content');zone.innerHTML=`<button class="btn-secondary" onclick="renderSousSagaCodex(document.getElementById('soussaga-tab-content'))">← Codex</button><div style="margin-top:12px">${renderCatalogEntityBanner(p.banniere,p.titre)}<div class="head-row"><h2>${safeText(p.titre)}</h2><label class="btn-secondary upload-file-btn">⇧ Bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('codex_pages','${p.id}',this,null).then(()=>openCodexPage('${p.id}'))"></label></div><div class="codex-toc">${b.filter(x=>x.navigation_label).map(x=>`<button class="btn-secondary" onclick="document.getElementById('cb-${x.id}').scrollIntoView({behavior:'smooth'})">${safeText(x.navigation_label)}</button>`).join('')}</div>${b.map(x=>`<div class="codex-block" id="cb-${x.id}"><small>${safeText(x.navigation_label||x.type)}</small><div contenteditable="true" onblur="saveCodexBlock('${x.id}',this.innerHTML)">${x.contenu?.html||''}</div></div>`).join('')}<button class="btn-primary" onclick="addCodexBlock('${p.id}')">+ Ajouter un bloc texte</button></div>`}
-  async function addCodexBlock(pageId){const label=prompt('Repère de navigation (facultatif) :','');const r=await db().from('codex_blocks').select('ordre').eq('page_id',pageId).order('ordre',{ascending:false}).limit(1);await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pageId,type:'texte',navigation_label:label||null,ordre:(Number(r.data?.[0]?.ordre)||0)+1,contenu:{html:''}});openCodexPage(pageId)}
+  async function openCodexPage(id){
+    const [pr,br,ssr]=await Promise.all([db().from('codex_pages').select('*').eq('id',id).single(),db().from('codex_blocks').select('*').eq('page_id',id).order('ordre'),db().from('sous_sagas').select('page_color,accent_color').eq('id',currentSousSagaId).single()]);
+    if(pr.error||br.error)return alert((pr.error||br.error).message);
+    window._codexInheritedPageColor=ssr.data?.page_color||null;window._codexInheritedAccent=ssr.data?.accent_color||null;window._openCodexRefresh=()=>openCodexPage(id);
+    const zone=document.getElementById('soussaga-tab-content');zone.innerHTML=renderCodexBuilderV564(pr.data,br.data||[],`renderSousSagaCodex(document.getElementById('soussaga-tab-content'))`);
+  }
+  async function addCodexBlock(pageId){return addCodexBlockV564(pageId,'texte')}
   async function saveCodexBlock(id,html){await db().from('codex_blocks').update({contenu:{html},updated_at:new Date().toISOString()}).eq('id',id)}
+
 
   async function renderSousSagaChronologie(zone){
     const {data,error}=await db().from('chronologie_evenements').select('*').eq('sous_saga_id',currentSousSagaId).order('periode_ordre');if(error){zone.innerHTML=`<div class="empty">Migration V5.5 requise : ${safeText(error.message)}</div>`;return}
