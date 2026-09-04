@@ -349,6 +349,44 @@
   @media(max-width:950px){.home-desk-planning{grid-template-columns:1fr}.planning-month{grid-template-columns:repeat(7,minmax(105px,1fr))}.planning-week{grid-template-columns:repeat(7,minmax(135px,1fr))}}
   @media(max-width:650px){.planning-head{flex-direction:column}.planning-actions{justify-content:flex-start}.planning-modal-grid{grid-template-columns:1fr}.planning-modal-grid .full{grid-column:auto}.csv-map-grid{grid-template-columns:1fr}.planning-period{min-width:auto}}
 
+
+
+  /* ---- Bannières de pages & Pépinière V5.4 ---- */
+  .page-image-banner{width:100%;height:220px;border-radius:16px;overflow:hidden;border:1px solid var(--line);margin:0 0 20px;background:var(--bg-2);position:relative}
+  .page-image-banner img{width:100%;height:100%;object-fit:cover;display:block}
+  .page-image-banner.compact{height:180px}
+  .banner-admin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .banner-admin-card{border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+  .banner-admin-preview{height:100px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:11px;overflow:hidden}
+  .banner-admin-preview img{width:100%;height:100%;object-fit:cover}
+  .banner-admin-body{padding:10px}.banner-admin-body strong{display:block;margin-bottom:8px}.banner-admin-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .upload-file-btn{position:relative;overflow:hidden}.upload-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+  .pep-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.pep-head h1{margin:0;font-size:2rem}.pep-head p{margin:5px 0 0;color:var(--text-dim);font-size:12px;font-style:italic}
+  .pep-summary{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 0 16px;border-bottom:1px solid var(--line);margin-bottom:16px}.pep-summary-item{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text-dim)}.pep-summary-item strong{font-size:15px;color:var(--text)}
+  .pep-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.pep-tabs button{border:0;background:transparent;color:var(--text-dim);padding:9px 12px;cursor:pointer;border-bottom:2px solid transparent}.pep-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .pep-filterbar{display:grid;grid-template-columns:minmax(260px,1.7fr) repeat(3,minmax(130px,.72fr));gap:9px;margin-bottom:14px}.pep-filterbar input,.pep-filterbar select{min-width:0}
+  .pep-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .pep-card{height:290px;border:1px solid var(--line);border-radius:13px;overflow:hidden;position:relative;cursor:pointer;background:var(--idea-page,var(--bg-2));isolation:isolate;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .pep-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 12px 26px rgba(27,18,46,.10)}
+  .pep-card-bg{position:absolute;inset:0;z-index:-3;background-size:cover;background-position:center}
+  .pep-card-bg.default-0{background-image:radial-gradient(circle at 22% 20%,rgba(255,255,255,.38) 0 2px,transparent 3px),radial-gradient(circle at 76% 28%,rgba(255,255,255,.28) 0 1px,transparent 2px),linear-gradient(135deg,transparent 45%,rgba(255,255,255,.10) 46% 48%,transparent 49%)}
+  .pep-card-bg.default-1{background-image:radial-gradient(ellipse at 25% 20%,rgba(255,255,255,.22),transparent 45%),repeating-linear-gradient(145deg,rgba(255,255,255,.08) 0 1px,transparent 1px 18px)}
+  .pep-card-bg.default-2{background-image:radial-gradient(circle at 50% 20%,rgba(255,255,255,.22),transparent 22%),radial-gradient(circle at 20% 70%,rgba(255,255,255,.12),transparent 32%),radial-gradient(circle at 80% 65%,rgba(255,255,255,.10),transparent 28%)}
+  .pep-card-bg.default-3{background-image:linear-gradient(115deg,transparent 0 30%,rgba(255,255,255,.10) 31% 34%,transparent 35% 55%,rgba(255,255,255,.08) 56% 58%,transparent 59%),radial-gradient(circle at 70% 25%,rgba(255,255,255,.22),transparent 30%)}
+  .pep-card-bg.default-4{background-image:repeating-radial-gradient(circle at 70% 20%,rgba(255,255,255,.08) 0 1px,transparent 2px 17px),linear-gradient(160deg,rgba(255,255,255,.12),transparent 42%)}
+  .pep-card::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(to bottom,color-mix(in srgb,var(--idea-page) 8%,transparent) 0%,color-mix(in srgb,var(--idea-page) 34%,transparent) 38%,color-mix(in srgb,var(--idea-page) 88%,transparent) 73%,var(--idea-page) 100%)}
+  .pep-card::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(10,8,18,.20),transparent 62%);pointer-events:none}
+  .pep-card-inner{height:100%;display:flex;flex-direction:column;padding:12px;color:var(--text)}.pep-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.pep-fav{border:0;background:rgba(10,8,18,.22);backdrop-filter:blur(4px);width:30px;height:30px;border-radius:50%;color:white;font-size:16px;cursor:pointer}.pep-card-spacer{flex:1}.pep-card h3{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1.05;margin:0 0 7px;text-shadow:0 1px 12px rgba(0,0,0,.22)}.pep-card-pitch{font-size:11px;line-height:1.55;margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.pep-tags{display:flex;gap:5px;flex-wrap:wrap}.pep-tag{font-size:9px;border:1px solid rgba(255,255,255,.22);background:rgba(18,13,28,.20);backdrop-filter:blur(5px);padding:4px 7px;border-radius:999px;color:inherit}.pep-card-foot{font-size:9px;color:color-mix(in srgb,var(--text) 70%,transparent);margin-top:9px}
+  .pep-status{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+  .pep-status.graine{background:linear-gradient(100deg,#3E7350,#8BBE83)}.pep-status.creuser{background:linear-gradient(100deg,#286D9C,#79BDE7)}.pep-status.prometteuse{background:linear-gradient(100deg,#68459B,#B292DD)}.pep-status.abandonnee{background:linear-gradient(100deg,#87515D,#C88A98)}
+  .pep-abandoned-table{width:100%;border-collapse:collapse;font-size:11px}.pep-abandoned-table th,.pep-abandoned-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left}.pep-abandoned-table th{color:var(--text-dim);font-weight:500;background:var(--bg-2)}
+
+  .idea-drawer-overlay{position:fixed;inset:0;background:rgba(14,10,22,.42);z-index:1200;display:none}.idea-drawer-overlay.open{display:block}.idea-drawer{position:absolute;right:0;top:0;height:100%;width:min(520px,96vw);background:var(--card);border-left:1px solid var(--line);box-shadow:-18px 0 45px rgba(12,8,22,.16);display:flex;flex-direction:column}.idea-drawer-head{padding:18px;border-bottom:1px solid var(--line)}.idea-drawer-head-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.idea-drawer-head h2{margin:0;font-family:'Cormorant Garamond',serif;font-size:27px}.idea-drawer-close{border:0;background:transparent;color:var(--text-dim);font-size:20px;cursor:pointer}.idea-drawer-tabs{display:flex;gap:4px;margin-top:14px;border-bottom:1px solid var(--line)}.idea-drawer-tabs button{border:0;background:transparent;padding:8px 10px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent}.idea-drawer-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}.idea-drawer-body{padding:18px;overflow:auto;flex:1}.idea-drawer-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.idea-form-section{display:grid;gap:11px}.idea-status-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.idea-status-picker button{padding:9px 7px;border-radius:9px;border:1px solid var(--line);background:var(--bg-2);color:var(--text);cursor:pointer;font-size:10px}.idea-status-picker button.active{box-shadow:inset 0 0 0 2px var(--accent);border-color:var(--accent)}.idea-image-preview{height:130px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:10px}.idea-image-preview img{width:100%;height:100%;object-fit:cover}.idea-rich{min-height:170px;border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--card);outline:none;font-size:12px;line-height:1.6}.idea-char-list{display:grid;gap:8px}.idea-char-card{border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--bg-2)}.idea-char-card-row{display:grid;grid-template-columns:1fr 1.7fr auto;gap:7px;align-items:start}.idea-char-card textarea{min-height:65px}.idea-empty-plant{text-align:center;padding:30px 16px;color:var(--text-dim)}
+  @media(max-width:1100px){.pep-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.banner-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:820px){.pep-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pep-filterbar{grid-template-columns:1fr 1fr}.pep-filterbar .pep-search{grid-column:1/-1}.page-image-banner{height:170px}}
+  @media(max-width:560px){.pep-grid{grid-template-columns:1fr}.pep-filterbar{grid-template-columns:1fr}.pep-filterbar .pep-search{grid-column:auto}.banner-admin-grid{grid-template-columns:1fr}.pep-head{flex-direction:column}.idea-status-picker{grid-template-columns:1fr}.idea-char-card-row{grid-template-columns:1fr}.page-image-banner{height:140px}}
+
 </style>
 </head>
 <body>
@@ -556,6 +594,47 @@
   // LIENS RAPIDES + BASCULE PASSE-AILES
   // ============================================================
   function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  const PAGE_BANNER_LABELS = {
+    accueil:'Accueil', oeuvres:'Œuvres', sagas:'Sagas', poesie:'Recueils de poésie', personnages:'Personnages',
+    relecture:'Relecture', planning:'Planning', pepiniere:'Pépinière', 'bureau-editorial':'Bureau éditorial'
+  };
+  async function getPageBanner(pageKey){
+    const {data,error}=await db().from('page_banners').select('image_url').eq('page_key',pageKey).maybeSingle();
+    if(error) return null;
+    return data?.image_url||null;
+  }
+  function renderPageImageBanner(url,alt='Bannière'){
+    return url ? `<div class="page-image-banner"><img src="${safeText(url)}" alt="${safeText(alt)}"></div>` : '';
+  }
+  async function uploadAssetFile(file,folder='banners'){
+    if(!file) return null;
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    const safeName=`${Date.now()}-${Math.random().toString(36).slice(2,9)}.${ext}`;
+    const path=`${currentUser.id}/${folder}/${safeName}`;
+    const {error}=await sb.storage.from('passerelle-assets').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||undefined});
+    if(error){alert('Upload impossible : '+error.message);return null;}
+    const {data}=sb.storage.from('passerelle-assets').getPublicUrl(path);
+    return data?.publicUrl||null;
+  }
+  async function uploadPageBanner(pageKey,input){
+    const file=input?.files?.[0]; if(!file)return;
+    const url=await uploadAssetFile(file,`banners/pages/${pageKey}`); if(!url)return;
+    const {error}=await db().from('page_banners').upsert({user_id:currentUser.id,page_key:pageKey,image_url:url,updated_at:new Date().toISOString()},{onConflict:'user_id,page_key'});
+    if(error){alert('Erreur bannière : '+error.message);return;} adminNavigate('configuration');
+  }
+  async function removePageBanner(pageKey){
+    if(!confirm('Retirer cette bannière ?'))return;
+    const {error}=await db().from('page_banners').delete().eq('page_key',pageKey);if(error){alert(error.message);return;}adminNavigate('configuration');
+  }
+  async function uploadEntityBanner(table,id,input,targetInputId){
+    const file=input?.files?.[0];if(!file||!id)return;
+    const url=await uploadAssetFile(file,`banners/${table}/${id}`);if(!url)return;
+    const {error}=await db().from(table).update({banniere:url}).eq('id',id);if(error){alert('Erreur bannière : '+error.message);return;}
+    const target=document.getElementById(targetInputId);if(target)target.value=url;
+    alert('Bannière téléversée ✓');
+  }
+
   function renderCatalogEntityBanner(url,title=''){
     if(!url) return '';
     return `<img class="catalog-entity-banner" src="${safeText(url)}" alt="Bannière ${safeText(title)}">`;
@@ -785,7 +864,7 @@
               <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Univers & Lore</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
             </section>
-            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><small style="color:var(--text-dim);">Image horizontale affichée en haut de la fiche Œuvre.</small></section>
+            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">Image horizontale affichée en haut de la fiche Œuvre.</small></section>
             <section class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></section>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
@@ -906,15 +985,34 @@
 
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
-    const [links, works, appearance] = await Promise.all([
+    const [links, works, appearance, v2notes, pageBanners] = await Promise.all([
       db().from('liens_rapides').select('*').order('ordre',{ascending:true}),
       db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true}),
-      db().from('configuration_utilisateur').select('*').eq('user_id',currentUser.id).maybeSingle()
+      db().from('configuration_utilisateur').select('*').eq('user_id',currentUser.id).maybeSingle(),
+      db().from('evolutions_v2').select('*').order('created_at',{ascending:false}),
+      db().from('page_banners').select('*').order('page_key',{ascending:true})
     ]);
     const linksOk=!links.error;
     const cfg=appearance.data||globalAppearance;
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`
       <div class="admin-section"><div class="admin-section-head"><h2>🎨 Apparence globale</h2></div><p class="admin-section-sub">S’applique à l’accueil, au menu, au back-office et aux pages générales. Les œuvres, sagas, sous-sagas et recueils gardent leur propre couleur de page.</p><div class="admin-section-grid three"><div><label>Mode</label><select id="cfg-theme-mode"><option value="clair" ${(cfg.theme_mode||globalAppearance.mode)==='clair'?'selected':''}>Clair</option><option value="sombre" ${(cfg.theme_mode||globalAppearance.mode)==='sombre'?'selected':''}>Sombre</option></select></div><div><label>Couleur du thème</label><input type="color" id="cfg-theme-color" value="${safeText(cfg.theme_color||globalAppearance.themeColor)}"></div><div><label>Couleur d’accent</label><input type="color" id="cfg-accent-color" value="${safeText(cfg.accent_color||globalAppearance.accent)}"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveGlobalAppearance()">Appliquer l’apparence globale</button></div>
+      <div class="admin-section">
+        <div class="admin-section-head"><div><h2>🖼️ Bannières des pages</h2><p class="admin-section-sub" style="margin:4px 0 0">Téléverse directement les bannières des pages générales. Les fiches Œuvre, Saga, Sous-saga et Recueil gardent leur bannière propre dans leur éditeur.</p></div></div>
+        ${pageBanners.error ? adminEmpty('La migration Bannières V5.4 doit être installée.') : `<div class="banner-admin-grid">${Object.entries(PAGE_BANNER_LABELS).map(([key,label])=>{const b=(pageBanners.data||[]).find(x=>x.page_key===key);return `<div class="banner-admin-card"><div class="banner-admin-preview">${b?.image_url?`<img src="${safeText(b.image_url)}" alt="">`:'Aucune bannière'}</div><div class="banner-admin-body"><strong>${safeText(label)}</strong><div class="banner-admin-actions"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadPageBanner('${key}',this)"></label>${b?.image_url?`<button class="tiny-btn danger-btn" onclick="removePageBanner('${key}')">Retirer</button>`:''}</div></div></div>`}).join('')}</div>`}
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-head"><div><h2>🧪 Évolutions & V2</h2><p class="admin-section-sub" style="margin:4px 0 0">Parking produit de Passerelle : idées à tester après usage, adaptations multi-utilisatrices et améliorations volontairement repoussées.</p></div></div>
+        ${v2notes.error ? adminEmpty('La base Évolutions & V2 n’est pas encore installée.') : `
+          <div class="panel" style="background:var(--bg-2);margin-bottom:14px">
+            <div class="row2"><div><label>Titre de l’évolution</label><input id="v2-title" placeholder="Connexion aux calendriers externes"></div><div><label>Module</label><input id="v2-module" placeholder="Planning"></div></div>
+            <div class="row2"><div><label>Type</label><select id="v2-type"><option value="amelioration_personnelle">Amélioration personnelle</option><option value="adaptation_multi">Adaptation multi-utilisatrice</option></select></div><div><label>Origine</label><input id="v2-origin" placeholder="Usage Cordélia, retour Sophie…"></div></div>
+            <div class="row2"><div><label>Statut</label><select id="v2-status"><option value="idee">Idée</option><option value="a_etudier">À étudier</option><option value="valide_v2">Validé pour V2</option><option value="ecarte">Écarté</option></select></div><div></div></div>
+            <label>Notes</label><textarea id="v2-notes" style="min-height:110px" placeholder="Décrire l’idée, le besoin, ce qu’on veut préserver ou tester plus tard…"></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn-primary" onclick="saveV2Evolution()">Ajouter au parking V2</button></div>
+          </div>
+          <div style="overflow:auto"><table class="admin-table"><thead><tr><th>Évolution</th><th>Module</th><th>Type</th><th>Origine</th><th>Statut</th><th>Notes</th><th></th></tr></thead><tbody>${(v2notes.data||[]).map(n=>`<tr><td><strong>${safeText(n.titre||'Sans titre')}</strong><div style="font-size:11px;color:var(--text-dim);margin-top:3px">${n.created_at?new Date(n.created_at).toLocaleDateString('fr-FR'):''}</div></td><td>${safeText(n.module||'—')}</td><td>${n.type_note==='adaptation_multi'?'Multi-utilisatrice':'Personnelle'}</td><td>${safeText(n.origine||'—')}</td><td><select style="min-width:130px;padding:6px 8px" onchange="updateV2EvolutionStatus('${n.id}',this.value)"><option value="idee" ${n.statut==='idee'?'selected':''}>Idée</option><option value="a_etudier" ${n.statut==='a_etudier'?'selected':''}>À étudier</option><option value="valide_v2" ${n.statut==='valide_v2'?'selected':''}>Validé V2</option><option value="ecarte" ${n.statut==='ecarte'?'selected':''}>Écarté</option></select></td><td style="max-width:360px;white-space:pre-wrap">${safeText(n.notes||'—')}</td><td><button class="tiny-btn danger-btn" onclick="deleteV2Evolution('${n.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="7"><div class="empty">Aucune note V2. Le futur est encore bien rangé. ✨</div></td></tr>'}</tbody></table></div>
+        `}
+      </div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
@@ -926,6 +1024,36 @@
     if(error){alert('Erreur : '+error.message);return;}
     globalAppearance={mode:payload.theme_mode,themeColor:payload.theme_color,accent:payload.accent_color};
     applyGlobalTheme(); renderAdminSidebar(); renderAdminConfiguration(document.getElementById('content'));
+  }
+
+  async function saveV2Evolution(){
+    const titre=document.getElementById('v2-title')?.value.trim();
+    if(!titre){alert('Donne un titre à cette évolution.');return;}
+    const payload={
+      user_id:currentUser.id,
+      titre,
+      module:document.getElementById('v2-module')?.value.trim()||null,
+      type_note:document.getElementById('v2-type')?.value||'amelioration_personnelle',
+      origine:document.getElementById('v2-origin')?.value.trim()||null,
+      statut:document.getElementById('v2-status')?.value||'idee',
+      notes:document.getElementById('v2-notes')?.value.trim()||null,
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await db().from('evolutions_v2').insert(payload);
+    if(error){alert('Erreur : '+error.message);return;}
+    adminNavigate('configuration');
+  }
+
+  async function updateV2EvolutionStatus(id,statut){
+    const {error}=await db().from('evolutions_v2').update({statut,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){alert('Erreur : '+error.message);return;}
+  }
+
+  async function deleteV2Evolution(id){
+    if(!confirm('Supprimer cette note du parking V2 ?'))return;
+    const {error}=await db().from('evolutions_v2').delete().eq('id',id);
+    if(error){alert('Erreur : '+error.message);return;}
+    adminNavigate('configuration');
   }
 
   async function saveQuickLink(){
@@ -953,6 +1081,7 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
     const now = new Date();
+    const accueilBanner = await getPageBanner('accueil');
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
     const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().slice(0,10);
 
@@ -1099,6 +1228,7 @@
 
   async function renderPlanning(){
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement du planning…</div>';
+    const planningBanner=await getPageBanner('planning');
     const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange());
     const [worksRes,sessionsRes,chapRes]=await Promise.all([
       db().from('oeuvres').select('id,titre,couverture,statut').eq('archive',false).order('titre',{ascending:true}),
@@ -1108,7 +1238,7 @@
     if(sessionsRes.error){content.innerHTML=`<div class="empty">Le Planning a besoin de sa migration SQL.<br><small>${safeText(sessionsRes.error.message)}</small></div>`;return;}
     planningWorks=worksRes.data||[];planningSessions=sessionsRes.data||[];planningChapters=chapRes.data||[];
     const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):planningView==='week'?`${formatDateFr(isoLocal(mondayOf(planningCursor)))} → ${formatDateFr(isoLocal(endOfWeek(planningCursor)))}`:'Toutes les sessions';
-    content.innerHTML=`<div class="planning-head"><div><h1>📅 Planning</h1><p>Sessions d’écriture et de relecture. Tu planifies, puis tu fais tatrat-glisser quand la vraie vie décide de jouer au bowling.</p></div><div class="planning-actions"><button class="btn-secondary" onclick="openPlanningCsv()">⇩ Import CSV</button><button class="btn-secondary" onclick="exportPlanningCsv()">⇧ Export CSV</button><button class="btn-primary" onclick="openPlanningSessionModal()">+ Nouvelle session</button><button class="btn-secondary" onclick="openPlanningSeriesModal()">✨ Créer une série</button></div></div>
+    content.innerHTML=`${renderPageImageBanner(planningBanner,'Planning')}<div class="planning-head"><div><h1>📅 Planning</h1><p>Sessions d’écriture et de relecture. Tu planifies, puis tu fais tatrat-glisser quand la vraie vie décide de jouer au bowling.</p></div><div class="planning-actions"><button class="btn-secondary" onclick="openPlanningCsv()">⇩ Import CSV</button><button class="btn-secondary" onclick="exportPlanningCsv()">⇧ Export CSV</button><button class="btn-primary" onclick="openPlanningSessionModal()">+ Nouvelle session</button><button class="btn-secondary" onclick="openPlanningSeriesModal()">✨ Créer une série</button></div></div>
       <div class="planning-toolbar"><div class="planning-nav"><button class="tiny-btn" onclick="movePlanning(-1)">←</button><div class="planning-period">${safeText(title)}</div><button class="tiny-btn" onclick="movePlanning(1)">→</button><button class="tiny-btn" onclick="planningCursor=new Date();renderPlanning()">Aujourd’hui</button></div><div class="planning-views"><button class="tiny-btn ${planningView==='week'?'active':''}" onclick="setPlanningView('week')">Semaine</button><button class="tiny-btn ${planningView==='month'?'active':''}" onclick="setPlanningView('month')">Mois</button><button class="tiny-btn ${planningView==='list'?'active':''}" onclick="setPlanningView('list')">Liste</button></div></div>
       <div class="planning-legend"><span><i style="background:#7C5CBF"></i>Écriture</span><span><i style="background:#59A77A"></i>Relecture</span><span>La couleur peut être personnalisée par session.</span></div>
       <div id="planning-bulk" class="planning-bulk"><span id="planning-bulk-count">0 sélectionnée</span><button class="tiny-btn" onclick="bulkShiftPlanning(1)">+1 jour</button><button class="tiny-btn" onclick="bulkShiftPlanning(7)">+1 semaine</button><button class="tiny-btn" onclick="bulkSetPlanningDate()">Changer la date</button><button class="tiny-btn danger-btn" onclick="bulkDeletePlanning()">Supprimer</button></div>
@@ -1228,6 +1358,7 @@
 
   async function renderBureauEditorial(){
     const content = document.getElementById('content');
+    const bureauBanner = await getPageBanner('bureau-editorial');
     content.innerHTML = `<div class="status-line">Chargement du catalogue éditorial…</div>`;
     const [worksRes,sagasRes,ssRes,universRes] = await Promise.all([
       db().from('oeuvres').select('id,titre,statut,saga_id,sous_saga_id,destination_editoriale,niveau_editorial_cible,statut_editorial_actuel,horizon_annee,publication_envisagee,notes_editoriales,couverture,archive').eq('archive',false).order('titre',{ascending:true}),
@@ -1246,7 +1377,7 @@
     beUnivers = universRes.data || [];
 
     content.innerHTML = `
-      <div class="be-banner-placeholder"><span>Emplacement de ta future bannière Bureau éditorial</span></div>
+      ${renderPageImageBanner(bureauBanner,'Bureau éditorial')}
       <div class="be-title-row">
         <div><h2>Bureau éditorial</h2><p>Le catalogue complet et les décisions stratégiques de Passerelle.</p></div>
         <div class="be-summary"><strong>${beData.length}</strong><span>œuvres au catalogue</span></div>
@@ -1368,6 +1499,7 @@
   }
   async function renderRelecture(){
     const content = document.getElementById('content');
+    const relectureBanner = await getPageBanner('relecture');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
     const now = new Date();
@@ -1461,8 +1593,9 @@
   // SAGAS — catalogue
   // ============================================================
   async function renderSagas(){
+    const sagasBanner=await getPageBanner('sagas');
     const content = document.getElementById('content');
-    content.innerHTML = `
+    content.innerHTML = `${renderPageImageBanner(sagasBanner,'Sagas')}
       <div class="head-row"><h2>Sagas</h2><button class="btn-primary" onclick="openSagaModal()">+ Créer une saga</button></div>
       <div id="sagas-zone"><div class="status-line">Chargement…</div></div>
     `;
@@ -2192,7 +2325,7 @@
               <div><label>Statut</label><select id="sf-statut"><option>Saga en cours</option><option>En pause</option><option>Terminée</option></select></div>
             </div>
             <div><label>Résumé / à propos</label><textarea id="sf-description"></textarea></div>
-            <div><label>Bannière de la fiche</label><input id="sf-banniere" placeholder="https://…"></div>
+            <div><label>Bannière de la fiche</label><input id="sf-banniere" placeholder="https://…"><div id="sf-banner-upload" style="margin-top:6px;display:none"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" id="sf-banner-file"></label></div></div>
           </div>
           <div class="modal-foot"><button class="btn-secondary" onclick="closeSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSaga()">Enregistrer</button></div>
         </div>
@@ -2205,6 +2338,7 @@
     document.getElementById('sf-nom').value = ''; document.getElementById('sf-genre').value = '';
     document.getElementById('sf-statut').value = 'Saga en cours'; document.getElementById('sf-description').value = ''; document.getElementById('sf-banniere').value='';
     if (id) {
+      document.getElementById('sf-banner-upload').style.display='block'; document.getElementById('sf-banner-file').onchange=(e)=>uploadEntityBanner('sagas',id,e.target,'sf-banniere');
       const { data } = await db().from('sagas').select('nom, genre, statut, description, banniere, image_couverture').eq('id', id).single();
       if (data) { document.getElementById('sf-nom').value = data.nom||''; document.getElementById('sf-genre').value = data.genre||''; document.getElementById('sf-statut').value = data.statut||'Saga en cours'; document.getElementById('sf-description').value = data.description||''; document.getElementById('sf-banniere').value=data.banniere||data.image_couverture||''; }
     }
@@ -2234,7 +2368,7 @@
               <div><label>Statut</label><select id="ssf-statut"><option>En cours</option><option>À venir</option><option>Terminée</option></select></div>
             </div>
             <div><label>Description</label><textarea id="ssf-description"></textarea></div>
-            <div><label>Bannière de la fiche</label><input id="ssf-banniere" placeholder="https://…"></div>
+            <div><label>Bannière de la fiche</label><input id="ssf-banniere" placeholder="https://…"><div id="ssf-banner-upload" style="margin-top:6px;display:none"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" id="ssf-banner-file"></label></div></div>
           </div>
           <div class="modal-foot"><button class="btn-secondary" onclick="closeSousSagaModal()">Annuler</button><button class="btn-primary" onclick="saveSousSaga()">Enregistrer</button></div>
         </div>
@@ -2247,6 +2381,7 @@
     document.getElementById('ssf-nom').value=''; document.getElementById('ssf-format').value='';
     document.getElementById('ssf-statut').value='En cours'; document.getElementById('ssf-description').value=''; document.getElementById('ssf-banniere').value='';
     if (id) {
+      document.getElementById('ssf-banner-upload').style.display='block'; document.getElementById('ssf-banner-file').onchange=(e)=>uploadEntityBanner('sous_sagas',id,e.target,'ssf-banniere');
       const { data } = await db().from('sous_sagas').select('nom, format, statut, description, banniere, image_url').eq('id', id).single();
       if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; document.getElementById('ssf-banniere').value=data.banniere||data.image_url||''; }
     }
@@ -2269,8 +2404,9 @@
   // ŒUVRES
   // ============================================================
   async function renderOeuvres(){
+    const oeuvresBanner=await getPageBanner('oeuvres');
     const content = document.getElementById('content');
-    content.innerHTML = `
+    content.innerHTML = `${renderPageImageBanner(oeuvresBanner,'Œuvres')}
       <div class="head-row"><h2>Œuvres</h2><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div>
       <div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>
     `;
@@ -3338,7 +3474,8 @@
   // ============================================================
   async function renderPersonnages(){
     const content = document.getElementById('content');
-    content.innerHTML = `
+    const personnagesBanner = await getPageBanner('personnages');
+    content.innerHTML = `${renderPageImageBanner(personnagesBanner,'Personnages')}
       <div class="head-row"><h2>Personnages</h2><button class="btn-primary" onclick="openPersonnageModal()">+ Créer un personnage</button></div>
       <div id="personnages-zone"><div class="status-line">Chargement…</div></div>
     `;
@@ -3391,218 +3528,131 @@
   }
 
   // ============================================================
-  // IDÉES ("la pépinière")
+  // IDÉES — PÉPINIÈRE V5.4
   // ============================================================
-  let ideesData = [];
-  const IDEE_STATUT_COLOR = { 'Graine':'#5B9B6E', 'À creuser':'#4A90D9', 'Prometteuse':'#8C7FB0', 'En sommeil':'#8A8780', 'Abandonnée':'#B0525E' };
-  async function renderIdees(){
-    const content = document.getElementById('content');
-    content.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data, error } = await db().from('idees').select('*').order('created_at', { ascending:false });
-    if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    ideesData = data;
-
-    const statuts = ['Graine','À creuser','Prometteuse','En sommeil','Abandonnée'];
-    const counts = {}; statuts.forEach(s => counts[s] = data.filter(i=>i.statut===s).length);
-    const types = [...new Set(data.map(i=>i.type).filter(Boolean))];
-    const genres = [...new Set(data.map(i=>i.genre).filter(Boolean))];
-
-    content.innerHTML = `
-      <div class="head-row"><h2>🌱 La pépinière</h2><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
-      <div class="stat-cards-row" style="grid-template-columns:repeat(6,1fr);">
-        <div class="stat-card"><h3>Total</h3><div class="stat-big">${data.length}</div></div>
-        ${statuts.map(s => `<div class="stat-card"><h3>${s}</h3><div class="stat-big" style="font-size:1.4rem;">${counts[s]}</div></div>`).join('')}
-      </div>
-      <div class="head-row">
-        <input class="search-input" id="idee-search" placeholder="Rechercher une idée..." oninput="renderIdeesGrid()">
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <select class="search-input" id="idee-filtre-statut" onchange="renderIdeesGrid()"><option value="">Statut : Tous</option>${statuts.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
-          <select class="search-input" id="idee-filtre-type" onchange="renderIdeesGrid()"><option value="">Type : Tous</option>${types.map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
-          <select class="search-input" id="idee-filtre-genre" onchange="renderIdeesGrid()"><option value="">Genre : Tous</option>${genres.map(g=>`<option value="${g}">${g}</option>`).join('')}</select>
-        </div>
-      </div>
-      <div class="gallery" id="idees-grid"></div>
-    `;
-    renderIdeesGrid();
+  let ideesData=[];
+  let pepiniereView='active';
+  let editingIdeeId=null;
+  let editingIdeeChars=[];
+  let ideeDrawerTab='details';
+  let ideaDraftState={};
+  const IDEE_STATUS_META={
+    'Graine':{emoji:'🌱',cls:'graine'},
+    'À creuser':{emoji:'🔎',cls:'creuser'},
+    'Prometteuse':{emoji:'⭐',cls:'prometteuse'},
+    'Abandonnée':{emoji:'🍂',cls:'abandonnee'}
+  };
+  function ideaDisplayTitle(i){
+    const t=String(i?.titre||'').trim();
+    if(t && t!=='Sans titre' && t!=='Idée') return t;
+    return `Idée #${String(i?.numero||Math.max(1,ideesData.indexOf(i)+1)).padStart(3,'0')}`;
   }
-  function joursDepuisGeneric(dateStr){
-    const diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
-    return diff <= 0 ? "aujourd'hui" : `il y a ${diff} j`;
+  function ideaTagEmoji(v,type='generic'){
+    const x=String(v||'').toLowerCase();
+    if(type==='type') return x.includes('roman')?'📖':x.includes('nouvelle')?'📄':x.includes('po')?'🪶':'📝';
+    if(type==='genre') return x.includes('romance')?'💗':x.includes('fant')?'🪄':x.includes('thrill')?'🕯️':x.includes('myst')?'🔍':x.includes('sf')?'🚀':'📚';
+    return x.includes('doux')?'☕':x.includes('melan')?'🌙':x.includes('mag')?'✨':x.includes('sombre')?'🖤':x.includes('été')||x.includes('estival')?'☀️':'✦';
+  }
+  function ideaStatusBadge(status){const m=IDEE_STATUS_META[status]||IDEE_STATUS_META.Graine;return `<span class="pep-status ${m.cls}">${m.emoji} ${safeText(status||'Graine')}</span>`;}
+  function joursDepuisGeneric(dateStr){const diff=Math.floor((new Date()-new Date(dateStr))/86400000);return diff<=0?"aujourd'hui":`il y a ${diff} j`;}
+
+  async function renderIdees(){
+    const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement de la pépinière…</div>';
+    const [{data,error},banner]=await Promise.all([db().from('idees').select('*').order('created_at',{ascending:false}),getPageBanner('pepiniere')]);
+    if(error){content.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}<br><small>La migration Pépinière V5.4 est peut-être à exécuter.</small></div>`;return;}
+    ideesData=data||[];
+    const active=ideesData.filter(i=>i.statut!=='Abandonnée' && i.statut!=='En sommeil');
+    const abandoned=ideesData.filter(i=>i.statut==='Abandonnée');
+    const counts={Graine:active.filter(i=>i.statut==='Graine').length,'À creuser':active.filter(i=>i.statut==='À creuser'||i.statut==='En sommeil').length,Prometteuse:active.filter(i=>i.statut==='Prometteuse').length};
+    const types=[...new Set(active.map(i=>i.type).filter(Boolean))],genres=[...new Set(active.map(i=>i.genre).filter(Boolean))];
+    content.innerHTML=`${renderPageImageBanner(banner,'Pépinière')}
+      <div class="pep-head"><div><h1>🌱 La pépinière</h1><p>Une pensée entre ici avec trois lignes. Elle gagne de la structure seulement si elle en a besoin.</p></div><button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle idée</button></div>
+      <div class="pep-summary"><div class="pep-summary-item">🌱 <strong>${counts.Graine}</strong> graines</div><div class="pep-summary-item">🔎 <strong>${counts['À creuser']}</strong> à creuser</div><div class="pep-summary-item">⭐ <strong>${counts.Prometteuse}</strong> prometteuses</div><div class="pep-summary-item">🍂 <strong>${abandoned.length}</strong> abandonnées</div></div>
+      <div class="pep-tabs"><button class="${pepiniereView==='active'?'active':''}" onclick="pepiniereView='active';renderIdeesBody()">🌿 Idées actives</button><button class="${pepiniereView==='abandoned'?'active':''}" onclick="pepiniereView='abandoned';renderIdeesBody()">🍂 Abandonnées</button></div>
+      <div id="pepiniere-body"></div>`;
+    window._pepTypes=types;window._pepGenres=genres;renderIdeesBody();
+  }
+  function renderIdeesBody(){
+    const zone=document.getElementById('pepiniere-body');if(!zone)return;
+    if(pepiniereView==='abandoned'){renderAbandonedIdeas(zone);return;}
+    const active=ideesData.filter(i=>i.statut!=='Abandonnée');
+    zone.innerHTML=`<div class="pep-filterbar"><input class="search-input pep-search" id="idee-search" placeholder="🔍 Rechercher une idée…" oninput="renderIdeesGrid()"><select id="idee-filtre-statut" onchange="renderIdeesGrid()"><option value="">🌿 Tous les statuts</option><option>Graine</option><option>À creuser</option><option>Prometteuse</option></select><select id="idee-filtre-type" onchange="renderIdeesGrid()"><option value="">📝 Tous les types</option>${(window._pepTypes||[]).map(x=>`<option>${safeText(x)}</option>`).join('')}</select><select id="idee-filtre-genre" onchange="renderIdeesGrid()"><option value="">📚 Tous les genres</option>${(window._pepGenres||[]).map(x=>`<option>${safeText(x)}</option>`).join('')}</select></div><div class="pep-grid" id="idees-grid"></div>`;
+    renderIdeesGrid();
   }
   function renderIdeesGrid(){
-    const q = (document.getElementById('idee-search').value||'').toLowerCase();
-    const statutFiltre = document.getElementById('idee-filtre-statut').value;
-    const typeFiltre = document.getElementById('idee-filtre-type').value;
-    const genreFiltre = document.getElementById('idee-filtre-genre').value;
-    let data = ideesData.filter(i => i.titre.toLowerCase().includes(q));
-    if (statutFiltre) data = data.filter(i => i.statut === statutFiltre);
-    if (typeFiltre) data = data.filter(i => i.type === typeFiltre);
-    if (genreFiltre) data = data.filter(i => i.genre === genreFiltre);
-    const zone = document.getElementById('idees-grid');
-    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune idée ne correspond.</div>`; return; }
-    zone.innerHTML = data.map(i => {
-      const color = IDEE_STATUT_COLOR[i.statut] || 'var(--text-dim)';
-      const tags = [i.genre, ...(i.ambiance||[]).slice(0,2)].filter(Boolean);
-      return `
-      <div class="char-card" onclick="openIdeeModal('${i.id}')" style="padding-bottom:2px;">
-        <span onclick="event.stopPropagation(); toggleFavoriIdee('${i.id}', ${!!i.favori})" style="position:absolute; top:8px; right:10px; font-size:16px; cursor:pointer; color:${i.favori?'var(--accent)':'var(--text-dim)'};">${i.favori?'★':'☆'}</span>
-        <div style="padding:12px 14px 0;">
-          <span style="font-size:10px; padding:3px 10px; border-radius:20px; background:${color}22; color:${color}; font-weight:600; text-transform:uppercase; letter-spacing:0.03em;">${i.statut||'Graine'}</span>
-        </div>
-        <div style="padding:10px 14px 0; font-size:15px; font-weight:500;">${i.titre}</div>
-        <div style="padding:6px 14px 0; font-size:12px; color:var(--text-dim); line-height:1.5;">${(i.note||'').slice(0,90)}${(i.note||'').length>90?'…':''}</div>
-        <div style="padding:10px 14px 0;">${tags.map(t=>`<span class="etat-pill" style="margin:0 5px 5px 0; display:inline-block;">${t}</span>`).join('')}</div>
-        <div style="padding:8px 14px 12px; font-size:11px; color:var(--text-dim);">${joursDepuisGeneric(i.created_at)}${i.potentiel ? ' · '+'★'.repeat(i.potentiel) : ''}</div>
-      </div>`;
-    }).join('');
+    const q=(document.getElementById('idee-search')?.value||'').toLowerCase(),sf=document.getElementById('idee-filtre-statut')?.value||'',tf=document.getElementById('idee-filtre-type')?.value||'',gf=document.getElementById('idee-filtre-genre')?.value||'';
+    let data=ideesData.filter(i=>i.statut!=='Abandonnée');
+    if(q)data=data.filter(i=>[ideaDisplayTitle(i),i.note,i.type,i.genre,...(i.ambiance||[])].join(' ').toLowerCase().includes(q));
+    if(sf)data=data.filter(i=>(i.statut==='En sommeil'?'À creuser':i.statut)===sf);if(tf)data=data.filter(i=>i.type===tf);if(gf)data=data.filter(i=>i.genre===gf);
+    const zone=document.getElementById('idees-grid');if(!zone)return;if(!data.length){zone.innerHTML='<div class="idea-empty-plant">🌱 Rien ici pour ce filtre. Une toute petite graine peut encore arriver.</div>';return;}
+    zone.innerHTML=data.map((i,idx)=>renderIdeaCard(i,idx)).join('');
   }
-  async function toggleFavoriIdee(id, currentlyFavori){
-    const { error } = await db().from('idees').update({ favori: !currentlyFavori }).eq('id', id);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    const idx = ideesData.findIndex(i=>i.id===id);
-    if (idx>-1) ideesData[idx].favori = !currentlyFavori;
-    renderIdeesGrid();
+  function renderIdeaCard(i,idx){
+    const status=i.statut==='En sommeil'?'À creuser':(i.statut||'Graine');const tags=[];if(i.type)tags.push(`${ideaTagEmoji(i.type,'type')} ${i.type}`);if(i.genre)tags.push(`${ideaTagEmoji(i.genre,'genre')} ${i.genre}`);(i.ambiance||[]).slice(0,2).forEach(a=>tags.push(`${ideaTagEmoji(a)} ${a}`));
+    const page=i.page_color||'#2F2941';const bg=i.image_url?`style="background-image:url('${safeText(i.image_url).replaceAll("'",'&#39;')}')"`:`class="pep-card-bg default-${(Number(i.numero)||idx)%5}"`;
+    return `<article class="pep-card" style="--idea-page:${safeText(page)}" onclick="openIdeeModal('${i.id}')"><div ${i.image_url?`class="pep-card-bg" ${bg}`:bg}></div><div class="pep-card-inner"><div class="pep-card-top">${ideaStatusBadge(status)}<button class="pep-fav" onclick="event.stopPropagation();toggleFavoriIdee('${i.id}',${!!i.favori})" title="Favori">${i.favori?'★':'☆'}</button></div><div class="pep-card-spacer"></div><h3>${safeText(ideaDisplayTitle(i))}</h3><p class="pep-card-pitch">${safeText(i.note||'Une idée encore toute petite…')}</p><div class="pep-tags">${tags.map(t=>`<span class="pep-tag">${safeText(t)}</span>`).join('')}</div><div class="pep-card-foot">${i.updated_at?'Modifiée '+joursDepuisGeneric(i.updated_at):'Créée '+joursDepuisGeneric(i.created_at)}</div></div></article>`;
   }
-
-  function ideeModalHtml(){
-    return `
-      <div class="modal-overlay" id="modal-idee-overlay" onclick="if(event.target===this) closeIdeeModal()">
-        <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-idee-title">Nouvelle idée</h2><button onclick="closeIdeeModal()">✕</button></div>
-          <div class="modal-body">
-            <div><label>Titre</label><input id="if-titre"></div>
-            <div><label>L'idée</label><textarea id="if-note"></textarea></div>
-            <div class="row2">
-              <div><label>Type</label><input id="if-type" placeholder="Roman, Nouvelle..."></div>
-              <div><label>Genre</label><input id="if-genre"></div>
-            </div>
-            <div class="row2">
-              <div><label>Statut</label><select id="if-statut"><option>Graine</option><option>À creuser</option><option>Prometteuse</option><option>En sommeil</option><option>Abandonnée</option></select></div>
-              <div><label>Potentiel (1 à 5)</label><input type="number" min="1" max="5" id="if-potentiel"></div>
-            </div>
-            <div><label>Ambiance (séparée par des virgules)</label><input id="if-ambiance"></div>
-            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="if-favori" style="width:auto;"><label style="margin:0;" for="if-favori">Idée favorite</label></div>
-
-            <div id="if-transform-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
-              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Devenue</div>
-              <div id="if-transform-info" style="font-size:13px;"></div>
-            </div>
-            <div id="if-transform-actions" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
-              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Transformer en projet</div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button class="btn-secondary" onclick="transformerIdee('oeuvre')">→ Œuvre</button>
-                <button class="btn-secondary" onclick="transformerIdee('saga')">→ Saga</button>
-                <button class="btn-secondary" onclick="transformerIdee('recueil')">→ Recueil</button>
-              </div>
-            </div>
-
-            <div id="if-notes-zone" style="display:none; border-top:1px solid var(--line); padding-top:12px;">
-              <div style="font-size:12px; color:var(--lavender); margin-bottom:8px;">Notes rapides</div>
-              <div id="if-notes-list"></div>
-              <textarea id="if-note-new" placeholder="Ajouter une note..." style="margin-top:8px;"></textarea>
-              <button class="btn-secondary" style="margin-top:6px; width:100%;" onclick="addIdeeNote()">Ajouter</button>
-            </div>
-          </div>
-          <div class="modal-foot">
-            <button class="btn-secondary" id="if-abandon" style="margin-right:auto; display:none; color:#e88;" onclick="abandonnerIdee()">Abandonner cette idée</button>
-            <button class="btn-secondary" onclick="closeIdeeModal()">Annuler</button>
-            <button class="btn-primary" onclick="saveIdee()">Enregistrer</button>
-          </div>
-        </div>
-      </div>`;
+  function renderAbandonedIdeas(zone){
+    const data=ideesData.filter(i=>i.statut==='Abandonnée');
+    zone.innerHTML=!data.length?'<div class="idea-empty-plant">🍂 Aucune idée abandonnée. Le compost est vide.</div>':`<div style="overflow:auto;border:1px solid var(--line);border-radius:12px"><table class="pep-abandoned-table"><thead><tr><th>Idée</th><th>Type</th><th>Genre</th><th>Abandonnée</th><th></th></tr></thead><tbody>${data.map(i=>`<tr><td><strong style="cursor:pointer" onclick="openIdeeModal('${i.id}')">${safeText(ideaDisplayTitle(i))}</strong><div style="color:var(--text-dim);margin-top:3px;max-width:520px">${safeText((i.note||'').slice(0,120))}</div></td><td>${safeText(i.type||'—')}</td><td>${safeText(i.genre||'—')}</td><td>${i.abandoned_at?new Date(i.abandoned_at).toLocaleDateString('fr-FR'):'—'}</td><td><button class="tiny-btn" onclick="reactiverIdee('${i.id}')">♻️ Réactiver</button></td></tr>`).join('')}</tbody></table></div>`;
   }
-  let editingIdeeId = null;
+  async function toggleFavoriIdee(id,current){const {error}=await db().from('idees').update({favori:!current}).eq('id',id);if(error){alert(error.message);return;}const x=ideesData.find(i=>i.id===id);if(x)x.favori=!current;renderIdeesGrid();}
+
+  function ideeModalHtml(){return `<div class="idea-drawer-overlay" id="modal-idee-overlay" onclick="if(event.target===this)closeIdeeModal()"><aside class="idea-drawer"><div class="idea-drawer-head"><div class="idea-drawer-head-row"><div><div id="if-status-badge"></div><h2 id="modal-idee-title">Nouvelle idée</h2></div><button class="idea-drawer-close" onclick="closeIdeeModal()">✕</button></div><div class="idea-drawer-tabs" id="if-tabs"><button data-tab="details" onclick="setIdeeDrawerTab('details')">Détails</button><button data-tab="notes" onclick="setIdeeDrawerTab('notes')">Notes</button><button data-tab="personnages" onclick="setIdeeDrawerTab('personnages')">Personnages</button></div></div><div class="idea-drawer-body" id="if-body"></div><div class="idea-drawer-foot"><button class="btn-secondary" id="if-abandon" style="margin-right:auto;color:#a85d6c" onclick="abandonnerIdee()">🍂 Abandonner</button><button class="btn-secondary" onclick="closeIdeeModal()">Fermer</button><button class="btn-primary" onclick="saveIdee()">Enregistrer</button></div></aside></div>`;}
+  function currentIdeeDraft(){const base=editingIdeeId?(ideesData.find(x=>x.id===editingIdeeId)||{}):{};return {...base,...ideaDraftState};}
+  function captureIdeeFormDraft(){const i=currentIdeeDraft();const get=id=>document.getElementById(id);const note=get('if-note'),title=get('if-titre'),img=get('if-image'),color=get('if-page-color'),fav=get('if-favori'),type=get('if-type'),genre=get('if-genre'),amb=get('if-ambiance'),notes=get('if-notes-rich');if(note)ideaDraftState.note=note.value;if(title)ideaDraftState.titre=title.value;if(img)ideaDraftState.image_url=img.value;if(color)ideaDraftState.page_color=color.value;if(fav)ideaDraftState.favori=fav.checked;if(type)ideaDraftState.type=type.value;if(genre)ideaDraftState.genre=genre.value;if(amb)ideaDraftState.ambiance=amb.value.split(',').map(x=>x.trim()).filter(Boolean);if(notes)ideaDraftState.notes_pelemele=notes.innerHTML;ideaDraftState.statut=window._ideeFormStatus||i.statut||'Graine';}
+  function setIdeeDrawerTab(tab){captureIdeeFormDraft();ideeDrawerTab=tab;renderIdeeDrawerBody();}
+  function ideaStatusForForm(){return document.querySelector('.idea-status-picker button.active')?.dataset.status||currentIdeeDraft().statut||'Graine';}
+  function renderIdeeDrawerHeader(){const i=currentIdeeDraft(),status=i.statut==='Abandonnée'?'Abandonnée':(window._ideeFormStatus||i.statut||'Graine');document.getElementById('if-status-badge').innerHTML=ideaStatusBadge(status);document.getElementById('modal-idee-title').textContent=editingIdeeId?ideaDisplayTitle(i):'Nouvelle idée';const tabs=document.querySelectorAll('#if-tabs button');tabs.forEach(b=>{const tab=b.dataset.tab;b.style.display=(tab==='details'||status==='À creuser'||status==='Prometteuse')?'':'none';if(tab==='personnages'&&status!=='Prometteuse')b.style.display='none';b.classList.toggle('active',tab===ideeDrawerTab)});}
+  function renderIdeeDrawerBody(){
+    const body=document.getElementById('if-body');if(!body)return;const i=currentIdeeDraft(),status=window._ideeFormStatus||(i.statut==='En sommeil'?'À creuser':i.statut)||'Graine';renderIdeeDrawerHeader();
+    if(ideeDrawerTab==='notes'){body.innerHTML=`<div class="idea-form-section"><div><label>🗒️ Notes pêle-mêle</label><div id="if-notes-rich" class="idea-rich" contenteditable="true">${i.notes_pelemele||''}</div><small style="color:var(--text-dim)">Ici, pas besoin de ranger les idées. Scènes, questions, fragments, contradictions : tout peut cohabiter.</small></div></div>`;return;}
+    if(ideeDrawerTab==='personnages'){body.innerHTML=`<div class="idea-form-section"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>👥 Idées de personnages</strong><div style="font-size:10px;color:var(--text-dim)">Des embryons seulement. Ils ne deviennent pas encore des personnages canoniques.</div></div><button class="tiny-btn" onclick="addIdeeCharacter()">+ Ajouter</button></div><div id="if-char-list" class="idea-char-list"></div></div>`;drawIdeeCharacters();return;}
+    const advanced=status!=='Graine'&&status!=='Abandonnée';
+    body.innerHTML=`<div class="idea-form-section"><div><label>Niveau de maturité</label><div class="idea-status-picker"><button data-status="Graine" class="${status==='Graine'?'active':''}" onclick="changeIdeeStatusForm('Graine')">🌱 Graine</button><button data-status="À creuser" class="${status==='À creuser'?'active':''}" onclick="changeIdeeStatusForm('À creuser')">🔎 À creuser</button><button data-status="Prometteuse" class="${status==='Prometteuse'?'active':''}" onclick="changeIdeeStatusForm('Prometteuse')">⭐ Prometteuse</button></div></div>${advanced?`<div><label>Titre <span style="color:var(--text-dim)">(facultatif)</span></label><input id="if-titre" value="${safeText((i.titre&&i.titre!=='Sans titre'&&i.titre!=='Idée')?i.titre:'')}" placeholder="Laisser vide pour garder ${safeText(ideaDisplayTitle(i))}"></div>`:''}<div><label>💡 L’idée</label><textarea id="if-note" style="min-height:150px" placeholder="Un homme reçoit les lettres d’amour destinées à l’ancien locataire…">${safeText(i.note||'')}</textarea></div><div class="row2"><div><label>🖼️ Image d’inspiration (URL)</label><input id="if-image" value="${safeText(i.image_url||'')}" placeholder="https://…" oninput="previewIdeeImage()"></div><div><label>🎨 Couleur de page</label><input type="color" id="if-page-color" value="${safeText(i.page_color||'#44385F')}" oninput="previewIdeeImage()"></div></div><div id="if-image-preview" class="idea-image-preview"></div>${advanced?`<div class="row2"><div><label>📝 Type</label><input id="if-type" value="${safeText(i.type||'')}" placeholder="Roman, nouvelle…"></div><div><label>📚 Genre</label><input id="if-genre" value="${safeText(i.genre||'')}" placeholder="Romance, fantasy…"></div></div><div><label>✨ Ambiance <span style="color:var(--text-dim)">(séparée par des virgules)</span></label><input id="if-ambiance" value="${safeText((i.ambiance||[]).join(', '))}" placeholder="Doux, intime, mélancolique"></div>`:''}<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" id="if-favori" style="width:auto" ${i.favori?'checked':''}> ⭐ Garder dans mes favorites</label>${status==='Prometteuse'&&!i.transforme_en_type?`<div style="border-top:1px solid var(--line);padding-top:12px"><strong>🌿 Prête à devenir un projet ?</strong><p style="font-size:10px;color:var(--text-dim)">La transformation réutilisera cette idée au lieu de recréer les informations.</p><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="tiny-btn" onclick="transformerIdee('oeuvre')">→ Œuvre</button><button class="tiny-btn" onclick="transformerIdee('saga')">→ Saga</button><button class="tiny-btn" onclick="transformerIdee('recueil')">→ Recueil</button></div></div>`:''}</div>`;previewIdeeImage();}
+  function previewIdeeImage(){const z=document.getElementById('if-image-preview');if(!z)return;const url=document.getElementById('if-image')?.value.trim();const color=document.getElementById('if-page-color')?.value||'#44385F';z.style.background=color;z.innerHTML=url?`<img src="${safeText(url)}" alt="Aperçu" onerror="this.remove();this.parentElement.textContent='Lien conservé · aperçu indisponible'">`:'Fond par défaut automatique · aucune carte ne restera vide 🌿';}
+  function changeIdeeStatusForm(status){captureIdeeFormDraft();window._ideeFormStatus=status;ideaDraftState.statut=status;if(status==='Graine')ideeDrawerTab='details';renderIdeeDrawerBody();}
+  function drawIdeeCharacters(){const z=document.getElementById('if-char-list');if(!z)return;z.innerHTML=editingIdeeChars.length?editingIdeeChars.map((c,idx)=>`<div class="idea-char-card"><div class="idea-char-card-row"><input value="${safeText(c.nom||'')}" placeholder="Nom / rôle provisoire" oninput="editingIdeeChars[${idx}].nom=this.value"><textarea placeholder="Quelques mots…" oninput="editingIdeeChars[${idx}].note=this.value">${safeText(c.note||'')}</textarea><button class="tiny-btn danger-btn" onclick="editingIdeeChars.splice(${idx},1);drawIdeeCharacters()">✕</button></div></div>`).join(''):'<div class="idea-empty-plant">👤 Aucun personnage encore. Et c’est parfaitement permis.</div>';}
+  function addIdeeCharacter(){editingIdeeChars.push({nom:'',note:''});drawIdeeCharacters();}
+
   async function openIdeeModal(id){
-    editingIdeeId = id || null;
-    document.getElementById('modal-idee-title').textContent = id ? "Modifier l'idée" : 'Nouvelle idée';
-    document.getElementById('if-titre').value=''; document.getElementById('if-note').value='';
-    document.getElementById('if-type').value=''; document.getElementById('if-genre').value='';
-    document.getElementById('if-statut').value='Graine'; document.getElementById('if-potentiel').value='';
-    document.getElementById('if-ambiance').value=''; document.getElementById('if-favori').checked=false;
-    document.getElementById('if-abandon').style.display = id ? 'block' : 'none';
-    document.getElementById('if-notes-zone').style.display = id ? 'block' : 'none';
-    document.getElementById('if-transform-zone').style.display = 'none';
-    document.getElementById('if-transform-actions').style.display = 'none';
-
-    if (id) {
-      const idee = ideesData.find(x=>x.id===id) || (await db().from('idees').select('*').eq('id', id).single()).data;
-      if (idee) {
-        document.getElementById('if-titre').value=idee.titre||''; document.getElementById('if-note').value=idee.note||'';
-        document.getElementById('if-type').value=idee.type||''; document.getElementById('if-genre').value=idee.genre||'';
-        document.getElementById('if-statut').value=idee.statut||'Graine'; document.getElementById('if-potentiel').value=idee.potentiel||'';
-        document.getElementById('if-ambiance').value=(idee.ambiance||[]).join(', '); document.getElementById('if-favori').checked=!!idee.favori;
-        if (idee.transforme_en_type) {
-          document.getElementById('if-transform-zone').style.display = 'block';
-          document.getElementById('if-transform-info').textContent = 'Transformée en ' + idee.transforme_en_type;
-        } else {
-          document.getElementById('if-transform-actions').style.display = 'block';
-        }
-      }
-      await loadIdeeNotes(id);
-    }
-    document.getElementById('modal-idee-overlay').classList.add('open');
+    editingIdeeId=id||null;ideeDrawerTab='details';ideaDraftState={};const i=id?(ideesData.find(x=>x.id===id)||(await db().from('idees').select('*').eq('id',id).single()).data):{};editingIdeeChars=Array.isArray(i?.personnages_idees)?JSON.parse(JSON.stringify(i.personnages_idees)):[];window._ideeFormStatus=(i?.statut==='En sommeil'?'À creuser':i?.statut)||'Graine';document.getElementById('if-abandon').style.display=id&&i?.statut!=='Abandonnée'?'inline-flex':'none';document.getElementById('modal-idee-overlay').classList.add('open');renderIdeeDrawerBody();
   }
-  function closeIdeeModal(){ document.getElementById('modal-idee-overlay').classList.remove('open'); }
+  function closeIdeeModal(){document.getElementById('modal-idee-overlay')?.classList.remove('open');editingIdeeId=null;ideaDraftState={};window._ideeFormStatus=null;}
   async function saveIdee(){
-    const ambianceRaw = document.getElementById('if-ambiance').value.trim();
-    const payload = {
-      titre: document.getElementById('if-titre').value.trim()||'Sans titre',
-      note: document.getElementById('if-note').value.trim(),
-      type: document.getElementById('if-type').value.trim(),
-      genre: document.getElementById('if-genre').value.trim(),
-      statut: document.getElementById('if-statut').value,
-      potentiel: parseInt(document.getElementById('if-potentiel').value)||null,
-      ambiance: ambianceRaw ? ambianceRaw.split(',').map(t=>t.trim()).filter(Boolean) : null,
-      favori: document.getElementById('if-favori').checked,
-    };
-    let error;
-    if (editingIdeeId) ({ error } = await db().from('idees').update(payload).eq('id', editingIdeeId));
-    else { payload.user_id = currentUser.id; ({ error } = await db().from('idees').insert(payload)); }
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closeIdeeModal(); await renderIdees();
+    captureIdeeFormDraft();
+    const i=currentIdeeDraft(),status=window._ideeFormStatus||i.statut||'Graine';if(status==='Abandonnée'){closeIdeeModal();return;}
+    const titleEl=document.getElementById('if-titre'),noteEl=document.getElementById('if-note'),imageEl=document.getElementById('if-image'),colorEl=document.getElementById('if-page-color'),favEl=document.getElementById('if-favori'),typeEl=document.getElementById('if-type'),genreEl=document.getElementById('if-genre'),ambEl=document.getElementById('if-ambiance'),notesEl=document.getElementById('if-notes-rich');
+    const payload={statut:status,note:noteEl?noteEl.value.trim():(i.note||''),image_url:imageEl?imageEl.value.trim()||null:(i.image_url||null),page_color:colorEl?colorEl.value:(i.page_color||'#44385F'),favori:favEl?favEl.checked:!!i.favori,updated_at:new Date().toISOString()};
+    if(status!=='Graine'){payload.titre=titleEl?.value.trim()||i.titre||'Idée';payload.type=typeEl?.value.trim()||null;payload.genre=genreEl?.value.trim()||null;const a=ambEl?.value.trim();payload.ambiance=a?a.split(',').map(x=>x.trim()).filter(Boolean):null;}else if(!editingIdeeId){payload.titre='Idée';}
+    if(notesEl)payload.notes_pelemele=notesEl.innerHTML;else if(i.notes_pelemele)payload.notes_pelemele=i.notes_pelemele;
+    if(status==='Prometteuse'||editingIdeeChars.length)payload.personnages_idees=editingIdeeChars.filter(c=>c.nom?.trim()||c.note?.trim());
+    let error;if(editingIdeeId)({error}=await db().from('idees').update(payload).eq('id',editingIdeeId));else{payload.user_id=currentUser.id;({error}=await db().from('idees').insert(payload));}
+    if(error){alert('Erreur : '+error.message);return;}closeIdeeModal();await renderIdees();
   }
-  async function abandonnerIdee(){
-    if (!confirm('Marquer cette idée comme abandonnée ?')) return;
-    const { error } = await db().from('idees').update({ statut: 'Abandonnée' }).eq('id', editingIdeeId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closeIdeeModal(); await renderIdees();
-  }
-  async function loadIdeeNotes(ideeId){
-    const { data } = await db().from('idee_notes').select('*').eq('idee_id', ideeId).order('created_at', { ascending:false });
-    document.getElementById('if-notes-list').innerHTML = (data||[]).length ? data.map(n=>`<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') : '<div style="font-size:12px; color:var(--text-dim);">Aucune note.</div>';
-  }
-  async function addIdeeNote(){
-    const val = document.getElementById('if-note-new').value.trim();
-    if (!val || !editingIdeeId) return;
-    const { error } = await db().from('idee_notes').insert({ idee_id: editingIdeeId, contenu: val });
-    if (error) { alert('Erreur : ' + error.message); return; }
-    document.getElementById('if-note-new').value = '';
-    await loadIdeeNotes(editingIdeeId);
-  }
+  async function abandonnerIdee(){if(!editingIdeeId||!confirm('Déplacer cette idée dans Abandonnées ? Elle pourra être réactivée plus tard.'))return;const {error}=await db().from('idees').update({statut:'Abandonnée',abandoned_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',editingIdeeId);if(error){alert(error.message);return;}closeIdeeModal();pepiniereView='abandoned';renderIdees();}
+  async function reactiverIdee(id){const {error}=await db().from('idees').update({statut:'À creuser',abandoned_at:null,updated_at:new Date().toISOString()}).eq('id',id);if(error){alert(error.message);return;}pepiniereView='active';renderIdees();}
   async function transformerIdee(type){
-    const idee = ideesData.find(x=>x.id===editingIdeeId);
-    if (!idee) return;
-    if (!confirm(`Transformer « ${idee.titre} » en ${type} ?`)) return;
-    let newId, tableName, updatePayload = { transforme_en_type: type };
-    if (type === 'oeuvre') {
-      tableName = 'oeuvres';
-      const { data, error } = await db().from('oeuvres').insert({ titre: idee.titre, resume: idee.note, user_id: currentUser.id }).select('id').single();
-      if (error) { alert('Erreur : ' + error.message); return; }
-      newId = data.id; updatePayload.transforme_en_oeuvre_id = newId;
-    } else if (type === 'saga') {
-      const { data, error } = await db().from('sagas').insert({ nom: idee.titre, description: idee.note, user_id: currentUser.id }).select('id').single();
-      if (error) { alert('Erreur : ' + error.message); return; }
-      newId = data.id; updatePayload.transforme_en_saga_id = newId;
-    } else if (type === 'recueil') {
-      const { data, error } = await db().from('recueils').insert({ titre: idee.titre, resume: idee.note, user_id: currentUser.id }).select('id').single();
-      if (error) { alert('Erreur : ' + error.message); return; }
-      newId = data.id; updatePayload.transforme_en_recueil_id = newId;
+    if(!editingIdeeId)return;
+    captureIdeeFormDraft();
+    const idee=currentIdeeDraft();
+    const display=ideaDisplayTitle(idee);
+    if(!confirm(`Transformer « ${display} » en ${type} ?`))return;
+    const title=(idee.titre&&idee.titre!=='Idée'&&idee.titre!=='Sans titre')?idee.titre:display;
+    let newId,updatePayload={transforme_en_type:type};
+    if(type==='oeuvre'){
+      const {data,error}=await db().from('oeuvres').insert({titre:title,resume:idee.note||'',user_id:currentUser.id}).select('id').single();
+      if(error){alert('Erreur : '+error.message);return;}newId=data.id;updatePayload.transforme_en_oeuvre_id=newId;
+    }else if(type==='saga'){
+      const {data,error}=await db().from('sagas').insert({nom:title,description:idee.note||'',user_id:currentUser.id}).select('id').single();
+      if(error){alert('Erreur : '+error.message);return;}newId=data.id;updatePayload.transforme_en_saga_id=newId;
+    }else if(type==='recueil'){
+      const {data,error}=await db().from('recueils').insert({titre:title,resume:idee.note||'',user_id:currentUser.id}).select('id').single();
+      if(error){alert('Erreur : '+error.message);return;}newId=data.id;updatePayload.transforme_en_recueil_id=newId;
     }
-    await db().from('idees').update(updatePayload).eq('id', editingIdeeId);
+    await db().from('idees').update(updatePayload).eq('id',editingIdeeId);
     closeIdeeModal();
-    if (type === 'oeuvre') openOeuvreDetail(newId);
-    else if (type === 'saga') openSagaDetail(newId);
-    else if (type === 'recueil') openRecueilDetail(newId);
+    if(type==='oeuvre')openOeuvreDetail(newId);else if(type==='saga')openSagaDetail(newId);else if(type==='recueil')openRecueilDetail(newId);
   }
 
   // ============================================================
@@ -3618,8 +3668,9 @@
   let currentRecueilId = null;
 
   async function renderPoesie(){
+    const poesieBanner=await getPageBanner('poesie');
     const content = document.getElementById('content');
-    content.innerHTML = `
+    content.innerHTML = `${renderPageImageBanner(poesieBanner,'Recueils de poésie')}
       <div class="head-row"><h2>Poésie</h2><button class="btn-primary" onclick="openRecueilModal()">+ Nouveau recueil</button></div>
       <div id="recueils-zone"><div class="status-line">Chargement…</div></div>
     `;
@@ -4019,9 +4070,9 @@
       </div>
       <div class="panel">
         <h2>Images</h2>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Colle l'URL d'une image déjà hébergée quelque part (pas encore d'upload direct).</p>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">URL possible, ou téléverse directement une image depuis ton ordinateur.</p>
         <label>URL de la couverture</label><input id="rp-couverture" value="${r.couverture||''}" placeholder="https://...">
-        <label style="margin-top:10px;">URL de la bannière</label><input id="rp-banniere" value="${r.banniere||''}" placeholder="https://...">
+        <label style="margin-top:10px;">URL de la bannière</label><input id="rp-banniere" value="${r.banniere||''}" placeholder="https://..."><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('recueils','${r.id}',this,'rp-banniere')"></label></div>
         <button class="btn-primary" style="margin-top:16px;" onclick="saveRecueilImages()">Enregistrer les images</button>
       </div>
       <div class="panel"><h2>Apparence</h2><p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Le mode clair/sombre reste global. Le recueil personnalise son fond et son accent.</p><div class="row2"><div><label>Couleur de page</label><input type="color" id="rp-page-color" value="${r.page_color||globalAppearance.themeColor}" style="height:42px;padding:4px"></div><div><label>Couleur d’accent</label><input type="color" id="rp-accent" value="${r.couleur_accent||globalAppearance.accent}" style="height:42px;padding:4px"></div></div><button class="btn-primary" style="margin-top:16px" onclick="saveRecueilApparence()">Appliquer</button></div>
