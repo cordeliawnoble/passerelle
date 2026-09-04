@@ -406,6 +406,12 @@
   .admin-tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0 18px}.admin-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 13px;color:var(--text-dim);cursor:pointer;font-family:'Lora',serif}.admin-tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
   .metadata-row{display:grid;grid-template-columns:48px 1fr 70px auto;gap:8px;align-items:center;margin-bottom:8px}.metadata-row input[type=color]{height:38px;padding:3px}
   @media(max-width:800px){.saga-info-layout,.saga-lower-grid{grid-template-columns:1fr}.entity-gallery{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
+  /* V5.6.1 — contraste adaptatif des cartes galerie */
+  .pep-card-inner,.entity-card-inner{color:var(--gallery-text,var(--text));}
+  .pep-card h3,.entity-card h3{color:var(--gallery-text,var(--text));text-shadow:var(--gallery-shadow,0 1px 12px rgba(0,0,0,.22));}
+  .pep-card-pitch,.pep-card-foot,.entity-card .meta-line{color:var(--gallery-muted,var(--gallery-text,var(--text)));}
+  .pep-tag,.meta-chip{background:var(--gallery-chip-bg,rgba(18,13,28,.20));border-color:var(--gallery-chip-border,rgba(255,255,255,.22));color:var(--gallery-text,var(--text));}
+  .pep-card::before,.entity-card::before{background:var(--gallery-gradient,linear-gradient(to bottom,color-mix(in srgb,var(--idea-page,var(--card-page)) 8%,transparent),color-mix(in srgb,var(--idea-page,var(--card-page)) 34%,transparent) 38%,color-mix(in srgb,var(--idea-page,var(--card-page)) 90%,transparent) 76%,var(--idea-page,var(--card-page))))}
 
 
 /* ===== V5.5 Sous-saga / Back-office tabs ===== */
@@ -438,7 +444,7 @@
     try{
       const { data: { session }, error } = await sb.auth.getSession();
       if(error) throw error;
-      if (session) { currentUser = session.user; await loadGlobalAppearance(); renderShell(); navigate('accueil'); }
+      if (session) { currentUser = session.user; await loadGlobalAppearance(); ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
       else renderAuth();
     }catch(err){
       console.error('Passerelle init error', err);
@@ -474,6 +480,7 @@
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
     currentUser = data.user;
+    ensureMonthlyBackupV561().catch(console.warn);
     renderShell(); navigate('accueil');
   }
 
@@ -485,7 +492,7 @@
     msg.textContent = 'Création du compte…'; msg.className = 'auth-msg';
     const { data, error } = await sb.auth.signUp({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
-    if (data.session) { currentUser = data.user; renderShell(); navigate('accueil'); }
+    if (data.session) { currentUser = data.user; ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
     else { msg.textContent = 'Compte créé — vérifie ta boîte mail, puis connecte-toi.'; msg.className = 'auth-msg ok'; }
   }
 
@@ -704,7 +711,7 @@
   const ADMIN_NAV = [
     ['collections','Collections'], ['sagas','Sagas'], ['sous-sagas','Sous-sagas'],
     ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'],
-    ['pepiniere','Pépinière'], ['configuration','Configuration']
+    ['pepiniere','Pépinière'], ['configuration','Configuration'], ['sauvegardes','Sauvegarde & restauration']
   ];
 
   function renderAdminSidebar(){
@@ -720,6 +727,7 @@
       <div class="nav-group">Réglages</div>
       <nav class="admin-mode-nav">
         <div class="nav-link admin-nav-link ${adminTab==='configuration'?'active':''}" data-admin-key="configuration" onclick="adminNavigate('configuration')">Configuration</div>
+        <div class="nav-link admin-nav-link ${adminTab==='sauvegardes'?'active':''}" data-admin-key="sauvegardes" onclick="adminNavigate('sauvegardes')">Sauvegarde & restauration</div>
       </nav>
       <div class="admin-mode-footer">${safeText(currentUser?.email||'')}<br><button class="tiny-btn" style="margin-top:8px" onclick="doLogout()">Déconnexion</button></div>`;
   }
@@ -748,6 +756,7 @@
     if(tab==='personnages') return renderAdminPersonnagesPage();
     if(tab==='pepiniere') return renderAdminPepinierePage();
     if(tab==='configuration') return renderAdminConfiguration(content);
+    if(tab==='sauvegardes') return renderAdminSauvegardes(content);
   }
 
   function adminPageHead(title,desc,buttonHtml=''){
@@ -1036,6 +1045,23 @@
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
     content.innerHTML=adminPageHead('Pépinière','Capturez et modifiez les graines avant leur promotion.',`<button class="btn-primary" onclick="openIdeeModal()">+ Nouvelle graine</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une graine…" oninput="filterAdminCards('admin-ideas-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ideas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText(((x.titre||'')+' '+(x.genre||'')+' '+(x.type||'')).toLowerCase())}" onclick="openIdeeModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🌱</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.type||'Idée')} · ${safeText(x.genre||'Genre non défini')}<br>${safeText(x.statut||'Graine')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune graine pour le moment.')}</div>`;
   }
+
+  async function ensureMonthlyBackupV561(){
+    if(!currentUser)return; const month=new Date().toISOString().slice(0,7);
+    const {data,error}=await db().from('sauvegardes').select('id').eq('user_id',currentUser.id).eq('type_sauvegarde','automatique').eq('periode',month).limit(1);
+    if(error)return; if(data?.length)return;
+    await db().rpc('creer_sauvegarde',{p_type:'automatique'});
+  }
+  async function renderAdminSauvegardes(zone){
+    zone.innerHTML=adminPageHead('Sauvegarde & restauration','Six mois glissants de données Passerelle, sans dépendance à Google Drive.',`<button class="btn-primary" onclick="createBackupNowV561()">🛡️ Sauvegarder maintenant</button>`)+`<div class="status-line">Chargement des archives…</div>`;
+    const {data,error}=await db().from('sauvegardes').select('id,type_sauvegarde,periode,created_at,taille_octets,nb_tables,nb_lignes').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+    if(error){zone.innerHTML=adminPageHead('Sauvegarde & restauration','Le module nécessite la migration V5.6.1.')+adminEmpty(safeText(error.message));return;}
+    const autos=(data||[]).filter(x=>x.type_sauvegarde==='automatique'); const last=autos[0]; const next=new Date();next.setMonth(next.getMonth()+1,1);
+    zone.innerHTML=adminPageHead('Sauvegarde & restauration','Les sauvegardes automatiques sont créées à la première ouverture de Passerelle de chaque mois et les six dernières sont conservées.',`<button class="btn-primary" onclick="createBackupNowV561()">🛡️ Sauvegarder maintenant</button>`)+`<div class="admin-section"><div class="admin-section-grid three"><div class="stat-card"><h3>Dernière automatique</h3><strong>${last?new Date(last.created_at).toLocaleDateString('fr-FR'):'Aucune'}</strong></div><div class="stat-card"><h3>Prochaine période</h3><strong>${next.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong></div><div class="stat-card"><h3>Rétention</h3><strong>6 automatiques + 3 manuelles</strong></div></div><p class="admin-section-sub" style="margin-top:12px">Avant une restauration, Passerelle crée automatiquement une sauvegarde de sécurité de l’état actuel.</p></div><div class="admin-section"><h2>Archives</h2><div style="overflow:auto"><table class="admin-table"><thead><tr><th>Date</th><th>Type</th><th>Période</th><th>Contenu</th><th></th></tr></thead><tbody>${(data||[]).map(b=>`<tr><td>${new Date(b.created_at).toLocaleString('fr-FR')}</td><td>${b.type_sauvegarde==='automatique'?'🕰️ Automatique':b.type_sauvegarde==='securite'?'🪂 Sécurité':'🛡️ Manuelle'}</td><td>${safeText(b.periode||'—')}</td><td>${b.nb_tables||0} tables · ${b.nb_lignes||0} lignes</td><td style="white-space:nowrap"><button class="tiny-btn" onclick="downloadBackupV561('${b.id}')">Télécharger</button> <button class="tiny-btn danger-btn" onclick="restoreBackupV561('${b.id}')">Restaurer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucune archive.</td></tr>'}</tbody></table></div></div>`;
+  }
+  async function createBackupNowV561(){const {data,error}=await db().rpc('creer_sauvegarde',{p_type:'manuelle'});if(error)return alert('Sauvegarde impossible : '+error.message);alert('Sauvegarde créée. 🛡️');renderAdminSauvegardes(document.getElementById('content'));}
+  async function downloadBackupV561(id){const {data,error}=await db().from('sauvegardes').select('*').eq('id',id).eq('user_id',currentUser.id).single();if(error)return alert(error.message);const blob=new Blob([JSON.stringify({passerelle_backup:1,id:data.id,created_at:data.created_at,type:data.type_sauvegarde,periode:data.periode,data:data.contenu},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Passerelle_Backup_${(data.created_at||new Date().toISOString()).slice(0,10)}_${data.type_sauvegarde}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+  async function restoreBackupV561(id){if(!confirm('Restaurer cette archive remplacera les données Passerelle actuelles par cet instantané. Une sauvegarde de sécurité sera créée juste avant. Continuer ?'))return;const phrase=prompt('Pour confirmer, écris RESTAURER :');if(phrase!=='RESTAURER')return;const {error}=await db().rpc('restaurer_sauvegarde',{p_sauvegarde_id:id});if(error)return alert('Restauration annulée : '+error.message);alert('Restauration terminée. Passerelle va se recharger.');location.reload();}
 
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
@@ -1648,10 +1674,17 @@
   // ============================================================
   // V5.6 — langage visuel des galeries + Saga auditée
   // ============================================================
+  function galleryContrastVars(hex){
+    const raw=(hex||'#EDE7F6').replace('#',''); const h=raw.length===3?raw.split('').map(x=>x+x).join(''):raw.padEnd(6,'f').slice(0,6);
+    const r=parseInt(h.slice(0,2),16)||0,g=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0;
+    const lum=(0.2126*r+0.7152*g+0.0722*b)/255; const dark=lum<0.56;
+    if(dark)return `--gallery-text:#fffafc;--gallery-muted:rgba(255,250,252,.82);--gallery-chip-bg:rgba(8,6,16,.34);--gallery-chip-border:rgba(255,255,255,.28);--gallery-shadow:0 2px 14px rgba(0,0,0,.48);--gallery-gradient:linear-gradient(to bottom,rgba(${r},${g},${b},.08) 0%,rgba(${r},${g},${b},.40) 38%,rgba(${r},${g},${b},.92) 72%,rgb(${r},${g},${b}) 100%);`;
+    return `--gallery-text:#241d31;--gallery-muted:rgba(36,29,49,.78);--gallery-chip-bg:rgba(255,255,255,.46);--gallery-chip-border:rgba(36,29,49,.14);--gallery-shadow:0 1px 12px rgba(255,255,255,.34);--gallery-gradient:linear-gradient(to bottom,rgba(${r},${g},${b},.08) 0%,rgba(${r},${g},${b},.42) 36%,rgba(${r},${g},${b},.94) 70%,rgb(${r},${g},${b}) 100%);`;
+  }
   function entityGalleryCard({title,image,pageColor,tags=[],top='',onclick='',preview=null}){
     const pc=safeText(pageColor||'#EDE7F6');
     const bg=image?`style="background-image:url('${safeText(image).replaceAll("'",'&#39;')}')"`:'class="entity-card-bg default"';
-    return `<article class="entity-card" style="--card-page:${pc}" onclick="${onclick}"><div ${image?`class="entity-card-bg" ${bg}`:bg}></div><div class="entity-card-inner"><div class="entity-card-top"><div style="display:flex;gap:5px;flex-wrap:wrap">${top?`<span class="meta-chip">${safeText(top)}</span>`:''}</div>${preview?`<button class="entity-preview-btn" onclick="event.stopPropagation();${preview}">◧ Aperçu</button>`:''}</div><div class="entity-card-spacer"></div><h3>${safeText(title||'Sans titre')}</h3><div class="pep-tags">${tags.filter(Boolean).map(t=>`<span class="meta-chip">${safeText(t)}</span>`).join('')}</div></div></article>`;
+    return `<article class="entity-card" style="--card-page:${pc};${galleryContrastVars(pageColor||'#EDE7F6')}" onclick="${onclick}"><div ${image?`class="entity-card-bg" ${bg}`:bg}></div><div class="entity-card-inner"><div class="entity-card-top"><div style="display:flex;gap:5px;flex-wrap:wrap">${top?`<span class="meta-chip">${safeText(top)}</span>`:''}</div>${preview?`<button class="entity-preview-btn" onclick="event.stopPropagation();${preview}">◧ Aperçu</button>`:''}</div><div class="entity-card-spacer"></div><h3>${safeText(title||'Sans titre')}</h3><div class="pep-tags">${tags.filter(Boolean).map(t=>`<span class="meta-chip">${safeText(t)}</span>`).join('')}</div></div></article>`;
   }
   function colorForCard(x){return x?.page_color||'#EDE7F6'}
   async function sagaMetadataBundle(){
@@ -3000,7 +3033,7 @@
   async function renderOeuvreRelectureV2(zone){
     zone.innerHTML=`<div class="status-line">Chargement…</div>`;
     let {data:rs}=await db().from('relectures').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false}).limit(1);
-    if(!rs?.length){zone.innerHTML=`<div class="empty">Aucune relecture démarrée.<br><br><button class="btn-primary" onclick="startRelecture();setTimeout(()=>showOeuvreTab('relecture'),400)">Démarrer une relecture</button></div>`;return;}
+    if(!rs?.length){const {data:manuscriptChaps}=await db().from('chapitres').select('id,nb_mots').eq('oeuvre_id',currentOeuvreId);const hasManuscript=(manuscriptChaps||[]).some(c=>(c.nb_mots||0)>0);zone.innerHTML=hasManuscript?`<div class="empty">Aucune relecture en cours.<br><br><button class="btn-primary" onclick="startRelecture();setTimeout(()=>showOeuvreTab('relecture'),400)">Démarrer une relecture</button></div>`:`<div class="empty"><strong>Aucune relecture en cours.</strong><br><br>La relecture apparaîtra ici quand le manuscrit contiendra des chapitres écrits.</div>`;return;}
     currentRelectureV2=rs[0];
     const [{data:chaps},{data:states},{data:checks},{data:links}]=await Promise.all([
       db().from('chapitres').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre'),
@@ -3026,7 +3059,9 @@
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
     let { data: relectures } = await db().from('relectures').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false });
     if (!relectures || !relectures.length) {
-      zone.innerHTML = `<div class="empty">Aucune relecture démarrée pour cette œuvre.<br><br><button class="btn-primary" onclick="startRelecture()">Démarrer une relecture</button></div>`;
+      const {data:manuscriptChaps}=await db().from('chapitres').select('id,nb_mots').eq('oeuvre_id',currentOeuvreId);
+      const hasManuscript=(manuscriptChaps||[]).some(c=>(c.nb_mots||0)>0);
+      zone.innerHTML = hasManuscript ? `<div class="empty">Aucune relecture en cours.<br><br><button class="btn-primary" onclick="startRelecture()">Démarrer une relecture</button></div>` : `<div class="empty"><strong>Aucune relecture en cours.</strong><br><br>La relecture apparaîtra ici quand le manuscrit contiendra des chapitres écrits.</div>`;
       return;
     }
     const relecture = relectures[0];
@@ -3633,7 +3668,7 @@
   function renderIdeaCard(i,idx){
     const status=i.statut==='En sommeil'?'À creuser':(i.statut||'Graine');const tags=[];if(i.type)tags.push(`${ideaTagEmoji(i.type,'type')} ${i.type}`);if(i.genre)tags.push(`${ideaTagEmoji(i.genre,'genre')} ${i.genre}`);(i.ambiance||[]).slice(0,2).forEach(a=>tags.push(`${ideaTagEmoji(a)} ${a}`));
     const page=i.page_color||'#2F2941';const bg=i.image_url?`style="background-image:url('${safeText(i.image_url).replaceAll("'",'&#39;')}')"`:`class="pep-card-bg default-${(Number(i.numero)||idx)%5}"`;
-    return `<article class="pep-card" style="--idea-page:${safeText(page)}" onclick="openIdeeModal('${i.id}')"><div ${i.image_url?`class="pep-card-bg" ${bg}`:bg}></div><div class="pep-card-inner"><div class="pep-card-top">${ideaStatusBadge(status)}<button class="pep-fav" onclick="event.stopPropagation();toggleFavoriIdee('${i.id}',${!!i.favori})" title="Favori">${i.favori?'★':'☆'}</button></div><div class="pep-card-spacer"></div><h3>${safeText(ideaDisplayTitle(i))}</h3><p class="pep-card-pitch">${safeText(i.note||'Une idée encore toute petite…')}</p><div class="pep-tags">${tags.map(t=>`<span class="pep-tag">${safeText(t)}</span>`).join('')}</div><div class="pep-card-foot">${i.updated_at?'Modifiée '+joursDepuisGeneric(i.updated_at):'Créée '+joursDepuisGeneric(i.created_at)}</div></div></article>`;
+    return `<article class="pep-card" style="--idea-page:${safeText(page)};${galleryContrastVars(page)}" onclick="openIdeeModal('${i.id}')"><div ${i.image_url?`class="pep-card-bg" ${bg}`:bg}></div><div class="pep-card-inner"><div class="pep-card-top">${ideaStatusBadge(status)}<button class="pep-fav" onclick="event.stopPropagation();toggleFavoriIdee('${i.id}',${!!i.favori})" title="Favori">${i.favori?'★':'☆'}</button></div><div class="pep-card-spacer"></div><h3>${safeText(ideaDisplayTitle(i))}</h3><p class="pep-card-pitch">${safeText(i.note||'Une idée encore toute petite…')}</p><div class="pep-tags">${tags.map(t=>`<span class="pep-tag">${safeText(t)}</span>`).join('')}</div><div class="pep-card-foot">${i.updated_at?'Modifiée '+joursDepuisGeneric(i.updated_at):'Créée '+joursDepuisGeneric(i.created_at)}</div></div></article>`;
   }
   function renderAbandonedIdeas(zone){
     const data=ideesData.filter(i=>i.statut==='Abandonnée');
