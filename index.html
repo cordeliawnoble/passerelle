@@ -1706,26 +1706,48 @@
 
   async function renderSagaInformations(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
-    const [sr,ssr,wr,por,chr,mr,codr]=await Promise.all([
-      db().from('sagas').select('*').eq('id',currentSagaId).single(),
-      db().from('sous_sagas').select('id').eq('saga_id',currentSagaId),
-      db().from('oeuvres').select('id').eq('saga_id',currentSagaId),
-      db().from('personnages_oeuvres').select('personnage_id,oeuvres!inner(saga_id)').eq('oeuvres.saga_id',currentSagaId),
-      db().from('chronologie_evenements').select('*').or(`saga_id.eq.${currentSagaId},sous_saga_id.not.is.null`).order('periode_ordre'),
-      db().from('medias').select('*').limit(80),
-      db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre')
-    ]);
-    const s=sr.data||{}; const ssIds=(ssr.data||[]).map(x=>x.id); const allWorks=(wr.data||[]);
-    const childWorks=await db().from('oeuvres').select('id').in('sous_saga_id',ssIds.length?ssIds:['00000000-0000-0000-0000-000000000000']);
-    const nbWorks=new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)]).size;
-    let events=(chr.data||[]).filter(e=>e.saga_id===currentSagaId||ssIds.includes(e.sous_saga_id));
-    const keyEvents=events.filter(e=>e.repere_cle_saga).slice(0,6);
-    const periods=events.map(e=>e.periode_label||e.date_evenement).filter(Boolean);
-    const period=s.periode_couverte||((periods.length>1)?`${periods[0]} → ${periods[periods.length-1]}`:(periods[0]||'—'));
-    const tags=(s.mots_cles||[]).map(x=>`<span class="tag">${safeText(x)}</span>`).join('');
-    const codexPlaces=(codr.data||[]).filter(p=>p.categorie==='Lieu'&&p.emblematique).slice(0,4);
-    const workIds=[...new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)])];const media=(mr.data||[]).filter(m=>mediaImage(m)&&(m.saga_id===currentSagaId||ssIds.includes(m.sous_saga_id)||workIds.includes(m.oeuvre_id))).slice(0,9);
-    zone.innerHTML=`<div class="saga-info-layout"><section class="panel"><h2>À propos de la saga</h2><div>${simpleMarkdown(s.description||s.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Statistiques de la saga</h2><div class="stat-cards-row" style="grid-template-columns:1fr"><div class="stat-card"><h3>Sous-sagas</h3><div class="stat-big">${ssIds.length}</div></div><div class="stat-card"><h3>Tomes / œuvres</h3><div class="stat-big">${nbWorks}</div></div><div class="stat-card"><h3>Période couverte</h3><div style="font-family:'Lora',serif;font-size:18px;margin-top:8px">${safeText(period)}</div></div></div></section></div><section class="panel"><h2>⭐ Repères clés de l’histoire</h2>${keyEvents.length?`<div style="display:grid;gap:9px">${keyEvents.map(e=>`<div style="display:grid;grid-template-columns:130px 14px 1fr;gap:10px;align-items:center;cursor:pointer" onclick="openChronoDrawer('${e.id}')"><strong>${safeText(e.periode_label||e.date_evenement||'~')}</strong><span style="width:10px;height:10px;border-radius:50%;background:${safeText(e.couleur||'var(--accent)')}"></span><span>${safeText(e.titre)}</span></div>`).join('')}</div>`:'<div class="empty">Coche « Repère clé Saga » dans la Chronologie pour faire remonter un événement ici.</div>'}</section><div class="saga-lower-grid"><section class="panel"><h2>🗺️ Lieux emblématiques</h2>${codexPlaces.length?`<div class="entity-gallery">${codexPlaces.map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:['Lieu'],onclick:`openSagaCodexPageV56('${p.id}')`})).join('')}</div>`:'<div class="empty">Les entrées Codex de catégorie « Lieu » marquées emblématiques apparaîtront ici.</div>'}</section><section class="panel"><h2>🖼️ Moodboard</h2>${media.length?`<div class="mini-moodboard">${media.slice(((new Date().getHours()<12)?0:3),((new Date().getHours()<12)?0:3)+6).map(m=>`<img src="${safeText(mediaImage(m))}" alt="">`).join('')}</div>`:'<div class="empty">Les médias liés à la saga et à ses enfants nourriront ce moodboard.</div>'}</section></div>`;
+    try{
+      const [sr,ssr,wr,chr,mr,codr]=await Promise.all([
+        db().from('sagas').select('*').eq('id',currentSagaId).single(),
+        db().from('sous_sagas').select('id').eq('saga_id',currentSagaId),
+        db().from('oeuvres').select('id').eq('saga_id',currentSagaId),
+        db().from('chronologie_evenements').select('*').order('periode_ordre'),
+        db().from('medias').select('*').limit(80),
+        db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre')
+      ]);
+
+      const firstError=[sr,ssr,wr,chr,mr,codr].find(r=>r?.error)?.error;
+      if(firstError) throw firstError;
+
+      const s=sr.data||{};
+      const ssIds=(ssr.data||[]).map(x=>x.id);
+      const allWorks=(wr.data||[]);
+      const childWorks=ssIds.length
+        ? await db().from('oeuvres').select('id').in('sous_saga_id',ssIds)
+        : {data:[],error:null};
+
+      if(childWorks.error) throw childWorks.error;
+
+      const nbWorks=new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)]).size;
+      const events=(chr.data||[]).filter(e=>e.saga_id===currentSagaId||ssIds.includes(e.sous_saga_id));
+      const keyEvents=events.filter(e=>e.repere_cle_saga).slice(0,6);
+      const periods=events.map(e=>e.periode_label||e.date_evenement).filter(Boolean);
+      const period=s.periode_couverte||((periods.length>1)?`${periods[0]} → ${periods[periods.length-1]}`:(periods[0]||'—'));
+
+      const rawTags=Array.isArray(s.mots_cles)
+        ? s.mots_cles
+        : (typeof s.mots_cles==='string' ? s.mots_cles.split(',').map(x=>x.trim()).filter(Boolean) : []);
+      const tags=rawTags.map(x=>`<span class="tag">${safeText(x)}</span>`).join('');
+
+      const codexPlaces=(codr.data||[]).filter(p=>p.categorie==='Lieu'&&p.emblematique).slice(0,4);
+      const workIds=[...new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)])];
+      const media=(mr.data||[]).filter(m=>mediaImage(m)&&(m.saga_id===currentSagaId||ssIds.includes(m.sous_saga_id)||workIds.includes(m.oeuvre_id))).slice(0,9);
+
+      zone.innerHTML=`<div class="saga-info-layout"><section class="panel"><h2>À propos de la saga</h2><div>${simpleMarkdown(s.description||s.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Statistiques de la saga</h2><div class="stat-cards-row" style="grid-template-columns:1fr"><div class="stat-card"><h3>Sous-sagas</h3><div class="stat-big">${ssIds.length}</div></div><div class="stat-card"><h3>Tomes / œuvres</h3><div class="stat-big">${nbWorks}</div></div><div class="stat-card"><h3>Période couverte</h3><div style="font-family:'Lora',serif;font-size:18px;margin-top:8px">${safeText(period)}</div></div></div></section></div><section class="panel"><h2>⭐ Repères clés de l’histoire</h2>${keyEvents.length?`<div style="display:grid;gap:9px">${keyEvents.map(e=>`<div style="display:grid;grid-template-columns:130px 14px 1fr;gap:10px;align-items:center;cursor:pointer" onclick="openChronoDrawer('${e.id}')"><strong>${safeText(e.periode_label||e.date_evenement||'~')}</strong><span style="width:10px;height:10px;border-radius:50%;background:${safeText(e.couleur||'var(--accent)')}"></span><span>${safeText(e.titre)}</span></div>`).join('')}</div>`:'<div class="empty">Coche « Repère clé Saga » dans la Chronologie pour faire remonter un événement ici.</div>'}</section><div class="saga-lower-grid"><section class="panel"><h2>🗺️ Lieux emblématiques</h2>${codexPlaces.length?`<div class="entity-gallery">${codexPlaces.map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:['Lieu'],onclick:`openSagaCodexPageV56('${p.id}')`})).join('')}</div>`:'<div class="empty">Les entrées Codex de catégorie « Lieu » marquées emblématiques apparaîtront ici.</div>'}</section><section class="panel"><h2>🖼️ Moodboard</h2>${media.length?`<div class="mini-moodboard">${media.slice(((new Date().getHours()<12)?0:3),((new Date().getHours()<12)?0:3)+6).map(m=>`<img src="${safeText(mediaImage(m))}" alt="">`).join('')}</div>`:'<div class="empty">Les médias liés à la saga et à ses enfants nourriront ce moodboard.</div>'}</section></div>`;
+    }catch(err){
+      console.error('Saga Informations',err);
+      zone.innerHTML=`<div class="empty"><strong>Impossible de charger les informations de la saga.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`;
+    }
   }
 
   async function renderSagaSousSagasV56(zone){
@@ -1932,18 +1954,33 @@
 
   async function renderSousSagaInformations(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
-    const [ssR,worksR,chapR]=await Promise.all([
-      db().from('sous_sagas').select('*,sagas(nom,univers_id)').eq('id',currentSousSagaId).single(),
-      db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga,statut_editorial_actuel').eq('sous_saga_id',currentSousSagaId),
-      db().from('oeuvres').select('id').eq('sous_saga_id',currentSousSagaId)
-    ]);
-    const ss=ssR.data||{}, works=worksR.data||[];
-    let totalWords=works.reduce((a,o)=>a+(Number(o.mots_ecrits)||0),0);
-    let active=works.filter(o=>/cours|écriture|prepa|prépa/i.test((o.statut||'')+' '+(o.statut_editorial_actuel||''))).length;
-    const tags=(ss.mots_cles||ss.ambiance_tags||[]).map(x=>`<span class="ss-pill">✨ ${safeText(x)}</span>`).join('');
-    zone.innerHTML=`<div class="ss-kpis"><div class="stat-card"><h3>Œuvres liées</h3><div class="stat-big">${works.length}</div></div><div class="stat-card"><h3>En cours / préparation</h3><div class="stat-big">${active}</div></div><div class="stat-card"><h3>Mots écrits cumulés</h3><div class="stat-big">${totalWords.toLocaleString('fr-FR')}</div></div></div>
-      <div class="ss-info-grid"><section class="panel"><h2>À propos de la sous-saga</h2><div>${simpleMarkdown(ss.description||ss.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Informations clés</h2><p><strong>Saga :</strong> ${safeText(ss.sagas?.nom||'—')}</p><p><strong>Genre dominant :</strong> ${safeText(ss.genre||'—')}</p><p><strong>Temporalité :</strong> ${safeText(ss.temporalite||'—')}</p><p><strong>Cadre :</strong> ${safeText(ss.lieu_principal||'—')}</p><p><strong>Nombre d’œuvres :</strong> ${works.length}</p></section></div>
-      ${ss.citation?`<div class="panel" style="text-align:center;margin-top:18px;font:italic 17px 'Lora',serif">✦<br>${safeText(ss.citation)}</div>`:''}`;
+    try{
+      const [ssR,worksR]=await Promise.all([
+        db().from('sous_sagas').select('*,sagas(nom,univers_id)').eq('id',currentSousSagaId).single(),
+        db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga,statut_editorial_actuel').eq('sous_saga_id',currentSousSagaId)
+      ]);
+
+      const firstError=[ssR,worksR].find(r=>r?.error)?.error;
+      if(firstError) throw firstError;
+
+      const ss=ssR.data||{}, works=worksR.data||[];
+      const totalWords=works.reduce((a,o)=>a+(Number(o.mots_ecrits)||0),0);
+      const active=works.filter(o=>/cours|écriture|prepa|prépa/i.test((o.statut||'')+' '+(o.statut_editorial_actuel||''))).length;
+
+      const rawTags=Array.isArray(ss.mots_cles)
+        ? ss.mots_cles
+        : (Array.isArray(ss.ambiance_tags)
+            ? ss.ambiance_tags
+            : (typeof ss.mots_cles==='string' ? ss.mots_cles.split(',').map(x=>x.trim()).filter(Boolean) : []));
+      const tags=rawTags.map(x=>`<span class="ss-pill">✨ ${safeText(x)}</span>`).join('');
+
+      zone.innerHTML=`<div class="ss-kpis"><div class="stat-card"><h3>Œuvres liées</h3><div class="stat-big">${works.length}</div></div><div class="stat-card"><h3>En cours / préparation</h3><div class="stat-big">${active}</div></div><div class="stat-card"><h3>Mots écrits cumulés</h3><div class="stat-big">${totalWords.toLocaleString('fr-FR')}</div></div></div>
+        <div class="ss-info-grid"><section class="panel"><h2>À propos de la sous-saga</h2><div>${simpleMarkdown(ss.description||ss.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Informations clés</h2><p><strong>Saga :</strong> ${safeText(ss.sagas?.nom||'—')}</p><p><strong>Genre dominant :</strong> ${safeText(ss.genre||'—')}</p><p><strong>Temporalité :</strong> ${safeText(ss.temporalite||'—')}</p><p><strong>Cadre :</strong> ${safeText(ss.lieu_principal||'—')}</p><p><strong>Nombre d’œuvres :</strong> ${works.length}</p></section></div>
+        ${ss.citation?`<div class="panel" style="text-align:center;margin-top:18px;font:italic 17px 'Lora',serif">✦<br>${safeText(ss.citation)}</div>`:''}`;
+    }catch(err){
+      console.error('Sous-saga Informations',err);
+      zone.innerHTML=`<div class="empty"><strong>Impossible de charger les informations de la sous-saga.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`;
+    }
   }
 
   async function renderSousSagaOeuvres(zone){
