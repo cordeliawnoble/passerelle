@@ -1035,7 +1035,107 @@
     const content=document.getElementById('content');
     const {data,error}=await db().from('recueils').select('*').order('created_at',{ascending:false});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Recueils de poésie','Créez et organisez les recueils.',`<button class="btn-primary" onclick="openRecueilModal()">+ Nouveau recueil</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher un recueil…" oninput="filterAdminCards('admin-recueils-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-recueils-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.titre||x.nom||'').toLowerCase())}" onclick="openRecueilModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.titre||x.nom||'R')}</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||x.nom||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.description||x.sous_titre||'Recueil de poésie')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucun recueil pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Recueils de poésie','Créez et organisez les recueils.',`<button class="btn-primary" onclick="openRecueilModal()">+ Nouveau recueil</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher un recueil…" oninput="filterAdminCards('admin-recueils-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-recueils-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.titre||x.nom||'').toLowerCase())}" onclick="openAdminRecueilEditorV565('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.titre||x.nom||'R')}</div></div><div class="admin-catalog-body"><h3>${safeText(x.titre||x.nom||'Sans titre')}</h3><div class="admin-catalog-meta">${safeText(x.description||x.sous_titre||'Recueil de poésie')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucun recueil pour le moment.')}</div>`;
+  }
+
+
+  let adminRecueilTabV565='information';
+  let adminRecueilIdV565=null;
+
+  async function openAdminRecueilEditorV565(id){
+    adminRecueilIdV565=id;
+    adminRecueilTabV565='information';
+    adminTab='recueils';
+    document.querySelectorAll('.admin-nav-link').forEach(el=>el.classList.toggle('active',el.dataset.adminKey==='recueils'));
+    await renderAdminRecueilEditorV565();
+  }
+
+  async function renderAdminRecueilEditorV565(){
+    const content=document.getElementById('content');
+    const {data:r,error}=await db().from('recueils').select('*').eq('id',adminRecueilIdV565).single();
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    content.innerHTML=`<div class="admin-work-editor">
+      <div class="admin-work-topbar">
+        <div><div class="admin-work-kicker">Administration · Recueils de poésie</div><h1>${safeText(r.titre||'Sans titre')}</h1></div>
+        <div class="admin-work-top-actions">
+          <button class="btn-secondary" onclick="renderAdminRecueilsPage()">← Catalogue</button>
+          <button class="btn-secondary" onclick="openRecueilDetail('${r.id}')">Ouvrir dans Passerelle ↗</button>
+        </div>
+      </div>
+      <div class="admin-editor-tabs">
+        <button class="${adminRecueilTabV565==='information'?'active':''}" onclick="setAdminRecueilTabV565('information')">Informations</button>
+        <button class="${adminRecueilTabV565==='configuration'?'active':''}" onclick="setAdminRecueilTabV565('configuration')">Configuration</button>
+        <button class="${adminRecueilTabV565==='archivage'?'active':''}" onclick="setAdminRecueilTabV565('archivage')">Archivage</button>
+      </div>
+      <div id="admin-recueil-v565"></div>
+    </div>`;
+    renderAdminRecueilTabV565(r);
+  }
+
+  function setAdminRecueilTabV565(tab){adminRecueilTabV565=tab;renderAdminRecueilEditorV565()}
+
+  function renderAdminRecueilTabV565(r){
+    const z=document.getElementById('admin-recueil-v565');
+    if(adminRecueilTabV565==='information'){
+      z.innerHTML=`<section class="admin-section">
+        <h2>Informations</h2>
+        <div class="admin-section-grid">
+          <div class="admin-field-full"><label>Titre</label><input id="ar565-titre" value="${safeText(r.titre||'')}"></div>
+          <div><label>Type de recueil</label><select id="ar565-type"><option value="original" ${r.type_recueil==='original'?'selected':''}>Recueil original</option><option value="anthologie" ${r.type_recueil==='anthologie'?'selected':''}>Anthologie</option></select></div>
+          <div><label>Statut</label><input id="ar565-statut" value="${safeText(r.statut||'')}"></div>
+          <div><label>Thème principal</label><input id="ar565-theme" value="${safeText(r.theme_principal||'')}"></div>
+          <div><label>Objectif de poèmes</label><input id="ar565-objectif" type="number" value="${safeText(r.objectif_poemes||'')}"></div>
+          <div class="admin-field-full"><label>À propos / résumé canonique</label><textarea id="ar565-resume" style="min-height:180px">${safeText(r.a_propos||r.resume||'')}</textarea></div>
+        </div>
+        <button class="btn-primary" onclick="saveAdminRecueilInfoV565()">Enregistrer</button>
+      </section>`;
+    }else if(adminRecueilTabV565==='configuration'){
+      z.innerHTML=`<section class="admin-section">
+        <h2>Configuration</h2>
+        <p class="admin-section-sub">Couverture, bannière et identité visuelle du recueil.</p>
+        <div class="admin-section-grid">
+          <div class="admin-field-full"><label>URL de la couverture</label><input id="ar565-cover" value="${safeText(r.couverture||'')}" placeholder="https://..."></div>
+          <div class="admin-field-full"><label>URL de la bannière</label><input id="ar565-banner" value="${safeText(r.banniere||'')}" placeholder="https://..."><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('recueils','${r.id}',this,'ar565-banner')"></label></div></div>
+          <div><label>Couleur de fond</label><input type="color" id="ar565-page-color" value="${safeText(r.page_color||globalAppearance.themeColor)}" style="height:42px;padding:4px"></div>
+          <div><label>Couleur d’accent</label><input type="color" id="ar565-accent" value="${safeText(r.couleur_accent||globalAppearance.accent)}" style="height:42px;padding:4px"></div>
+        </div>
+        <button class="btn-primary" onclick="saveAdminRecueilConfigV565()">Enregistrer la configuration</button>
+      </section>`;
+    }else{
+      z.innerHTML=`<section class="admin-section"><h2>Archivage</h2><p class="admin-section-sub">${r.archive?'Ce recueil est actuellement archivé.':'Ce recueil est actif.'}</p><button class="btn-secondary" onclick="toggleAdminRecueilArchiveV565(${!!r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button></section>`;
+    }
+  }
+
+  async function saveAdminRecueilInfoV565(){
+    const payload={
+      titre:document.getElementById('ar565-titre').value.trim()||'Sans titre',
+      type_recueil:document.getElementById('ar565-type').value,
+      statut:document.getElementById('ar565-statut').value.trim(),
+      theme_principal:document.getElementById('ar565-theme').value.trim(),
+      objectif_poemes:parseInt(document.getElementById('ar565-objectif').value)||null,
+      resume:document.getElementById('ar565-resume').value.trim()
+    };
+    const {error}=await db().from('recueils').update(payload).eq('id',adminRecueilIdV565);
+    if(error)return alert('Erreur : '+error.message);
+    await renderAdminRecueilEditorV565();
+  }
+
+  async function saveAdminRecueilConfigV565(){
+    const payload={
+      couverture:document.getElementById('ar565-cover').value.trim()||null,
+      banniere:document.getElementById('ar565-banner').value.trim()||null,
+      page_color:document.getElementById('ar565-page-color').value,
+      couleur_accent:document.getElementById('ar565-accent').value
+    };
+    const {error}=await db().from('recueils').update(payload).eq('id',adminRecueilIdV565);
+    if(error)return alert('Erreur : '+error.message);
+    await renderAdminRecueilEditorV565();
+  }
+
+  async function toggleAdminRecueilArchiveV565(current){
+    const {error}=await db().from('recueils').update({archive:!current}).eq('id',adminRecueilIdV565);
+    if(error)return alert('Erreur : '+error.message);
+    await renderAdminRecueilEditorV565();
   }
 
   async function renderAdminPersonnagesPage(){
@@ -1743,7 +1843,7 @@
       const workIds=[...new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)])];
       const media=(mr.data||[]).filter(m=>mediaImage(m)&&(m.saga_id===currentSagaId||ssIds.includes(m.sous_saga_id)||workIds.includes(m.oeuvre_id))).slice(0,9);
 
-      zone.innerHTML=`<div class="saga-info-layout"><section class="panel"><h2>À propos de la saga</h2><div>${simpleMarkdown(s.description||s.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Statistiques de la saga</h2><div class="stat-cards-row" style="grid-template-columns:1fr"><div class="stat-card"><h3>Sous-sagas</h3><div class="stat-big">${ssIds.length}</div></div><div class="stat-card"><h3>Tomes / œuvres</h3><div class="stat-big">${nbWorks}</div></div><div class="stat-card"><h3>Période couverte</h3><div style="font-family:'Lora',serif;font-size:18px;margin-top:8px">${safeText(period)}</div></div></div></section></div><section class="panel"><h2>⭐ Repères clés de l’histoire</h2>${keyEvents.length?`<div style="display:grid;gap:9px">${keyEvents.map(e=>`<div style="display:grid;grid-template-columns:130px 14px 1fr;gap:10px;align-items:center;cursor:pointer" onclick="openChronoDrawer('${e.id}')"><strong>${safeText(e.periode_label||e.date_evenement||'~')}</strong><span style="width:10px;height:10px;border-radius:50%;background:${safeText(e.couleur||'var(--accent)')}"></span><span>${safeText(e.titre)}</span></div>`).join('')}</div>`:'<div class="empty">Coche « Repère clé Saga » dans la Chronologie pour faire remonter un événement ici.</div>'}</section><div class="saga-lower-grid"><section class="panel"><h2>🗺️ Lieux emblématiques</h2>${codexPlaces.length?`<div class="entity-gallery">${codexPlaces.map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:['Lieu'],onclick:`openSagaCodexPageV56('${p.id}')`})).join('')}</div>`:'<div class="empty">Les entrées Codex de catégorie « Lieu » marquées emblématiques apparaîtront ici.</div>'}</section><section class="panel"><h2>🖼️ Moodboard</h2>${media.length?`<div class="mini-moodboard">${media.slice(((new Date().getHours()<12)?0:3),((new Date().getHours()<12)?0:3)+6).map(m=>`<img src="${safeText(mediaImage(m))}" alt="">`).join('')}</div>`:'<div class="empty">Les médias liés à la saga et à ses enfants nourriront ce moodboard.</div>'}</section></div>`;
+      zone.innerHTML=`<div class="saga-info-layout"><section class="panel"><h2>À propos de la saga</h2><div>${renderSimpleRichText(s.description||s.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Statistiques de la saga</h2><div class="stat-cards-row" style="grid-template-columns:1fr"><div class="stat-card"><h3>Sous-sagas</h3><div class="stat-big">${ssIds.length}</div></div><div class="stat-card"><h3>Tomes / œuvres</h3><div class="stat-big">${nbWorks}</div></div><div class="stat-card"><h3>Période couverte</h3><div style="font-family:'Lora',serif;font-size:18px;margin-top:8px">${safeText(period)}</div></div></div></section></div><section class="panel"><h2>⭐ Repères clés de l’histoire</h2>${keyEvents.length?`<div style="display:grid;gap:9px">${keyEvents.map(e=>`<div style="display:grid;grid-template-columns:130px 14px 1fr;gap:10px;align-items:center;cursor:pointer" onclick="openChronoDrawer('${e.id}')"><strong>${safeText(e.periode_label||e.date_evenement||'~')}</strong><span style="width:10px;height:10px;border-radius:50%;background:${safeText(e.couleur||'var(--accent)')}"></span><span>${safeText(e.titre)}</span></div>`).join('')}</div>`:'<div class="empty">Coche « Repère clé Saga » dans la Chronologie pour faire remonter un événement ici.</div>'}</section><div class="saga-lower-grid"><section class="panel"><h2>🗺️ Lieux emblématiques</h2>${codexPlaces.length?`<div class="entity-gallery">${codexPlaces.map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:['Lieu'],onclick:`openSagaCodexPageV56('${p.id}')`})).join('')}</div>`:'<div class="empty">Les entrées Codex de catégorie « Lieu » marquées emblématiques apparaîtront ici.</div>'}</section><section class="panel"><h2>🖼️ Moodboard</h2>${media.length?`<div class="mini-moodboard">${media.slice(((new Date().getHours()<12)?0:3),((new Date().getHours()<12)?0:3)+6).map(m=>`<img src="${safeText(mediaImage(m))}" alt="">`).join('')}</div>`:'<div class="empty">Les médias liés à la saga et à ses enfants nourriront ce moodboard.</div>'}</section></div>`;
     }catch(err){
       console.error('Saga Informations',err);
       zone.innerHTML=`<div class="empty"><strong>Impossible de charger les informations de la saga.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`;
@@ -1763,7 +1863,7 @@
     const map=new Map([...(wr.data||[]),...(child.data||[])].map(x=>[x.id,x])); const data=[...map.values()]; const opts=meta.defs.map(d=>`<option value="${d.id}">${safeText((d.emoji?d.emoji+' ':'')+d.nom)}</option>`).join('');
     zone.innerHTML=`<div class="head-row"><h2>Toutes les œuvres de la saga</h2><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div class="admin-filterbar"><input class="search-input" id="saga-work-q" placeholder="🔍 Rechercher…" oninput="filterSagaEntityCards('saga-work-grid',this.value,document.getElementById('saga-work-meta').value)"><select id="saga-work-meta" onchange="filterSagaEntityCards('saga-work-grid',document.getElementById('saga-work-q').value,this.value)"><option value="">Toutes les métadonnées</option>${opts}</select></div><div class="entity-gallery" id="saga-work-grid">${data.map(o=>{const names=metadataNames(meta.defs,meta.works,o.id,'oeuvre_id');const relIds=meta.works.filter(r=>r.oeuvre_id===o.id).map(r=>r.metadata_id).join(' ');const origin=o.sous_saga_id?(o.sous_sagas?.nom||'Sous-saga'):'✨ Indépendante';return `<div data-search="${safeText((o.titre+' '+origin+' '+names.join(' ')).toLowerCase())}" data-meta="${relIds}">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[origin,...names,o.numero_sous_saga!=null?'T'+o.numero_sous_saga:null],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,preview:`openSagaWorkPreviewV56('${o.id}')`})}</div>`}).join('')||'<div class="empty">Aucune œuvre.</div>'}</div>`;
   }
-  async function openSagaWorkPreviewV56(id){const {data:o}=await db().from('oeuvres').select('*,sous_sagas(nom)').eq('id',id).single();document.getElementById('v55-drawer')?.remove();document.body.insertAdjacentHTML('beforeend',`<aside class="drawer-v55" id="v55-drawer"><button class="btn-secondary" onclick="this.parentElement.remove()">✕ Fermer</button>${o.couverture?`<img src="${safeText(o.couverture)}" style="width:110px;border-radius:10px;margin-top:12px">`:''}<h2>${safeText(o.titre)}</h2><p>${safeText(o.sous_sagas?.nom||'Œuvre indépendante')}</p><div>${simpleMarkdown(o.resume||o.pitch||'Pas encore de résumé.')}</div><button class="btn-primary" style="margin-top:14px" onclick="document.getElementById('v55-drawer')?.remove();openOeuvreDetail('${o.id}')">Ouvrir la fiche complète ↗</button></aside>`)}
+  async function openSagaWorkPreviewV56(id){const {data:o}=await db().from('oeuvres').select('*,sous_sagas(nom)').eq('id',id).single();document.getElementById('v55-drawer')?.remove();document.body.insertAdjacentHTML('beforeend',`<aside class="drawer-v55" id="v55-drawer"><button class="btn-secondary" onclick="this.parentElement.remove()">✕ Fermer</button>${o.couverture?`<img src="${safeText(o.couverture)}" style="width:110px;border-radius:10px;margin-top:12px">`:''}<h2>${safeText(o.titre)}</h2><p>${safeText(o.sous_sagas?.nom||'Œuvre indépendante')}</p><div>${renderSimpleRichText(o.resume||o.pitch||'Pas encore de résumé.')}</div><button class="btn-primary" style="margin-top:14px" onclick="document.getElementById('v55-drawer')?.remove();openOeuvreDetail('${o.id}')">Ouvrir la fiche complète ↗</button></aside>`)}
 
   async function renderSagaPersonnagesV56(zone){
     const {data:rels,error}=await db().from('personnages_oeuvres').select('role,importance,personnages(id,nom,portrait_url),oeuvres!inner(id,titre,saga_id,sous_saga_id,numero_sous_saga,sous_sagas(nom))').eq('oeuvres.saga_id',currentSagaId);
@@ -1960,6 +2060,7 @@
     { key:'personnages', label:'Personnages', real:true },
     { key:'codex', label:'Codex', real:true },
     { key:'chronologie', label:'Chronologie', real:true },
+    { key:'medias', label:'Médias', real:true },
   ];
   let currentSagaId = null;
   let currentSagaTab = 'informations';
@@ -2011,6 +2112,7 @@
     if (key === 'personnages') await renderSagaPersonnagesV56(zone);
     if (key === 'codex') await renderSagaCodexV56(zone);
     if (key === 'chronologie') await renderSagaChronologieV56(zone);
+    if (key === 'medias') await renderSagaMediasV565(zone);
   }
 
   async function renderSagaApercu(zone){
@@ -2043,6 +2145,73 @@
       </div>`).join('')}</div>`;
   }
 
+  async function renderHierarchyMediasV565(zone,{level,id}){
+    zone.innerHTML='<div class="status-line">Chargement des médias…</div>';
+    try{
+      let directIds=[], childSsIds=[], workIds=[];
+      if(level==='saga'){
+        const [ssR,wR]=await Promise.all([
+          db().from('sous_sagas').select('id').eq('saga_id',id),
+          db().from('oeuvres').select('id').eq('saga_id',id)
+        ]);
+        if(ssR.error||wR.error) throw (ssR.error||wR.error);
+        childSsIds=(ssR.data||[]).map(x=>x.id);
+        workIds=(wR.data||[]).map(x=>x.id);
+        if(childSsIds.length){
+          const cw=await db().from('oeuvres').select('id').in('sous_saga_id',childSsIds);
+          if(cw.error) throw cw.error;
+          workIds=[...new Set([...workIds,...(cw.data||[]).map(x=>x.id)])];
+        }
+      }else{
+        const wR=await db().from('oeuvres').select('id').eq('sous_saga_id',id);
+        if(wR.error) throw wR.error;
+        workIds=(wR.data||[]).map(x=>x.id);
+      }
+
+      const mr=await db().from('medias').select('*').order('created_at',{ascending:false});
+      if(mr.error) throw mr.error;
+      const all=(mr.data||[]).filter(m=>{
+        if(level==='saga') return m.saga_id===id || childSsIds.includes(m.sous_saga_id) || workIds.includes(m.oeuvre_id);
+        return m.sous_saga_id===id || workIds.includes(m.oeuvre_id);
+      });
+
+      const filters=['Tout','Illustration','Promotion & Bonus','Couverture'];
+      const filterKey=`${level}-${id}`;
+      window._hierarchyMediaFilters=window._hierarchyMediaFilters||{};
+      const active=window._hierarchyMediaFilters[filterKey]||'Tout';
+      const rows=active==='Tout'?all:all.filter(m=>m.type===active);
+
+      zone.innerHTML=`<div class="work-toolbar">
+        <div class="segmented">${filters.map(x=>`<button class="btn-secondary ${active===x?'active':''}" onclick="window._hierarchyMediaFilters['${filterKey}']='${x}';${level==='saga'?"renderSagaMediasV565(document.getElementById('saga-tab-content'))":"renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'))"}">${x}</button>`).join('')}</div>
+        <button class="btn-primary" onclick="addHierarchyMediaV565('${level}','${id}')">+ Ajouter un média 🌸</button>
+      </div>
+      ${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaReadDrawerV565('${m.id}')">
+        ${mediaImage(m)?`<img src="${safeText(mediaImage(m))}" alt="">`:'<div class="walter-empty">🖼</div>'}
+        <div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}</small></div>
+      </article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Aucun média ici pour le moment.</strong><div>Les médias liés à ce niveau ou à ses enfants remonteront automatiquement.</div></div>`}`;
+    }catch(err){
+      zone.innerHTML=`<div class="empty"><strong>Impossible de charger les médias.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`;
+    }
+  }
+  function renderSagaMediasV565(zone){return renderHierarchyMediasV565(zone,{level:'saga',id:currentSagaId})}
+  function renderSousSagaMediasV565(zone){return renderHierarchyMediasV565(zone,{level:'sous-saga',id:currentSousSagaId})}
+  async function addHierarchyMediaV565(level,id){
+    const url=prompt('URL du média :'); if(!url)return;
+    const titre=prompt('Titre :','')||'';
+    const type=prompt('Type : Illustration, Promotion & Bonus ou Couverture','Illustration')||'Illustration';
+    const payload={user_id:currentUser.id,url,titre,type};
+    if(level==='saga') payload.saga_id=id; else payload.sous_saga_id=id;
+    const {error}=await db().from('medias').insert(payload);
+    if(error)return alert('Erreur : '+error.message);
+    if(level==='saga') renderSagaMediasV565(document.getElementById('saga-tab-content'));
+    else renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
+  }
+  async function openMediaReadDrawerV565(id){
+    const {data:m,error}=await db().from('medias').select('*').eq('id',id).single();
+    if(error)return alert(error.message);
+    openDrawer(m?.titre||'Média',`${mediaImage(m)?`<img src="${safeText(mediaImage(m))}" style="max-width:100%;border-radius:10px;margin-bottom:16px">`:''}<p><strong>Type :</strong> ${safeText(m?.type||'Média')}</p>${m?.description?`<div style="margin-top:12px">${m.description}</div>`:''}`);
+  }
+
   // ============================================================
   // SOUS-SAGA — page détail, avec onglets
   // ============================================================
@@ -2053,6 +2222,7 @@
     { key:'plan-global', label:'Plan global', real:true },
     { key:'codex', label:'Codex', real:true },
     { key:'chronologie', label:'Chronologie', real:true },
+    { key:'medias', label:'Médias', real:true },
   ];
   let currentSousSagaId = null;
   let currentSousSagaParentSagaId = null;
@@ -2103,6 +2273,7 @@
     if (key === 'plan-global') await renderSousSagaPlanGlobal(zone);
     if (key === 'codex') await renderSousSagaCodex(zone);
     if (key === 'chronologie') await renderSousSagaChronologie(zone);
+    if (key === 'medias') await renderSousSagaMediasV565(zone);
   }
 
   async function renderSousSagaInformations(zone){
@@ -2128,7 +2299,7 @@
       const tags=rawTags.map(x=>`<span class="ss-pill">✨ ${safeText(x)}</span>`).join('');
 
       zone.innerHTML=`<div class="ss-kpis"><div class="stat-card"><h3>Œuvres liées</h3><div class="stat-big">${works.length}</div></div><div class="stat-card"><h3>En cours / préparation</h3><div class="stat-big">${active}</div></div><div class="stat-card"><h3>Mots écrits cumulés</h3><div class="stat-big">${totalWords.toLocaleString('fr-FR')}</div></div></div>
-        <div class="ss-info-grid"><section class="panel"><h2>À propos de la sous-saga</h2><div>${simpleMarkdown(ss.description||ss.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Informations clés</h2><p><strong>Saga :</strong> ${safeText(ss.sagas?.nom||'—')}</p><p><strong>Genre dominant :</strong> ${safeText(ss.genre||'—')}</p><p><strong>Temporalité :</strong> ${safeText(ss.temporalite||'—')}</p><p><strong>Cadre :</strong> ${safeText(ss.lieu_principal||'—')}</p><p><strong>Nombre d’œuvres :</strong> ${works.length}</p></section></div>
+        <div class="ss-info-grid"><section class="panel"><h2>À propos de la sous-saga</h2><div>${renderSimpleRichText(ss.description||ss.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Informations clés</h2><p><strong>Saga :</strong> ${safeText(ss.sagas?.nom||'—')}</p><p><strong>Genre dominant :</strong> ${safeText(ss.genre||'—')}</p><p><strong>Temporalité :</strong> ${safeText(ss.temporalite||'—')}</p><p><strong>Cadre :</strong> ${safeText(ss.lieu_principal||'—')}</p><p><strong>Nombre d’œuvres :</strong> ${works.length}</p></section></div>
         ${ss.citation?`<div class="panel" style="text-align:center;margin-top:18px;font:italic 17px 'Lora',serif">✦<br>${safeText(ss.citation)}</div>`:''}`;
     }catch(err){
       console.error('Sous-saga Informations',err);
@@ -3942,11 +4113,9 @@
   // POÉSIE
   // ============================================================
   const RECUEIL_TABS = [
-    { key:'apercu', label:'Aperçu' },
+    { key:'apercu', label:'Informations' },
     { key:'poemes', label:'Poèmes' },
     { key:'structure', label:'Structure' },
-    { key:'fiche-detaillee', label:'Fiche détaillée' },
-    { key:'parametres', label:'Paramètres' },
   ];
   let currentRecueilId = null;
 
