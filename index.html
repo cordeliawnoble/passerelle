@@ -387,6 +387,18 @@
   @media(max-width:820px){.pep-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pep-filterbar{grid-template-columns:1fr 1fr}.pep-filterbar .pep-search{grid-column:1/-1}.page-image-banner{height:170px}}
   @media(max-width:560px){.pep-grid{grid-template-columns:1fr}.pep-filterbar{grid-template-columns:1fr}.pep-filterbar .pep-search{grid-column:auto}.banner-admin-grid{grid-template-columns:1fr}.pep-head{flex-direction:column}.idea-status-picker{grid-template-columns:1fr}.idea-char-card-row{grid-template-columns:1fr}.page-image-banner{height:140px}}
 
+
+/* ===== V5.5 Sous-saga / Back-office tabs ===== */
+.admin-editor-tabs,.ss-view-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:0 0 18px;padding:0 2px}
+.admin-editor-tabs button,.ss-view-tabs button{border:0;background:transparent;padding:10px 13px;cursor:pointer;color:var(--text-dim);font:500 13px 'Lora',serif;border-bottom:2px solid transparent}
+.admin-editor-tabs button.active,.ss-view-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+.ss-info-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);gap:18px}.ss-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.ss-work-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}.ss-work-card{border:1px solid var(--line);background:var(--card);border-radius:16px;overflow:hidden;cursor:pointer}.ss-work-cover{height:245px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font:600 28px 'Lora',serif}.ss-work-cover img{width:100%;height:100%;object-fit:cover}.ss-work-body{padding:14px}.ss-pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,transparent);font-size:10px;margin:0 5px 5px 0}.ss-tome-status{display:grid;gap:4px;margin-top:10px}.ss-tome-status span{font-size:10px;padding:4px 7px;border:1px solid var(--line);border-radius:8px}
+.ss-segment{border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:10px;overflow:hidden}.ss-segment>summary{padding:14px 16px;cursor:pointer;font:600 15px 'Lora',serif}.ss-segment-body{padding:0 16px 16px}.ss-segment-body details{border-top:1px solid var(--line);padding:10px 0}.ss-segment-body summary{cursor:pointer;font-weight:600}.ss-rich{min-height:90px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);margin-top:8px}
+.codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px}.codex-card{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--card);cursor:pointer}.codex-card-visual{height:125px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 25%,var(--bg-2)),var(--bg-2));background-size:cover;background-position:center}.codex-card-body{padding:13px}.codex-toc{position:sticky;top:10px;display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}.codex-toc button{font-size:10px}.codex-block{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--card)}
+.timeline-row{display:grid;grid-template-columns:120px 22px minmax(0,1fr);gap:10px;position:relative}.timeline-date{font-size:11px;color:var(--text-dim);padding-top:14px;text-align:right}.timeline-axis{position:relative}.timeline-axis:before{content:'';position:absolute;left:10px;top:0;bottom:0;border-left:2px dashed var(--timeline-color,var(--accent))}.timeline-dot{position:absolute;top:18px;left:4px;width:14px;height:14px;border-radius:50%;background:var(--timeline-color,var(--accent));border:3px solid var(--card)}.timeline-card{display:grid;grid-template-columns:92px 1fr;gap:12px;border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:10px;background:var(--card);cursor:pointer}.timeline-thumb{width:92px;height:72px;border-radius:9px;background:var(--bg-2);object-fit:cover}.drawer-v55{position:fixed;right:0;top:0;width:min(520px,92vw);height:100vh;background:var(--bg);border-left:1px solid var(--line);z-index:1200;padding:22px;overflow:auto;box-shadow:-12px 0 35px rgba(0,0,0,.12)}
+@media(max-width:850px){.ss-info-grid{grid-template-columns:1fr}.ss-kpis{grid-template-columns:1fr}.timeline-row{grid-template-columns:80px 18px 1fr}.timeline-card{grid-template-columns:1fr}.timeline-thumb{width:100%;height:150px}}
+
 </style>
 </head>
 <body>
@@ -750,7 +762,7 @@
     const content=document.getElementById('content');
     const {data,error}=await db().from('sous_sagas').select('id,nom,genre,statut,saga_id,sagas(nom)').order('created_at',{ascending:false});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Sous-sagas','Gérez les sous-sagas dans le contexte de leur saga.')+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une sous-saga…" oninput="filterAdminCards('admin-ss-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ss-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" onclick="openSousSagaModal('${x.saga_id}','${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">Saga : ${safeText(x.sagas?.nom||'—')}<br>${safeText(x.genre||x.statut||'')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune sous-saga pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Sous-sagas','Gérez les sous-sagas dans le contexte de leur saga.')+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une sous-saga…" oninput="filterAdminCards('admin-ss-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ss-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" onclick="openAdminSousSagaEditor('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">Saga : ${safeText(x.sagas?.nom||'—')}<br>${safeText(x.genre||x.statut||'')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune sous-saga pour le moment.')}</div>`;
   }
 
   async function renderAdminOeuvresPage(){
@@ -840,7 +852,7 @@
             <section class="admin-section"><h2>Manuscrit & Atelier</h2><p class="admin-section-sub">Configuration de la source manuscrit. Le nombre de mots réel a vocation à venir d’Atelier, pas à être ressaisi ici.</p>
               <div class="admin-section-grid three">
                 <div><label>Statut manuscrit</label><select id="aow-statut">${manuscriptStatuses.map(x=>`<option ${o.statut===x?'selected':''}>${x}</option>`).join('')}</select></div>
-                <div><label>Objectif de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"></div>
+                <div><label>Objectif global de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"><button type="button" class="btn-secondary" style="margin-top:6px" onclick="distributeWorkWordTarget()">↻ Répartir sur le Plan</button></div>
                 <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.code_session||'')}" placeholder="ex. EC-T2"></div>
               </div>
               <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
@@ -861,7 +873,7 @@
           <aside class="admin-work-side">
             <section class="admin-section"><h2>Couverture canonique</h2><p class="admin-section-sub">La couverture vient de Médias → Couvertures. Une seule image est marquée ★ actuelle.</p><div class="admin-cover-preview" id="aow-cover-preview">${currentCoverUrl?`<img src="${safeText(currentCoverUrl)}" alt="Couverture">`:'✒'}</div><input type="hidden" id="aow-cover-media-id" value="${safeText(currentCoverMedia?.id||'')}"><input type="hidden" id="aow-couverture" value="${safeText(currentCoverUrl)}"><button class="btn-secondary" style="width:100%;margin-top:10px" onclick="toggleAdminCoverPicker()">Choisir dans les médias</button><div class="admin-cover-picker" id="aow-cover-picker">${adminCoverMedias.length?`<div class="admin-cover-picker-grid">${adminCoverMedias.map(m=>`<button type="button" class="admin-cover-choice ${m.id===currentCoverMedia?.id?'selected':''}" data-cover-id="${m.id}" onclick="selectAdminCoverMedia('${m.id}','${safeText(m.url||'')}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="admin-catalog-placeholder">🖼</div>'}<small>${safeText(m.titre||'Couverture')}</small></button>`).join('')}</div>`:`<div class="empty" style="padding:18px">Aucune couverture dans Médias pour cette œuvre.</div>`}</div></section>
             <section class="admin-section"><h2>Modules de la fiche</h2><p class="admin-section-sub">Afficher ou masquer les espaces optionnels sans supprimer leurs données.</p>
-              <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Univers & Lore</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
+              <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Codex</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
             </section>
             <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">Image horizontale affichée en haut de la fiche Œuvre.</small></section>
@@ -870,6 +882,7 @@
           </aside>
         </div>
       </div>`;
+    activateAdminWorkTabs();
   }
 
   async function onAdminOeuvreSagaChange(){
@@ -1711,14 +1724,12 @@
   // SOUS-SAGA — page détail, avec onglets
   // ============================================================
   const SOUS_SAGA_TABS = [
-    { key:'apercu', label:'Aperçu', real:true },
+    { key:'informations', label:'Informations', real:true },
     { key:'oeuvres', label:'Œuvres', real:true },
     { key:'personnages', label:'Personnages', real:true },
     { key:'plan-global', label:'Plan global', real:true },
-    { key:'univers-lore', label:'Univers & Lore', real:true },
+    { key:'codex', label:'Codex', real:true },
     { key:'chronologie', label:'Chronologie', real:true },
-    { key:'fiche-detaillee', label:'Fiche détaillée', real:true },
-    { key:'parametres', label:'Paramètres', real:true },
   ];
   let currentSousSagaId = null;
   let currentSousSagaParentSagaId = null;
@@ -1749,7 +1760,7 @@
       </div>
       <div id="soussaga-tab-content"></div>
     `;
-    showSousSagaTab('apercu');
+    showSousSagaTab('informations');
   }
 
   async function showSousSagaTab(key){
@@ -1763,143 +1774,73 @@
       zone.innerHTML = `<div class="empty">Cet onglet n'est pas encore branché à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà — on le construit dès qu'on y arrive dans l'ordre.</span></div>`;
       return;
     }
-    if (key === 'apercu') await renderSousSagaApercu(zone);
+    if (key === 'informations') await renderSousSagaInformations(zone);
     if (key === 'oeuvres') await renderSousSagaOeuvres(zone);
     if (key === 'personnages') await renderSousSagaPersonnages(zone);
     if (key === 'plan-global') await renderSousSagaPlanGlobal(zone);
-    if (key === 'univers-lore') await renderSousSagaUniversLore(zone);
+    if (key === 'codex') await renderSousSagaCodex(zone);
     if (key === 'chronologie') await renderSousSagaChronologie(zone);
-    if (key === 'fiche-detaillee') await renderSousSagaFicheDetaillee(zone);
-    if (key === 'parametres') await renderSousSagaParametres(zone);
   }
 
-  async function renderSousSagaApercu(zone){
-    const [{ data: ss }, { count: nbOeuvres }] = await Promise.all([
-      db().from('sous_sagas').select('description, fil_rouge').eq('id', currentSousSagaId).single(),
-      db().from('oeuvres').select('*', { count:'exact', head:true }).eq('sous_saga_id', currentSousSagaId),
+  async function renderSousSagaInformations(zone){
+    zone.innerHTML='<div class="status-line">Chargement…</div>';
+    const [ssR,worksR,chapR]=await Promise.all([
+      db().from('sous_sagas').select('*,sagas(nom,univers_id)').eq('id',currentSousSagaId).single(),
+      db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga,statut_editorial_actuel').eq('sous_saga_id',currentSousSagaId),
+      db().from('oeuvres').select('id').eq('sous_saga_id',currentSousSagaId)
     ]);
-    zone.innerHTML = `
-      <div class="panel"><h2>À propos</h2><p style="font-size:14px;">${ss?.description || 'Pas encore de description.'}</p></div>
-      ${ss?.fil_rouge ? `<div class="panel"><h2>Fil rouge</h2><p style="font-size:14px;">${ss.fil_rouge}</p></div>` : ''}
-      <div class="stat-cards-row"><div class="stat-card"><h3>Œuvres</h3><div class="stat-big">${nbOeuvres ?? 0}</div></div></div>
-    `;
+    const ss=ssR.data||{}, works=worksR.data||[];
+    let totalWords=works.reduce((a,o)=>a+(Number(o.mots_ecrits)||0),0);
+    let active=works.filter(o=>/cours|écriture|prepa|prépa/i.test((o.statut||'')+' '+(o.statut_editorial_actuel||''))).length;
+    const tags=(ss.mots_cles||ss.ambiance_tags||[]).map(x=>`<span class="ss-pill">✨ ${safeText(x)}</span>`).join('');
+    zone.innerHTML=`<div class="ss-kpis"><div class="stat-card"><h3>Œuvres liées</h3><div class="stat-big">${works.length}</div></div><div class="stat-card"><h3>En cours / préparation</h3><div class="stat-big">${active}</div></div><div class="stat-card"><h3>Mots écrits cumulés</h3><div class="stat-big">${totalWords.toLocaleString('fr-FR')}</div></div></div>
+      <div class="ss-info-grid"><section class="panel"><h2>À propos de la sous-saga</h2><div>${simpleMarkdown(ss.description||ss.a_propos||'Pas encore de résumé.')}</div><div style="margin-top:12px">${tags}</div></section><section class="panel"><h2>Informations clés</h2><p><strong>Saga :</strong> ${safeText(ss.sagas?.nom||'—')}</p><p><strong>Genre dominant :</strong> ${safeText(ss.genre||'—')}</p><p><strong>Temporalité :</strong> ${safeText(ss.temporalite||'—')}</p><p><strong>Cadre :</strong> ${safeText(ss.lieu_principal||'—')}</p><p><strong>Nombre d’œuvres :</strong> ${works.length}</p></section></div>
+      ${ss.citation?`<div class="panel" style="text-align:center;margin-top:18px;font:italic 17px 'Lora',serif">✦<br>${safeText(ss.citation)}</div>`:''}`;
   }
 
   async function renderSousSagaOeuvres(zone){
-    zone.innerHTML = `<div class="head-row"><div></div><button class="btn-primary" onclick="openOeuvreModalForSousSaga()">+ Créer une œuvre</button></div><div id="ss-oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
-    const { data, error } = await db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('sous_saga_id', currentSousSagaId).order('created_at', { ascending:false });
-    const inner = document.getElementById('ss-oeuvres-zone');
-    if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    if (!data.length) { inner.innerHTML = `<div class="empty">Aucune œuvre dans cette sous-saga pour l'instant.</div>`; return; }
-    inner.innerHTML = `<div class="gallery">${data.map(o => {
-      const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : null;
-      return `<div class="char-card" onclick="openOeuvreDetail('${o.id}')">
-        <div class="char-portrait" style="background:linear-gradient(160deg, var(--accent)33, var(--bg-2));">${initials(o.titre)}</div>
-        <div class="char-name">${o.titre}</div>
-        <div class="char-role">${o.statut||'Sans statut'}${pct!==null ? ' · '+pct+'%' : ''}</div>
-      </div>`;
-    }).join('')}</div>`;
+    zone.innerHTML='<div class="status-line">Chargement…</div>';
+    const {data,error}=await db().from('oeuvres').select('id,titre,resume,pitch,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).order('ordre_sous_saga',{ascending:true,nullsFirst:false});
+    if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    const works=data||[]; const ids=works.map(x=>x.id); let counts={};
+    if(ids.length){const r=await db().from('chapitres').select('oeuvre_id,etat,nb_mots,objectif_mots').in('oeuvre_id',ids);(r.data||[]).forEach(c=>{counts[c.oeuvre_id]??={all:0,written:0};counts[c.oeuvre_id].all++;if((c.nb_mots||0)>0||/écrit|rédig|relu/i.test(c.etat||''))counts[c.oeuvre_id].written++})}
+    zone.innerHTML=`<div class="head-row"><h2>Les œuvres de la sous-saga</h2><button class="btn-primary" onclick="openOeuvreModalForSousSaga()">+ Créer une œuvre</button></div><div class="ss-work-grid">${works.map(o=>{const c=counts[o.id]||{all:0,written:0};const n=o.numero_sous_saga!=null?'T'+o.numero_sous_saga:'—';return `<article class="ss-work-card" onclick="openOeuvreDetail('${o.id}')"><div class="ss-work-cover">${o.couverture?`<img src="${safeText(o.couverture)}" alt="">`:initials(o.titre)}</div><div class="ss-work-body"><span class="ss-pill">${safeText(o.nature_sous_saga||'Tome principal')}</span><span class="ss-pill">${n}</span><h3>${safeText(o.titre)}</h3><p style="font-size:12px;color:var(--text-dim)">${safeText((o.resume||o.pitch||'').slice(0,180))}</p><small>${safeText(o.statut_editorial_actuel||o.statut||'Sans statut')} · ${c.written||c.all} chap. · ${(Number(o.mots_ecrits)||0).toLocaleString('fr-FR')} mots</small></div></article>`}).join('')||'<div class="empty">Aucune œuvre liée.</div>'}</div>`;
   }
-  async function openOeuvreModalForSousSaga(){
-    await openOeuvreModal(null, currentSousSagaParentSagaId);
-    await loadSousSagaOptions(currentSousSagaParentSagaId, currentSousSagaId);
-  }
+  async function openOeuvreModalForSousSaga(){await openOeuvreModal(null,currentSousSagaParentSagaId);await loadSousSagaOptions(currentSousSagaParentSagaId,currentSousSagaId)}
 
-  // ---- Personnages (agrégés depuis les œuvres de cette sous-saga) ----
   async function renderSousSagaPersonnages(zone){
-    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data: oeuvresList } = await db().from('oeuvres').select('id').eq('sous_saga_id', currentSousSagaId);
-    const ids = (oeuvresList||[]).map(o=>o.id);
-    if (!ids.length) { zone.innerHTML = `<div class="empty">Aucune œuvre dans cette sous-saga pour l'instant.</div>`; return; }
-    const { data, error } = await db().from('personnages_oeuvres').select('personnage_id, role, personnages(nom, favori)').in('oeuvre_id', ids);
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    const uniq = {};
-    (data||[]).forEach(d => { if (d.personnage_id) uniq[d.personnage_id] = d; });
-    const list = Object.values(uniq);
-    zone.innerHTML = list.length ? `<div class="gallery">${list.map(d => `
-      <div class="char-card">
-        ${d.personnages?.favori ? '<span class="fav-heart">♥</span>' : ''}
-        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(d.personnages?.nom)}</div>
-        <div class="char-name">${d.personnages?.nom||'—'}</div>
-        <div class="char-role">${d.role||'—'}</div>
-      </div>`).join('')}</div>` : `<div class="empty">Aucun personnage pour l'instant.</div>`;
+    zone.innerHTML='<div class="status-line">Chargement…</div>';
+    const wr=await db().from('oeuvres').select('id,titre,numero_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).order('ordre_sous_saga',{ascending:true,nullsFirst:false}); const works=wr.data||[]; const ids=works.map(x=>x.id);
+    if(!ids.length){zone.innerHTML='<div class="empty">Aucune œuvre dans cette sous-saga.</div>';return}
+    const {data,error}=await db().from('personnages_oeuvres').select('personnage_id,oeuvre_id,role,importance,etat,personnages(id,nom,favori)').in('oeuvre_id',ids);if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    const map={};(data||[]).forEach(r=>{const k=r.personnage_id;if(!map[k])map[k]={p:r.personnages,rels:{},role:r.role,importance:r.importance};map[k].rels[r.oeuvre_id]=r});
+    zone.innerHTML=`<div class="head-row"><h2>Évolution des personnages</h2></div><div class="gallery">${Object.values(map).map(x=>`<article class="char-card"><div class="char-portrait">${initials(x.p?.nom)}</div><div class="char-name">${safeText(x.p?.nom||'—')}</div><div class="char-role">${safeText(x.role||x.importance||'—')}</div><div class="ss-tome-status">${works.map(w=>{const r=x.rels[w.id];return `<span><strong>T${w.numero_sous_saga??'?'}</strong> · ${r?safeText(r.etat||r.role||'Présent'):'Absent / non renseigné'}</span>`}).join('')}</div></article>`).join('')}</div>`;
   }
 
-  // ---- Plan global (plans.sous_saga_id, transversaux à toute la trilogie) ----
-  let ssPlansData = [];
   async function renderSousSagaPlanGlobal(zone){
-    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data, error } = await db().from('plans').select('*').eq('sous_saga_id', currentSousSagaId).order('ordre');
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    ssPlansData = data;
-    zone.innerHTML = `
-      <div class="head-row"><div></div><button class="btn-primary" onclick="openSsPlanModal()">+ Nouvel arc transversal</button></div>
-      ${data.length ? renderPlansTable(data) : `<div class="empty">Aucun plan transversal pour cette sous-saga pour l'instant.</div>`}
-    `;
+    const {data,error}=await db().from('sous_saga_segments').select('*,oeuvres(titre)').eq('sous_saga_id',currentSousSagaId).order('ordre');if(error){zone.innerHTML=`<div class="empty">Migration V5.5 requise : ${safeText(error.message)}</div>`;return}
+    zone.innerHTML=`<div class="head-row"><div><h2>Plan global</h2><p style="color:var(--text-dim);font-size:12px">Le dossier narratif multi-tomes de la sous-saga.</p></div><button class="btn-primary" onclick="addSousSagaSegment()">+ Ajouter un tome</button></div><div>${(data||[]).map(seg=>renderSsSegment(seg)).join('')||'<div class="empty">Aucun tome/segment de plan global.</div>'}</div>`;
   }
-  function ssPlanModalHtml(){
-    return `
-      <div class="modal-overlay" id="modal-ssplan-overlay" onclick="if(event.target===this) closeSsPlanModal()">
-        <div class="modal-box">
-          <div class="modal-head"><h2>Nouvel arc transversal</h2><button onclick="closeSsPlanModal()">✕</button></div>
-          <div class="modal-body">
-            <div><label>Type</label><select id="ssp-type"><option>Arc transversal</option><option>Intrigue principale</option><option>Arc personnage</option></select></div>
-            <div><label>Titre</label><input id="ssp-titre"></div>
-            <div><label>Statut</label><input id="ssp-plan-statut"></div>
-          </div>
-          <div class="modal-foot"><button class="btn-secondary" onclick="closeSsPlanModal()">Annuler</button><button class="btn-primary" onclick="saveSsPlan()">Enregistrer</button></div>
-        </div>
-      </div>`;
-  }
-  function openSsPlanModal(){ document.getElementById('modal-ssplan-overlay').classList.add('open'); }
-  function closeSsPlanModal(){ document.getElementById('modal-ssplan-overlay').classList.remove('open'); }
-  async function saveSsPlan(){
-    const payload = { type: document.getElementById('ssp-type').value, titre: document.getElementById('ssp-titre').value.trim()||'Sans titre', statut: document.getElementById('ssp-plan-statut').value.trim(), sous_saga_id: currentSousSagaId, user_id: currentUser.id };
-    const { error } = await db().from('plans').insert(payload);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closeSsPlanModal();
-    await renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'));
-  }
+  function renderSsSegment(seg){const fields=[['identite','Identité du tome'],['resume_complet','Résumé complet'],['arc_protagonistes','Arc des protagonistes'],['arc_relationnel','Arc relationnel'],['evenements_importants','Événements importants'],['continuite','Continuité']];return `<details class="ss-segment"><summary>💙 ${safeText(seg.libelle||('Tome '+(seg.numero||'')))} ${seg.oeuvres?.titre?'· '+safeText(seg.oeuvres.titre):''}</summary><div class="ss-segment-body">${fields.map(([k,l])=>`<details><summary>▸ ${l}</summary><div class="ss-rich" contenteditable="true" onblur="saveSsSegmentField('${seg.id}','${k}',this.innerHTML)">${seg[k]||''}</div></details>`).join('')}<button class="btn-secondary" onclick="deleteSsSegment('${seg.id}')">Supprimer ce segment</button></div></details>`}
+  async function addSousSagaSegment(){const r=await db().from('sous_saga_segments').select('ordre').eq('sous_saga_id',currentSousSagaId).order('ordre',{ascending:false}).limit(1);const ord=(Number(r.data?.[0]?.ordre)||0)+1;const {error}=await db().from('sous_saga_segments').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,libelle:'Tome '+ord,numero:ord,ordre:ord});if(error)return alert(error.message);renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'))}
+  async function saveSsSegmentField(id,key,val){await db().from('sous_saga_segments').update({[key]:val,updated_at:new Date().toISOString()}).eq('id',id)}
+  async function deleteSsSegment(id){if(!confirm('Supprimer ce segment du plan global ?'))return;await db().from('sous_saga_segments').delete().eq('id',id);renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'))}
 
-  // ---- Univers & Lore (filtré via elements_univers_sous_sagas) ----
-  async function renderSousSagaUniversLore(zone){
-    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data: links, error } = await db().from('elements_univers_sous_sagas').select('element_id, elements_univers(*)').eq('sous_saga_id', currentSousSagaId);
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    const items = (links||[]).map(l=>l.elements_univers).filter(Boolean);
-    luData = items; luCategorieActive = 'Tout';
-    zone.innerHTML = `
-      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
-        <div>
-          <div class="head-row"><input class="search-input" id="lu-search" placeholder="Rechercher..." oninput="renderLuGrid()"><button class="btn-primary" onclick="alert('Pour lier un élément existant, ouvre-le depuis Univers & Lore de la saga et associe-le à cette sous-saga.')">+ Lier une entrée</button></div>
-          <div id="lu-cat-tabs" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;"></div>
-          <div class="gallery" id="lu-grid"></div>
-        </div>
-        <div class="panel" id="lu-detail"><div class="empty">Sélectionne un élément à gauche.</div></div>
-      </div>
-    `;
-    renderLuGrid();
+  async function renderSousSagaCodex(zone){
+    const {data,error}=await db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre');if(error){zone.innerHTML=`<div class="empty">Migration V5.5 requise : ${safeText(error.message)}</div>`;return}
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Le lore canonique de la saga parente reste hérité, pas dupliqué.</p></div><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div><div class="codex-grid">${(data||[]).map(p=>`<article class="codex-card" onclick="openCodexPage('${p.id}')"><div class="codex-card-visual" style="${p.banniere?`background-image:url('${safeText(p.banniere)}')`:''}"></div><div class="codex-card-body"><small>${safeText(p.categorie||'Codex')}</small><h3>${safeText(p.titre)}</h3></div></article>`).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
   }
+  async function createCodexPage(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openCodexPage(data.id)}
+  async function openCodexPage(id){const [pr,br]=await Promise.all([db().from('codex_pages').select('*').eq('id',id).single(),db().from('codex_blocks').select('*').eq('page_id',id).order('ordre')]);const p=pr.data,b=br.data||[];const zone=document.getElementById('soussaga-tab-content');zone.innerHTML=`<button class="btn-secondary" onclick="renderSousSagaCodex(document.getElementById('soussaga-tab-content'))">← Codex</button><div style="margin-top:12px">${renderCatalogEntityBanner(p.banniere,p.titre)}<div class="head-row"><h2>${safeText(p.titre)}</h2><label class="btn-secondary upload-file-btn">⇧ Bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('codex_pages','${p.id}',this,null).then(()=>openCodexPage('${p.id}'))"></label></div><div class="codex-toc">${b.filter(x=>x.navigation_label).map(x=>`<button class="btn-secondary" onclick="document.getElementById('cb-${x.id}').scrollIntoView({behavior:'smooth'})">${safeText(x.navigation_label)}</button>`).join('')}</div>${b.map(x=>`<div class="codex-block" id="cb-${x.id}"><small>${safeText(x.navigation_label||x.type)}</small><div contenteditable="true" onblur="saveCodexBlock('${x.id}',this.innerHTML)">${x.contenu?.html||''}</div></div>`).join('')}<button class="btn-primary" onclick="addCodexBlock('${p.id}')">+ Ajouter un bloc texte</button></div>`}
+  async function addCodexBlock(pageId){const label=prompt('Repère de navigation (facultatif) :','');const r=await db().from('codex_blocks').select('ordre').eq('page_id',pageId).order('ordre',{ascending:false}).limit(1);await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pageId,type:'texte',navigation_label:label||null,ordre:(Number(r.data?.[0]?.ordre)||0)+1,contenu:{html:''}});openCodexPage(pageId)}
+  async function saveCodexBlock(id,html){await db().from('codex_blocks').update({contenu:{html},updated_at:new Date().toISOString()}).eq('id',id)}
 
-  // ---- Chronologie (mêmes éléments, filtrés via la même jonction) ----
   async function renderSousSagaChronologie(zone){
-    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data: links, error } = await db().from('elements_univers_sous_sagas').select('elements_univers(*)').eq('sous_saga_id', currentSousSagaId);
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    const items = (links||[]).map(l=>l.elements_univers).filter(e=>e && e.periode_label).sort((a,b)=>(a.periode_ordre||0)-(b.periode_ordre||0));
-    chronoData = items;
-    let lastEre = null, html = '';
-    items.forEach(e => {
-      if (e.ere !== lastEre) { html += `<div style="margin:16px 0 6px; font-size:11px; text-transform:uppercase; color:var(--text-dim);">${e.periode_label||''} · ${e.ere||''}</div>`; lastEre = e.ere; }
-      html += `<div class="panel" style="cursor:pointer; margin-bottom:10px;" onclick="showChronoDetail('${e.id}')"><div style="font-size:15px; font-weight:500;">${e.nom}</div></div>`;
-    });
-    zone.innerHTML = `
-      <div class="row2" style="grid-template-columns:1.3fr 1fr; gap:20px; align-items:start;">
-        <div>${items.length ? html : `<div class="empty">Aucun événement lié à cette sous-saga pour l'instant.</div>`}</div>
-        <div class="panel" id="chrono-detail"><div class="empty">Sélectionne un événement à gauche.</div></div>
-      </div>
-    `;
+    const {data,error}=await db().from('chronologie_evenements').select('*').eq('sous_saga_id',currentSousSagaId).order('periode_ordre');if(error){zone.innerHTML=`<div class="empty">Migration V5.5 requise : ${safeText(error.message)}</div>`;return}
+    const items=data||[];zone.innerHTML=`<div class="head-row"><h2>Chronologie</h2><button class="btn-primary" onclick="createChronoEvent()">+ Ajouter un événement</button></div>${items.map(e=>`<div class="timeline-row" style="--timeline-color:${safeText(e.couleur||'var(--accent)')}"><div class="timeline-date">${safeText(e.periode_label||e.date_evenement||'~')}</div><div class="timeline-axis"><span class="timeline-dot"></span></div><article class="timeline-card" onclick="openChronoDrawer('${e.id}')">${e.image_url?`<img class="timeline-thumb" src="${safeText(e.image_url)}" alt="">`:`<div class="timeline-thumb"></div>`}<div><span class="ss-pill">${safeText(e.categorie||'Événement')}</span><h3>${safeText(e.titre)}</h3><p style="font-size:12px;color:var(--text-dim)">${safeText(e.resume||'')}</p></div></article></div>`).join('')||'<div class="empty">Aucun événement pour le moment.</div>'}`;
   }
+  async function createChronoEvent(){const titre=prompt('Titre de l’événement :');if(!titre)return;const periode=prompt('Date ou période :','');const {error}=await db().from('chronologie_evenements').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,titre,periode_label:periode||null,couleur:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()});if(error)return alert(error.message);renderSousSagaChronologie(document.getElementById('soussaga-tab-content'))}
+  async function openChronoDrawer(id){const {data:e}=await db().from('chronologie_evenements').select('*').eq('id',id).single();document.getElementById('v55-drawer')?.remove();document.body.insertAdjacentHTML('beforeend',`<aside class="drawer-v55" id="v55-drawer"><button class="btn-secondary" onclick="this.parentElement.remove()">✕ Fermer</button>${e.image_url?`<img src="${safeText(e.image_url)}" style="width:100%;max-height:230px;object-fit:cover;border-radius:12px;margin-top:12px">`:''}<h2>${safeText(e.titre)}</h2><p>${safeText(e.periode_label||'')}</p><p>${safeText(e.description||e.resume||'')}</p></aside>`)}
 
   async function renderSousSagaFicheDetaillee(zone){
     const { data: ss } = await db().from('sous_sagas').select('pitch, a_propos, intentions, genre, temporalite, lieu_principal, resume_deja_raconte, resume_prevu, resume_envisage, fil_rouge, registre_continuite').eq('id', currentSousSagaId).single();
@@ -2464,7 +2405,7 @@
         </div>
       </div>
       <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
-        ${[...OEUVRE_TABS, ...(o.module_lore?[{key:'lore',label:'Univers & Lore'}]:[]), ...(o.module_chronologie?[{key:'chronologie',label:'Chronologie'}]:[])].map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+        ${[...OEUVRE_TABS, ...(o.module_lore?[{key:'lore',label:'Codex'}]:[]), ...(o.module_chronologie?[{key:'chronologie',label:'Chronologie'}]:[])].map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
       </div>
       <div id="oeuvre-tab-content"></div>
     `;
@@ -4123,6 +4064,35 @@
   function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);setRootPalette(p,accentColor||globalAppearance.accent);}
   function applyTheme(themeBase,accentColor){globalAppearance.mode=themeBase==='sombre'?'sombre':'clair';globalAppearance.accent=accentColor||globalAppearance.accent;applyGlobalTheme();}
   function resetTheme(){applyGlobalTheme();}
+
+
+  // ===== V5.5 Back-office : navigation par onglets =====
+  function activateAdminWorkTabs(){
+    const root=document.querySelector('.admin-work-editor'); if(!root)return;
+    const sections=[...root.querySelectorAll('.admin-section')]; if(!sections.length)return;
+    const labels=sections.map(s=>s.querySelector('h2')?.textContent?.trim()).filter(Boolean);
+    const tabs=document.createElement('div');tabs.className='admin-editor-tabs';
+    labels.forEach((l,i)=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{sections.forEach((s,j)=>s.style.display=j===i?'block':'none');tabs.querySelectorAll('button').forEach((x,j)=>x.classList.toggle('active',j===i))};tabs.appendChild(b)});
+    root.querySelector('.admin-work-topbar')?.insertAdjacentElement('afterend',tabs);tabs.querySelector('button')?.click();
+  }
+  async function distributeWorkWordTarget(){
+    const total=Number(document.getElementById('aow-objectif')?.value||0);if(!total||!currentAdminOeuvreId)return alert('Renseigne d’abord un objectif global de mots.');
+    const {data,error}=await db().from('chapitres').select('id').eq('oeuvre_id',currentAdminOeuvreId).order('ordre');if(error)return alert(error.message);if(!data?.length)return alert('Aucun chapitre dans le Plan.');
+    const base=Math.floor(total/data.length),reste=total-base*data.length;for(let i=0;i<data.length;i++)await db().from('chapitres').update({objectif_mots:base+(i<reste?1:0)}).eq('id',data[i].id);alert(`Objectif réparti sur ${data.length} chapitres.`)
+  }
+
+  async function openAdminSousSagaEditor(id){
+    const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement…</div>';
+    const [sr,wr]=await Promise.all([db().from('sous_sagas').select('*,sagas(nom)').eq('id',id).single(),db().from('oeuvres').select('id,titre,numero_sous_saga').eq('sous_saga_id',id).order('ordre_sous_saga')]);const ss=sr.data;if(!ss){content.innerHTML='<div class="empty">Sous-saga introuvable.</div>';return}
+    content.innerHTML=`<div class="admin-work-editor"><div class="admin-work-topbar"><div><div class="admin-work-kicker">Administration · Sous-sagas</div><h1>${safeText(ss.nom)}</h1></div><div class="admin-work-top-actions"><button class="btn-secondary" onclick="renderAdminSousSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSousSagaDetail('${id}')">Ouvrir dans Passerelle ↗</button><button class="btn-primary" onclick="saveAdminSousSagaEditor('${id}')">Enregistrer</button></div></div><div class="admin-editor-tabs"><button class="active" onclick="adminSsTab(this,'info')">Informations</button><button onclick="adminSsTab(this,'plan')">Plan global</button><button onclick="adminSsTab(this,'appearance')">Apparence</button><button onclick="adminSsTab(this,'archive')">Archivage</button></div>
+    <div id="ass-info"><section class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div class="admin-field-full"><label>Nom</label><input id="ass-nom" value="${safeText(ss.nom||'')}"></div><div><label>Saga parente</label><input value="${safeText(ss.sagas?.nom||'')}" disabled></div><div><label>Genre dominant</label><input id="ass-genre" value="${safeText(ss.genre||'')}"></div><div><label>Temporalité</label><input id="ass-temporalite" value="${safeText(ss.temporalite||'')}"></div><div><label>Cadre</label><input id="ass-lieu" value="${safeText(ss.lieu_principal||'')}" placeholder="Sélection parent Codex à brancher"></div><div class="admin-field-full"><label>Mots-clés</label><input id="ass-tags" value="${safeText((ss.mots_cles||[]).join(', '))}"></div></div><label>À propos / résumé canonique</label><textarea id="ass-description">${safeText(ss.description||'')}</textarea><label>Citation</label><textarea id="ass-citation">${safeText(ss.citation||'')}</textarea></section></div>
+    <div id="ass-plan" style="display:none"><section class="admin-section"><h2>Plan global</h2><p class="admin-section-sub">Les tomes/segments sont dynamiques. Ils peuvent exister avant d’être liés à une œuvre.</p><button class="btn-primary" onclick="currentSousSagaId='${id}';addSousSagaSegment().then(()=>openAdminSousSagaEditor('${id}'))">+ Ajouter un tome</button><div id="ass-plan-list" style="margin-top:12px"></div></section></div>
+    <div id="ass-appearance" style="display:none"><section class="admin-section"><h2>Apparence</h2><label>Couleur de page</label><input type="color" id="ass-page-color" value="${safeText(ss.page_color||globalAppearance.themeColor)}"><label>Couleur d’accent</label><input type="color" id="ass-accent" value="${safeText(ss.accent_color||globalAppearance.accent)}"><label>Bannière</label><input id="ass-banniere" value="${safeText(ss.banniere||'')}"><label class="btn-secondary upload-file-btn" style="margin-top:7px">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('sous_sagas','${id}',this,'ass-banniere')"></label></section></div>
+    <div id="ass-archive" style="display:none"><section class="admin-section admin-danger"><h2>Archivage</h2><div class="admin-check-row"><input type="checkbox" id="ass-archive-check" ${ss.archive?'checked':''}><div><strong>Sous-saga archivée</strong><small>Masquée sans suppression.</small></div></div></section></div></div>`;
+    const seg=await db().from('sous_saga_segments').select('*').eq('sous_saga_id',id).order('ordre');const z=document.getElementById('ass-plan-list');if(z)z.innerHTML=(seg.data||[]).map(renderSsSegment).join('')||'<div class="empty">Aucun tome/segment.</div>';
+  }
+  function adminSsTab(btn,key){document.querySelectorAll('.admin-editor-tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['info','plan','appearance','archive'].forEach(k=>{const e=document.getElementById('ass-'+k);if(e)e.style.display=k===key?'block':'none'})}
+  async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:document.getElementById('ass-description').value.trim(),citation:document.getElementById('ass-citation').value.trim(),page_color:document.getElementById('ass-page-color').value,accent_color:document.getElementById('ass-accent').value,banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {error}=await db().from('sous_sagas').update(payload).eq('id',id);if(error)return alert(error.message);alert('Sous-saga enregistrée ✨')}
 
   init();
 </script>
