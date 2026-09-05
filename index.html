@@ -1835,8 +1835,9 @@
       const cleanup=()=>{window.removeEventListener('message',onMessage);clearTimeout(timer);try{iframe.remove()}catch(e){}};
       const finish=(err,data)=>{if(done)return;done=true;cleanup();err?reject(err):resolve(data)};
       const onMessage=(event)=>{
-        const origin=String(event.origin||'');
-        if(!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)?script\.googleusercontent\.com)$/i.test(origin)) return;
+        // Apps Script HtmlService peut publier depuis une origine opaque ("null")
+        // ou depuis un hôte Google intermédiaire. Le jeton aléatoire par requête est
+        // notre garde-fou fiable ici : on ne traite QUE le message portant ce jeton.
         const msg=event.data;
         if(!msg||msg.type!=='atelier-passerelle'||msg.token!==token) return;
         finish(null,msg.payload);
