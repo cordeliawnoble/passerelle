@@ -669,7 +669,7 @@
     ]},
     { group: 'Pilotage', items: [
       { key:'bureau-editorial', label:'Bureau éditorial', real:true },
-      { key:'archives', label:'Archives', real:false },
+      { key:'archives', label:'Archives', real:true },
       { key:'administration', label:'⚙ Administration', real:true },
     ]}
   ];
@@ -778,6 +778,7 @@
     if (key === 'relecture') renderRelecture();
     if (key === 'planning') renderPlanning();
     if (key === 'bureau-editorial') renderBureauEditorial();
+    if (key === 'archives') renderArchives();
     if (key === 'poesie') renderPoesie();
     if (key === 'administration') renderAdministration();
   }
@@ -3767,11 +3768,22 @@
   // ŒUVRES
   // ============================================================
   let oeuvreCatalogueDataV571=[],oeuvreCatalogueGroupV571=sessionStorage.getItem('passerelle-oeuvres-group')||'saga';
-  async function renderOeuvres(){
-    const b=await getPageBanner('oeuvres'),content=document.getElementById('content');content.innerHTML=`${renderPageImageBanner(b,'Œuvres')}<div class="head-row"><div><h2>Œuvres</h2><p style="font-size:12px;color:var(--text-dim)">Explorateur du catalogue.</p></div><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
-    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,page_color,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',false).order('titre');const z=document.getElementById('oeuvres-zone');if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}oeuvreCatalogueDataV571=data||[];
+  async function renderOeuvres(){ return renderOeuvreCataloguePageV571(false); }
+  async function renderArchives(){ return renderOeuvreCataloguePageV571(true); }
+  async function renderOeuvreCataloguePageV571(archived=false){
+    const content=document.getElementById('content');
+    const title=archived?'Archives':'Œuvres';
+    const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':'Explorateur du catalogue.';
+    const banner=archived?'':renderPageImageBanner(await getPageBanner('oeuvres'),'Œuvres');
+    const action=archived?'':`<button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button>`;
+    content.innerHTML=`${banner}<div class="head-row"><div><h2>${title}</h2><p style="font-size:12px;color:var(--text-dim)">${subtitle}</p></div>${action}</div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
+    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,page_color,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',archived).order('titre');
+    const z=document.getElementById('oeuvres-zone');
+    if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    oeuvreCatalogueDataV571=data||[];
     const sagaOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.saga_id&&x.sagas?.nom).map(x=>[x.saga_id,x.sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join(''),colOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.univers_id&&x.univers?.nom).map(x=>[x.univers_id,x.univers.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
-    z.innerHTML=`<div class="catalog-toolbar"><div class="search-wrap"><label>Recherche</label><input id="oc-q" placeholder="Titre, genre…" oninput="renderOeuvreCatalogueV571()"></div><div><label>Collection</label><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option>${colOpts}</select></div><div><label>Saga</label><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Toutes</option>${sagaOpts}</select></div><div><label>Sous-saga</label><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option></select></div><div><label>Éditorial actuel</label><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select></div><div><label>Regrouper par</label><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div id="oc-grid"></div>`;syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();
+    z.innerHTML=`<div class="catalog-toolbar"><div class="search-wrap"><label>Recherche</label><input id="oc-q" placeholder="Titre, genre…" oninput="renderOeuvreCatalogueV571()"></div><div><label>Collection</label><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option>${colOpts}</select></div><div><label>Saga</label><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Toutes</option>${sagaOpts}</select></div><div><label>Sous-saga</label><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option></select></div><div><label>Éditorial actuel</label><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select></div><div><label>Regrouper par</label><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div id="oc-grid"></div>`;
+    syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();
   }
   function syncOeuvreSousSagaFilterV571(){const el=document.getElementById('oc-ss');if(!el)return;const saga=document.getElementById('oc-saga')?.value||'',old=el.value,rows=oeuvreCatalogueDataV571.filter(x=>x.sous_saga_id&&x.sous_sagas?.nom&&(!saga||x.saga_id===saga));el.innerHTML='<option value="">Toutes</option>'+[...new Map(rows.map(x=>[x.sous_saga_id,x.sous_sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old}
   function renderOeuvreCatalogueV571(){const q=(document.getElementById('oc-q')?.value||'').toLowerCase(),col=document.getElementById('oc-col')?.value||'',saga=document.getElementById('oc-saga')?.value||'',ss=document.getElementById('oc-ss')?.value||'',ed=document.getElementById('oc-ed')?.value||'',group=document.getElementById('oc-group')?.value||oeuvreCatalogueGroupV571,rows=oeuvreCatalogueDataV571.filter(o=>(!q||[o.titre,o.genre,o.sagas?.nom,o.sous_sagas?.nom,o.univers?.nom,o.statut_editorial_actuel].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!col||o.univers_id===col)&&(!saga||o.saga_id===saga)&&(!ss||o.sous_saga_id===ss)&&(!ed||o.statut_editorial_actuel===ed)),key=o=>group==='collection'?(o.univers?.nom||'Sans collection'):group==='saga'?(o.sagas?.nom||'Œuvres indépendantes'):group==='soussaga'?(o.sous_sagas?.nom||'Sans sous-saga'):group==='editorial'?(o.statut_editorial_actuel||'Non défini'):'',groups=new Map();rows.forEach(o=>{const k=key(o);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(o)});const card=o=>entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[o.sous_sagas?.nom||o.sagas?.nom||'Indépendante',o.genre,o.statut_editorial_actuel||o.statut],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,imageMode:o.banniere?'landscape':'portrait'});document.getElementById('oc-grid').innerHTML=!rows.length?'<div class="empty">Aucune œuvre avec ces filtres.</div>':group==='none'?`<div class="entity-gallery">${rows.map(card).join('')}</div>`:[...groups.entries()].map(([k,a])=>`<section><h3 class="catalog-group-title">${safeText(k)} <small style="color:var(--text-dim)">· ${a.length}</small></h3><div class="entity-gallery">${a.map(card).join('')}</div></section>`).join('')}
