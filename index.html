@@ -515,6 +515,23 @@
   .media-batch-tools-v566{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 10px}.media-batch-item-v566{display:grid;grid-template-columns:86px 1fr auto;gap:11px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:8px}.media-batch-item-v566>img{width:86px;height:76px;object-fit:cover;border-radius:8px;background:var(--bg-2)}.media-batch-fields-v566{display:grid;gap:7px}.media-current-v566{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:5px}.media-opt-v573b{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--text-dim)}.media-opt-v573b strong{color:var(--accent)}.media-upload-footer-v566{display:flex;justify-content:flex-end;margin-top:12px}.media-upload-status-v573b{margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--bg-2);font-size:11px;color:var(--text-dim)}
   @media(max-width:650px){.media-batch-item-v566{grid-template-columns:70px 1fr}.media-batch-item-v566>img{width:70px;height:64px}.media-batch-item-v566>button{grid-column:1/-1;justify-self:end}}
 
+
+  /* ===== V5.7.4 — crash-test import Notion Œuvre → Manuscrit ===== */
+  .notion-work-import{border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--accent) 4%,var(--card));padding:16px;margin-top:16px}
+  .notion-work-import h3{margin:0 0 4px;color:var(--accent);font-size:1rem}
+  .notion-work-import p{margin:0 0 12px;color:var(--text-dim);font-size:11px;line-height:1.55}
+  .notion-import-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+  .notion-import-kpi{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:9px}
+  .notion-import-kpi strong{display:block;font-size:16px;color:var(--accent)}
+  .notion-import-kpi span{font-size:9px;color:var(--text-dim)}
+  .notion-import-preview-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:11px}
+  .notion-import-preview-row:first-child{border-top:0}
+  .notion-import-state{font-size:9px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+  .notion-import-state.ok{color:#39875f}.notion-import-state.warn{color:#ad6f23}.notion-import-state.skip{color:var(--text-dim)}
+  .notion-import-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .notion-import-status{margin-top:10px;min-height:18px;font-size:11px;color:var(--text-dim)}
+  @media(max-width:620px){.notion-import-kpis{grid-template-columns:1fr}.notion-import-preview-row{grid-template-columns:32px 1fr}.notion-import-preview-row .notion-import-state{grid-column:2}}
+
 </style>
 </head>
 <body>
@@ -1128,6 +1145,8 @@
               <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
             </section>
 
+            <section class="admin-section"><h2>Import Notion</h2><p class="admin-section-sub">Crash-test contrôlé : remplit le Manuscrit sans toucher au Plan. Réexécutable sans doublon grâce aux identifiants source.</p><div id="notion-work-import-v574"></div></section>
+
             <section class="admin-section"><h2>Pilotage éditorial</h2><p class="admin-section-sub">Les mêmes données que le Bureau éditorial, éditables ici sans créer de copie.</p>
               <div class="admin-section-grid three">
                 <div><label>Destination</label><select id="aow-destination"><option value="">Non définie</option>${editorialDest.map(x=>`<option ${o.destination_editoriale===x?'selected':''}>${x}</option>`).join('')}</select></div>
@@ -1154,6 +1173,92 @@
         </div>
       </div>`;
     activateAdminWorkTabs();
+    renderNotionWorkImportTestV574(o);
+  }
+
+
+  // ============================================================
+  // V5.7.4a — Crash-test d'import Notion : Le Déclencheur, chapitre 1
+  // Le Plan reste volontairement hors de ce flux.
+  // ============================================================
+  const NOTION_IMPORT_TEST_V574 = {
+    sourceWorkId:'33cb0616-1c84-805f-881b-fa2a19833969',
+    sourceWorkTitle:'L’équation du chaos - Le déclencheur',
+    expectedTome:1,
+    chapters:[{
+      notion_page_id:'349b0616-1c84-806d-a5be-c3036d93a427',
+      numero:1,
+      ordre:1,
+      titre:'La Loi des Séries',
+      acte:'Acte I : La Variable Inconnue',
+      etat:'écrit',
+      nb_mots:1808,
+      pov:'1500 mots (Maddie) + 200 mots (POV Roy)',
+      resume:`L'histoire s'ouvre sur Maddie, qui se bat contre la comptabilité chaotique du bar de son oncle, le "Ride or Die". Elle est sous pression, fatiguée par une journée d'entretiens ratés (merci les talons hauts !), et on sent que ses émotions sont au bord de la surcharge. Littéralement.
+L'agacement de Maddie semble avoir un effet physique sur son environnement : les ampoules claquent dès qu'elle perd patience. Pour aider son oncle Loyd, elle descend faire le service en salle. Là, elle se confronte à Miles, un biker aussi charmant qu'un orc en colère, qui l'agresse physiquement.
+Le climax : Quand il tente de la forcer à s'asseoir sur lui, la rage de Maddie explose. Résultat ? Un court-circuit massif, des ampoules qui explosent, et un Miles qui se prend une décharge électrique sortie de nulle part. Loyd intervient pour virer l'importun, mais le doute plane : Maddie est-elle une pile électrique humaine ? ⚡️
+On finit sur le POV de Roy, un mystérieux étranger qui arrive sous la pluie, déterminé à remplir une mission... et il cherche visiblement Maddie.`,
+      analysis:`Maddie Mocrate : La "Princesse" aux yeux gris orageux. Elle est fascinante parce qu'elle essaie d'être une adulte responsable (le job, les comptes, les talons), mais elle a un "chaos" intérieur qu'elle ne maîtrise pas encore. Elle utilise la logique (tables de multiplication) pour brider un pouvoir qui semble lié à ses émotions. C'est une Sorcière qui s'ignore ! 🧙‍♀️
+Oncle Loyd : Le protecteur bourru. C'est le "Grog" de la bande : pas de manières, une voix rocailleuse, mais une loyauté absolue envers sa nièce. Leur relation est ultra touchante, faite de piques et de non-dits protecteurs.
+Miles (Le Biker) : Le méchant de niveau 1. Il sert de catalyseur pour nous montrer que Maddie n'est pas une demoiselle en détresse ordinaire. Il a tâté du courant alternatif, le pauvre ! 😂
+Roy : L'élément perturbateur. Il dégage une aura de "Rôdeur" en quête de sa cible. Sa relation avec Maddie n'existe pas encore, mais la tension est déjà là par sa simple présence dans l'ombre.`,
+      favorite:`"Qu’il me lâche"
+Les ampoules au-dessus de nous se mettent à clignoter plusieurs fois avant qu’elles n’explosent les unes après les autres dans un bruit d’explosion de verre.
+
+Pourquoi ? Parce que c'est hyper cinématographique ! J'ai imaginé la scène comme un épisode de Stranger Things ou un moment de bascule dans X-Men. C'est le moment précis où la réalité de Maddie se brise. C'est viscéral, puissant, et ça pose direct les enjeux : elle est dangereuse quand elle est poussée à bout. 💥`,
+      date_ecriture:null
+    }]
+  };
+
+  function normalizeImportTextV574(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function workLooksLikeDeclencheurV574(o){const t=normalizeImportTextV574(o?.titre);return t.includes('declencheur') || (t.includes('equation du chaos') && /(^| )t(ome )?1($| )/.test(t))}
+  function noteHtmlV574(ch){
+    const esc=(v)=>safeText(v||'').replace(/\n/g,'<br>');
+    return `<h2>🎭 Analyse des personnages & relations</h2><p>${esc(ch.analysis)}</p><h2>💘 Passage préféré de Liam</h2><p>${esc(ch.favorite)}</p>`;
+  }
+  let notionImportPreviewV574=null;
+  async function renderNotionWorkImportTestV574(work){
+    const z=document.getElementById('notion-work-import-v574');if(!z)return;
+    const compatible=workLooksLikeDeclencheurV574(work);
+    z.innerHTML=`<div class="notion-work-import"><h3>🧪 Test Le Déclencheur</h3><p>Source Notion trouvée : <strong>${safeText(NOTION_IMPORT_TEST_V574.sourceWorkTitle)}</strong>. Ce test importe uniquement le chapitre 1 dans <strong>Manuscrit</strong>. Aucune ligne de <code>plans</code> n'est créée ou modifiée.</p>${compatible?`<button class="btn-secondary" onclick="previewNotionWorkImportV574()">Analyser avant import</button>`:`<div class="danger-inline">Cette fiche ne ressemble pas au Tome 1 « Le Déclencheur ». Le test est verrouillé ici pour éviter une injection dans la mauvaise œuvre.</div>`}<div id="notion-import-preview-v574"></div><div class="notion-import-status" id="notion-import-status-v574"></div></div>`;
+  }
+  async function previewNotionWorkImportV574(){
+    const zone=document.getElementById('notion-import-preview-v574'),status=document.getElementById('notion-import-status-v574');if(!zone||!adminEditingOeuvreId)return;
+    status.textContent='Analyse de la fiche Passerelle…';
+    const {data:existing,error}=await db().from('chapitres').select('id,numero,ordre,titre,notion_page_id,nb_mots').eq('oeuvre_id',adminEditingOeuvreId).order('ordre');
+    if(error){status.textContent='La migration SQL V5.7.4 est probablement manquante : '+error.message;return}
+    const decisions=NOTION_IMPORT_TEST_V574.chapters.map(ch=>{
+      const bySource=(existing||[]).find(x=>x.notion_page_id===ch.notion_page_id);
+      if(bySource)return {chapter:ch,action:'update',target:bySource,reason:'Déjà importé : mise à jour sûre'};
+      const byExact=(existing||[]).find(x=>Number(x.numero)===Number(ch.numero)&&normalizeImportTextV574(x.titre)===normalizeImportTextV574(ch.titre));
+      if(byExact)return {chapter:ch,action:'attach',target:byExact,reason:'Chapitre existant reconnu par n° + titre'};
+      const conflict=(existing||[]).find(x=>Number(x.numero)===Number(ch.numero));
+      if(conflict)return {chapter:ch,action:'conflict',target:conflict,reason:`Le n° ${ch.numero} existe déjà sous « ${conflict.titre} »`};
+      return {chapter:ch,action:'insert',target:null,reason:'Nouveau chapitre Manuscrit'};
+    });
+    notionImportPreviewV574={existing:existing||[],decisions};
+    const conflicts=decisions.filter(x=>x.action==='conflict').length;
+    zone.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${decisions.filter(x=>x.action==='insert').length}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${decisions.filter(x=>['update','attach'].includes(x.action)).length}</strong><span>à rattacher / mettre à jour</span></div><div class="notion-import-kpi"><strong>${conflicts}</strong><span>conflit</span></div></div><div>${decisions.map(d=>`<div class="notion-import-preview-row"><strong>#${d.chapter.numero}</strong><div><strong>${safeText(d.chapter.titre)}</strong><br><small>${safeText(d.reason)} · ${d.chapter.nb_mots.toLocaleString('fr-FR')} mots</small></div><span class="notion-import-state ${d.action==='conflict'?'warn':d.action==='update'?'skip':'ok'}">${d.action==='insert'?'Créer':d.action==='attach'?'Rattacher':d.action==='update'?'Mettre à jour':'Conflit'}</span></div>`).join('')}</div><div class="notion-import-actions"><button class="btn-primary" ${conflicts?'disabled':''} onclick="applyNotionWorkImportV574()">Importer ce test</button><button class="btn-secondary" onclick="document.getElementById('notion-import-preview-v574').innerHTML='';notionImportPreviewV574=null">Annuler</button></div>`;
+    status.textContent=conflicts?'Import bloqué tant que le conflit n’est pas résolu.':'Prévisualisation prête. Le Plan restera intact.';
+  }
+  async function applyNotionWorkImportV574(){
+    const status=document.getElementById('notion-import-status-v574');if(!notionImportPreviewV574||!adminEditingOeuvreId||!status)return;
+    if(notionImportPreviewV574.decisions.some(x=>x.action==='conflict')){status.textContent='Import bloqué : conflit détecté.';return}
+    status.textContent='Import du chapitre test…';
+    const workSource=await db().from('oeuvres').update({notion_page_id:NOTION_IMPORT_TEST_V574.sourceWorkId,updated_at:new Date().toISOString()}).eq('id',adminEditingOeuvreId);
+    if(workSource.error){status.textContent='Erreur sur la fiche œuvre : '+workSource.error.message;return}
+    for(const d of notionImportPreviewV574.decisions){
+      const ch=d.chapter;
+      const payload={notion_page_id:ch.notion_page_id,titre:ch.titre,numero:ch.numero,ordre:ch.ordre,acte:ch.acte,pov:ch.pov,etat:ch.etat,nb_mots:ch.nb_mots,resume:ch.resume,memo:noteHtmlV574(ch),updated_at:new Date().toISOString()};
+      if(ch.date_ecriture)payload.date_ecriture=ch.date_ecriture;
+      let r;
+      if(d.action==='insert'){payload.user_id=currentUser.id;payload.oeuvre_id=adminEditingOeuvreId;r=await db().from('chapitres').insert(payload)}
+      else r=await db().from('chapitres').update(payload).eq('id',d.target.id);
+      if(r.error){status.textContent=`Erreur chapitre #${ch.numero} : ${r.error.message}`;return}
+    }
+    status.textContent='✓ Crash-test importé. Chapitre 1 ajouté au Manuscrit, notes incluses, Plan intact.';
+    notionImportPreviewV574=null;
+    setTimeout(()=>openAdminOeuvreEditor(adminEditingOeuvreId),900);
   }
 
   async function onAdminOeuvreSagaChange(){
@@ -5232,7 +5337,7 @@
       {key:'identity',label:'Identité',titles:['Identité & hiérarchie']},
       {key:'presentation',label:'Présentation',titles:['Présentation de l’œuvre']},
       {key:'narrative',label:'Narratif',titles:['Informations narratives']},
-      {key:'manuscript',label:'Manuscrit & Atelier',titles:['Manuscrit & Atelier']},
+      {key:'manuscript',label:'Manuscrit & Atelier',titles:['Manuscrit & Atelier','Import Notion']},
       {key:'editorial',label:'Éditorial',titles:['Pilotage éditorial']},
       {key:'configuration',label:'Configuration',titles:['Couverture canonique','Modules de la fiche','Apparence de la page']},
       {key:'archive',label:'Archivage',titles:['Archivage']}
