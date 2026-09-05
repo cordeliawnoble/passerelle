@@ -543,6 +543,13 @@
   .plan-drawer-form-v576b{display:grid;gap:12px}.plan-drawer-form-v576b .row2{gap:10px}.plan-drawer-actions-v576b{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
   .collection-visual-v576b{width:100%;height:150px;object-fit:cover;border-radius:10px;background:var(--bg-2)}.palette-v576b{display:flex;gap:5px;margin-top:7px}.palette-v576b i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
   .admin-section>summary{cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;list-style:none}.admin-section>summary::-webkit-details-marker{display:none}.admin-section>summary:after{content:'⌄';float:right;color:var(--text-dim)}.admin-section[open]>summary:after{content:'⌃'}
+
+  /* V5.7.6c — FilterBar compacte */
+  .admin-filterbar-v576b{display:flex!important;gap:8px!important;align-items:center!important;flex-wrap:wrap!important;margin:10px 0 14px!important}
+  .admin-filterbar-v576b input,.admin-filterbar-v576b select{width:auto!important;min-width:150px!important;max-width:230px!important;margin:0!important;padding:8px 10px!important;height:38px!important}
+  .admin-filterbar-v576b .search-input{flex:1 1 220px!important;max-width:360px!important}
+  .admin-filterbar-v576b button{height:38px!important;margin:0!important;white-space:nowrap!important}
+  @media(max-width:760px){.admin-filterbar-v576b input,.admin-filterbar-v576b select,.admin-filterbar-v576b .search-input{flex:1 1 160px!important;max-width:none!important;min-width:0!important}}
 </style>
 </head>
 <body>
@@ -1167,7 +1174,7 @@
                 <div><label>Objectif global de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"><button type="button" class="btn-secondary" style="margin-top:6px" onclick="distributeWorkWordTarget()">↻ Répartir sur le Plan</button></div>
                 <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.atelier_project_id||o.code_session||'')}" placeholder="ex. EC-T2"></div>
               </div>
-              <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
+              <div class="admin-work-note" id="atelier-sync-box-v576c">🔌 <strong>Atelier</strong> : Passerelle lit uniquement les chapitres marqués « Rédigé ». Les lignes planifiées restent dans le Plan et ne créent jamais de faux chapitres Manuscrit.<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn-primary" onclick="syncAtelierWorkV576c()">↻ Synchroniser maintenant</button><button type="button" class="btn-secondary" onclick="testAtelierConnectorV576c()">Tester la connexion</button><span id="atelier-sync-status-v576c" style="font-size:12px;color:var(--text-dim)">${o.atelier_last_sync_at?'Dernière synchro : '+new Date(o.atelier_last_sync_at).toLocaleString('fr-FR'):'Jamais synchronisé'}</span></div></div>
             </details>
 
             <details class="admin-section" open><summary>Import Notion</summary><p class="admin-section-sub">Importe un paquet JSON préparé depuis Notion. Prévisualisation obligatoire, Manuscrit uniquement, Plan intact et import réexécutable sans doublon.</p><div id="notion-work-import-v575"></div></details>
@@ -1723,6 +1730,7 @@
           <div style="overflow:auto"><table class="admin-table"><thead><tr><th>Évolution</th><th>Module</th><th>Type</th><th>Origine</th><th>Statut</th><th>Notes</th><th></th></tr></thead><tbody>${(v2notes.data||[]).map(n=>`<tr><td><strong>${safeText(n.titre||'Sans titre')}</strong><div style="font-size:11px;color:var(--text-dim);margin-top:3px">${n.created_at?new Date(n.created_at).toLocaleDateString('fr-FR'):''}</div></td><td>${safeText(n.module||'—')}</td><td>${n.type_note==='adaptation_multi'?'Multi-utilisatrice':'Personnelle'}</td><td>${safeText(n.origine||'—')}</td><td><select style="min-width:130px;padding:6px 8px" onchange="updateV2EvolutionStatus('${n.id}',this.value)"><option value="idee" ${n.statut==='idee'?'selected':''}>Idée</option><option value="a_etudier" ${n.statut==='a_etudier'?'selected':''}>À étudier</option><option value="valide_v2" ${n.statut==='valide_v2'?'selected':''}>Validé V2</option><option value="ecarte" ${n.statut==='ecarte'?'selected':''}>Écarté</option></select></td><td style="max-width:360px;white-space:pre-wrap">${safeText(n.notes||'—')}</td><td><button class="tiny-btn danger-btn" onclick="deleteV2Evolution('${n.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="7"><div class="empty">Aucune note V2. Le futur est encore bien rangé. ✨</div></td></tr>'}</tbody></table></div>
         `}
       </div>
+      <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle ne modifie jamais le Google Sheet.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button></div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
@@ -1735,6 +1743,50 @@
   async function addKeywordV571(){const nom=document.getElementById('kw-new-name')?.value.trim(),category_id=document.getElementById('kw-new-cat-id')?.value;if(!nom||!category_id)return;const {error}=await db().from('keywords').insert({user_id:currentUser.id,nom,category_id});if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
   async function updateKeywordV571(id,f,v){const {error}=await db().from('keywords').update({[f]:v||null}).eq('id',id);if(error)alert(error.message);keywordCacheV571=null}
   async function deleteKeywordV571(id){if(!confirm('Supprimer ce mot-clé ?'))return;const {error}=await db().from('keywords').delete().eq('id',id);if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
+
+  async function saveAtelierConnectorConfigV576c(){
+    const url=document.getElementById('cfg-atelier-url')?.value.trim()||null;
+    const {error}=await db().from('configuration_utilisateur').upsert({user_id:currentUser.id,atelier_connector_url:url,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    if(error)return alert('Connecteur Atelier : '+error.message);
+    showTransientStatusV572('Connecteur Atelier enregistré ✓');
+  }
+  async function getAtelierConnectorUrlV576c(){
+    const {data,error}=await db().from('configuration_utilisateur').select('atelier_connector_url').eq('user_id',currentUser.id).maybeSingle();
+    if(error)throw error; return data?.atelier_connector_url||'';
+  }
+  function atelierJsonpV576c(baseUrl,projectId){
+    return new Promise((resolve,reject)=>{
+      if(!/^https:\/\/script\.google\.com\//i.test(baseUrl||'')) return reject(new Error('URL Apps Script invalide. Configure-la dans BO → Configuration → Connecteur Atelier.'));
+      const cb='atelierCb_'+Date.now()+'_'+Math.random().toString(36).slice(2); let script=document.createElement('script');
+      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier ne répond pas.')),15000);
+      function finish(err,data){clearTimeout(timer);try{delete window[cb]}catch(e){}script.remove();err?reject(err):resolve(data)}
+      window[cb]=(data)=>finish(null,data);
+      const sep=baseUrl.includes('?')?'&':'?'; script.src=baseUrl+sep+'project='+encodeURIComponent(projectId||'')+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();
+      script.onerror=()=>finish(new Error('Impossible de charger le connecteur Atelier. Vérifie son déploiement Web App.')); document.head.appendChild(script);
+    });
+  }
+  async function testAtelierConnectorV576c(){
+    const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
+    if(!projectId){if(status)status.textContent='Renseigne d’abord l’ID Atelier.';return}
+    try{if(status)status.textContent='Test de connexion…';const url=await getAtelierConnectorUrlV576c();const data=await atelierJsonpV576c(url,projectId);if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');if(status)status.textContent=`✓ Atelier répond · ${data.project?.name||projectId} · ${(data.chapters||[]).length} chapitre(s)`;}catch(e){if(status)status.textContent='⚠ '+e.message}
+  }
+  async function syncAtelierWorkV576c(){
+    const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
+    if(!adminEditingOeuvreId||!projectId){if(status)status.textContent='Enregistre d’abord un ID Atelier sur cette œuvre.';return}
+    try{
+      if(status)status.textContent='Synchronisation Atelier…'; const url=await getAtelierConnectorUrlV576c(); const data=await atelierJsonpV576c(url,projectId);
+      if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');
+      const written=(data.chapters||[]).filter(c=>/r[ée]dig/i.test(c.state||''));
+      const {data:existing,error:readErr}=await db().from('chapitres').select('id,numero,titre,nb_mots,etat').eq('oeuvre_id',adminEditingOeuvreId); if(readErr)throw readErr;
+      const byNum=new Map((existing||[]).filter(c=>c.numero!=null).map(c=>[Number(c.numero),c])); let created=0,updated=0,unchanged=0;
+      for(const c of written){const numero=Number(c.number);if(!Number.isFinite(numero)||numero<1)continue;const old=byNum.get(numero);const words=Number(String(c.words??0).replace(/[^0-9-]/g,''))||0;const title=(c.manuscriptTitle||'').trim()||old?.titre||`Chapitre ${numero}`;const payload={numero,titre:title,nb_mots:words,etat:'Rédigé'};
+        if(old){if(old.titre===title&&Number(old.nb_mots||0)===words&&/r[ée]dig/i.test(old.etat||'')){unchanged++;continue}const r=await db().from('chapitres').update(payload).eq('id',old.id);if(r.error)throw r.error;updated++;}
+        else{const r=await db().from('chapitres').insert({...payload,user_id:currentUser.id,oeuvre_id:adminEditingOeuvreId,ordre:numero});if(r.error)throw r.error;created++;}
+      }
+      const now=new Date().toISOString();const wr=await db().from('oeuvres').update({atelier_project_id:projectId,atelier_last_sync_at:now,updated_at:now}).eq('id',adminEditingOeuvreId);if(wr.error)throw wr.error;
+      if(status)status.textContent=`✓ ${written.length} rédigé(s) · ${created} créé(s) · ${updated} mis à jour · ${unchanged} inchangé(s)`;
+    }catch(e){if(status)status.textContent='⚠ Synchronisation impossible : '+e.message}
+  }
 
   async function saveGlobalAppearance(){
     const payload={user_id:currentUser.id,theme_mode:document.getElementById('cfg-theme-mode').value,theme_color:document.getElementById('cfg-theme-color').value,accent_color:document.getElementById('cfg-accent-color').value,updated_at:new Date().toISOString()};
@@ -2413,8 +2465,8 @@
   function filterSagaEntityCards(gridId,q,metaId){q=(q||'').toLowerCase();document.querySelectorAll(`#${gridId}>div[data-search]`).forEach(x=>{const okq=!q||x.dataset.search.includes(q);const okm=!metaId||(x.dataset.meta||'').split(' ').includes(metaId);x.style.display=(okq&&okm)?'':'none'})}
 
   async function renderSagaOeuvresV56(zone){
-    const [ssr,wr,meta]=await Promise.all([db().from('sous_sagas').select('id,nom').eq('saga_id',currentSagaId),db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,page_color,sous_saga_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').eq('saga_id',currentSagaId).order('created_at',{ascending:false}),sagaMetadataBundle()]);
-    const ssIds=(ssr.data||[]).map(x=>x.id); const child=ssIds.length?await db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,page_color,sous_saga_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').in('sous_saga_id',ssIds):{data:[]};
+    const [ssr,wr,meta]=await Promise.all([db().from('sous_sagas').select('id,nom').eq('saga_id',currentSagaId),db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,page_color,sous_saga_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').eq('saga_id',currentSagaId).eq('archive',false).order('created_at',{ascending:false}),sagaMetadataBundle()]);
+    const ssIds=(ssr.data||[]).map(x=>x.id); const child=ssIds.length?await db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,page_color,sous_saga_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').in('sous_saga_id',ssIds).eq('archive',false):{data:[]};
     const map=new Map([...(wr.data||[]),...(child.data||[])].map(x=>[x.id,x])); const data=[...map.values()]; const opts=meta.defs.map(d=>`<option value="${d.id}">${safeText((d.emoji?d.emoji+' ':'')+d.nom)}</option>`).join('');
     zone.innerHTML=`<div class="head-row"><h2>Toutes les œuvres de la saga</h2><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div class="admin-filterbar"><input class="search-input" id="saga-work-q" placeholder="🔍 Rechercher…" oninput="filterSagaEntityCards('saga-work-grid',this.value,document.getElementById('saga-work-meta').value)"><select id="saga-work-meta" onchange="filterSagaEntityCards('saga-work-grid',document.getElementById('saga-work-q').value,this.value)"><option value="">Toutes les métadonnées</option>${opts}</select></div><div class="entity-gallery" id="saga-work-grid">${data.map(o=>{const names=metadataNames(meta.defs,meta.works,o.id,'oeuvre_id');const relIds=meta.works.filter(r=>r.oeuvre_id===o.id).map(r=>r.metadata_id).join(' ');const origin=o.sous_saga_id?(o.sous_sagas?.nom||'Sous-saga'):'✨ Indépendante';return `<div data-search="${safeText((o.titre+' '+origin+' '+names.join(' ')).toLowerCase())}" data-meta="${relIds}">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[origin,...names,o.numero_sous_saga!=null?'T'+o.numero_sous_saga:null],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,preview:`openSagaWorkPreviewV56('${o.id}')`})}</div>`}).join('')||'<div class="empty">Aucune œuvre.</div>'}</div>`;
   }
@@ -2987,7 +3039,7 @@
     try{
       const [ssR,worksR]=await Promise.all([
         db().from('sous_sagas').select('*,sagas(nom,univers_id)').eq('id',currentSousSagaId).single(),
-        db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga,statut_editorial_actuel').eq('sous_saga_id',currentSousSagaId)
+        db().from('oeuvres').select('id,titre,statut,mots_ecrits,objectif_mots,couverture,numero_sous_saga,nature_sous_saga,ordre_sous_saga,statut_editorial_actuel').eq('sous_saga_id',currentSousSagaId).eq('archive',false)
       ]);
 
       const firstError=[ssR,worksR].find(r=>r?.error)?.error;
@@ -3015,7 +3067,7 @@
 
   async function renderSousSagaOeuvres(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
-    const {data,error}=await db().from('oeuvres').select('id,titre,resume,pitch,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,page_color,numero_sous_saga,nature_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).order('ordre_sous_saga',{ascending:true,nullsFirst:false});
+    const {data,error}=await db().from('oeuvres').select('id,titre,resume,pitch,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,page_color,numero_sous_saga,nature_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).eq('archive',false).order('ordre_sous_saga',{ascending:true,nullsFirst:false});
     if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
     const works=(data||[]).sort((a,b)=>{const ao=Number.isFinite(Number(a.ordre_sous_saga))?Number(a.ordre_sous_saga):Number.isFinite(Number(a.numero_sous_saga))?Number(a.numero_sous_saga):9999;const bo=Number.isFinite(Number(b.ordre_sous_saga))?Number(b.ordre_sous_saga):Number.isFinite(Number(b.numero_sous_saga))?Number(b.numero_sous_saga):9999;return ao-bo||String(a.titre||'').localeCompare(String(b.titre||''),'fr')}); const ids=works.map(x=>x.id); let counts={};
     if(ids.length){const r=await db().from('chapitres').select('oeuvre_id,etat,nb_mots,objectif_mots').in('oeuvre_id',ids);(r.data||[]).forEach(c=>{counts[c.oeuvre_id]??={all:0,written:0};counts[c.oeuvre_id].all++;if((c.nb_mots||0)>0||/écrit|rédig|relu/i.test(c.etat||''))counts[c.oeuvre_id].written++})}
@@ -3025,7 +3077,7 @@
 
   async function renderSousSagaPersonnages(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
-    const wr=await db().from('oeuvres').select('id,titre,numero_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).order('ordre_sous_saga',{ascending:true,nullsFirst:false}); const works=wr.data||[]; const ids=works.map(x=>x.id);
+    const wr=await db().from('oeuvres').select('id,titre,numero_sous_saga,ordre_sous_saga').eq('sous_saga_id',currentSousSagaId).eq('archive',false).order('ordre_sous_saga',{ascending:true,nullsFirst:false}); const works=wr.data||[]; const ids=works.map(x=>x.id);
     if(!ids.length){zone.innerHTML='<div class="empty">Aucune œuvre dans cette sous-saga.</div>';return}
     const {data,error}=await db().from('personnages_oeuvres').select('personnage_id,oeuvre_id,role,importance,etat,personnages(id,nom,favori)').in('oeuvre_id',ids);if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
     const map={};(data||[]).forEach(r=>{const k=r.personnage_id;if(!map[k])map[k]={p:r.personnages,rels:{},role:r.role,importance:r.importance};map[k].rels[r.oeuvre_id]=r});
@@ -3202,7 +3254,7 @@
 
   async function renderSagaOeuvres(zone){
     zone.innerHTML = `<div class="head-row"><div></div><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div id="saga-oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
-    const { data, error } = await db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('saga_id', currentSagaId).order('created_at', { ascending:false });
+    const { data, error } = await db().from('oeuvres').select('id, titre, statut, mots_ecrits, objectif_mots').eq('saga_id', currentSagaId).eq('archive',false).order('created_at', { ascending:false });
     const inner = document.getElementById('saga-oeuvres-zone');
     if (error) { inner.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { inner.innerHTML = `<div class="empty">Aucune œuvre dans cette saga pour l'instant.</div>`; return; }
@@ -3638,7 +3690,7 @@
   let oeuvreCatalogueDataV571=[],oeuvreCatalogueGroupV571=sessionStorage.getItem('passerelle-oeuvres-group')||'saga';
   async function renderOeuvres(){
     const b=await getPageBanner('oeuvres'),content=document.getElementById('content');content.innerHTML=`${renderPageImageBanner(b,'Œuvres')}<div class="head-row"><div><h2>Œuvres</h2><p style="font-size:12px;color:var(--text-dim)">Explorateur du catalogue.</p></div><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
-    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,page_color,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').order('titre');const z=document.getElementById('oeuvres-zone');if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}oeuvreCatalogueDataV571=data||[];
+    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,page_color,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',false).order('titre');const z=document.getElementById('oeuvres-zone');if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}oeuvreCatalogueDataV571=data||[];
     const sagaOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.saga_id&&x.sagas?.nom).map(x=>[x.saga_id,x.sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join(''),colOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.univers_id&&x.univers?.nom).map(x=>[x.univers_id,x.univers.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
     z.innerHTML=`<div class="catalog-toolbar"><div class="search-wrap"><label>Recherche</label><input id="oc-q" placeholder="Titre, genre…" oninput="renderOeuvreCatalogueV571()"></div><div><label>Collection</label><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option>${colOpts}</select></div><div><label>Saga</label><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Toutes</option>${sagaOpts}</select></div><div><label>Sous-saga</label><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option></select></div><div><label>Éditorial actuel</label><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select></div><div><label>Regrouper par</label><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div id="oc-grid"></div>`;syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();
   }
