@@ -537,6 +537,12 @@
   .series-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.series-preview-list{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-top:10px}.series-preview-line{display:grid;grid-template-columns:100px 1fr;gap:8px;padding:7px 9px;border-bottom:1px solid var(--line);font-size:10px}.series-preview-line:last-child{border-bottom:0}
 
 
+
+  /* V5.7.6b — listes longues, drawer Plan, chartes */
+  .catalog-tools-v576b{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.catalog-tools-v576b select,.catalog-tools-v576b input{min-width:150px}.catalog-group-v576b{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:var(--card);overflow:hidden}.catalog-group-head-v576b{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-2);cursor:pointer}.catalog-group-body-v576b{padding:10px}.catalog-group-v576b.collapsed .catalog-group-body-v576b{display:none}.compact-list-v576b{display:grid;gap:6px}.compact-card-v576b{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:7px 9px;cursor:pointer;background:var(--card)}.compact-card-v576b img,.compact-thumb-v576b{width:44px;height:44px;object-fit:cover;border-radius:7px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:10px}.compact-card-v576b h3{font-size:13px;margin:0}.compact-card-v576b small{color:var(--text-dim)}
+  .plan-drawer-form-v576b{display:grid;gap:12px}.plan-drawer-form-v576b .row2{gap:10px}.plan-drawer-actions-v576b{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  .collection-visual-v576b{width:100%;height:150px;object-fit:cover;border-radius:10px;background:var(--bg-2)}.palette-v576b{display:flex;gap:5px;margin-top:7px}.palette-v576b i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
+  .admin-section>summary{cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;list-style:none}.admin-section>summary::-webkit-details-marker{display:none}.admin-section>summary:after{content:'⌄';float:right;color:var(--text-dim)}.admin-section[open]>summary:after{content:'⌃'}
 </style>
 </head>
 <body>
@@ -685,7 +691,7 @@
       ${ideeModalHtml()}
       ${chapitreModalHtml()}
       ${personnageOeuvreModalHtml()}
-      ${planModalHtml()}
+
       ${correctionModalHtml()}
       ${luModalHtml()}
       ${chronoModalHtml()}
@@ -886,7 +892,7 @@
   const ADMIN_NAV = [
     ['collections','Collections'], ['sagas','Sagas'], ['sous-sagas','Sous-sagas'],
     ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'],
-    ['pepiniere','Pépinière'], ['configuration','Configuration'], ['sauvegardes','Sauvegarde & restauration'], ['identification','Identification']
+    ['pepiniere','Pépinière'], ['archives','Archives'], ['configuration','Configuration'], ['sauvegardes','Sauvegarde & restauration'], ['identification','Identification']
   ];
 
   function renderAdminSidebar(){
@@ -897,7 +903,7 @@
       <div class="admin-back-link" onclick="leaveAdministration()">← Retour à Passerelle</div>
       <div class="nav-group">Catalogue</div>
       <nav class="admin-mode-nav">
-        ${ADMIN_NAV.slice(0,7).map(([k,l])=>`<div class="nav-link admin-nav-link ${adminTab===k?'active':''}" data-admin-key="${k}" onclick="adminNavigate('${k}')">${l}</div>`).join('')}
+        ${ADMIN_NAV.slice(0,8).map(([k,l])=>`<div class="nav-link admin-nav-link ${adminTab===k?'active':''}" data-admin-key="${k}" onclick="adminNavigate('${k}')">${l}</div>`).join('')}
       </nav>
       <div class="nav-group">Réglages</div>
       <nav class="admin-mode-nav">
@@ -936,6 +942,7 @@
     if(tab==='recueils') return renderAdminRecueilsPage();
     if(tab==='personnages') return renderAdminPersonnagesPage();
     if(tab==='pepiniere') return renderAdminPepinierePage();
+    if(tab==='archives') return renderAdminArchivesV576b();
     if(tab==='configuration') return renderAdminConfiguration(content);
     if(tab==='sauvegardes') return renderAdminSauvegardes(content);
     if(tab==='identification') return renderAdminIdentificationV572(content);
@@ -948,12 +955,11 @@
 
   async function renderAdminCollectionsPage(){
     const content=document.getElementById('content');
-    const {data,error}=await db().from('univers').select('id,nom,sous_titre,description,ordre').order('ordre',{ascending:true});
+    const {data,error}=await db().from('univers').select('id,nom,sous_titre,description,ordre,illustration_url,accent_color,secondary_color,soft_color,dark_color').order('ordre',{ascending:true});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Collections','Gérez les grandes familles éditoriales de Passerelle.',`<button class="btn-primary" onclick="openAdminCollectionForm()">+ Nouvelle collection</button>`)+
-      `<div class="admin-filterbar"><input class="search-input" id="admin-collection-search" placeholder="🔍 Rechercher une collection…" oninput="filterAdminCards('admin-collections-grid',this.value)"></div>
-      <div id="admin-collection-form"></div>
-      <div class="admin-catalog-grid" id="admin-collections-grid">${(data||[]).map(c=>`<article class="admin-catalog-card" data-search="${safeText((c.nom+' '+(c.sous_titre||'')).toLowerCase())}"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(c.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(c.nom)}</h3><div class="admin-catalog-meta">${safeText(c.sous_titre||'Collection éditoriale')}<br>Ordre : ${c.ordre||0}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminCollectionForm('${c.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune collection pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Collections','Grandes familles éditoriales et socle de leur identité graphique.',`<button class="btn-primary" onclick="openAdminCollectionForm()">+ Nouvelle collection</button>`)+
+      `<div class="admin-filterbar"><input class="search-input" id="admin-collection-search" placeholder="🔍 Rechercher une collection…" oninput="filterAdminCards('admin-collections-grid',this.value)"></div><div id="admin-collection-form"></div>
+      <div class="admin-catalog-grid" id="admin-collections-grid">${(data||[]).map(c=>`<article class="admin-catalog-card" data-search="${safeText((c.nom+' '+(c.sous_titre||'')).toLowerCase())}"><div class="admin-catalog-visual">${c.illustration_url?`<img src="${safeText(c.illustration_url)}" alt="">`:`<div class="admin-catalog-placeholder">${initials(c.nom)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(c.nom)}</h3><div class="admin-catalog-meta">${safeText(c.sous_titre||'Collection éditoriale')}<div class="palette-v576b"><i style="background:${safeText(c.accent_color||'#8C7FB0')}"></i><i style="background:${safeText(c.secondary_color||'#D7C9ED')}"></i><i style="background:${safeText(c.soft_color||'#F7F3FB')}"></i><i style="background:${safeText(c.dark_color||'#3A3148')}"></i></div></div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminCollectionForm('${c.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune collection pour le moment.')}</div>`;
   }
 
   function filterAdminCards(gridId,q){
@@ -1046,19 +1052,25 @@
   }
   async function saveSagaMetadataFieldV56(id,key,val){await db().from('saga_metadonnees').update({[key]:val}).eq('id',id)}
   async function deleteSagaMetadataV56(id){if(!confirm('Supprimer cette métadonnée ?'))return;await db().from('saga_metadonnees').delete().eq('id',id);renderAdminSagaEditorV56()}
+  let adminCatalogWorksV576b={data:[],collections:[],sagas:[],subs:[],search:'',group:'collection',collection:'',saga:'',sub:'',status:'',detail:false};
   async function renderAdminSousSagasPage(){
     const content=document.getElementById('content');
-    const {data,error}=await db().from('sous_sagas').select('id,nom,genre,statut,saga_id,sagas(nom)').order('created_at',{ascending:false});
-    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Sous-sagas','Gérez les sous-sagas dans le contexte de leur saga.')+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une sous-saga…" oninput="filterAdminCards('admin-ss-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-ss-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" onclick="openAdminSousSagaEditor('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">Saga : ${safeText(x.sagas?.nom||'—')}<br>${safeText(x.genre||x.statut||'')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune sous-saga pour le moment.')}</div>`;
+    const [{data,error},{data:cols}]=await Promise.all([db().from('sous_sagas').select('id,nom,genre,statut,saga_id,sagas(id,nom,univers_id)').order('created_at',{ascending:false}),db().from('univers').select('id,nom')]);
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;} const rows=data||[];
+    content.innerHTML=adminPageHead('Sous-sagas','Catalogue compact : recherche, filtres et regroupements évitent les kilomètres de cartes.')+`<div class="catalog-tools-v576b"><input class="search-input" placeholder="🔍 Rechercher…" oninput="filterGenericCatalogV576b('admin-ss-grid',this.value)"><select onchange="filterGenericDataV576b('admin-ss-grid','collection',this.value)"><option value="">Toutes les collections</option>${(cols||[]).map(c=>`<option value="${c.id}">${safeText(c.nom)}</option>`).join('')}</select><select onchange="filterGenericDataV576b('admin-ss-grid','saga',this.value)"><option value="">Toutes les sagas</option>${[...new Map(rows.map(x=>[x.sagas?.id,x.sagas])).values()].filter(Boolean).map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}</select></div><div class="compact-list-v576b" id="admin-ss-grid">${rows.map(x=>`<article class="compact-card-v576b" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" data-collection="${x.sagas?.univers_id||''}" data-saga="${x.saga_id||''}" onclick="openAdminSousSagaEditor('${x.id}')"><div class="compact-thumb-v576b">${initials(x.nom)}</div><div><h3>${safeText(x.nom)}</h3><small>${safeText(x.sagas?.nom||'Sans saga')} · ${safeText(x.genre||x.statut||'')}</small></div><span>›</span></article>`).join('')||adminEmpty('Aucune sous-saga.')}</div>`;
   }
-
+  function filterGenericCatalogV576b(id,q){const z=document.getElementById(id);if(!z)return;z.dataset.search=(q||'').toLowerCase();applyGenericFiltersV576b(z)}
+  function filterGenericDataV576b(id,key,v){const z=document.getElementById(id);if(!z)return;z.dataset[key]=v||'';applyGenericFiltersV576b(z)}
+  function applyGenericFiltersV576b(z){[...z.children].forEach(c=>{const okSearch=!z.dataset.search||(c.dataset.search||'').includes(z.dataset.search);const okC=!z.dataset.collection||c.dataset.collection===z.dataset.collection;const okS=!z.dataset.saga||c.dataset.saga===z.dataset.saga;c.style.display=okSearch&&okC&&okS?'':'none'})}
   async function renderAdminOeuvresPage(){
     const content=document.getElementById('content');
-    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,saga_id,sous_saga_id,univers_id,sagas(nom,univers_id),sous_sagas(nom)').order('created_at',{ascending:false});
-    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Œuvres','Le catalogue canonique. Un clic ouvre maintenant la fiche d’administration complète de l’œuvre.',`<button class="btn-secondary" onclick="openWorksImportV576()">📦 Import Notion</button><button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div id="works-import-host-v576"></div><div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une œuvre…" oninput="filterAdminCards('admin-works-grid',this.value)"><select onchange="filterAdminWorksStatus(this.value)"><option value="">Tous les statuts</option>${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(v=>`<option>${safeText(v)}</option>`).join('')}</select></div><div class="admin-catalog-grid" id="admin-works-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-status="${safeText(x.statut||'')}" data-search="${safeText((x.titre+' '+(x.genre||'')+' '+(x.sagas?.nom||'')+' '+(x.sous_sagas?.nom||'')).toLowerCase())}" onclick="openAdminOeuvreEditor('${x.id}')"><div class="admin-catalog-visual">${x.couverture?`<img src="${safeText(x.couverture)}" alt="">`:`<div class="admin-catalog-placeholder">${initials(x.titre)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(x.titre)}</h3><div class="admin-catalog-meta">${safeText(x.sagas?.nom||'Œuvre indépendante')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''}<br>${safeText(x.genre||'—')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminOeuvreEditor('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune œuvre pour le moment.')}</div>`;
+    const [wr,cr,sr,ssr]=await Promise.all([db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,saga_id,sous_saga_id,univers_id,sagas(id,nom,univers_id),sous_sagas(id,nom)').eq('archive',false).order('created_at',{ascending:false}),db().from('univers').select('id,nom').order('ordre'),db().from('sagas').select('id,nom,univers_id').eq('archive',false).order('nom'),db().from('sous_sagas').select('id,nom,saga_id').order('nom')]);
+    if(wr.error){content.innerHTML=adminEmpty('Erreur : '+safeText(wr.error.message));return;} Object.assign(adminCatalogWorksV576b,{data:wr.data||[],collections:cr.data||[],sagas:sr.data||[],subs:ssr.data||[]});
+    content.innerHTML=adminPageHead('Œuvres','Catalogue actif. Les œuvres archivées vivent désormais uniquement dans Archives.',`<button class="btn-secondary" onclick="openWorksImportV576()">📦 Import Notion</button><button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div id="works-import-host-v576"></div><div class="catalog-tools-v576b"><input class="search-input" placeholder="🔍 Rechercher…" oninput="adminCatalogWorksV576b.search=this.value;renderAdminWorksResultsV576b()"><select onchange="adminCatalogWorksV576b.group=this.value;renderAdminWorksResultsV576b()"><option value="none">Sans regroupement</option><option value="collection" selected>Regrouper par collection</option><option value="saga">Regrouper par saga</option><option value="sub">Regrouper par sous-saga</option><option value="status">Regrouper par statut</option></select><select onchange="adminCatalogWorksV576b.collection=this.value;renderAdminWorksResultsV576b()"><option value="">Toutes les collections</option>${adminCatalogWorksV576b.collections.map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}</select><select onchange="adminCatalogWorksV576b.saga=this.value;adminCatalogWorksV576b.sub='';renderAdminWorksResultsV576b()"><option value="">Toutes les sagas</option>${adminCatalogWorksV576b.sagas.map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}</select><select onchange="adminCatalogWorksV576b.sub=this.value;renderAdminWorksResultsV576b()"><option value="">Toutes les sous-sagas</option>${adminCatalogWorksV576b.subs.map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}</select><select onchange="adminCatalogWorksV576b.status=this.value;renderAdminWorksResultsV576b()"><option value="">Tous les statuts</option>${[...new Set(adminCatalogWorksV576b.data.map(x=>x.statut).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select><button class="tiny-btn" onclick="adminCatalogWorksV576b.detail=!adminCatalogWorksV576b.detail;renderAdminWorksResultsV576b()">Compact / détaillé</button></div><div id="admin-works-results-v576b"></div>`;renderAdminWorksResultsV576b();
   }
+  function workCollectionIdV576b(x){return x.sagas?.univers_id||x.univers_id||''}
+  function renderAdminWorksResultsV576b(){const z=document.getElementById('admin-works-results-v576b');if(!z)return;const st=adminCatalogWorksV576b,q=normV576(st.search);let rows=st.data.filter(x=>(!q||normV576([x.titre,x.genre,x.sagas?.nom,x.sous_sagas?.nom].join(' ')).includes(q))&&(!st.collection||workCollectionIdV576b(x)===st.collection)&&(!st.saga||x.saga_id===st.saga)&&(!st.sub||x.sous_saga_id===st.sub)&&(!st.status||x.statut===st.status));const colMap=new Map(st.collections.map(x=>[x.id,x.nom])),sagMap=new Map(st.sagas.map(x=>[x.id,x.nom])),subMap=new Map(st.subs.map(x=>[x.id,x.nom]));const key=x=>st.group==='collection'?(colMap.get(workCollectionIdV576b(x))||'Sans collection'):st.group==='saga'?(sagMap.get(x.saga_id)||'Sans saga'):st.group==='sub'?(subMap.get(x.sous_saga_id)||'Sans sous-saga'):st.group==='status'?(x.statut||'Sans statut'):'Toutes les œuvres';const groups=new Map();rows.forEach(x=>{const k=key(x);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});const card=x=>`<article class="${st.detail?'admin-catalog-card':'compact-card-v576b'}" onclick="openAdminOeuvreEditor('${x.id}')">${st.detail?`<div class="admin-catalog-visual">${x.couverture?`<img src="${safeText(x.couverture)}">`:`<div class="admin-catalog-placeholder">${initials(x.titre)}</div>`}</div><div class="admin-catalog-body">`:`${x.couverture?`<img src="${safeText(x.couverture)}">`:`<div class="compact-thumb-v576b">${initials(x.titre)}</div>`}<div>`}<h3>${safeText(x.titre)}</h3><small>${safeText(x.sagas?.nom||'Indépendante')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''} · ${safeText(x.statut||'Sans statut')}</small></div>${st.detail?'':'<span>›</span>'}</article>`;z.innerHTML=rows.length?[...groups].map(([g,items])=>`<section class="catalog-group-v576b"><div class="catalog-group-head-v576b" onclick="this.parentElement.classList.toggle('collapsed')"><strong>${safeText(g)}</strong><span>${items.length} œuvre${items.length>1?'s':''} · replier</span></div><div class="catalog-group-body-v576b ${st.detail?'admin-catalog-grid':'compact-list-v576b'}">${items.map(card).join('')}</div></section>`).join(''):adminEmpty('Aucune œuvre avec ces filtres.');}
+  async function renderAdminArchivesV576b(){const content=document.getElementById('content');const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,couverture,sagas(nom),sous_sagas(nom)').eq('archive',true).order('titre');if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}content.innerHTML=adminPageHead('Archives','Les fiches restent canoniques : restaurer une œuvre la renvoie simplement dans le catalogue actif.')+`<div class="compact-list-v576b">${(data||[]).map(x=>`<article class="compact-card-v576b" onclick="openAdminOeuvreEditor('${x.id}')">${x.couverture?`<img src="${safeText(x.couverture)}">`:`<div class="compact-thumb-v576b">${initials(x.titre)}</div>`}<div><h3>${safeText(x.titre)}</h3><small>${safeText(x.sagas?.nom||'Sans saga')}${x.sous_sagas?.nom?' · '+safeText(x.sous_sagas.nom):''}</small></div><span>📦</span></article>`).join('')||adminEmpty('Aucune œuvre archivée.')}</div>`;}
 
 
   let worksPackageV576=null, worksPreviewV576=null;
@@ -1066,7 +1078,7 @@
   function openWorksImportV576(){const h=document.getElementById('works-import-host-v576');if(!h)return;h.innerHTML=`<div class="works-import-box"><h3 style="margin:0 0 5px">📦 Import multi-œuvres Notion</h3><p style="margin:0 0 10px;color:var(--text-dim);font-size:11px">Prévisualisation obligatoire. Les personnages sont ignorés. Les archives sans page complète peuvent être créées avec leurs métadonnées puis enrichies plus tard.</p><label class="btn-primary" style="display:inline-block;cursor:pointer">Choisir le paquet JSON<input type="file" accept=".json,application/json" style="display:none" onchange="readWorksPackageV576(this.files[0])"></label><div id="works-import-preview-v576" class="works-import-preview"></div><div id="works-import-status-v576" class="notion-import-status"></div></div>`}
   async function readWorksPackageV576(file){const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');worksPackageV576=null;worksPreviewV576=null;if(!file)return;try{const pkg=JSON.parse(await file.text());if(pkg.format!=='passerelle-notion-works-import'||!Array.isArray(pkg.oeuvres))throw new Error('Ce fichier n’est pas un paquet multi-œuvres Passerelle.');worksPackageV576=pkg;st.textContent=`${pkg.oeuvres.length} œuvre(s) détectée(s). Analyse du catalogue…`;await previewWorksPackageV576()}catch(e){st.textContent='Paquet refusé : '+e.message;if(z)z.innerHTML=''}}
   async function previewWorksPackageV576(){if(!worksPackageV576)return;const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');const [{data:cols,error:ce},{data:works,error:we}]=await Promise.all([db().from('univers').select('id,nom'),db().from('oeuvres').select('id,titre,archive,notion_page_id,univers_id')]);if(ce||we){st.textContent='Erreur de lecture du catalogue : '+(ce||we).message;return}const colName=worksPackageV576.collection?.nom||worksPackageV576.oeuvres[0]?.collection||'';const col=(cols||[]).find(c=>normV576(c.nom)===normV576(colName));worksPreviewV576=(worksPackageV576.oeuvres||[]).map(src=>{const byId=src.notion_page_id?(works||[]).find(o=>o.notion_page_id===src.notion_page_id):null;const byTitle=(works||[]).find(o=>normV576(o.titre)===normV576(src.titre));const target=byId||byTitle||null;const conflict=!!(byId&&normV576(byId.titre)!==normV576(src.titre));return{src,target,action:conflict?'conflict':target?'update':'create',collection:col}});const conflicts=worksPreviewV576.filter(x=>x.action==='conflict').length,creates=worksPreviewV576.filter(x=>x.action==='create').length,updates=worksPreviewV576.filter(x=>x.action==='update').length,archives=worksPreviewV576.filter(x=>x.src.archive).length,resumes=worksPreviewV576.filter(x=>x.src.resume_extrait||x.src.resume_csv).length,plans=worksPreviewV576.reduce((n,x)=>n+(x.src.plans_importables?.length||0),0);z.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${creates}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${updates}</strong><span>à enrichir</span></div><div class="notion-import-kpi"><strong>${resumes}</strong><span>résumé(s)</span></div><div class="notion-import-kpi"><strong>${plans}</strong><span>entrée(s) Plan</span></div><div class="notion-import-kpi"><strong>${archives}</strong><span>archivée(s)</span></div></div>${!col?`<div class="admin-work-note">⚠ Collection « ${safeText(colName)} » introuvable. Crée-la d’abord ou corrige son nom.</div>`:''}<div>${worksPreviewV576.map(x=>{const pc=x.src.plans_importables?.length||0,hasResume=!!(x.src.resume_extrait||x.src.resume_csv);return `<div class="works-import-row"><div><strong>${safeText(x.src.titre)}</strong><br><small style="color:var(--text-dim)">${x.src.import_mode==='metadata_only'?'Métadonnées uniquement':x.src.contenu_source_markdown?'Page complète disponible':'Métadonnées disponibles'}${x.src.archive?' · archive':''} · ${hasResume?'Résumé ✓':'Résumé —'} · Plan ${pc?pc+' entrées':'—'}</small></div><span class="works-import-badge ${x.action==='conflict'?'conflict':x.src.archive?'archive':x.action}">${x.action==='create'?'Créer':x.action==='update'?'Enrichir':'Conflit'}${x.src.archive?' · archivée':''}</span></div>`}).join('')}</div><div class="notion-import-actions"><button class="btn-primary" ${conflicts||!col?'disabled':''} onclick="importWorksPackageV576()">Importer ${worksPreviewV576.length} œuvre(s)</button></div>`;st.textContent=conflicts?`${conflicts} conflit(s) à résoudre avant import.`:!col?'Import bloqué tant que la collection n’est pas retrouvée.':`Prévisualisation prête. ${resumes} résumé(s), ${plans} entrées Plan. Personnages : 0 écriture.`}
-  async function importWorksPackageV576(){if(!worksPreviewV576?.length)return;const st=document.getElementById('works-import-status-v576');if(worksPreviewV576.some(x=>x.action==='conflict')){st.textContent='Import bloqué : conflit détecté.';return}let done=0,planDone=0;for(const x of worksPreviewV576){const src=x.src;const payload={titre:src.titre,archive:!!src.archive,univers_id:x.collection?.id||null,updated_at:new Date().toISOString()};if(src.notion_page_id)payload.notion_page_id=src.notion_page_id;if(src.statut_source)payload.statut=src.statut_source;if(src.avancement)payload.avancement=src.avancement;if(src.couple)payload.couple=src.couple;if(src.destination_editoriale)payload.destination_editoriale=src.destination_editoriale;if(src.objectif_mots!=null&&src.objectif_mots!=='')payload.objectif_mots=Number(src.objectif_mots)||null;const importedResume=src.resume_extrait||src.resume_csv;if(importedResume)payload.resume=importedResume;if(src.contenu_source_markdown)payload.notion_source_markdown=src.contenu_source_markdown;let workId=x.target?.id||null,r;if(workId){r=await db().from('oeuvres').update(payload).eq('id',workId)}else{r=await db().from('oeuvres').insert({...payload,user_id:currentUser.id}).select('id').single();if(!r.error)workId=r.data?.id}if(r.error){st.textContent=`Erreur sur « ${src.titre} » : ${r.error.message}`;return}for(const p of (src.plans_importables||[])){const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,statut:p.statut||'À écrire',transformation:p.transformation||p.resume_source||null,ordre:Number(p.ordre)||0,notion_source_key:p.source_key};const {error:pe}=await db().from('plans').upsert(pp,{onConflict:'user_id,notion_source_key'});if(pe){st.textContent=`Œuvre « ${src.titre} » importée, mais erreur Plan : ${pe.message}`;return}planDone++}done++;st.textContent=`Import en cours… ${done}/${worksPreviewV576.length} · ${planDone} entrées Plan`}st.textContent=`✓ ${done} œuvre(s) enrichie(s), ${planDone} entrées Plan synchronisées. Résumés récupérés. Archives conservées. Personnages ignorés.`;setTimeout(()=>renderAdminOeuvresPage(),900)}
+  async function importWorksPackageV576(){if(!worksPreviewV576?.length)return;const st=document.getElementById('works-import-status-v576');if(worksPreviewV576.some(x=>x.action==='conflict')){st.textContent='Import bloqué : conflit détecté.';return}let done=0,planDone=0;for(const x of worksPreviewV576){const src=x.src;const payload={titre:src.titre,archive:!!src.archive,univers_id:x.collection?.id||null,updated_at:new Date().toISOString()};if(src.notion_page_id)payload.notion_page_id=src.notion_page_id;if(src.statut_source)payload.statut=src.statut_source;if(src.avancement)payload.avancement=src.avancement;if(src.couple)payload.couple=src.couple;if(src.destination_editoriale)payload.destination_editoriale=src.destination_editoriale;if(src.objectif_mots!=null&&src.objectif_mots!=='')payload.objectif_mots=Number(src.objectif_mots)||null;const importedResume=src.resume_extrait||src.resume_csv;if(importedResume)payload.resume=importedResume;if(src.contenu_source_markdown)payload.notion_source_markdown=src.contenu_source_markdown;let workId=x.target?.id||null,r;if(workId){r=await db().from('oeuvres').update(payload).eq('id',workId)}else{r=await db().from('oeuvres').insert({...payload,user_id:currentUser.id}).select('id').single();if(!r.error)workId=r.data?.id}if(r.error){st.textContent=`Erreur sur « ${src.titre} » : ${r.error.message}`;return}for(const p of (src.plans_importables||[])){const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À écrire',transformation:p.resume_source||p.transformation||null,ordre:Number(p.ordre)||0,notion_source_key:p.source_key};const {error:pe}=await db().from('plans').upsert(pp,{onConflict:'user_id,notion_source_key'});if(pe){st.textContent=`Œuvre « ${src.titre} » importée, mais erreur Plan : ${pe.message}`;return}planDone++}done++;st.textContent=`Import en cours… ${done}/${worksPreviewV576.length} · ${planDone} entrées Plan`}st.textContent=`✓ ${done} œuvre(s) enrichie(s), ${planDone} entrées Plan synchronisées. Résumés récupérés. Archives conservées. Personnages ignorés.`;setTimeout(()=>renderAdminOeuvresPage(),900)}
 
   let adminEditingOeuvreId=null;
   let adminOeuvreSagas=[];
@@ -1111,7 +1123,7 @@
         </div>
         <div class="admin-work-layout">
           <div class="admin-work-main">
-            <section class="admin-section"><h2>Identité & hiérarchie</h2><p class="admin-section-sub">Les informations canoniques qui situent l’œuvre dans le catalogue.</p>
+            <details class="admin-section" open><summary>Identité & hiérarchie</summary><p class="admin-section-sub">Les informations canoniques qui situent l’œuvre dans le catalogue.</p>
               <div class="admin-section-grid">
                 <div class="admin-field-full"><label>Titre</label><input id="aow-titre" value="${safeText(o.titre||'')}"></div>
                 <div><label>Sous-titre</label><input id="aow-sous-titre" value="${safeText(o.sous_titre||'')}"></div>
@@ -1121,17 +1133,17 @@
                 <div><label>Sous-saga</label><select id="aow-sous-saga" ${o.saga_id?'':'disabled'}><option value="">—</option>${ss.map(x=>`<option value="${x.id}" ${o.sous_saga_id===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div>
                 <div><label>Langue</label><input id="aow-langue" value="${safeText(o.langue||'Français')}"></div>
               </div>
-            </section>
+            </details>
 
-            <section class="admin-section"><h2>Présentation de l’œuvre</h2><p class="admin-section-sub">Ces champs nourriront la future page Informations. Ils ne sont pas une seconde copie.</p>
+            <details class="admin-section" open><summary>Présentation de l’œuvre</summary><p class="admin-section-sub">Ces champs nourriront la future page Informations. Ils ne sont pas une seconde copie.</p>
               <label>Pitch</label><textarea id="aow-pitch">${safeText(o.pitch||'')}</textarea>
               <label style="margin-top:10px;">Résumé</label><textarea id="aow-resume">${safeText(o.resume||'')}</textarea>
               <label style="margin-top:10px;">À propos</label><textarea id="aow-a-propos">${safeText(o.a_propos||'')}</textarea>
               <label style="margin-top:10px;">Intentions</label><textarea id="aow-intentions">${safeText(o.intentions||'')}</textarea>
               <div class="admin-check-row"><input type="checkbox" id="aow-coeur" ${o.tient_a_coeur?'checked':''}><div><strong>Projet qui me tient particulièrement à cœur</strong><small>Marqueur personnel, sans effet sur les priorités Liam.</small></div></div>
-            </section>
+            </details>
 
-            <section class="admin-section"><h2>Informations narratives</h2><p class="admin-section-sub">Le contenu qui appartenait jusque-là à la Fiche détaillée.</p>
+            <details class="admin-section" open><summary>Informations narratives</summary><p class="admin-section-sub">Le contenu qui appartenait jusque-là à la Fiche détaillée.</p>
               <div class="admin-section-grid">
                 <div><label>Genre</label><input id="aow-genre" value="${safeText(o.genre||'')}"></div>
                 <div><label>Sous-genre</label><input id="aow-sous-genre" value="${safeText(o.sous_genre||'')}"></div>
@@ -1147,20 +1159,20 @@
                 <label>Enjeu principal</label><textarea id="aow-enjeu">${safeText(o.enjeu_principal||'')}</textarea>
                 <label style="margin-top:10px">Enjeux secondaires</label><textarea id="aow-enjeux">${safeText(enjeux)}</textarea>
               </details>
-            </section>
+            </details>
 
-            <section class="admin-section"><h2>Manuscrit & Atelier</h2><p class="admin-section-sub">Configuration de la source manuscrit. Le nombre de mots réel a vocation à venir d’Atelier, pas à être ressaisi ici.</p>
+            <details class="admin-section" open><summary>Manuscrit & Atelier</summary><p class="admin-section-sub">Configuration de la source manuscrit. Le nombre de mots réel a vocation à venir d’Atelier, pas à être ressaisi ici.</p>
               <div class="admin-section-grid three">
                 <div><label>Statut manuscrit</label><select id="aow-statut">${manuscriptStatuses.map(x=>`<option ${o.statut===x?'selected':''}>${x}</option>`).join('')}</select></div>
                 <div><label>Objectif global de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"><button type="button" class="btn-secondary" style="margin-top:6px" onclick="distributeWorkWordTarget()">↻ Répartir sur le Plan</button></div>
-                <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.code_session||'')}" placeholder="ex. EC-T2"></div>
+                <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.atelier_project_id||o.code_session||'')}" placeholder="ex. EC-T2"></div>
               </div>
               <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
-            </section>
+            </details>
 
-            <section class="admin-section"><h2>Import Notion</h2><p class="admin-section-sub">Importe un paquet JSON préparé depuis Notion. Prévisualisation obligatoire, Manuscrit uniquement, Plan intact et import réexécutable sans doublon.</p><div id="notion-work-import-v575"></div></section>
+            <details class="admin-section" open><summary>Import Notion</summary><p class="admin-section-sub">Importe un paquet JSON préparé depuis Notion. Prévisualisation obligatoire, Manuscrit uniquement, Plan intact et import réexécutable sans doublon.</p><div id="notion-work-import-v575"></div></details>
 
-            <section class="admin-section"><h2>Pilotage éditorial</h2><p class="admin-section-sub">Les mêmes données que le Bureau éditorial, éditables ici sans créer de copie.</p>
+            <details class="admin-section" open><summary>Pilotage éditorial</summary><p class="admin-section-sub">Les mêmes données que le Bureau éditorial, éditables ici sans créer de copie.</p>
               <div class="admin-section-grid three">
                 <div><label>Destination</label><select id="aow-destination"><option value="">Non définie</option>${editorialDest.map(x=>`<option ${o.destination_editoriale===x?'selected':''}>${x}</option>`).join('')}</select></div>
                 <div><label>Cible éditoriale</label><select id="aow-cible"><option value="">Non définie</option>${editorialTargets.map(x=>`<option ${o.niveau_editorial_cible===x?'selected':''}>${x}</option>`).join('')}</select></div>
@@ -1169,18 +1181,18 @@
                 <div class="admin-field-full"><label>Publication envisagée</label><input id="aow-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="2029, T2 2030, printemps 2028…"></div>
                 <div class="admin-field-full"><label>Notes éditoriales</label><textarea id="aow-notes-editoriales">${safeText(o.notes_editoriales||'')}</textarea></div>
               </div>
-            </section>
+            </details>
           </div>
 
           <aside class="admin-work-side">
-            <section class="admin-section"><h2>Couverture canonique</h2><p class="admin-section-sub">La couverture vient de Médias → Couvertures. Une seule image est marquée ★ actuelle.</p><div class="admin-cover-preview" id="aow-cover-preview">${currentCoverUrl?`<img src="${safeText(currentCoverUrl)}" alt="Couverture">`:'✒'}</div><input type="hidden" id="aow-cover-media-id" value="${safeText(currentCoverMedia?.id||'')}"><input type="hidden" id="aow-couverture" value="${safeText(currentCoverUrl)}"><button class="btn-secondary" style="width:100%;margin-top:10px" onclick="toggleAdminCoverPicker()">Choisir dans les médias</button><div class="admin-cover-picker" id="aow-cover-picker">${adminCoverMedias.length?`<div class="admin-cover-picker-grid">${adminCoverMedias.map(m=>`<button type="button" class="admin-cover-choice ${m.id===currentCoverMedia?.id?'selected':''}" data-cover-id="${m.id}" onclick="selectAdminCoverMedia('${m.id}','${safeText(m.url||'')}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="admin-catalog-placeholder">🖼</div>'}<small>${safeText(m.titre||'Couverture')}</small></button>`).join('')}</div>`:`<div class="empty" style="padding:18px">Aucune couverture dans Médias pour cette œuvre.</div>`}</div></section>
-            <section class="admin-section"><h2>Modules de la fiche</h2><p class="admin-section-sub">Afficher ou masquer les espaces optionnels sans supprimer leurs données.</p>
+            <details class="admin-section" open><summary>Couverture canonique</summary><p class="admin-section-sub">La couverture vient de Médias → Couvertures. Une seule image est marquée ★ actuelle.</p><div class="admin-cover-preview" id="aow-cover-preview">${currentCoverUrl?`<img src="${safeText(currentCoverUrl)}" alt="Couverture">`:'✒'}</div><input type="hidden" id="aow-cover-media-id" value="${safeText(currentCoverMedia?.id||'')}"><input type="hidden" id="aow-couverture" value="${safeText(currentCoverUrl)}"><button class="btn-secondary" style="width:100%;margin-top:10px" onclick="toggleAdminCoverPicker()">Choisir dans les médias</button><div class="admin-cover-picker" id="aow-cover-picker">${adminCoverMedias.length?`<div class="admin-cover-picker-grid">${adminCoverMedias.map(m=>`<button type="button" class="admin-cover-choice ${m.id===currentCoverMedia?.id?'selected':''}" data-cover-id="${m.id}" onclick="selectAdminCoverMedia('${m.id}','${safeText(m.url||'')}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="admin-catalog-placeholder">🖼</div>'}<small>${safeText(m.titre||'Couverture')}</small></button>`).join('')}</div>`:`<div class="empty" style="padding:18px">Aucune couverture dans Médias pour cette œuvre.</div>`}</div></details>
+            <details class="admin-section" open><summary>Modules de la fiche</summary><p class="admin-section-sub">Afficher ou masquer les espaces optionnels sans supprimer leurs données.</p>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-lore" ${o.module_lore?'checked':''}><div><strong>Codex</strong><small>Active l’onglet sur la fiche de travail.</small></div></div>
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
               <div style="margin-top:14px"><label>Métadonnées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._aowMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="aow-meta-check" value="${m.id}" style="width:auto" ${window._aowMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Choisis d’abord une saga pour utiliser ses métadonnées.</small>'}</div></div>
-            </section>
-            <section class="admin-section"><h2>Apparence de la page</h2><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">Image horizontale affichée en haut de la fiche Œuvre.</small></section>
-            <section class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></section>
+            </details>
+            <details class="admin-section" open><summary>Apparence de la page</summary><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">Image horizontale affichée en haut de la fiche Œuvre.</small></details>
+            <section class="admin-section admin-danger"><h2>Archivage</summary><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></details>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
         </div>
@@ -1340,6 +1352,7 @@
       statut:document.getElementById('aow-statut').value,
       objectif_mots:document.getElementById('aow-objectif').value?Number(document.getElementById('aow-objectif').value):null,
       code_session:document.getElementById('aow-code-session').value.trim()||null,
+      atelier_project_id:document.getElementById('aow-code-session').value.trim()||null,
       destination_editoriale:document.getElementById('aow-destination').value||null,
       niveau_editorial_cible:document.getElementById('aow-cible').value||null,
       statut_editorial_actuel:newEditorial,
@@ -1432,7 +1445,7 @@
           <div class="admin-field-full"><label>À propos / résumé canonique</label>${adminRichFieldV567('ar565-resume',r.a_propos||r.resume||'',170)}</div>
         </div>
         <button class="btn-primary" onclick="saveAdminRecueilInfoV565()">Enregistrer</button>
-      </section>`;
+      </details>`;
     }else if(adminRecueilTabV565==='configuration'){
       z.innerHTML=`<section class="admin-section">
         <h2>Configuration</h2>
@@ -1444,9 +1457,9 @@
           <div><label>Couleur d’accent</label><input type="color" id="ar565-accent" value="${safeText(r.couleur_accent||globalAppearance.accent)}" style="height:42px;padding:4px"></div>
         </div>
         <button class="btn-primary" onclick="saveAdminRecueilConfigV565()">Enregistrer la configuration</button>
-      </section>`;
+      </details>`;
     }else{
-      z.innerHTML=`<section class="admin-section"><h2>Archivage</h2><p class="admin-section-sub">${r.archive?'Ce recueil est actuellement archivé.':'Ce recueil est actif.'}</p><button class="btn-secondary" onclick="toggleAdminRecueilArchiveV565(${!!r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button></section>`;
+      z.innerHTML=`<details class="admin-section" open><summary>Archivage</summary><p class="admin-section-sub">${r.archive?'Ce recueil est actuellement archivé.':'Ce recueil est actif.'}</p><button class="btn-secondary" onclick="toggleAdminRecueilArchiveV565(${!!r.archive})">${r.archive?'Désarchiver':'Archiver ce recueil'}</button></details>`;
     }
   }
 
@@ -1510,7 +1523,7 @@
   async function renderCharacterTemplatesAdminV572(zone){
     const [{data,error},defaultId]=await Promise.all([db().from('templates_personnage').select('*').eq('archive',false).order('created_at'),getDefaultCharacterTemplateIdV572()]);
     if(error){zone.innerHTML=adminEmpty('Migration V5.7.2 requise : '+safeText(error.message));return}
-    zone.innerHTML=`<div class="character-topbar"><div><h2>Modèles de Capacités</h2><p class="admin-section-sub">La fiche Personnage reste universelle. Seul l’onglet Capacités change selon le contexte. Un modèle par défaut couvre les indépendants, puis Œuvre → Sous-saga → Saga.</p></div><button class="btn-primary" onclick="createCharacterTemplateV572()">+ Nouveau modèle</button></div>
+    zone.innerHTML=`<div class="character-topbar"><div><h2>Modèles de Capacités</summary><p class="admin-section-sub">La fiche Personnage reste universelle. Seul l’onglet Capacités change selon le contexte. Un modèle par défaut couvre les indépendants, puis Œuvre → Sous-saga → Saga.</p></div><button class="btn-primary" onclick="createCharacterTemplateV572()">+ Nouveau modèle</button></div>
       <div class="admin-catalog-grid">${(data||[]).map(t=>`<article class="admin-catalog-card"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🧩</div></div><div class="admin-catalog-body"><h3>${safeText(t.nom)} ${t.id===defaultId?'<span class="ss-pill">★ Par défaut</span>':''}</h3><div class="admin-catalog-meta">${safeText(t.description||'Modèle personnalisable')}<br>${renderPasserelleIdBadgeV572(t.passerelle_id)}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="openCharacterTemplateBuilderV572('${t.id}')">Modifier</button><button class="tiny-btn" onclick="exportCharacterTemplateV572('${t.id}')">JSON</button>${t.id!==defaultId?`<button class="tiny-btn" onclick="setDefaultCharacterTemplateV572('${t.id}')">Par défaut</button>`:''}<button class="tiny-btn danger-btn" onclick="requestDeleteCharacterTemplateCardV572('${t.id}')">Supprimer</button></div><div id="ct-card-confirm-${t.id}"></div></div></article>`).join('')||adminEmpty('Aucun modèle. Crée le modèle indépendant par défaut pour commencer.')}</div>`;
   }
 
@@ -1578,7 +1591,7 @@
 
   let characterTemplateImportModeV572='json';
   function renderCharacterTemplateImportV572(zone){
-    zone.innerHTML=`<div class="template-import-tabs"><button class="${characterTemplateImportModeV572==='json'?'active':''}" onclick="characterTemplateImportModeV572='json';renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))">JSON Passerelle</button><button class="${characterTemplateImportModeV572==='notion'?'active':''}" onclick="characterTemplateImportModeV572='notion';renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))">Notion</button></div>${characterTemplateImportModeV572==='json'?`<div class="import-step"><h2>Importer un modèle JSON</h2><p class="admin-section-sub">Le JSON Passerelle transporte fidèlement la structure du modèle. Un mockup traduit ensemble pourra être livré directement sous ce format.</p><input type="file" accept="application/json,.json" onchange="readCharacterTemplateJsonV572(this.files[0])"></div>`:`<div class="import-step"><h2>Importer un modèle depuis Notion</h2><p class="admin-section-sub">Pour une importation fiable depuis GitHub Pages, exporte uniquement la page modèle depuis Notion en <strong>Markdown</strong> ou <strong>HTML</strong>, puis dépose le fichier ici. Passerelle en fabrique une première version modifiable dans le builder.</p><div class="notion-import-help"><strong>Modèle de fiche :</strong> export Markdown/HTML de la page Notion.<br><strong>Données de personnages :</strong> utilise l’onglet « Import de données » avec l’export CSV de la base.</div><label class="btn-primary" style="display:inline-block;cursor:pointer;margin-top:14px">Choisir un export Notion<input type="file" accept=".md,.markdown,.html,.htm,.txt,text/markdown,text/html,text/plain" style="display:none" onchange="readCharacterTemplateNotionFileV572(this.files[0])"></label><div id="ct-notion-status" class="admin-inline-status"></div></div>`}<div id="character-template-import-preview">${pendingCharacterTemplateImportV572?characterTemplateImportPreviewHtmlV572():''}</div>`;
+    zone.innerHTML=`<div class="template-import-tabs"><button class="${characterTemplateImportModeV572==='json'?'active':''}" onclick="characterTemplateImportModeV572='json';renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))">JSON Passerelle</button><button class="${characterTemplateImportModeV572==='notion'?'active':''}" onclick="characterTemplateImportModeV572='notion';renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))">Notion</button></div>${characterTemplateImportModeV572==='json'?`<div class="import-step"><h2>Importer un modèle JSON</summary><p class="admin-section-sub">Le JSON Passerelle transporte fidèlement la structure du modèle. Un mockup traduit ensemble pourra être livré directement sous ce format.</p><input type="file" accept="application/json,.json" onchange="readCharacterTemplateJsonV572(this.files[0])"></div>`:`<div class="import-step"><h2>Importer un modèle depuis Notion</summary><p class="admin-section-sub">Pour une importation fiable depuis GitHub Pages, exporte uniquement la page modèle depuis Notion en <strong>Markdown</strong> ou <strong>HTML</strong>, puis dépose le fichier ici. Passerelle en fabrique une première version modifiable dans le builder.</p><div class="notion-import-help"><strong>Modèle de fiche :</strong> export Markdown/HTML de la page Notion.<br><strong>Données de personnages :</strong> utilise l’onglet « Import de données » avec l’export CSV de la base.</div><label class="btn-primary" style="display:inline-block;cursor:pointer;margin-top:14px">Choisir un export Notion<input type="file" accept=".md,.markdown,.html,.htm,.txt,text/markdown,text/html,text/plain" style="display:none" onchange="readCharacterTemplateNotionFileV572(this.files[0])"></label><div id="ct-notion-status" class="admin-inline-status"></div></div>`}<div id="character-template-import-preview">${pendingCharacterTemplateImportV572?characterTemplateImportPreviewHtmlV572():''}</div>`;
   }
   async function importCharacterTemplateFromNotionUrlV572(){const input=document.getElementById('ct-notion-url'),status=document.getElementById('ct-notion-status'),url=(input?.value||'').trim();if(!url){if(status)status.textContent='Colle un lien Notion.';return}if(status)status.textContent='Analyse du lien…';try{const r=await fetch(url,{credentials:'omit'});if(!r.ok)throw new Error('Notion a refusé la lecture directe.');const text=await r.text();pendingCharacterTemplateImportV572=parseNotionTemplateToPasserelleV572(text,notionTitleFromHtmlV572(text)||'Modèle Notion','notion-url',url);renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))}catch(e){if(status)status.textContent='Lecture directe impossible depuis le navigateur. Utilise « Choisir un export Notion » (Markdown ou HTML). Tes données restent locales à Passerelle.'}}
   async function readCharacterTemplateNotionFileV572(file){if(!file)return;try{const text=await file.text();const title=file.name.replace(/\.(md|markdown|html?|txt)$/i,'').replace(/[-_]+/g,' ').trim()||'Modèle Notion';pendingCharacterTemplateImportV572=parseNotionTemplateToPasserelleV572(text,title,'notion-export',file.name);renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))}catch(e){showTransientStatusV572('Import Notion impossible : '+e.message)}}
@@ -1591,7 +1604,7 @@
 
   async function renderCharacterDataImportV572(zone){
     const {data:templates}=await db().from('templates_personnage').select('id,nom,schema').eq('archive',false).order('nom');
-    zone.innerHTML=`<div class="import-step"><h2>Importer des personnages</h2><p class="admin-section-sub">V1 : export Notion (CSV), CSV/Excel et fichiers structurés. L’ID Passerelle de l’œuvre est prioritaire ; le titre sert de secours humain.</p><div class="admin-section-grid two"><div><label>Modèle cible</label><select id="char-import-template"><option value="">— Modèle hérité / non imposé —</option>${(templates||[]).map(t=>`<option value="${t.id}">${safeText(t.nom)}</option>`).join('')}</select></div><div><label>Source</label><select id="char-import-source"><option value="notion">Notion (export CSV)</option><option value="csv">CSV</option><option value="excel">Excel</option></select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-secondary" onclick="downloadCharacterCsvTemplateV572()">Télécharger le CSV modèle</button><label class="btn-primary" style="cursor:pointer">Choisir un fichier<input type="file" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="readCharacterImportFileV572(this.files[0])"></label></div></div><div id="character-import-workzone">${characterImportStateV572.rows.length?characterImportPreviewHtmlV572():''}</div>`;
+    zone.innerHTML=`<div class="import-step"><h2>Importer des personnages</summary><p class="admin-section-sub">V1 : export Notion (CSV), CSV/Excel et fichiers structurés. L’ID Passerelle de l’œuvre est prioritaire ; le titre sert de secours humain.</p><div class="admin-section-grid two"><div><label>Modèle cible</label><select id="char-import-template"><option value="">— Modèle hérité / non imposé —</option>${(templates||[]).map(t=>`<option value="${t.id}">${safeText(t.nom)}</option>`).join('')}</select></div><div><label>Source</label><select id="char-import-source"><option value="notion">Notion (export CSV)</option><option value="csv">CSV</option><option value="excel">Excel</option></select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-secondary" onclick="downloadCharacterCsvTemplateV572()">Télécharger le CSV modèle</button><label class="btn-primary" style="cursor:pointer">Choisir un fichier<input type="file" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="readCharacterImportFileV572(this.files[0])"></label></div></div><div id="character-import-workzone">${characterImportStateV572.rows.length?characterImportPreviewHtmlV572():''}</div>`;
     window._characterImportTemplatesV572=templates||[];
   }
   function expectedCharacterFieldsV572(){const tid=document.getElementById('char-import-template')?.value;const t=(window._characterImportTemplatesV572||[]).find(x=>x.id===tid);const fields=(t?.schema||[]).filter(b=>b.type==='field').map(b=>b.label||b.key).filter(Boolean);return ['personnage_id','nom','resume','oeuvre_id','oeuvre',...fields]}
@@ -1641,7 +1654,7 @@
     await db().from('imports_personnages').update({details:{rows:st.selected.size,created,updated,linked,errors}}).eq('id',batch.id);showTransientStatusV572(`${created} créé(s), ${updated} mis à jour, ${linked} lien(s) ✓`);characterImportStateV572={rows:[],headers:[],selected:new Set(),mapping:{},source:'csv',fileName:''};renderAdminPersonnagesPage('import-donnees');
   }
 
-  async function renderCharacterIdentifiersV572(zone){const {data,error}=await db().from('personnages').select('passerelle_id,nom,archive').order('nom');if(error){zone.innerHTML=adminEmpty(error.message);return}zone.innerHTML=`<div class="character-topbar"><div><h2>Identifiants Personnages</h2><p class="admin-section-sub">Ils servent au dédoublonnage, aux mises à jour et aux relations d’import. Ils restent volontairement discrets dans le front.</p></div></div><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Personnage</th><th>ID Passerelle</th><th>État</th><th></th></tr></thead><tbody>${(data||[]).map(p=>`<tr><td>${safeText(p.nom)}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td><td>${p.archive?'Archivé':'Actif'}</td><td><button class="tiny-btn" onclick="copyPasserelleIdV572('${safeText(p.passerelle_id||'')}')">Copier</button></td></tr>`).join('')}</tbody></table></div>`}
+  async function renderCharacterIdentifiersV572(zone){const {data,error}=await db().from('personnages').select('passerelle_id,nom,archive').order('nom');if(error){zone.innerHTML=adminEmpty(error.message);return}zone.innerHTML=`<div class="character-topbar"><div><h2>Identifiants Personnages</summary><p class="admin-section-sub">Ils servent au dédoublonnage, aux mises à jour et aux relations d’import. Ils restent volontairement discrets dans le front.</p></div></div><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Personnage</th><th>ID Passerelle</th><th>État</th><th></th></tr></thead><tbody>${(data||[]).map(p=>`<tr><td>${safeText(p.nom)}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td><td>${p.archive?'Archivé':'Actif'}</td><td><button class="tiny-btn" onclick="copyPasserelleIdV572('${safeText(p.passerelle_id||'')}')">Copier</button></td></tr>`).join('')}</tbody></table></div>`}
 
   async function renderAdminPepinierePage(){
     const content=document.getElementById('content');
@@ -1673,7 +1686,7 @@
     const [cols,sagas,subs,works,recs]=await Promise.all([
       db().from('univers').select('nom,passerelle_id').order('nom'),db().from('sagas').select('nom,passerelle_id').order('nom'),db().from('sous_sagas').select('nom,passerelle_id').order('nom'),db().from('oeuvres').select('titre,passerelle_id').order('titre'),db().from('recueils').select('titre,passerelle_id').order('titre')]);
     const groups=[['Collections',cols.data,'nom'],['Sagas',sagas.data,'nom'],['Sous-sagas',subs.data,'nom'],['Œuvres',works.data,'titre'],['Recueils',recs.data,'titre']];
-    zone.innerHTML=adminPageHead('Identification','Les noms peuvent changer. Les identifiants, eux, restent stables pour les imports, relations et synchronisations.')+groups.map(([title,rows,key])=>`<section class="id-section"><h2>${title}</h2><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Nom</th><th>ID Passerelle</th><th></th></tr></thead><tbody>${(rows||[]).map(x=>`<tr><td>${safeText(x[key])}</td><td><code>${safeText(x.passerelle_id||'Migration V5.7.2 requise')}</code></td><td><button class="tiny-btn" ${x.passerelle_id?'':'disabled'} onclick="copyPasserelleIdV572('${safeText(x.passerelle_id||'')}')">Copier</button></td></tr>`).join('')||'<tr><td colspan="3">Aucune donnée.</td></tr>'}</tbody></table></div></section>`).join('');
+    zone.innerHTML=adminPageHead('Identification','Les noms peuvent changer. Les identifiants, eux, restent stables pour les imports, relations et synchronisations.')+groups.map(([title,rows,key])=>`<section class="id-section"><h2>${title}</h2><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Nom</th><th>ID Passerelle</th><th></th></tr></thead><tbody>${(rows||[]).map(x=>`<tr><td>${safeText(x[key])}</td><td><code>${safeText(x.passerelle_id||'Migration V5.7.2 requise')}</code></td><td><button class="tiny-btn" ${x.passerelle_id?'':'disabled'} onclick="copyPasserelleIdV572('${safeText(x.passerelle_id||'')}')">Copier</button></td></tr>`).join('')||'<tr><td colspan="3">Aucune donnée.</td></tr>'}</tbody></table></div></details>`).join('');
   }
 
   async function renderAdminConfiguration(zone){
@@ -1773,10 +1786,11 @@
 
   async function openAdminCollectionForm(id){
     const host=document.getElementById('admin-collection-form'); if(!host)return; let c={}; if(id){const {data}=await db().from('univers').select('*').eq('id',id).single();c=data||{};}
-    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
+    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><h2>${id?'Modifier':'Nouvelle'} collection</h2><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div><label>Illustration de collection</label><input id="ac-illustration" value="${safeText(c.illustration_url||'')}" placeholder="URL de l’image"><small>Image d’identité du catalogue BO, distincte des bannières et couvertures.</small></div></div>${c.illustration_url?`<img class="collection-visual-v576b" src="${safeText(c.illustration_url)}">`:''}<h3 style="margin-top:18px">🎨 Charte graphique héritée</h3><p class="admin-section-sub">Les enfants sans personnalisation héritent de cette palette : Collection → Saga → Sous-saga → Œuvre.</p><div class="admin-section-grid four"><div><label>Accent principal</label><input type="color" id="ac-accent" value="${safeText(c.accent_color||'#8C7FB0')}"></div><div><label>Secondaire</label><input type="color" id="ac-secondary" value="${safeText(c.secondary_color||'#D7C9ED')}"></div><div><label>Fond doux</label><input type="color" id="ac-soft" value="${safeText(c.soft_color||'#F7F3FB')}"></div><div><label>Sombre / texte</label><input type="color" id="ac-dark" value="${safeText(c.dark_color||'#3A3148')}"></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
     host.scrollIntoView({behavior:'smooth',block:'center'});
   }
-  async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10)};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});const {error}=await q;if(error){alert('Erreur : '+error.message);return;}adminNavigate('collections');}
+  async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10),illustration_url:document.getElementById('ac-illustration').value.trim()||null,accent_color:document.getElementById('ac-accent').value,secondary_color:document.getElementById('ac-secondary').value,soft_color:document.getElementById('ac-soft').value,dark_color:document.getElementById('ac-dark').value};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});const {error}=await q;if(error){alert('Erreur : '+error.message);return;}adminNavigate('collections');}
+
 
   // ============================================================
   // ACCUEIL
@@ -1955,18 +1969,18 @@
     ]);
     if(sessionsRes.error){content.innerHTML=`<div class="empty">Le Planning a besoin de sa migration SQL.<br><small>${safeText(sessionsRes.error.message)}</small></div>`;return;}
     planningWorks=worksRes.data||[];planningSessions=sessionsRes.data||[];planningChapters=chapRes.data||[];
-    const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):planningView==='week'?`${formatDateFr(isoLocal(mondayOf(planningCursor)))} → ${formatDateFr(isoLocal(endOfWeek(planningCursor)))}`:'Toutes les sessions';
+    if(planningView==='week')planningView='month'; const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):'Toutes les sessions';
     content.innerHTML=`${renderPageImageBanner(planningBanner,'Planning')}<div class="planning-head"><div><h1>📅 Planning</h1><p>Sessions d’écriture et de relecture. Tu planifies, puis tu fais tatrat-glisser quand la vraie vie décide de jouer au bowling.</p></div><div class="planning-actions"><button class="btn-secondary" onclick="openPlanningCsv()">⇩ Import CSV</button><button class="btn-secondary" onclick="exportPlanningCsv()">⇧ Export CSV</button><button class="btn-primary" onclick="openPlanningSessionModal()">+ Nouvelle session</button><button class="btn-secondary" onclick="openPlanningSeriesModal()">✨ Créer une série</button></div></div>
-      <div class="planning-toolbar"><div class="planning-nav"><button class="tiny-btn" onclick="movePlanning(-1)">←</button><div class="planning-period">${safeText(title)}</div><button class="tiny-btn" onclick="movePlanning(1)">→</button><button class="tiny-btn" onclick="planningCursor=new Date();renderPlanning()">Aujourd’hui</button></div><div class="planning-views"><button class="tiny-btn ${planningView==='week'?'active':''}" onclick="setPlanningView('week')">Semaine</button><button class="tiny-btn ${planningView==='month'?'active':''}" onclick="setPlanningView('month')">Mois</button><button class="tiny-btn ${planningView==='list'?'active':''}" onclick="setPlanningView('list')">Liste</button></div></div>
+      <div class="planning-toolbar"><div class="planning-nav"><button class="tiny-btn" onclick="movePlanning(-1)">←</button><div class="planning-period">${safeText(title)}</div><button class="tiny-btn" onclick="movePlanning(1)">→</button><button class="tiny-btn" onclick="planningCursor=new Date();renderPlanning()">Aujourd’hui</button></div><div class="planning-views"><button class="tiny-btn ${planningView==='month'?'active':''}" onclick="setPlanningView('month')">Mois</button><button class="tiny-btn ${planningView==='list'?'active':''}" onclick="setPlanningView('list')">Liste</button></div></div>
       <div class="planning-legend"><span><i style="background:#7C5CBF"></i>Écriture</span><span><i style="background:#59A77A"></i>Relecture</span><span>La couleur peut être personnalisée par session.</span></div>
       <div id="planning-bulk" class="planning-bulk"><span id="planning-bulk-count">0 sélectionnée</span><button class="tiny-btn" onclick="bulkShiftPlanning(1)">+1 jour</button><button class="tiny-btn" onclick="bulkShiftPlanning(7)">+1 semaine</button><button class="tiny-btn" onclick="bulkSetPlanningDate()">Changer la date</button><button class="tiny-btn danger-btn" onclick="bulkDeletePlanning()">Supprimer</button></div>
-      <div id="planning-body">${planningView==='month'?renderPlanningMonth():planningView==='week'?renderPlanningWeek():renderPlanningList()}</div>
+      <div id="planning-body">${planningView==='month'?renderPlanningMonth():renderPlanningList()}</div>
       <input id="planning-csv-file" type="file" accept=".csv,text/csv" style="display:none" onchange="readPlanningCsvFile(event)">
       <div id="planning-modal-host"></div>`;
   }
 
-  function setPlanningView(v){planningView=v;renderPlanning();}
-  function movePlanning(dir){if(planningView==='month')planningCursor=new Date(planningCursor.getFullYear(),planningCursor.getMonth()+dir,1);else if(planningView==='week'){planningCursor=new Date(planningCursor);planningCursor.setDate(planningCursor.getDate()+dir*7)}renderPlanning();}
+  function setPlanningView(v){planningView=(v==='week'?'month':v);renderPlanning();}
+  function movePlanning(dir){if(planningView==='month')planningCursor=new Date(planningCursor.getFullYear(),planningCursor.getMonth()+dir,1);renderPlanning();}
 
   function renderPlanningMonth(){const y=planningCursor.getFullYear(),m=planningCursor.getMonth();const start=mondayOf(new Date(y,m,1));let html=['<div class="planning-month">',...['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d=>`<div class="planning-month-head">${d}</div>`)];for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);html.push(`<div class="planning-day ${d.getMonth()!==m?'other':''} ${iso===isoLocal(new Date())?'today':''}" data-date="${iso}" ondragover="planningDragOver(event)" ondragleave="planningDragLeave(event)" ondrop="planningDrop(event,'${iso}')"><div class="planning-day-num">${d.getDate()}</div>${planningSessions.filter(s=>s.date===iso).map(renderPlanningEvent).join('')}</div>`)}html.push('</div>');return html.join('');}
   function renderPlanningWeek(){const start=mondayOf(planningCursor);let html='<div class="planning-week">';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);html+=`<div class="planning-week-col ${iso===isoLocal(new Date())?'today':''}" data-date="${iso}" ondragover="planningDragOver(event)" ondragleave="planningDragLeave(event)" ondrop="planningDrop(event,'${iso}')"><h3>${d.toLocaleDateString('fr-FR',{weekday:'long'})}</h3><small>${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</small>${planningSessions.filter(s=>s.date===iso).map(renderPlanningEvent).join('')}</div>`}return html+'</div>';}
@@ -2664,7 +2678,7 @@
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
     const { data: s, error } = await db().from('sagas').select('*').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    applyObjectTheme(s.page_color, s.accent_color);
+    const inheritedThemeV576b=await resolveGraphicThemeV576b('saga',s); applyObjectTheme(inheritedThemeV576b.pageColor,inheritedThemeV576b.accent);
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
@@ -2927,7 +2941,7 @@
     const { data: ss, error } = await db().from('sous_sagas').select('*, sagas(id, nom)').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     currentSousSagaParentSagaId = ss.saga_id;
-    applyObjectTheme(ss.page_color, ss.accent_color);
+    const inheritedThemeV576b=await resolveGraphicThemeV576b('sub',ss); applyObjectTheme(inheritedThemeV576b.pageColor,inheritedThemeV576b.accent);
 
     content.innerHTML = `
       <div class="back-link" onclick="openSagaDetail('${ss.saga_id}')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à ${ss.sagas?.nom || 'la saga'}</div>
@@ -3652,7 +3666,8 @@
     const { data: o, error } = await db().from('oeuvres').select('*, sagas(nom)').eq('id', id).single();
     if (error) { content.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     currentOeuvre = o;
-    applyObjectTheme(o.page_color, o.accent_color);
+    const inheritedThemeV576b=await resolveGraphicThemeV576b('work',o);
+    applyObjectTheme(inheritedThemeV576b.pageColor,inheritedThemeV576b.accent);
 
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
     content.innerHTML = `
@@ -4080,71 +4095,16 @@
   }
   function renderPlansTable(plans){
     if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
-    return `<table class="ch-table"><thead><tr><th>Type</th><th>Titre</th><th>Acte</th><th>Statut</th></tr></thead><tbody>
-      ${plans.map(p => `<tr onclick="openPlanModal('${p.id}')"><td>${p.type}</td><td>${p.titre}</td><td>${p.acte||'—'}</td><td><span class="etat-pill">${p.statut||'—'}</span></td></tr>`).join('')}
-    </tbody></table>`;
+    return `<table class="ch-table"><thead><tr><th>Type</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td>${safeText(p.type)}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
   }
-  function renderPlansKanban(plans, groupBy){
-    const groupes = [...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];
-    if (!groupes.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
-    return `<div class="kanban-row">${groupes.map(g => `
-      <div class="kanban-col"><h4>${g} (${plans.filter(p=>p[groupBy]===g).length})</h4>
-        ${plans.filter(p=>p[groupBy]===g).map(p => `<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px; color:var(--text-dim);">${p.type}</div>${p.titre}</div>`).join('')}
-      </div>`).join('')}</div>`;
-  }
+  function renderPlansKanban(plans, groupBy){const groupes=[...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];if(!groupes.length)return `<div class="empty">Aucun plan pour l'instant.</div>`;return `<div class="kanban-row">${groupes.map(g=>`<div class="kanban-col"><h4>${safeText(g)} (${plans.filter(p=>p[groupBy]===g).length})</h4>${plans.filter(p=>p[groupBy]===g).map(p=>`<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px;color:var(--text-dim)">${safeText(p.type)}${p.pov?' · POV '+safeText(p.pov):''}</div>${safeText(p.titre)}</div>`).join('')}</div>`).join('')}</div>`;}
+  let editingPlanId=null;
+  function planModalHtml(){return ''}
+  function openPlanModal(id){editingPlanId=id||null;const p=id?plansData.find(x=>x.id===id):null;openDrawer(id?'Modifier le plan':'Nouveau plan',`<div class="plan-drawer-form-v576b"><div><label>Type</label><select id="pf-type">${['Intrigue principale','Arc personnage','Sous-intrigue','Romance'].map(x=>`<option ${p?.type===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Titre</label><input id="pf-titre" value="${safeText(p?.titre||'')}"></div><div class="row2"><div><label>Acte</label><input id="pf-acte" value="${safeText(p?.acte||'')}"></div><div><label>Statut</label><input id="pf-statut" value="${safeText(p?.statut||'')}" placeholder="À écrire, En cours…"></div></div><div><label>POV</label><input id="pf-pov" value="${safeText(p?.pov||'')}" placeholder="Capucine, Roy, Maddie…"></div><div><label>Transformation / résumé</label><textarea id="pf-transformation" style="min-height:180px">${safeText(p?.transformation||'')}</textarea></div><div class="plan-drawer-actions-v576b">${id?`<button class="btn-secondary danger-btn" style="margin-right:auto" onclick="deletePlan()">Supprimer</button>`:''}<button class="btn-secondary" onclick="closeDrawer()">Annuler</button><button class="btn-primary" onclick="savePlan()">Enregistrer</button></div></div>`);}
+  function closePlanModal(){closeDrawer()}
+  async function savePlan(){const payload={type:document.getElementById('pf-type').value,titre:document.getElementById('pf-titre').value.trim()||'Sans titre',acte:document.getElementById('pf-acte').value.trim()||null,statut:document.getElementById('pf-statut').value.trim()||null,pov:document.getElementById('pf-pov').value.trim()||null,transformation:document.getElementById('pf-transformation').value.trim()||null};let error;if(editingPlanId)({error}=await db().from('plans').update(payload).eq('id',editingPlanId));else{payload.user_id=currentUser.id;payload.oeuvre_id=currentOeuvreId;({error}=await db().from('plans').insert(payload))}if(error){alert('Erreur : '+error.message);return}closeDrawer();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));}
+  async function deletePlan(){if(!confirm('Supprimer ce plan ?'))return;const {error}=await db().from('plans').delete().eq('id',editingPlanId);if(error){alert('Erreur : '+error.message);return}closeDrawer();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));}
 
-  function planModalHtml(){
-    return `
-      <div class="modal-overlay" id="modal-plan-overlay" onclick="if(event.target===this) closePlanModal()">
-        <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-plan-title">Nouveau plan</h2><button onclick="closePlanModal()">✕</button></div>
-          <div class="modal-body">
-            <div><label>Type</label><select id="pf-type"><option>Intrigue principale</option><option>Arc personnage</option><option>Sous-intrigue</option><option>Romance</option></select></div>
-            <div><label>Titre</label><input id="pf-titre"></div>
-            <div class="row2">
-              <div><label>Acte</label><input id="pf-acte"></div>
-              <div><label>Statut</label><input id="pf-statut" placeholder="En cours, À venir..."></div>
-            </div>
-            <div><label>Transformation / résumé</label><textarea id="pf-transformation"></textarea></div>
-          </div>
-          <div class="modal-foot">
-            <button class="btn-secondary" id="pf-delete" style="margin-right:auto; display:none; color:#e88;" onclick="deletePlan()">Supprimer</button>
-            <button class="btn-secondary" onclick="closePlanModal()">Annuler</button>
-            <button class="btn-primary" onclick="savePlan()">Enregistrer</button>
-          </div>
-        </div>
-      </div>`;
-  }
-  let editingPlanId = null;
-  function openPlanModal(id){
-    editingPlanId = id || null;
-    document.getElementById('modal-plan-title').textContent = id ? 'Modifier le plan' : 'Nouveau plan';
-    document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
-    document.getElementById('pf-type').value='Intrigue principale'; document.getElementById('pf-titre').value='';
-    document.getElementById('pf-acte').value=''; document.getElementById('pf-statut').value=''; document.getElementById('pf-transformation').value='';
-    if (id) {
-      const p = plansData.find(x=>x.id===id);
-      if (p) { document.getElementById('pf-type').value=p.type; document.getElementById('pf-titre').value=p.titre||''; document.getElementById('pf-acte').value=p.acte||''; document.getElementById('pf-statut').value=p.statut||''; document.getElementById('pf-transformation').value=p.transformation||''; }
-    }
-    document.getElementById('modal-plan-overlay').classList.add('open');
-  }
-  function closePlanModal(){ document.getElementById('modal-plan-overlay').classList.remove('open'); }
-  async function savePlan(){
-    const payload = { type: document.getElementById('pf-type').value, titre: document.getElementById('pf-titre').value.trim()||'Sans titre', acte: document.getElementById('pf-acte').value.trim(), statut: document.getElementById('pf-statut').value.trim(), transformation: document.getElementById('pf-transformation').value.trim() };
-    let error;
-    if (editingPlanId) ({ error } = await db().from('plans').update(payload).eq('id', editingPlanId));
-    else { payload.user_id = currentUser.id; payload.oeuvre_id = currentOeuvreId; ({ error } = await db().from('plans').insert(payload)); }
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closePlanModal();
-    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
-  }
-  async function deletePlan(){
-    if (!confirm('Supprimer ce plan ?')) return;
-    const { error } = await db().from('plans').delete().eq('id', editingPlanId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closePlanModal();
-    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
-  }
   async function addOeuvreNote(){
     const val = document.getElementById('on-new').value.trim();
     if (!val) return;
@@ -5360,6 +5320,16 @@
   function setRootPalette(palette,accent){Object.entries(palette).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));document.documentElement.style.setProperty('--accent',accent||DEFAULT_ACCENT);}
   async function loadGlobalAppearance(){try{const {data,error}=await db().from('configuration_utilisateur').select('theme_mode,theme_color,accent_color').eq('user_id',currentUser.id).maybeSingle();if(!error&&data)globalAppearance={mode:data.theme_mode||'clair',themeColor:data.theme_color||'#F6F3FB',accent:data.accent_color||DEFAULT_ACCENT};}catch(e){console.warn('Configuration globale indisponible',e);}applyGlobalTheme();}
   function applyGlobalTheme(){const p=makePalette(globalAppearance.mode,globalAppearance.themeColor);setRootPalette(p,globalAppearance.accent);Object.entries(p).forEach(([k,v])=>document.documentElement.style.setProperty('--global'+k.slice(1),v));document.documentElement.style.setProperty('--global-accent',globalAppearance.accent||DEFAULT_ACCENT);}
+  async function resolveGraphicThemeV576b(type,obj){
+    let collection=null,saga=null,sub=null;
+    if(type==='collection') collection=obj;
+    if(type==='saga'){saga=obj;if(obj.univers_id){const r=await db().from('univers').select('*').eq('id',obj.univers_id).maybeSingle();collection=r.data}}
+    if(type==='sub'){sub=obj;if(obj.saga_id){const r=await db().from('sagas').select('*').eq('id',obj.saga_id).maybeSingle();saga=r.data;if(saga?.univers_id){const c=await db().from('univers').select('*').eq('id',saga.univers_id).maybeSingle();collection=c.data}}}
+    if(type==='work'){if(obj.sous_saga_id){const r=await db().from('sous_sagas').select('*').eq('id',obj.sous_saga_id).maybeSingle();sub=r.data}if(obj.saga_id){const r=await db().from('sagas').select('*').eq('id',obj.saga_id).maybeSingle();saga=r.data}const cid=saga?.univers_id||obj.univers_id;if(cid){const r=await db().from('univers').select('*').eq('id',cid).maybeSingle();collection=r.data}}
+    const chain=[collection,saga?.charte_override?saga:null,sub?.charte_override?sub:null,obj?.charte_override?obj:null].filter(Boolean);
+    const pick=(k,fallback)=>chain.reduce((v,x)=>x?.[k]||v,fallback);
+    return {pageColor:pick('soft_color',pick('page_color',globalAppearance.themeColor)),accent:pick('accent_color',globalAppearance.accent),secondary:pick('secondary_color',null),dark:pick('dark_color',null)};
+  }
   function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);setRootPalette(p,accentColor||globalAppearance.accent);}
   function applyTheme(themeBase,accentColor){globalAppearance.mode=themeBase==='sombre'?'sombre':'clair';globalAppearance.accent=accentColor||globalAppearance.accent;applyGlobalTheme();}
   function resetTheme(){applyGlobalTheme();}
