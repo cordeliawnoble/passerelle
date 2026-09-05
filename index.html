@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg: #FFFFFF; --bg-2: #F6F3FB; --card: #FFFFFF;
@@ -1378,8 +1377,27 @@
   function downloadCharacterCsvTemplateV572(){const headers=expectedCharacterFieldsV572();const example=headers.map(h=>h==='nom'?'Nom du personnage':h==='oeuvre_id'?'WRK-XXXXXXXX':h==='oeuvre'?'Titre de l’œuvre':'');const csv=[headers,example].map(row=>row.map(csvCellV572).join(';')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Import_Personnages_Passerelle.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
   function csvCellV572(v){v=String(v??'');return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
   function parseCsvV572(text){const first=(text.split(/\r?\n/,1)[0]||'');const sep=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length?';':',';const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++}else q=!q}else if(c===sep&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>String(x).trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(x=>String(x).trim()!==''))rows.push(row);const headers=(rows.shift()||[]).map(x=>String(x).trim().replace(/^\ufeff/,''));return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])))}
+  async function ensureXlsxV572(){
+    if(window.XLSX)return window.XLSX;
+    return new Promise((resolve,reject)=>{
+      const existing=document.getElementById('xlsx-lazy-v572');
+      if(existing){
+        if(window.XLSX){resolve(window.XLSX);return;}
+        existing.addEventListener('load',()=>resolve(window.XLSX),{once:true});
+        existing.addEventListener('error',()=>reject(new Error('Le lecteur Excel n’a pas pu être chargé. Tu peux utiliser un CSV.')),{once:true});
+        return;
+      }
+      const script=document.createElement('script');
+      script.id='xlsx-lazy-v572';
+      script.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      script.onload=()=>window.XLSX?resolve(window.XLSX):reject(new Error('Le lecteur Excel n’est pas disponible.'));
+      script.onerror=()=>reject(new Error('Le lecteur Excel n’a pas pu être chargé. Tu peux utiliser un CSV.'));
+      document.head.appendChild(script);
+    });
+  }
+
   async function readCharacterImportFileV572(file){
-    if(!file)return;let rows=[];try{if(/\.xlsx?$/.test(file.name.toLowerCase())){if(!window.XLSX)throw new Error('Le lecteur Excel n’est pas disponible. Utilise CSV en secours.');const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{defval:''})}else rows=parseCsvV572(await file.text());}catch(e){return showTransientStatusV572('Lecture impossible : '+e.message)}
+    if(!file)return;let rows=[];try{if(/\.xlsx?$/.test(file.name.toLowerCase())){const XLSXLib=await ensureXlsxV572();const buf=await file.arrayBuffer(),wb=XLSXLib.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];rows=XLSXLib.utils.sheet_to_json(ws,{defval:''})}else rows=parseCsvV572(await file.text());}catch(e){return showTransientStatusV572('Lecture impossible : '+e.message)}
     const headers=rows.length?Object.keys(rows[0]):[];characterImportStateV572={rows,headers,selected:new Set(rows.map((_,i)=>i)),mapping:autoCharacterImportMappingV572(headers),source:document.getElementById('char-import-source')?.value||'csv',fileName:file.name};renderCharacterImportWorkzoneV572();
   }
   function normHeaderV572(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')}
