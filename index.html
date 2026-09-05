@@ -1145,7 +1145,7 @@
               <div class="admin-work-note">🔌 <strong>Identifiant Atelier</strong> utilise le champ technique déjà prévu pour la liaison Google Sheets. La synchronisation sera branchée séparément. Ici, on prépare simplement la prise.</div>
             </section>
 
-            <section class="admin-section"><h2>Import Notion</h2><p class="admin-section-sub">Crash-test contrôlé : remplit le Manuscrit sans toucher au Plan. Réexécutable sans doublon grâce aux identifiants source.</p><div id="notion-work-import-v574"></div></section>
+            <section class="admin-section"><h2>Import Notion</h2><p class="admin-section-sub">Importe un paquet JSON préparé depuis Notion. Prévisualisation obligatoire, Manuscrit uniquement, Plan intact et import réexécutable sans doublon.</p><div id="notion-work-import-v575"></div></section>
 
             <section class="admin-section"><h2>Pilotage éditorial</h2><p class="admin-section-sub">Les mêmes données que le Bureau éditorial, éditables ici sans créer de copie.</p>
               <div class="admin-section-grid three">
@@ -1173,92 +1173,100 @@
         </div>
       </div>`;
     activateAdminWorkTabs();
-    renderNotionWorkImportTestV574(o);
+    renderNotionWorkImportV575(o);
   }
 
 
   // ============================================================
-  // V5.7.4a — Crash-test d'import Notion : Le Déclencheur, chapitre 1
-  // Le Plan reste volontairement hors de ce flux.
+  // V5.7.5 — Import JSON Notion générique pour une œuvre
+  // Le fichier est préparé hors Passerelle (ex. connecteur Notion), puis
+  // prévisualisé avant toute écriture. Ce flux n'écrit jamais dans plans.
   // ============================================================
-  const NOTION_IMPORT_TEST_V574 = {
-    sourceWorkId:'33cb0616-1c84-805f-881b-fa2a19833969',
-    sourceWorkTitle:'L’équation du chaos - Le déclencheur',
-    expectedTome:1,
-    chapters:[{
-      notion_page_id:'349b0616-1c84-806d-a5be-c3036d93a427',
-      numero:1,
-      ordre:1,
-      titre:'La Loi des Séries',
-      acte:'Acte I : La Variable Inconnue',
-      etat:'écrit',
-      nb_mots:1808,
-      pov:'1500 mots (Maddie) + 200 mots (POV Roy)',
-      resume:`L'histoire s'ouvre sur Maddie, qui se bat contre la comptabilité chaotique du bar de son oncle, le "Ride or Die". Elle est sous pression, fatiguée par une journée d'entretiens ratés (merci les talons hauts !), et on sent que ses émotions sont au bord de la surcharge. Littéralement.
-L'agacement de Maddie semble avoir un effet physique sur son environnement : les ampoules claquent dès qu'elle perd patience. Pour aider son oncle Loyd, elle descend faire le service en salle. Là, elle se confronte à Miles, un biker aussi charmant qu'un orc en colère, qui l'agresse physiquement.
-Le climax : Quand il tente de la forcer à s'asseoir sur lui, la rage de Maddie explose. Résultat ? Un court-circuit massif, des ampoules qui explosent, et un Miles qui se prend une décharge électrique sortie de nulle part. Loyd intervient pour virer l'importun, mais le doute plane : Maddie est-elle une pile électrique humaine ? ⚡️
-On finit sur le POV de Roy, un mystérieux étranger qui arrive sous la pluie, déterminé à remplir une mission... et il cherche visiblement Maddie.`,
-      analysis:`Maddie Mocrate : La "Princesse" aux yeux gris orageux. Elle est fascinante parce qu'elle essaie d'être une adulte responsable (le job, les comptes, les talons), mais elle a un "chaos" intérieur qu'elle ne maîtrise pas encore. Elle utilise la logique (tables de multiplication) pour brider un pouvoir qui semble lié à ses émotions. C'est une Sorcière qui s'ignore ! 🧙‍♀️
-Oncle Loyd : Le protecteur bourru. C'est le "Grog" de la bande : pas de manières, une voix rocailleuse, mais une loyauté absolue envers sa nièce. Leur relation est ultra touchante, faite de piques et de non-dits protecteurs.
-Miles (Le Biker) : Le méchant de niveau 1. Il sert de catalyseur pour nous montrer que Maddie n'est pas une demoiselle en détresse ordinaire. Il a tâté du courant alternatif, le pauvre ! 😂
-Roy : L'élément perturbateur. Il dégage une aura de "Rôdeur" en quête de sa cible. Sa relation avec Maddie n'existe pas encore, mais la tension est déjà là par sa simple présence dans l'ombre.`,
-      favorite:`"Qu’il me lâche"
-Les ampoules au-dessus de nous se mettent à clignoter plusieurs fois avant qu’elles n’explosent les unes après les autres dans un bruit d’explosion de verre.
+  let notionPackageV575=null;
+  let notionImportPreviewV575=null;
+  let notionCurrentWorkV575=null;
 
-Pourquoi ? Parce que c'est hyper cinématographique ! J'ai imaginé la scène comme un épisode de Stranger Things ou un moment de bascule dans X-Men. C'est le moment précis où la réalité de Maddie se brise. C'est viscéral, puissant, et ça pose direct les enjeux : elle est dangereuse quand elle est poussée à bout. 💥`,
-      date_ecriture:null
-    }]
-  };
-
-  function normalizeImportTextV574(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
-  function workLooksLikeDeclencheurV574(o){const t=normalizeImportTextV574(o?.titre);return t.includes('declencheur') || (t.includes('equation du chaos') && /(^| )t(ome )?1($| )/.test(t))}
-  function noteHtmlV574(ch){
-    const esc=(v)=>safeText(v||'').replace(/\n/g,'<br>');
-    return `<h2>🎭 Analyse des personnages & relations</h2><p>${esc(ch.analysis)}</p><h2>💘 Passage préféré de Liam</h2><p>${esc(ch.favorite)}</p>`;
+  function normalizeImportTextV575(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’‘]/g,"'").toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function noteHtmlV575(ch){
+    const notes=Array.isArray(ch.notes)?ch.notes:[];
+    const legacy=[];
+    if(ch.analysis)legacy.push({titre:'🎭 Analyse des personnages & relations',contenu:ch.analysis});
+    if(ch.favorite)legacy.push({titre:'💘 Passage préféré de Liam',contenu:ch.favorite});
+    return [...notes,...legacy].filter(n=>n&&(n.titre||n.contenu)).map(n=>`<h2>${safeText(n.titre||'Note')}</h2><p>${safeText(n.contenu||'').replace(/\n/g,'<br>')}</p>`).join('');
   }
-  let notionImportPreviewV574=null;
-  async function renderNotionWorkImportTestV574(work){
-    const z=document.getElementById('notion-work-import-v574');if(!z)return;
-    const compatible=workLooksLikeDeclencheurV574(work);
-    z.innerHTML=`<div class="notion-work-import"><h3>🧪 Test Le Déclencheur</h3><p>Source Notion trouvée : <strong>${safeText(NOTION_IMPORT_TEST_V574.sourceWorkTitle)}</strong>. Ce test importe uniquement le chapitre 1 dans <strong>Manuscrit</strong>. Aucune ligne de <code>plans</code> n'est créée ou modifiée.</p>${compatible?`<button class="btn-secondary" onclick="previewNotionWorkImportV574()">Analyser avant import</button>`:`<div class="danger-inline">Cette fiche ne ressemble pas au Tome 1 « Le Déclencheur ». Le test est verrouillé ici pour éviter une injection dans la mauvaise œuvre.</div>`}<div id="notion-import-preview-v574"></div><div class="notion-import-status" id="notion-import-status-v574"></div></div>`;
+  function packageChaptersV575(){return Array.isArray(notionPackageV575?.chapitres)?notionPackageV575.chapitres:[]}
+  function packageWorkV575(){return notionPackageV575?.oeuvre||notionPackageV575?.work||{}}
+  function packageCompatibleV575(work,pkgWork){
+    const current=normalizeImportTextV575(work?.titre), hints=[pkgWork?.cible_titre,pkgWork?.titre,pkgWork?.source_title,pkgWork?.sourceWorkTitle].map(normalizeImportTextV575).filter(Boolean);
+    return !!current && hints.some(h=>h===current||h.includes(current)||current.includes(h));
   }
-  async function previewNotionWorkImportV574(){
-    const zone=document.getElementById('notion-import-preview-v574'),status=document.getElementById('notion-import-status-v574');if(!zone||!adminEditingOeuvreId)return;
-    status.textContent='Analyse de la fiche Passerelle…';
+  function validateNotionPackageV575(pkg){
+    if(!pkg||typeof pkg!=='object')return 'Le fichier JSON est vide ou invalide.';
+    const format=String(pkg.format||'');
+    if(format && !['passerelle-notion-import','passerelle_import_notion'].includes(format))return `Format inconnu : ${format}`;
+    const work=pkg.oeuvre||pkg.work;
+    if(!work||typeof work!=='object')return 'Le paquet ne contient pas de bloc « oeuvre ».';
+    if(!Array.isArray(pkg.chapitres))return 'Le paquet ne contient pas de tableau « chapitres ».';
+    const bad=pkg.chapitres.find(ch=>!ch||!ch.titre||ch.numero===undefined||ch.numero===null);
+    if(bad)return 'Au moins un chapitre n’a ni titre ni numéro exploitable.';
+    return null;
+  }
+  async function renderNotionWorkImportV575(work){
+    notionCurrentWorkV575=work||null; notionPackageV575=null; notionImportPreviewV575=null;
+    const z=document.getElementById('notion-work-import-v575');if(!z)return;
+    z.innerHTML=`<div class="notion-work-import"><h3>📦 Importer un paquet Notion</h3><p>Le fichier JSON peut être généré depuis Notion sans modifier ce HTML. Passerelle compare d’abord les chapitres avec le Manuscrit existant, puis propose créer / rattacher / mettre à jour. <strong>Le Plan n’est jamais touché par cet import.</strong></p><label class="btn-primary" style="display:inline-block;cursor:pointer">Choisir un fichier JSON<input type="file" accept="application/json,.json" style="display:none" onchange="readNotionPackageV575(this.files[0])"></label><button class="btn-secondary" style="margin-left:6px" onclick="downloadNotionPackageExampleV575()">Exemple de paquet</button><div id="notion-package-summary-v575"></div><div id="notion-import-preview-v575"></div><div class="notion-import-status" id="notion-import-status-v575"></div></div>`;
+  }
+  async function readNotionPackageV575(file){
+    const status=document.getElementById('notion-import-status-v575'),summary=document.getElementById('notion-package-summary-v575'),preview=document.getElementById('notion-import-preview-v575');
+    notionPackageV575=null;notionImportPreviewV575=null;if(preview)preview.innerHTML='';
+    if(!file)return;
+    if(status)status.textContent='Lecture du paquet…';
+    try{
+      const pkg=JSON.parse(await file.text()); const err=validateNotionPackageV575(pkg); if(err)throw new Error(err);
+      notionPackageV575=pkg; const w=packageWorkV575(),chs=packageChaptersV575(); const compatible=packageCompatibleV575(notionCurrentWorkV575,w);
+      if(summary)summary.innerHTML=`<div class="admin-work-note" style="margin-top:12px"><strong>${safeText(w.cible_titre||w.titre||w.source_title||'Œuvre Notion')}</strong> · ${chs.length} chapitre${chs.length>1?'s':''} · source ${safeText(w.notion_page_id||w.source_id||'sans ID')}<br>${compatible?'✓ Cette source correspond à la fiche ouverte.':'⚠ Le titre source ne correspond pas clairement à la fiche ouverte.'}</div><div class="notion-import-actions"><button class="btn-secondary" ${compatible?'':'disabled'} onclick="previewNotionPackageV575()">Analyser avant import</button></div>`;
+      if(status)status.textContent=compatible?'Paquet chargé. Lance l’analyse avant import.':'Import verrouillé : ouvre la bonne œuvre ou corrige le champ cible_titre du paquet.';
+    }catch(e){if(summary)summary.innerHTML='';if(status)status.textContent='Fichier refusé : '+e.message}
+  }
+  async function previewNotionPackageV575(){
+    const zone=document.getElementById('notion-import-preview-v575'),status=document.getElementById('notion-import-status-v575');if(!zone||!adminEditingOeuvreId||!notionPackageV575)return;
+    status.textContent='Comparaison avec le Manuscrit Passerelle…';
     const {data:existing,error}=await db().from('chapitres').select('id,numero,ordre,titre,notion_page_id,nb_mots').eq('oeuvre_id',adminEditingOeuvreId).order('ordre');
-    if(error){status.textContent='La migration SQL V5.7.4 est probablement manquante : '+error.message;return}
-    const decisions=NOTION_IMPORT_TEST_V574.chapters.map(ch=>{
-      const bySource=(existing||[]).find(x=>x.notion_page_id===ch.notion_page_id);
-      if(bySource)return {chapter:ch,action:'update',target:bySource,reason:'Déjà importé : mise à jour sûre'};
-      const byExact=(existing||[]).find(x=>Number(x.numero)===Number(ch.numero)&&normalizeImportTextV574(x.titre)===normalizeImportTextV574(ch.titre));
+    if(error){status.textContent='Analyse impossible : '+error.message;return}
+    const decisions=packageChaptersV575().map(raw=>{
+      const ch={...raw,numero:Number(raw.numero),ordre:Number(raw.ordre??raw.numero),nb_mots:Number(raw.nb_mots??raw.mots??0)||0,notion_page_id:raw.notion_page_id||raw.source_id||null};
+      const bySource=ch.notion_page_id?(existing||[]).find(x=>x.notion_page_id===ch.notion_page_id):null;
+      if(bySource)return {chapter:ch,action:'update',target:bySource,reason:'Déjà importé : mise à jour sûre par ID Notion'};
+      const byExact=(existing||[]).find(x=>Number(x.numero)===ch.numero&&normalizeImportTextV575(x.titre)===normalizeImportTextV575(ch.titre));
       if(byExact)return {chapter:ch,action:'attach',target:byExact,reason:'Chapitre existant reconnu par n° + titre'};
-      const conflict=(existing||[]).find(x=>Number(x.numero)===Number(ch.numero));
+      const conflict=(existing||[]).find(x=>Number(x.numero)===ch.numero);
       if(conflict)return {chapter:ch,action:'conflict',target:conflict,reason:`Le n° ${ch.numero} existe déjà sous « ${conflict.titre} »`};
       return {chapter:ch,action:'insert',target:null,reason:'Nouveau chapitre Manuscrit'};
-    });
-    notionImportPreviewV574={existing:existing||[],decisions};
-    const conflicts=decisions.filter(x=>x.action==='conflict').length;
-    zone.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${decisions.filter(x=>x.action==='insert').length}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${decisions.filter(x=>['update','attach'].includes(x.action)).length}</strong><span>à rattacher / mettre à jour</span></div><div class="notion-import-kpi"><strong>${conflicts}</strong><span>conflit</span></div></div><div>${decisions.map(d=>`<div class="notion-import-preview-row"><strong>#${d.chapter.numero}</strong><div><strong>${safeText(d.chapter.titre)}</strong><br><small>${safeText(d.reason)} · ${d.chapter.nb_mots.toLocaleString('fr-FR')} mots</small></div><span class="notion-import-state ${d.action==='conflict'?'warn':d.action==='update'?'skip':'ok'}">${d.action==='insert'?'Créer':d.action==='attach'?'Rattacher':d.action==='update'?'Mettre à jour':'Conflit'}</span></div>`).join('')}</div><div class="notion-import-actions"><button class="btn-primary" ${conflicts?'disabled':''} onclick="applyNotionWorkImportV574()">Importer ce test</button><button class="btn-secondary" onclick="document.getElementById('notion-import-preview-v574').innerHTML='';notionImportPreviewV574=null">Annuler</button></div>`;
-    status.textContent=conflicts?'Import bloqué tant que le conflit n’est pas résolu.':'Prévisualisation prête. Le Plan restera intact.';
+    }).sort((a,b)=>(a.chapter.ordre||a.chapter.numero)-(b.chapter.ordre||b.chapter.numero));
+    notionImportPreviewV575={existing:existing||[],decisions}; const conflicts=decisions.filter(x=>x.action==='conflict').length;
+    zone.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${decisions.filter(x=>x.action==='insert').length}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${decisions.filter(x=>['update','attach'].includes(x.action)).length}</strong><span>à rattacher / mettre à jour</span></div><div class="notion-import-kpi"><strong>${conflicts}</strong><span>conflit</span></div></div><div style="max-height:420px;overflow:auto">${decisions.map(d=>`<div class="notion-import-preview-row"><strong>#${d.chapter.numero}</strong><div><strong>${safeText(d.chapter.titre)}</strong><br><small>${safeText(d.reason)} · ${(d.chapter.nb_mots||0).toLocaleString('fr-FR')} mots</small></div><span class="notion-import-state ${d.action==='conflict'?'warn':d.action==='update'?'skip':'ok'}">${d.action==='insert'?'Créer':d.action==='attach'?'Rattacher':d.action==='update'?'Mettre à jour':'Conflit'}</span></div>`).join('')}</div><div class="notion-import-actions"><button class="btn-primary" ${conflicts?'disabled':''} onclick="applyNotionPackageV575()">Importer ${decisions.length} chapitre${decisions.length>1?'s':''}</button><button class="btn-secondary" onclick="document.getElementById('notion-import-preview-v575').innerHTML='';notionImportPreviewV575=null">Annuler</button></div>`;
+    status.textContent=conflicts?'Import bloqué tant que les conflits ne sont pas résolus.':'Prévisualisation prête. Plans : 0 écriture.';
   }
-  async function applyNotionWorkImportV574(){
-    const status=document.getElementById('notion-import-status-v574');if(!notionImportPreviewV574||!adminEditingOeuvreId||!status)return;
-    if(notionImportPreviewV574.decisions.some(x=>x.action==='conflict')){status.textContent='Import bloqué : conflit détecté.';return}
-    status.textContent='Import du chapitre test…';
-    const workSource=await db().from('oeuvres').update({notion_page_id:NOTION_IMPORT_TEST_V574.sourceWorkId,updated_at:new Date().toISOString()}).eq('id',adminEditingOeuvreId);
-    if(workSource.error){status.textContent='Erreur sur la fiche œuvre : '+workSource.error.message;return}
-    for(const d of notionImportPreviewV574.decisions){
-      const ch=d.chapter;
-      const payload={notion_page_id:ch.notion_page_id,titre:ch.titre,numero:ch.numero,ordre:ch.ordre,acte:ch.acte,pov:ch.pov,etat:ch.etat,nb_mots:ch.nb_mots,resume:ch.resume,memo:noteHtmlV574(ch)};
+  async function applyNotionPackageV575(){
+    const status=document.getElementById('notion-import-status-v575');if(!notionImportPreviewV575||!adminEditingOeuvreId||!status)return;
+    if(notionImportPreviewV575.decisions.some(x=>x.action==='conflict')){status.textContent='Import bloqué : conflit détecté.';return}
+    const pkgWork=packageWorkV575();status.textContent='Import en cours…';
+    const sourceId=pkgWork.notion_page_id||pkgWork.source_id||null;
+    if(sourceId){const workSource=await db().from('oeuvres').update({notion_page_id:sourceId,updated_at:new Date().toISOString()}).eq('id',adminEditingOeuvreId);if(workSource.error){status.textContent='Erreur sur la fiche œuvre : '+workSource.error.message;return}}
+    let done=0;
+    for(const d of notionImportPreviewV575.decisions){
+      const ch=d.chapter; const payload={titre:ch.titre,numero:ch.numero,ordre:ch.ordre??ch.numero,acte:ch.acte||null,pov:ch.pov||null,etat:ch.etat||ch.etat_manuscrit||'écrit',nb_mots:Number(ch.nb_mots??ch.mots??0)||0,resume:ch.resume||null,memo:noteHtmlV575(ch)};
+      if(ch.notion_page_id)payload.notion_page_id=ch.notion_page_id;
       if(ch.date_ecriture)payload.date_ecriture=ch.date_ecriture;
-      let r;
-      if(d.action==='insert'){payload.user_id=currentUser.id;payload.oeuvre_id=adminEditingOeuvreId;r=await db().from('chapitres').insert(payload)}
-      else r=await db().from('chapitres').update(payload).eq('id',d.target.id);
-      if(r.error){status.textContent=`Erreur chapitre #${ch.numero} : ${r.error.message}`;return}
+      let r;if(d.action==='insert'){payload.user_id=currentUser.id;payload.oeuvre_id=adminEditingOeuvreId;r=await db().from('chapitres').insert(payload)}else r=await db().from('chapitres').update(payload).eq('id',d.target.id);
+      if(r.error){status.textContent=`Erreur chapitre #${ch.numero} : ${r.error.message} (${done}/${notionImportPreviewV575.decisions.length} traités)`;return}
+      done++;status.textContent=`Import en cours… ${done}/${notionImportPreviewV575.decisions.length}`;
     }
-    status.textContent='✓ Crash-test importé. Chapitre 1 ajouté au Manuscrit, notes incluses, Plan intact.';
-    notionImportPreviewV574=null;
-    setTimeout(()=>openAdminOeuvreEditor(adminEditingOeuvreId),900);
+    status.textContent=`✓ Import terminé : ${done} chapitre${done>1?'s':''} traités. Manuscrit mis à jour, Plan intact.`;notionImportPreviewV575=null;setTimeout(()=>openAdminOeuvreEditor(adminEditingOeuvreId),1000);
+  }
+  function downloadNotionPackageExampleV575(){
+    const example={format:'passerelle-notion-import',version:1,generated_at:new Date().toISOString(),oeuvre:{cible_titre:notionCurrentWorkV575?.titre||'Titre Passerelle',titre:'Titre source Notion',notion_page_id:'UUID-NOTION-DE-L-OEUVRE'},chapitres:[{notion_page_id:'UUID-NOTION-DU-CHAPITRE',numero:1,ordre:1,titre:'Titre du chapitre',acte:'Acte I',etat:'Ecrit',nb_mots:1800,pov:'Maddie',resume:'Résumé du chapitre',date_ecriture:null,notes:[{titre:'🎭 Analyse des personnages & relations',contenu:'Note libre'},{titre:'💘 Passage préféré de Liam',contenu:'Note libre'}]}]};
+    const blob=new Blob([JSON.stringify(example,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='exemple-import-notion-passerelle.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
 
   async function onAdminOeuvreSagaChange(){
