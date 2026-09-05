@@ -1836,13 +1836,13 @@
       const finish=(err,data)=>{if(done)return;done=true;cleanup();err?reject(err):resolve(data)};
       const onMessage=(event)=>{
         const origin=String(event.origin||'');
-        if(!/^https:\/\/(?:script\.google\.com|script\.googleusercontent\.com)$/i.test(origin)) return;
+        if(!/^https:\/\/(?:script\.google\.com|(?:[a-z0-9-]+\.)?script\.googleusercontent\.com)$/i.test(origin)) return;
         const msg=event.data;
         if(!msg||msg.type!=='atelier-passerelle'||msg.token!==token) return;
         finish(null,msg.payload);
       };
       window.addEventListener('message',onMessage);
-      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier ne répond pas. Vérifie que le Web App a été redéployé avec la version Bridge.')),20000);
+      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier ne répond pas. Vérifie le déploiement du Web App Atelier.')),20000);
       const sep=baseUrl.includes('?')?'&':'?';
       iframe.src=baseUrl+sep+'project='+encodeURIComponent(projectId)+'&transport=iframe&token='+encodeURIComponent(token)+'&_='+Date.now();
       iframe.onerror=()=>finish(new Error('Impossible de charger le connecteur Atelier.'));
