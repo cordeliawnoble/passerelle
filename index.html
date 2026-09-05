@@ -328,6 +328,14 @@
   /* ŒUVRE V5.2 — pages figées */
   .work-info-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:20px;align-items:start}
   .keyword-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.keyword-chip{padding:5px 9px;border-radius:999px;background:var(--lavender);font-size:11px}
+  .work-hero-banner{height:clamp(250px,25vw,380px);border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--bg-2);margin-bottom:18px;position:relative}.work-hero-banner img{width:100%;height:100%;object-fit:cover;display:block}.work-hero-banner.empty{display:grid;place-items:center;color:var(--text-dim);font-family:'Lora',serif;font-size:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--bg)),var(--bg-2))}
+  .work-info-cover{width:min(100%,240px);aspect-ratio:2/3;object-fit:cover;border-radius:14px;border:1px solid var(--line);box-shadow:0 12px 32px rgba(35,24,55,.12);display:block;margin:0 auto 20px;transition:transform .2s ease,box-shadow .2s ease}.work-info-cover:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 18px 38px rgba(35,24,55,.18)}.work-info-cover-empty{width:min(100%,240px);aspect-ratio:2/3;border-radius:14px;border:1px dashed var(--line);display:grid;place-items:center;margin:0 auto 20px;color:var(--accent);font:700 34px 'Lora',serif;background:var(--bg-2)}
+  .catalog-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:0 0 16px}.catalog-toolbar>div{min-width:145px;flex:1}.catalog-toolbar .search-wrap{min-width:220px;flex:1.4}.catalog-group-title{font:600 18px 'Lora',serif;margin:24px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  .keyword-selector{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg-2)}.keyword-selector-search{margin-bottom:8px}.keyword-selector-groups{display:grid;gap:10px;max-height:290px;overflow:auto}.keyword-selector-group strong{display:block;font-size:11px;color:var(--text-dim);margin-bottom:6px}.keyword-choice{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;margin:0 5px 5px 0;cursor:pointer;font-size:11px;background:var(--card)}.keyword-choice input{display:none}.keyword-choice.selected{border-color:var(--kw-color,var(--accent));box-shadow:inset 0 0 0 1px var(--kw-color,var(--accent));background:color-mix(in srgb,var(--kw-color,var(--accent)) 12%,var(--card))}
+  .keyword-config-row{display:grid;grid-template-columns:1.2fr .8fr .7fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .mini-cal-dots{display:flex;gap:2px;flex-direction:column;align-items:stretch;margin-top:3px}.mini-cal-dot{width:auto;height:auto;border-radius:4px;display:block;cursor:help;font-size:7px;line-height:1.2;padding:2px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;font-weight:700}
+  .entity-card-bg.contain-image{background-size:cover!important;filter:blur(9px);transform:scale(1.08);opacity:.48}.entity-card-portrait{position:absolute;inset:12px 20%;z-index:1;background-size:contain;background-repeat:no-repeat;background-position:center;border-radius:10px;filter:drop-shadow(0 8px 14px rgba(20,15,30,.18))}
+
   .work-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}.segmented{display:flex;gap:4px;flex-wrap:wrap}.segmented button.active{background:var(--accent);color:var(--bg)}
   .character-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}.relation-preview{position:sticky;top:12px}
   .manuscript-table td,.manuscript-table th{vertical-align:middle}.note-icon{border:0;background:transparent;cursor:pointer;font-size:17px;padding:6px}
@@ -971,7 +979,7 @@
                 <div><label>Temporalité</label><input id="aow-temporalite" value="${safeText(o.temporalite||'')}"></div>
                 <div><label>Lieu principal</label><input id="aow-lieu" value="${safeText(o.lieu_principal||'')}"></div>
                 <div><label>Public cible</label><select id="aow-public"><option value="">—</option>${['Tout public','Young Adult','16+','18+'].map(x=>`<option ${o.public_cible===x?'selected':''}>${x}</option>`).join('')}</select></div>
-                <div class="admin-field-full"><label>Tropes / mots-clés</label><input id="aow-tropes" value="${safeText(tropes)}" placeholder="Séparés par des virgules"></div>
+                <div class="admin-field-full"><label>Mots-clés</label>${keywordSelectorHtmlV571(kwCacheV571,kwSelectedV571,'aow-kw-select')}</div>
               </div>
               <details class="admin-optional" ${(o.enjeu_principal||o.enjeux_secondaires?.length)?'open':''}>
                 <summary>Champs narratifs optionnels</summary>
@@ -1251,12 +1259,14 @@
 
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
-    const [links, works, appearance, v2notes, pageBanners] = await Promise.all([
+    const [links, works, appearance, v2notes, pageBanners, kwCategories, kwWords] = await Promise.all([
       db().from('liens_rapides').select('*').order('ordre',{ascending:true}),
       db().from('oeuvres').select('id,titre,horizon_annee,archive').eq('archive',false).order('titre',{ascending:true}),
       db().from('configuration_utilisateur').select('*').eq('user_id',currentUser.id).maybeSingle(),
       db().from('evolutions_v2').select('*').order('created_at',{ascending:false}),
-      db().from('page_banners').select('*').order('page_key',{ascending:true})
+      db().from('page_banners').select('*').order('page_key',{ascending:true}),
+      db().from('keyword_categories').select('*').order('ordre'),
+      db().from('keywords').select('*').order('ordre').order('nom')
     ]);
     const linksOk=!links.error;
     const cfg=appearance.data||globalAppearance;
@@ -1266,6 +1276,8 @@
         <div class="admin-section-head"><div><h2>🖼️ Bannières des pages</h2><p class="admin-section-sub" style="margin:4px 0 0">Téléverse directement les bannières des pages générales. Les fiches Œuvre, Saga, Sous-saga et Recueil gardent leur bannière propre dans leur éditeur.</p></div></div>
         ${pageBanners.error ? adminEmpty('Bannières indisponibles : '+safeText(pageBanners.error?.message||'table non disponible')) : `<div class="banner-admin-grid">${Object.entries(PAGE_BANNER_LABELS).map(([key,label])=>{const b=(pageBanners.data||[]).find(x=>x.page_key===key);return `<div class="banner-admin-card"><div class="banner-admin-preview">${b?.image_url?`<img src="${safeText(b.image_url)}" alt="">`:'Aucune bannière'}</div><div class="banner-admin-body"><strong>${safeText(label)}</strong><div class="banner-admin-actions"><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadPageBanner('${key}',this)"></label>${b?.image_url?`<button class="tiny-btn danger-btn" onclick="removePageBanner('${key}')">Retirer</button>`:''}</div></div></div>`}).join('')}</div>`}
       </div>
+      <div class="admin-section"><div class="admin-section-head"><div><h2>🏷️ Mots-clés</h2><p class="admin-section-sub" style="margin:4px 0 0">Référentiel global : tu crées ici, puis tu coches partout.</p></div></div>
+      ${(kwCategories.error||kwWords.error)?adminEmpty('Migration V5.7.1 requise.'):`<div class="panel" style="background:var(--bg-2);margin-bottom:12px"><h3>Catégories</h3>${(kwCategories.data||[]).map(c=>`<div class="keyword-config-row"><input value="${safeText(c.nom)}" onchange="updateKeywordCategoryV571('${c.id}','nom',this.value)"><input value="${safeText(c.emoji||'')}" placeholder="Emoji" onchange="updateKeywordCategoryV571('${c.id}','emoji',this.value)"><input type="color" value="${safeText(c.couleur||'#7C5CBF')}" onchange="updateKeywordCategoryV571('${c.id}','couleur',this.value)"><button class="tiny-btn danger-btn" onclick="deleteKeywordCategoryV571('${c.id}')">Supprimer</button></div>`).join('')}<div class="row2" style="margin-top:10px"><input id="kw-new-cat" placeholder="Nouvelle catégorie"><button class="btn-secondary" onclick="addKeywordCategoryV571()">+ Catégorie</button></div></div><div class="panel" style="background:var(--bg-2)"><h3>Mots-clés</h3>${(kwWords.data||[]).map(k=>`<div class="keyword-config-row"><input value="${safeText(k.nom)}" onchange="updateKeywordV571('${k.id}','nom',this.value)"><select onchange="updateKeywordV571('${k.id}','category_id',this.value)">${(kwCategories.data||[]).map(c=>`<option value="${c.id}" ${c.id===k.category_id?'selected':''}>${safeText(c.nom)}</option>`).join('')}</select><span><input value="${safeText(k.emoji||'')}" placeholder="Emoji" style="width:55px;display:inline-block" onchange="updateKeywordV571('${k.id}','emoji',this.value)"> <input type="color" value="${safeText(k.couleur||'#7C5CBF')}" style="width:48px;display:inline-block" onchange="updateKeywordV571('${k.id}','couleur',this.value)"></span><button class="tiny-btn danger-btn" onclick="deleteKeywordV571('${k.id}')">Supprimer</button></div>`).join('')}<div class="admin-section-grid three" style="margin-top:10px"><input id="kw-new-name" placeholder="Nouveau mot-clé"><select id="kw-new-cat-id">${(kwCategories.data||[]).map(c=>`<option value="${c.id}">${safeText(c.nom)}</option>`).join('')}</select><button class="btn-secondary" onclick="addKeywordV571()">+ Mot-clé</button></div></div>`}</div>
       <div class="admin-section">
         <div class="admin-section-head"><div><h2>🧪 Évolutions & V2</h2><p class="admin-section-sub" style="margin:4px 0 0">Parking produit de Passerelle : idées à tester après usage, adaptations multi-utilisatrices et améliorations volontairement repoussées.</p></div></div>
         ${v2notes.error ? adminEmpty('La base Évolutions & V2 n’est pas encore installée.') : `
@@ -1284,6 +1296,13 @@
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
     activateAdminConfigurationTabs(zone);
   }
+
+  async function addKeywordCategoryV571(){const nom=document.getElementById('kw-new-cat')?.value.trim();if(!nom)return;const {error}=await db().from('keyword_categories').insert({user_id:currentUser.id,nom});if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
+  async function updateKeywordCategoryV571(id,f,v){const {error}=await db().from('keyword_categories').update({[f]:v||null}).eq('id',id);if(error)alert(error.message);keywordCacheV571=null}
+  async function deleteKeywordCategoryV571(id){if(!confirm('Supprimer cette catégorie et ses mots-clés ?'))return;const {error}=await db().from('keyword_categories').delete().eq('id',id);if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
+  async function addKeywordV571(){const nom=document.getElementById('kw-new-name')?.value.trim(),category_id=document.getElementById('kw-new-cat-id')?.value;if(!nom||!category_id)return;const {error}=await db().from('keywords').insert({user_id:currentUser.id,nom,category_id});if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
+  async function updateKeywordV571(id,f,v){const {error}=await db().from('keywords').update({[f]:v||null}).eq('id',id);if(error)alert(error.message);keywordCacheV571=null}
+  async function deleteKeywordV571(id){if(!confirm('Supprimer ce mot-clé ?'))return;const {error}=await db().from('keywords').delete().eq('id',id);if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
 
   async function saveGlobalAppearance(){
     const payload={user_id:currentUser.id,theme_mode:document.getElementById('cfg-theme-mode').value,theme_color:document.getElementById('cfg-theme-color').value,accent_color:document.getElementById('cfg-accent-color').value,updated_at:new Date().toISOString()};
@@ -1345,6 +1364,8 @@
   // ============================================================
   async function renderAccueil(){
     const content = document.getElementById('content');
+    const kwCacheV571=await loadKeywordsV571();
+    const kwSelectedV571=await keywordIdsForV571('oeuvre',o.id);
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
     const now = new Date();
@@ -1494,7 +1515,7 @@
 
   function renderMiniPlanning(now,sessions,worksMap){
     const y=now.getFullYear(),m=now.getMonth();const first=new Date(y,m,1);const start=mondayOf(first);const cells=[];
-    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);const ds=sessions.filter(s=>s.date===iso);cells.push(`<div class="mini-cal-day ${d.getMonth()!==m?'muted':''} ${iso===isoLocal(now)?'today':''}"><div class="mini-cal-num">${d.getDate()}</div><div class="mini-cal-dots">${ds.slice(0,5).map(s=>{const o=worksMap.get(s.oeuvre_id);const title=[o?.titre,s.titre,s.type_session==='relecture'?'Relecture':'Écriture'].filter(Boolean).join(' · ');return `<span class="mini-cal-dot" style="background:${safeText(s.couleur|| (s.type_session==='relecture'?'#59A77A':'#7C5CBF'))}" title="${safeText(title)}"></span>`}).join('')}</div></div>`)}
+    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);const ds=sessions.filter(s=>s.date===iso);cells.push(`<div class="mini-cal-day ${d.getMonth()!==m?'muted':''} ${iso===isoLocal(now)?'today':''}"><div class="mini-cal-num">${d.getDate()}</div><div class="mini-cal-dots">${ds.slice(0,5).map(s=>{const o=worksMap.get(s.oeuvre_id);const title=[o?.titre,s.titre,s.type_session==='relecture'?'Relecture':'Écriture'].filter(Boolean).join(' · ');const label=(s.titre||o?.titre||'•').replace(/Équation du Chaos/gi,'EC').replace(/Campus North/gi,'CN').slice(0,12);return `<span class="mini-cal-dot" style="background:${safeText(s.couleur|| (s.type_session==='relecture'?'#59A77A':'#7C5CBF'))}" title="${safeText(title)}">${safeText(label)}</span>`}).join('')}</div></div>`)}
     return `<div class="mini-cal-head"><strong>${now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong><span style="font-size:10px;color:var(--text-dim)">${sessions.length} session${sessions.length>1?'s':''}</span></div><div class="mini-cal-week">${['L','M','M','J','V','S','D'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mini-cal-grid">${cells.join('')}</div>`;
   }
 
@@ -1872,10 +1893,9 @@
     if(dark)return `--gallery-text:#fffafc;--gallery-muted:rgba(255,250,252,.82);--gallery-chip-bg:rgba(8,6,16,.34);--gallery-chip-border:rgba(255,255,255,.28);--gallery-shadow:0 2px 14px rgba(0,0,0,.48);--gallery-gradient:linear-gradient(to bottom,rgba(${r},${g},${b},.08) 0%,rgba(${r},${g},${b},.40) 38%,rgba(${r},${g},${b},.92) 72%,rgb(${r},${g},${b}) 100%);`;
     return `--gallery-text:#241d31;--gallery-muted:rgba(36,29,49,.78);--gallery-chip-bg:rgba(255,255,255,.46);--gallery-chip-border:rgba(36,29,49,.14);--gallery-shadow:0 1px 12px rgba(255,255,255,.34);--gallery-gradient:linear-gradient(to bottom,rgba(${r},${g},${b},.08) 0%,rgba(${r},${g},${b},.42) 36%,rgba(${r},${g},${b},.94) 70%,rgb(${r},${g},${b}) 100%);`;
   }
-  function entityGalleryCard({title,image,pageColor,tags=[],top='',onclick='',preview=null}){
-    const pc=safeText(pageColor||'#EDE7F6');
-    const bg=image?`style="background-image:url('${safeText(image).replaceAll("'",'&#39;')}')"`:'class="entity-card-bg default"';
-    return `<article class="entity-card" style="--card-page:${pc};${galleryContrastVars(pageColor||'#EDE7F6')}" onclick="${onclick}"><div ${image?`class="entity-card-bg" ${bg}`:bg}></div><div class="entity-card-inner"><div class="entity-card-top"><div style="display:flex;gap:5px;flex-wrap:wrap">${top?`<span class="meta-chip">${safeText(top)}</span>`:''}</div>${preview?`<button class="entity-preview-btn" onclick="event.stopPropagation();${preview}">◧ Aperçu</button>`:''}</div><div class="entity-card-spacer"></div><h3>${safeText(title||'Sans titre')}</h3><div class="pep-tags">${tags.filter(Boolean).map(t=>`<span class="meta-chip">${safeText(t)}</span>`).join('')}</div></div></article>`;
+  function entityGalleryCard({title,image,pageColor,tags=[],top='',onclick='',preview=null,imageMode='auto'}){
+    const style=galleryContrastVars(pageColor||'#EDE7F6'),img=safeText(image||''),vertical=imageMode==='portrait';
+    return `<article class="entity-card" style="${style}" onclick="${onclick}">${img?`<div class="entity-card-bg ${vertical?'contain-image':''}" style="background-image:url('${img}')"></div>${vertical?`<div class="entity-card-portrait" style="background-image:url('${img}')"></div>`:''}`:''}<div class="entity-card-overlay"></div><div class="entity-card-top"><span class="entity-card-kind">${safeText(top||'')}</span>${preview?`<button class="entity-preview-btn" onclick="event.stopPropagation();${preview}">◧ Aperçu</button>`:''}</div><div class="entity-card-body"><h3>${safeText(title||'Sans titre')}</h3><div class="entity-card-tags">${tags.filter(Boolean).map(t=>`<span>${safeText(t)}</span>`).join('')}</div></div></article>`;
   }
   function colorForCard(x){return x?.page_color||'#EDE7F6'}
   async function sagaMetadataBundle(){
@@ -3150,20 +3170,15 @@
   // ============================================================
   // ŒUVRES
   // ============================================================
+  let oeuvreCatalogueDataV571=[],oeuvreCatalogueGroupV571=sessionStorage.getItem('passerelle-oeuvres-group')||'saga';
   async function renderOeuvres(){
-    const oeuvresBanner=await getPageBanner('oeuvres');
-    const content = document.getElementById('content');
-    content.innerHTML = `${renderPageImageBanner(oeuvresBanner,'Œuvres')}
-      <div class="head-row"><h2>Œuvres</h2><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div>
-      <div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>
-    `;
-    const { data, error } = await db().from('oeuvres').select('id, titre, genre, statut, mots_ecrits, objectif_mots, archive, couverture, banniere, page_color, sagas(nom)').order('created_at', { ascending:false });
-    const zone = document.getElementById('oeuvres-zone');
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune œuvre pour l'instant.<br><br><button class="btn-primary" onclick="openOeuvreModal()">Créer ta première œuvre</button></div>`; return; }
-    zone.innerHTML = `<div class="entity-gallery">${data.map(o => entityGalleryCard({id:o.id,title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[o.sagas?.nom||'Indépendante',o.genre,o.statut,o.archive?'Archivée':null],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`})) .join('')}</div>`;
+    const b=await getPageBanner('oeuvres'),content=document.getElementById('content');content.innerHTML=`${renderPageImageBanner(b,'Œuvres')}<div class="head-row"><div><h2>Œuvres</h2><p style="font-size:12px;color:var(--text-dim)">Explorateur du catalogue.</p></div><button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button></div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
+    const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,page_color,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').order('titre');const z=document.getElementById('oeuvres-zone');if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}oeuvreCatalogueDataV571=data||[];
+    const sagaOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.saga_id&&x.sagas?.nom).map(x=>[x.saga_id,x.sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join(''),colOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.univers_id&&x.univers?.nom).map(x=>[x.univers_id,x.univers.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
+    z.innerHTML=`<div class="catalog-toolbar"><div class="search-wrap"><label>Recherche</label><input id="oc-q" placeholder="Titre, genre…" oninput="renderOeuvreCatalogueV571()"></div><div><label>Collection</label><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option>${colOpts}</select></div><div><label>Saga</label><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Toutes</option>${sagaOpts}</select></div><div><label>Sous-saga</label><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Toutes</option></select></div><div><label>Éditorial actuel</label><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select></div><div><label>Regrouper par</label><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div id="oc-grid"></div>`;syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();
   }
-
+  function syncOeuvreSousSagaFilterV571(){const el=document.getElementById('oc-ss');if(!el)return;const saga=document.getElementById('oc-saga')?.value||'',old=el.value,rows=oeuvreCatalogueDataV571.filter(x=>x.sous_saga_id&&x.sous_sagas?.nom&&(!saga||x.saga_id===saga));el.innerHTML='<option value="">Toutes</option>'+[...new Map(rows.map(x=>[x.sous_saga_id,x.sous_sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old}
+  function renderOeuvreCatalogueV571(){const q=(document.getElementById('oc-q')?.value||'').toLowerCase(),col=document.getElementById('oc-col')?.value||'',saga=document.getElementById('oc-saga')?.value||'',ss=document.getElementById('oc-ss')?.value||'',ed=document.getElementById('oc-ed')?.value||'',group=document.getElementById('oc-group')?.value||oeuvreCatalogueGroupV571,rows=oeuvreCatalogueDataV571.filter(o=>(!q||[o.titre,o.genre,o.sagas?.nom,o.sous_sagas?.nom,o.univers?.nom,o.statut_editorial_actuel].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!col||o.univers_id===col)&&(!saga||o.saga_id===saga)&&(!ss||o.sous_saga_id===ss)&&(!ed||o.statut_editorial_actuel===ed)),key=o=>group==='collection'?(o.univers?.nom||'Sans collection'):group==='saga'?(o.sagas?.nom||'Œuvres indépendantes'):group==='soussaga'?(o.sous_sagas?.nom||'Sans sous-saga'):group==='editorial'?(o.statut_editorial_actuel||'Non défini'):'',groups=new Map();rows.forEach(o=>{const k=key(o);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(o)});const card=o=>entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[o.sous_sagas?.nom||o.sagas?.nom||'Indépendante',o.genre,o.statut_editorial_actuel||o.statut],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,imageMode:o.banniere?'landscape':'portrait'});document.getElementById('oc-grid').innerHTML=!rows.length?'<div class="empty">Aucune œuvre avec ces filtres.</div>':group==='none'?`<div class="entity-gallery">${rows.map(card).join('')}</div>`:[...groups.entries()].map(([k,a])=>`<section><h3 class="catalog-group-title">${safeText(k)} <small style="color:var(--text-dim)">· ${a.length}</small></h3><div class="entity-gallery">${a.map(card).join('')}</div></section>`).join('')}
   // ============================================================
   // ŒUVRE — page détail, avec onglets
   // ============================================================
@@ -3191,9 +3206,8 @@
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
     content.innerHTML = `
       <div class="back-link" onclick="navigate('oeuvres')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux œuvres</div>
-      ${renderCatalogEntityBanner(o.banniere,o.titre)}
+      <div class="work-hero-banner ${o.banniere?'':'empty'}">${o.banniere?`<img src="${safeText(o.banniere)}" alt="Bannière de ${safeText(o.titre)}">`:`<span>${safeText(o.titre)}</span>`}</div>
       <div class="oeuvre-head">
-        ${o.couverture ? `<img src="${safeText(o.couverture)}" alt="Couverture de ${safeText(o.titre)}" style="width:100px;height:130px;object-fit:cover;border-radius:6px;border:1px solid var(--line);flex-shrink:0;">` : `<div class="cover-block">${initials(o.titre)}</div>`}
         <div class="oeuvre-info">
           <h1>${o.titre}</h1>
           <div class="oeuvre-sub">${o.sagas?.nom || 'Œuvre indépendante'}</div>
@@ -3866,6 +3880,14 @@
       .replace(/\n/g, '<br>');
   }
 
+  let keywordCacheV571=null;
+  async function loadKeywordsV571(force=false){if(keywordCacheV571&&!force)return keywordCacheV571;const [c,k]=await Promise.all([db().from('keyword_categories').select('*').order('ordre'),db().from('keywords').select('*').order('ordre').order('nom')]);return keywordCacheV571={categories:c.data||[],keywords:k.data||[],error:c.error||k.error}}
+  async function keywordIdsForV571(t,id){const {data}=await db().from('keyword_links').select('keyword_id').eq('entity_type',t).eq('entity_id',id);return new Set((data||[]).map(x=>x.keyword_id))}
+  function keywordSelectorHtmlV571(cache,selected,cls){if(cache.error)return '<div class="empty">Migration V5.7.1 requise.</div>';return `<div class="keyword-selector"><input class="keyword-selector-search" placeholder="🔍 Chercher…" oninput="filterKeywordSelectorV571(this)"><div class="keyword-selector-groups">${cache.categories.map(c=>{const ks=cache.keywords.filter(k=>k.category_id===c.id);return ks.length?`<div class="keyword-selector-group"><strong>${safeText((c.emoji?c.emoji+' ':'')+c.nom)}</strong><div>${ks.map(k=>`<label class="keyword-choice ${selected.has(k.id)?'selected':''}" style="--kw-color:${safeText(k.couleur||c.couleur||'#7C5CBF')}" data-kw-search="${safeText((k.nom+' '+c.nom).toLowerCase())}"><input type="checkbox" class="${cls}" value="${k.id}" ${selected.has(k.id)?'checked':''} onchange="this.parentElement.classList.toggle('selected',this.checked)">${safeText((k.emoji?k.emoji+' ':'')+k.nom)}</label>`).join('')}</div></div>`:''}).join('')}</div></div>`}
+  function filterKeywordSelectorV571(i){const q=i.value.toLowerCase();i.closest('.keyword-selector').querySelectorAll('.keyword-choice').forEach(x=>x.style.display=!q||x.dataset.kwSearch.includes(q)?'inline-flex':'none')}
+  async function saveKeywordLinksV571(t,id,sel){const ids=[...document.querySelectorAll(sel+':checked')].map(x=>x.value);let r=await db().from('keyword_links').delete().eq('entity_type',t).eq('entity_id',id);if(r.error)throw r.error;if(ids.length){r=await db().from('keyword_links').insert(ids.map(keyword_id=>({user_id:currentUser.id,entity_type:t,entity_id:id,keyword_id})));if(r.error)throw r.error}}
+  async function renderKeywordChipsV571(t,id,legacy=[]){const c=await loadKeywordsV571(),ids=await keywordIdsForV571(t,id),ks=c.keywords.filter(k=>ids.has(k.id));return ks.length?ks.map(k=>`<span class="keyword-chip" style="background:color-mix(in srgb,${safeText(k.couleur||'#7C5CBF')} 16%,var(--card));border:1px solid ${safeText(k.couleur||'#7C5CBF')}">${safeText((k.emoji?k.emoji+' ':'')+k.nom)}</span>`).join(''):(legacy||[]).map(k=>`<span class="keyword-chip">${safeText(k)}</span>`).join('')}
+
   async function renderOeuvreInformations(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
     const [{data:o},{data:chaps},{data:plans}] = await Promise.all([
@@ -3882,7 +3904,8 @@
     if(wordsEl) wordsEl.textContent=`${words.toLocaleString('fr-FR')} / ${(o?.objectif_mots||0).toLocaleString('fr-FR')} mots`;
     if(chaptersEl) chaptersEl.textContent=planned>0?`${written} / ${planned} chapitres écrits`:(written>0?`${written} chapitre${written>1?'s':''} écrit${written>1?'s':''}`:'Aucun chapitre synchronisé');
     if(barEl) barEl.style.width=`${pct}%`;
-    zone.innerHTML=`<div class="work-info-grid"><section class="panel"><h2>Résumé</h2><div style="font-size:14px;line-height:1.75">${o?.resume?renderSimpleRichText(o.resume):'<span style="color:var(--text-dim)">Pas encore de résumé.</span>'}</div></section><aside class="panel"><h2>Informations clés</h2>${[['Genre',o?.genre],['Type d’œuvre',o?.format],['Saga',o?.sagas?.nom],['Sous-saga',o?.sous_sagas?.nom],['Statut',o?.statut]].map(([k,v])=>`<div class="info-line"><span>${k}</span><strong>${safeText(v||'—')}</strong></div>`).join('')}<h3 style="margin-top:18px">Mots-clés</h3><div class="keyword-wrap">${kws.map(k=>`<span class="keyword-chip">${safeText(k)}</span>`).join('')||'<span style="font-size:12px;color:var(--text-dim)">Aucun mot-clé.</span>'}</div></aside></div>`;
+    const kwHtml=await renderKeywordChipsV571('oeuvre',currentOeuvreId,kws);
+    zone.innerHTML=`<div class="work-info-grid"><section class="panel"><h2>Résumé</h2><div style="font-size:14px;line-height:1.75">${o?.resume?renderSimpleRichText(o.resume):'<span style="color:var(--text-dim)">Pas encore de résumé.</span>'}</div></section><aside class="panel">${o?.couverture?`<img class="work-info-cover" src="${safeText(o.couverture)}" alt="Couverture de ${safeText(o.titre)}">`:`<div class="work-info-cover-empty">${initials(o?.titre||'')}</div>`}<h2>Informations clés</h2>${[['Genre',o?.genre],['Type d’œuvre',o?.format],['Saga',o?.sagas?.nom],['Sous-saga',o?.sous_sagas?.nom],['Statut',o?.statut]].map(([k,v])=>`<div class="info-line"><span>${k}</span><strong>${safeText(v||'—')}</strong></div>`).join('')}<h3 style="margin-top:18px">Mots-clés</h3><div class="keyword-wrap">${kwHtml||'<span style="font-size:12px;color:var(--text-dim)">Aucun mot-clé.</span>'}</div></aside></div>`;
   }
 
   async function renderOeuvreFicheDetaillee(zone){
