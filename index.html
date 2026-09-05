@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg: #FFFFFF; --bg-2: #F6F3FB; --card: #FFFFFF;
@@ -450,6 +451,38 @@
 .timeline-row{display:grid;grid-template-columns:120px 22px minmax(0,1fr);gap:10px;position:relative}.timeline-date{font-size:11px;color:var(--text-dim);padding-top:14px;text-align:right}.timeline-axis{position:relative}.timeline-axis:before{content:'';position:absolute;left:10px;top:0;bottom:0;border-left:2px dashed var(--timeline-color,var(--accent))}.timeline-dot{position:absolute;top:18px;left:4px;width:14px;height:14px;border-radius:50%;background:var(--timeline-color,var(--accent));border:3px solid var(--card)}.timeline-card{display:grid;grid-template-columns:92px 1fr;gap:12px;border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:10px;background:var(--card);cursor:pointer}.timeline-thumb{width:92px;height:72px;border-radius:9px;background:var(--bg-2);object-fit:cover}.drawer-v55{position:fixed;right:0;top:0;width:min(520px,92vw);height:100vh;background:var(--bg);border-left:1px solid var(--line);z-index:1200;padding:22px;overflow:auto;box-shadow:-12px 0 35px rgba(0,0,0,.12)}
 @media(max-width:850px){.ss-info-grid{grid-template-columns:1fr}.ss-kpis{grid-template-columns:1fr}.timeline-row{grid-template-columns:80px 18px 1fr}.timeline-card{grid-template-columns:1fr}.timeline-thumb{width:100%;height:150px}}
 
+
+  /* ---- V5.7.2 : identifiants, personnages, modèles & imports ---- */
+  .passerelle-id{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);color:var(--text-dim);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;vertical-align:middle;white-space:nowrap}
+  .passerelle-id button{border:0;background:transparent;color:inherit;cursor:pointer;padding:0;font-size:11px}
+  .character-topbar,.character-filterbar,.character-bulkbar,.char-admin-tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .character-topbar{justify-content:space-between;margin:14px 0}
+  .character-filterbar{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-bottom:14px}
+  .character-filterbar input,.character-filterbar select{min-width:160px}
+  .character-bulkbar{position:sticky;top:10px;z-index:8;padding:10px 12px;margin:0 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);box-shadow:0 10px 30px rgba(30,20,55,.08)}
+  .char-select{width:auto!important;accent-color:var(--accent)}
+  .char-card.selectable{position:relative;cursor:pointer}
+  .char-card.selectable .char-card-check{position:absolute;top:10px;left:10px;z-index:3;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:3px 5px;line-height:1}
+  .char-card.archived{opacity:.68;filter:saturate(.75)}
+  .char-card-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;color:var(--text-dim);margin-top:5px}
+  .char-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+  .char-admin-tabs{border-bottom:1px solid var(--line);margin-bottom:18px}
+  .char-admin-tabs button{border:0;background:transparent;padding:10px 13px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;font-family:'Lora',serif}
+  .char-admin-tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .template-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+  .template-builder{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:14px;min-height:240px}
+  .template-block{display:grid;grid-template-columns:30px 120px minmax(0,1fr) 36px;gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:7px;background:var(--bg-2);margin-bottom:8px}
+  .template-block.dragging{opacity:.45}.template-drag{cursor:grab;color:var(--text-dim);text-align:center}.template-type{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim)}
+  .template-palette{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+  .template-side{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:14px;position:sticky;top:16px}
+  .template-json-preview,.import-preview{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:7px;background:var(--bg-2);padding:10px}
+  .import-step{border:1px solid var(--line);border-radius:9px;background:var(--card);padding:15px;margin-bottom:14px}
+  .import-map{display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.3fr);gap:8px;align-items:center}
+  .import-status-ok{color:#39875f}.import-status-warn{color:#ad6f23}.danger-inline{border:1px solid rgba(170,50,70,.25);background:rgba(170,50,70,.06);padding:10px 12px;border-radius:8px;margin-bottom:12px}
+  .id-section{margin-bottom:22px}.id-table code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:var(--accent)}
+  .muted-box{padding:12px;border:1px dashed var(--line);border-radius:8px;color:var(--text-dim);background:var(--bg-2)}
+  @media(max-width:900px){.template-layout{grid-template-columns:1fr}.template-side{position:static}.template-block{grid-template-columns:28px 90px minmax(0,1fr) 32px}}
+
 </style>
 </head>
 <body>
@@ -731,6 +764,14 @@
     alert('Passe-Ailes sera branché ici pendant son propre audit. Le bouton est déjà réservé dans la navigation.');
   }
 
+
+  function renderPasserelleIdBadgeV572(id){
+    if(!id)return '';
+    return `<span class="passerelle-id" title="Identifiant Passerelle immuable">${safeText(id)} <button type="button" title="Copier" onclick="event.stopPropagation();copyPasserelleIdV572('${safeText(id)}')">⧉</button></span>`;
+  }
+  async function copyPasserelleIdV572(id){try{await navigator.clipboard.writeText(id);showTransientStatusV572(`Identifiant ${id} copié ✓`)}catch(e){showTransientStatusV572(id)}}
+  function showTransientStatusV572(msg){let el=document.getElementById('v572-toast');if(!el){el=document.createElement('div');el.id='v572-toast';el.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;padding:9px 12px;border:1px solid var(--line);border-radius:7px;background:var(--card);box-shadow:0 10px 30px rgba(0,0,0,.12);font-size:12px';document.body.appendChild(el)}el.textContent=msg;el.style.display='block';clearTimeout(window._v572Toast);window._v572Toast=setTimeout(()=>el.style.display='none',1800)}
+
   // ============================================================
   // ADMINISTRATION / BACK-OFFICE — MODE DÉDIÉ
   // ============================================================
@@ -738,7 +779,7 @@
   const ADMIN_NAV = [
     ['collections','Collections'], ['sagas','Sagas'], ['sous-sagas','Sous-sagas'],
     ['oeuvres','Œuvres'], ['recueils','Recueils de poésie'], ['personnages','Personnages'],
-    ['pepiniere','Pépinière'], ['configuration','Configuration'], ['sauvegardes','Sauvegarde & restauration']
+    ['pepiniere','Pépinière'], ['configuration','Configuration'], ['sauvegardes','Sauvegarde & restauration'], ['identification','Identification']
   ];
 
   function renderAdminSidebar(){
@@ -755,6 +796,7 @@
       <nav class="admin-mode-nav">
         <div class="nav-link admin-nav-link ${adminTab==='configuration'?'active':''}" data-admin-key="configuration" onclick="adminNavigate('configuration')">Configuration</div>
         <div class="nav-link admin-nav-link ${adminTab==='sauvegardes'?'active':''}" data-admin-key="sauvegardes" onclick="adminNavigate('sauvegardes')">Sauvegarde & restauration</div>
+        <div class="nav-link admin-nav-link ${adminTab==='identification'?'active':''}" data-admin-key="identification" onclick="adminNavigate('identification')">Identification</div>
       </nav>
       <div class="admin-mode-footer">${safeText(currentUser?.email||'')}<br><button class="tiny-btn" style="margin-top:8px" onclick="doLogout()">Déconnexion</button></div>`;
   }
@@ -789,6 +831,7 @@
     if(tab==='pepiniere') return renderAdminPepinierePage();
     if(tab==='configuration') return renderAdminConfiguration(content);
     if(tab==='sauvegardes') return renderAdminSauvegardes(content);
+    if(tab==='identification') return renderAdminIdentificationV572(content);
   }
 
   function adminPageHead(title,desc,buttonHtml=''){
@@ -1226,12 +1269,140 @@
     await renderAdminRecueilEditorV565();
   }
 
-  async function renderAdminPersonnagesPage(){
+  let adminCharacterTabV572='modeles';
+  let characterTemplateDraftV572=null;
+  let characterTemplateDragIndexV572=null;
+  let pendingCharacterTemplateImportV572=null;
+  let characterImportStateV572={rows:[],headers:[],selected:new Set(),mapping:{},source:'csv',fileName:''};
+
+  async function renderAdminPersonnagesPage(tab){
+    adminCharacterTabV572=tab||adminCharacterTabV572||'modeles';
     const content=document.getElementById('content');
-    const {data,error}=await db().from('personnages').select('id,nom,resume,favori').order('created_at',{ascending:false});
-    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Personnages','Une base canonique unique pour tous les personnages.',`<button class="btn-primary" onclick="openPersonnageModal()">+ Nouveau personnage</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher un personnage…" oninput="filterAdminCards('admin-char-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-char-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.resume||'')).toLowerCase())}" onclick="openPersonnageModal('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${x.favori?'♥ ':''}${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.resume||'Aucun résumé')}</div><div class="admin-catalog-card-actions"><button class="btn-secondary">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucun personnage pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Personnages','Structure des fiches, modèles et migrations. Le nettoyage quotidien reste dans la page Personnages.')+`
+      <div class="char-admin-tabs">
+        ${[['modeles','🧩 Modèles'],['import-modele','📦 Import de modèle'],['import-donnees','📥 Import de données'],['identifiants','🪪 Identifiants']].map(([k,l])=>`<button class="${adminCharacterTabV572===k?'active':''}" onclick="renderAdminPersonnagesPage('${k}')">${l}</button>`).join('')}
+      </div><div id="admin-character-zone"><div class="status-line">Chargement…</div></div>`;
+    const zone=document.getElementById('admin-character-zone');
+    if(adminCharacterTabV572==='modeles') return renderCharacterTemplatesAdminV572(zone);
+    if(adminCharacterTabV572==='import-modele') return renderCharacterTemplateImportV572(zone);
+    if(adminCharacterTabV572==='import-donnees') return renderCharacterDataImportV572(zone);
+    if(adminCharacterTabV572==='identifiants') return renderCharacterIdentifiersV572(zone);
   }
+
+  async function getDefaultCharacterTemplateIdV572(){
+    const {data}=await db().from('configuration_utilisateur').select('template_personnage_defaut_id').eq('user_id',currentUser.id).maybeSingle();
+    return data?.template_personnage_defaut_id||null;
+  }
+
+  async function renderCharacterTemplatesAdminV572(zone){
+    const [{data,error},defaultId]=await Promise.all([db().from('templates_personnage').select('*').eq('archive',false).order('created_at'),getDefaultCharacterTemplateIdV572()]);
+    if(error){zone.innerHTML=adminEmpty('Migration V5.7.2 requise : '+safeText(error.message));return}
+    zone.innerHTML=`<div class="character-topbar"><div><h2>Modèles de fiche</h2><p class="admin-section-sub">Un modèle par défaut couvre les indépendants. Les surcharges Œuvre → Sous-saga → Saga prennent priorité selon le contexte.</p></div><button class="btn-primary" onclick="createCharacterTemplateV572()">+ Nouveau modèle</button></div>
+      <div class="admin-catalog-grid">${(data||[]).map(t=>`<article class="admin-catalog-card"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">🧩</div></div><div class="admin-catalog-body"><h3>${safeText(t.nom)} ${t.id===defaultId?'<span class="ss-pill">★ Par défaut</span>':''}</h3><div class="admin-catalog-meta">${safeText(t.description||'Modèle personnalisable')}<br>${renderPasserelleIdBadgeV572(t.passerelle_id)}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="openCharacterTemplateBuilderV572('${t.id}')">Modifier</button><button class="tiny-btn" onclick="exportCharacterTemplateV572('${t.id}')">JSON</button>${t.id!==defaultId?`<button class="tiny-btn" onclick="setDefaultCharacterTemplateV572('${t.id}')">Définir par défaut</button>`:''}</div></div></article>`).join('')||adminEmpty('Aucun modèle. Crée le modèle indépendant par défaut pour commencer.')}</div><div id="character-template-editor" style="margin-top:18px"></div>`;
+  }
+
+  async function createCharacterTemplateV572(){
+    const {data,error}=await db().from('templates_personnage').insert({user_id:currentUser.id,nom:'Nouveau modèle',description:'',schema:[]}).select('id').single();
+    if(error){showTransientStatusV572('Création impossible : '+error.message);return}
+    await renderAdminPersonnagesPage('modeles'); await openCharacterTemplateBuilderV572(data.id);
+  }
+
+  async function openCharacterTemplateBuilderV572(id){
+    const [{data:t,error},sagas,subs,works]=await Promise.all([
+      db().from('templates_personnage').select('*').eq('id',id).single(),
+      db().from('sagas').select('id,nom,template_fiche_perso_id').eq('archive',false).order('nom'),
+      db().from('sous_sagas').select('id,nom,template_fiche_perso_id').order('nom'),
+      db().from('oeuvres').select('id,titre,template_fiche_perso_id,archive').eq('archive',false).order('titre')
+    ]);
+    if(error){showTransientStatusV572(error.message);return}
+    characterTemplateDraftV572={...t,schema:Array.isArray(t.schema)?JSON.parse(JSON.stringify(t.schema)):[]};
+    const zone=document.getElementById('character-template-editor');if(!zone)return;
+    zone.innerHTML=`<div class="template-layout"><div><div class="admin-section"><div class="admin-section-head"><h2>Builder du modèle</h2><div><button class="btn-secondary" onclick="renderAdminPersonnagesPage('modeles')">Fermer</button> <button class="btn-primary" onclick="saveCharacterTemplateV572()">Enregistrer</button></div></div><div class="admin-section-grid two"><div><label>Nom</label><input id="ct-name" value="${safeText(t.nom)}"></div><div><label>Description</label><input id="ct-desc" value="${safeText(t.description||'')}"></div></div><div class="template-palette"><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('title')">+ Titre</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('text')">+ Texte riche</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('field')">+ Champ</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('callout')">+ Encadré</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('image')">+ Image</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('stats')">+ Jauges</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('relations')">+ Relations</button><button class="tiny-btn" onclick="addCharacterTemplateBlockV572('tome_states')">+ États par tome</button></div><div id="character-template-blocks" class="template-builder"></div></div></div>
+      <aside class="template-side"><h3>Affectation</h3><p class="admin-section-sub">Priorité : personnage → œuvre → sous-saga → saga → modèle par défaut.</p><label>Périmètre</label><select id="ct-scope" onchange="renderCharacterTemplateScopeTargetsV572()"><option value="default">★ Par défaut global</option><option value="saga">Saga</option><option value="sub">Sous-saga</option><option value="work">Œuvre</option></select><div id="ct-scope-target-wrap" style="margin-top:8px"></div><button class="btn-secondary" style="width:100%;margin-top:10px" onclick="assignCharacterTemplateScopeV572('${id}')">Appliquer le modèle</button><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><button class="btn-secondary" style="width:100%" onclick="exportCharacterTemplateV572('${id}')">Exporter en JSON</button><button class="tiny-btn danger-btn" style="width:100%;margin-top:8px" onclick="requestDeleteCharacterTemplateV572('${id}')">Supprimer le modèle</button><div id="ct-delete-confirm"></div></aside></div>`;
+    window._ctScopesV572={sagas:sagas.data||[],subs:subs.data||[],works:works.data||[]};
+    renderCharacterTemplateBlocksV572();renderCharacterTemplateScopeTargetsV572();
+  }
+
+  function characterBlockLabelV572(type){return ({title:'Titre',text:'Texte riche',field:'Champ',callout:'Encadré',image:'Image',stats:'Jauges',relations:'Relations',tome_states:'États par tome'})[type]||type}
+  function addCharacterTemplateBlockV572(type){
+    if(!characterTemplateDraftV572)return; const n=characterTemplateDraftV572.schema.length+1;
+    characterTemplateDraftV572.schema.push({id:`bloc_${Date.now()}_${n}`,type,label:characterBlockLabelV572(type),key:type==='field'?`champ_${n}`:null,options:{}});renderCharacterTemplateBlocksV572();
+  }
+  function renderCharacterTemplateBlocksV572(){
+    const zone=document.getElementById('character-template-blocks');if(!zone||!characterTemplateDraftV572)return;
+    const blocks=characterTemplateDraftV572.schema||[];
+    zone.innerHTML=blocks.length?blocks.map((b,i)=>`<div class="template-block" draggable="true" ondragstart="characterTemplateDragStartV572(${i},event)" ondragover="event.preventDefault()" ondrop="characterTemplateDropV572(${i},event)"><div class="template-drag">☰</div><div class="template-type">${safeText(characterBlockLabelV572(b.type))}</div><div><input value="${safeText(b.label||'')}" oninput="updateCharacterTemplateBlockV572(${i},'label',this.value)" placeholder="Libellé">${b.type==='field'?`<input style="margin-top:5px" value="${safeText(b.key||'')}" oninput="updateCharacterTemplateBlockV572(${i},'key',this.value)" placeholder="Clé du champ">`:''}</div><button class="tiny-btn danger-btn" onclick="removeCharacterTemplateBlockV572(${i})">×</button></div>`).join(''):`<div class="muted-box">Le modèle est vide. Ajoute des blocs depuis la palette puis réordonne-les par glisser-déposer.</div>`;
+  }
+  function updateCharacterTemplateBlockV572(i,k,v){if(characterTemplateDraftV572?.schema?.[i])characterTemplateDraftV572.schema[i][k]=v}
+  function removeCharacterTemplateBlockV572(i){characterTemplateDraftV572.schema.splice(i,1);renderCharacterTemplateBlocksV572()}
+  function characterTemplateDragStartV572(i,e){characterTemplateDragIndexV572=i;e.dataTransfer.effectAllowed='move'}
+  function characterTemplateDropV572(i,e){e.preventDefault();if(characterTemplateDragIndexV572===null||characterTemplateDragIndexV572===i)return;const [b]=characterTemplateDraftV572.schema.splice(characterTemplateDragIndexV572,1);characterTemplateDraftV572.schema.splice(i,0,b);characterTemplateDragIndexV572=null;renderCharacterTemplateBlocksV572()}
+  async function saveCharacterTemplateV572(){
+    if(!characterTemplateDraftV572)return;const payload={nom:document.getElementById('ct-name').value.trim()||'Modèle sans nom',description:document.getElementById('ct-desc').value.trim(),schema:characterTemplateDraftV572.schema,updated_at:new Date().toISOString()};
+    const {error}=await db().from('templates_personnage').update(payload).eq('id',characterTemplateDraftV572.id);if(error)return showTransientStatusV572('Erreur : '+error.message);showTransientStatusV572('Modèle enregistré ✓');characterTemplateDraftV572={...characterTemplateDraftV572,...payload};
+  }
+  function renderCharacterTemplateScopeTargetsV572(){
+    const scope=document.getElementById('ct-scope')?.value,wrap=document.getElementById('ct-scope-target-wrap');if(!wrap)return;if(scope==='default'){wrap.innerHTML='<div class="muted-box">Ce modèle sera utilisé quand aucune saga, sous-saga ou œuvre ne surcharge le modèle.</div>';return}
+    const list=scope==='saga'?window._ctScopesV572.sagas:scope==='sub'?window._ctScopesV572.subs:window._ctScopesV572.works;wrap.innerHTML=`<label>${scope==='saga'?'Saga':scope==='sub'?'Sous-saga':'Œuvre'}</label><select id="ct-scope-target"><option value="">— Choisir —</option>${list.map(x=>`<option value="${x.id}">${safeText(x.nom||x.titre)}</option>`).join('')}</select>`;
+  }
+  async function assignCharacterTemplateScopeV572(templateId){
+    const scope=document.getElementById('ct-scope').value;if(scope==='default')return setDefaultCharacterTemplateV572(templateId,true);
+    const target=document.getElementById('ct-scope-target')?.value;if(!target)return showTransientStatusV572('Choisis une cible.');const table=scope==='saga'?'sagas':scope==='sub'?'sous_sagas':'oeuvres';const {error}=await db().from(table).update({template_fiche_perso_id:templateId}).eq('id',target);if(error)return showTransientStatusV572(error.message);showTransientStatusV572('Modèle appliqué ✓');
+  }
+  async function setDefaultCharacterTemplateV572(id,stay){
+    const {error}=await db().from('configuration_utilisateur').upsert({user_id:currentUser.id,template_personnage_defaut_id:id},{onConflict:'user_id'});if(error)return showTransientStatusV572(error.message);showTransientStatusV572('Modèle par défaut défini ✓');if(!stay)renderAdminPersonnagesPage('modeles');
+  }
+  function requestDeleteCharacterTemplateV572(id){const z=document.getElementById('ct-delete-confirm');if(z)z.innerHTML=`<div class="danger-inline" style="margin-top:10px">Supprimer définitivement ce modèle ? Les fiches conservent leurs données mais retomberont sur leur modèle hérité.<div style="margin-top:8px"><button class="tiny-btn danger-btn" onclick="deleteCharacterTemplateV572('${id}')">Confirmer</button> <button class="tiny-btn" onclick="this.closest('.danger-inline').remove()">Annuler</button></div></div>`}
+  async function deleteCharacterTemplateV572(id){const {error}=await db().from('templates_personnage').delete().eq('id',id);if(error)return showTransientStatusV572(error.message);renderAdminPersonnagesPage('modeles')}
+
+  async function exportCharacterTemplateV572(id){
+    const {data,error}=await db().from('templates_personnage').select('nom,description,schema,passerelle_id').eq('id',id).single();if(error)return showTransientStatusV572(error.message);
+    const payload={passerelle_character_template:1,format_version:'1.0',exported_at:new Date().toISOString(),template:{nom:data.nom,description:data.description||'',schema:data.schema||[],source_passerelle_id:data.passerelle_id||null}};downloadJsonV572(payload,`Modele_Personnage_${slugFileV572(data.nom)}.json`)
+  }
+  function downloadJsonV572(obj,name){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  function slugFileV572(v){return String(v||'export').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'export'}
+
+  function renderCharacterTemplateImportV572(zone){
+    zone.innerHTML=`<div class="import-step"><h2>Importer un modèle JSON</h2><p class="admin-section-sub">Le JSON Passerelle transporte fidèlement la structure du modèle. Un mockup traduit ensemble pourra être livré directement sous ce format.</p><input type="file" accept="application/json,.json" onchange="readCharacterTemplateJsonV572(this.files[0])"></div><div id="character-template-import-preview">${pendingCharacterTemplateImportV572?characterTemplateImportPreviewHtmlV572():''}</div>`;
+  }
+  async function readCharacterTemplateJsonV572(file){if(!file)return;try{const obj=JSON.parse(await file.text());const t=obj?.template||obj;if(!Array.isArray(t.schema)||!t.nom)throw new Error('Structure de modèle non reconnue');pendingCharacterTemplateImportV572={nom:t.nom,description:t.description||'',schema:t.schema,source_external_id:t.source_passerelle_id||null};renderCharacterTemplateImportV572(document.getElementById('admin-character-zone'))}catch(e){showTransientStatusV572('JSON invalide : '+e.message)}}
+  function characterTemplateImportPreviewHtmlV572(){const t=pendingCharacterTemplateImportV572;return `<div class="import-step"><h3>Aperçu : ${safeText(t.nom)}</h3><p>${safeText(t.description||'Sans description')}</p><div class="template-json-preview">${t.schema.map((b,i)=>`<div><strong>${i+1}. ${safeText(characterBlockLabelV572(b.type))}</strong> · ${safeText(b.label||'')}</div>`).join('')}</div><button class="btn-primary" style="margin-top:12px" onclick="confirmCharacterTemplateImportV572()">Importer ce modèle</button></div>`}
+  async function confirmCharacterTemplateImportV572(){const t=pendingCharacterTemplateImportV572;if(!t)return;const {error}=await db().from('templates_personnage').insert({user_id:currentUser.id,nom:t.nom,description:t.description,schema:t.schema,source_type:'json',source_external_id:t.source_external_id});if(error)return showTransientStatusV572(error.message);pendingCharacterTemplateImportV572=null;showTransientStatusV572('Modèle importé ✓');renderAdminPersonnagesPage('modeles')}
+
+  async function renderCharacterDataImportV572(zone){
+    const {data:templates}=await db().from('templates_personnage').select('id,nom,schema').eq('archive',false).order('nom');
+    zone.innerHTML=`<div class="import-step"><h2>Importer des personnages</h2><p class="admin-section-sub">V1 : export Notion (CSV), CSV/Excel et fichiers structurés. L’ID Passerelle de l’œuvre est prioritaire ; le titre sert de secours humain.</p><div class="admin-section-grid two"><div><label>Modèle cible</label><select id="char-import-template"><option value="">— Modèle hérité / non imposé —</option>${(templates||[]).map(t=>`<option value="${t.id}">${safeText(t.nom)}</option>`).join('')}</select></div><div><label>Source</label><select id="char-import-source"><option value="notion">Notion (export CSV)</option><option value="csv">CSV</option><option value="excel">Excel</option></select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-secondary" onclick="downloadCharacterCsvTemplateV572()">Télécharger le CSV modèle</button><label class="btn-primary" style="cursor:pointer">Choisir un fichier<input type="file" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="readCharacterImportFileV572(this.files[0])"></label></div></div><div id="character-import-workzone">${characterImportStateV572.rows.length?characterImportPreviewHtmlV572():''}</div>`;
+    window._characterImportTemplatesV572=templates||[];
+  }
+  function expectedCharacterFieldsV572(){const tid=document.getElementById('char-import-template')?.value;const t=(window._characterImportTemplatesV572||[]).find(x=>x.id===tid);const fields=(t?.schema||[]).filter(b=>b.type==='field').map(b=>b.label||b.key).filter(Boolean);return ['personnage_id','nom','resume','oeuvre_id','oeuvre',...fields]}
+  function downloadCharacterCsvTemplateV572(){const headers=expectedCharacterFieldsV572();const example=headers.map(h=>h==='nom'?'Nom du personnage':h==='oeuvre_id'?'WRK-XXXXXXXX':h==='oeuvre'?'Titre de l’œuvre':'');const csv=[headers,example].map(row=>row.map(csvCellV572).join(';')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Import_Personnages_Passerelle.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  function csvCellV572(v){v=String(v??'');return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+  function parseCsvV572(text){const first=(text.split(/\r?\n/,1)[0]||'');const sep=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length?';':',';const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++}else q=!q}else if(c===sep&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>String(x).trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(x=>String(x).trim()!==''))rows.push(row);const headers=(rows.shift()||[]).map(x=>String(x).trim().replace(/^\ufeff/,''));return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])))}
+  async function readCharacterImportFileV572(file){
+    if(!file)return;let rows=[];try{if(/\.xlsx?$/.test(file.name.toLowerCase())){if(!window.XLSX)throw new Error('Le lecteur Excel n’est pas disponible. Utilise CSV en secours.');const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{defval:''})}else rows=parseCsvV572(await file.text());}catch(e){return showTransientStatusV572('Lecture impossible : '+e.message)}
+    const headers=rows.length?Object.keys(rows[0]):[];characterImportStateV572={rows,headers,selected:new Set(rows.map((_,i)=>i)),mapping:autoCharacterImportMappingV572(headers),source:document.getElementById('char-import-source')?.value||'csv',fileName:file.name};renderCharacterImportWorkzoneV572();
+  }
+  function normHeaderV572(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')}
+  function autoCharacterImportMappingV572(headers){const map={};for(const target of expectedCharacterFieldsV572()){const nt=normHeaderV572(target);map[target]=headers.find(h=>normHeaderV572(h)===nt)||headers.find(h=>normHeaderV572(h).includes(nt)||nt.includes(normHeaderV572(h)))||''}return map}
+  function renderCharacterImportWorkzoneV572(){const z=document.getElementById('character-import-workzone');if(z)z.innerHTML=characterImportPreviewHtmlV572()}
+  function characterImportPreviewHtmlV572(){const st=characterImportStateV572,targets=expectedCharacterFieldsV572();return `<div class="import-step"><h3>1. Mapping</h3><div class="import-map">${targets.map(t=>`<label>${safeText(t)}</label><select onchange="characterImportStateV572.mapping['${safeText(t)}']=this.value"><option value="">— Ignorer / absent —</option>${st.headers.map(h=>`<option ${st.mapping[t]===h?'selected':''}>${safeText(h)}</option>`).join('')}</select>`).join('')}</div></div><div class="import-step"><div class="character-topbar"><div><h3>2. Prévisualisation</h3><span>${st.rows.length} ligne(s) · ${st.selected.size} sélectionnée(s)</span></div><div><button class="tiny-btn" onclick="selectAllCharacterImportV572(true)">Tout cocher</button> <button class="tiny-btn" onclick="selectAllCharacterImportV572(false)">Tout décocher</button></div></div><div class="import-preview"><table class="admin-table"><thead><tr><th></th><th>Nom</th><th>Œuvre</th><th>Action probable</th></tr></thead><tbody>${st.rows.slice(0,250).map((r,i)=>{const name=r[st.mapping.nom]||'—',wid=r[st.mapping.oeuvre_id]||'',wn=r[st.mapping.oeuvre]||'';return `<tr><td><input class="char-select" type="checkbox" ${st.selected.has(i)?'checked':''} onchange="toggleCharacterImportRowV572(${i},this.checked)"></td><td>${safeText(name)}</td><td>${safeText(wid||wn||'—')}</td><td class="import-status-ok">Créer / mettre à jour après vérification</td></tr>`}).join('')}</tbody></table></div><button class="btn-primary" style="margin-top:12px" onclick="executeCharacterImportV572()">Importer la sélection</button></div>`}
+  function toggleCharacterImportRowV572(i,on){on?characterImportStateV572.selected.add(i):characterImportStateV572.selected.delete(i);renderCharacterImportWorkzoneV572()}
+  function selectAllCharacterImportV572(on){characterImportStateV572.selected=new Set(on?characterImportStateV572.rows.map((_,i)=>i):[]);renderCharacterImportWorkzoneV572()}
+  async function executeCharacterImportV572(){
+    const st=characterImportStateV572;if(!st.selected.size)return showTransientStatusV572('Aucune ligne sélectionnée.');
+    const [{data:works,error:werr},{data:existing,error:perr}]=await Promise.all([db().from('oeuvres').select('id,titre,passerelle_id'),db().from('personnages').select('id,nom,passerelle_id,source_type,source_external_id')]);if(werr||perr)return showTransientStatusV572((werr||perr).message);
+    const {data:batch,error:berr}=await db().from('imports_personnages').insert({user_id:currentUser.id,type_source:st.source,fichier_nom:st.fileName,details:{rows:st.selected.size}}).select('id').single();if(berr)return showTransientStatusV572(berr.message);
+    const templateId=document.getElementById('char-import-template')?.value||null;let created=0,updated=0,linked=0,errors=[];
+    for(const i of [...st.selected]){const row=st.rows[i],m=st.mapping,name=String(row[m.nom]||'').trim();if(!name){errors.push(`Ligne ${i+2}: nom manquant`);continue}const refId=String(row[m.personnage_id]||'').trim();let p=(refId&&existing.find(x=>String(x.passerelle_id).toUpperCase()===refId.toUpperCase()))||null;if(!p)p=existing.find(x=>x.nom.toLowerCase()===name.toLowerCase())||null;
+      const baseKeys=new Set(['personnage_id','nom','resume','oeuvre_id','oeuvre']);const contenu={};for(const [target,source] of Object.entries(m)){if(!source||baseKeys.has(target))continue;const v=row[source];if(v!==''&&v!=null)contenu[normHeaderV572(target)]=v}
+      const payload={nom,resume:m.resume?String(row[m.resume]||'').trim():null,contenu,template_id:templateId||undefined,updated_at:new Date().toISOString(),import_batch_id:batch.id,source_type:st.source};Object.keys(payload).forEach(k=>payload[k]===undefined&&delete payload[k]);
+      if(p){const {error}=await db().from('personnages').update(payload).eq('id',p.id);if(error){errors.push(`${name}: ${error.message}`);continue}updated++}else{payload.user_id=currentUser.id;const {data,error}=await db().from('personnages').insert(payload).select('id,nom,passerelle_id').single();if(error){errors.push(`${name}: ${error.message}`);continue}p=data;existing.push(data);created++}
+      const wid=String(m.oeuvre_id?row[m.oeuvre_id]||'':'').trim(),wn=String(m.oeuvre?row[m.oeuvre]||'':'').trim();const work=(wid&&works.find(w=>String(w.passerelle_id).toUpperCase()===wid.toUpperCase()))||(!wid&&wn?works.find(w=>w.titre.toLowerCase()===wn.toLowerCase()):null);if(work){const {error}=await db().from('personnages_oeuvres').upsert({personnage_id:p.id,oeuvre_id:work.id},{onConflict:'personnage_id,oeuvre_id'});if(!error)linked++;else errors.push(`${name} / œuvre: ${error.message}`)}else if(wid||wn)errors.push(`${name}: œuvre introuvable (${wid||wn})`)
+    }
+    await db().from('imports_personnages').update({details:{rows:st.selected.size,created,updated,linked,errors}}).eq('id',batch.id);showTransientStatusV572(`${created} créé(s), ${updated} mis à jour, ${linked} lien(s) ✓`);characterImportStateV572={rows:[],headers:[],selected:new Set(),mapping:{},source:'csv',fileName:''};renderAdminPersonnagesPage('import-donnees');
+  }
+
+  async function renderCharacterIdentifiersV572(zone){const {data,error}=await db().from('personnages').select('passerelle_id,nom,archive').order('nom');if(error){zone.innerHTML=adminEmpty(error.message);return}zone.innerHTML=`<div class="character-topbar"><div><h2>Identifiants Personnages</h2><p class="admin-section-sub">Ils servent au dédoublonnage, aux mises à jour et aux relations d’import. Ils restent volontairement discrets dans le front.</p></div></div><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Personnage</th><th>ID Passerelle</th><th>État</th><th></th></tr></thead><tbody>${(data||[]).map(p=>`<tr><td>${safeText(p.nom)}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td><td>${p.archive?'Archivé':'Actif'}</td><td><button class="tiny-btn" onclick="copyPasserelleIdV572('${safeText(p.passerelle_id||'')}')">Copier</button></td></tr>`).join('')}</tbody></table></div>`}
 
   async function renderAdminPepinierePage(){
     const content=document.getElementById('content');
@@ -1256,6 +1427,15 @@
   async function createBackupNowV561(){const {data,error}=await db().rpc('creer_sauvegarde',{p_type:'manuelle'});if(error)return alert('Sauvegarde impossible : '+error.message);alert('Sauvegarde créée. 🛡️');renderAdminSauvegardes(document.getElementById('content'));}
   async function downloadBackupV561(id){const {data,error}=await db().from('sauvegardes').select('*').eq('id',id).eq('user_id',currentUser.id).single();if(error)return alert(error.message);const blob=new Blob([JSON.stringify({passerelle_backup:1,id:data.id,created_at:data.created_at,type:data.type_sauvegarde,periode:data.periode,data:data.contenu},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Passerelle_Backup_${(data.created_at||new Date().toISOString()).slice(0,10)}_${data.type_sauvegarde}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
   async function restoreBackupV561(id){if(!confirm('Restaurer cette archive remplacera les données Passerelle actuelles par cet instantané. Une sauvegarde de sécurité sera créée juste avant. Continuer ?'))return;const phrase=prompt('Pour confirmer, écris RESTAURER :');if(phrase!=='RESTAURER')return;const {error}=await db().rpc('restaurer_sauvegarde',{p_sauvegarde_id:id});if(error)return alert('Restauration annulée : '+error.message);alert('Restauration terminée. Passerelle va se recharger.');location.reload();}
+
+
+  async function renderAdminIdentificationV572(zone){
+    zone.innerHTML=adminPageHead('Identification','Référentiel des identifiants Passerelle immuables partagés par l’Atelier, Passerelle et Passe-Ailes.')+'<div class="status-line">Chargement…</div>';
+    const [cols,sagas,subs,works,recs]=await Promise.all([
+      db().from('univers').select('nom,passerelle_id').order('nom'),db().from('sagas').select('nom,passerelle_id').order('nom'),db().from('sous_sagas').select('nom,passerelle_id').order('nom'),db().from('oeuvres').select('titre,passerelle_id').order('titre'),db().from('recueils').select('titre,passerelle_id').order('titre')]);
+    const groups=[['Collections',cols.data,'nom'],['Sagas',sagas.data,'nom'],['Sous-sagas',subs.data,'nom'],['Œuvres',works.data,'titre'],['Recueils',recs.data,'titre']];
+    zone.innerHTML=adminPageHead('Identification','Les noms peuvent changer. Les identifiants, eux, restent stables pour les imports, relations et synchronisations.')+groups.map(([title,rows,key])=>`<section class="id-section"><h2>${title}</h2><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Nom</th><th>ID Passerelle</th><th></th></tr></thead><tbody>${(rows||[]).map(x=>`<tr><td>${safeText(x[key])}</td><td><code>${safeText(x.passerelle_id||'Migration V5.7.2 requise')}</code></td><td><button class="tiny-btn" ${x.passerelle_id?'':'disabled'} onclick="copyPasserelleIdV572('${safeText(x.passerelle_id||'')}')">Copier</button></td></tr>`).join('')||'<tr><td colspan="3">Aucune donnée.</td></tr>'}</tbody></table></div></section>`).join('');
+  }
 
   async function renderAdminConfiguration(zone){
     zone.innerHTML = adminPageHead('Configuration','Réglages transversaux du back-office et de Passerelle.')+`<div class="status-line">Chargement de la configuration…</div>`;
@@ -2236,7 +2416,7 @@
       <div class="oeuvre-head">
         <div class="cover-block">${initials(s.nom)}</div>
         <div class="oeuvre-info">
-          <h1>${s.nom}</h1>
+          <h1>${safeText(s.nom)} ${renderPasserelleIdBadgeV572(s.passerelle_id)}</h1>
           <div class="oeuvre-sub">${s.genre || '—'}</div>
           <span class="status-badge">${s.statut || 'Sans statut'}</span>
         </div>
@@ -2495,7 +2675,7 @@
       <div class="oeuvre-head">
         <div class="cover-block">${initials(ss.nom)}</div>
         <div class="oeuvre-info">
-          <h1>${ss.nom}</h1>
+          <h1>${safeText(ss.nom)} ${renderPasserelleIdBadgeV572(ss.passerelle_id)}</h1>
           <div class="oeuvre-sub">${ss.format || 'Sous-saga'} · ${ss.sagas?.nom || ''}</div>
           <span class="status-badge">${ss.statut || 'Sans statut'}</span>
         </div>
@@ -3209,7 +3389,7 @@
       <div class="work-hero-banner ${o.banniere?'':'empty'}">${o.banniere?`<img src="${safeText(o.banniere)}" alt="Bannière de ${safeText(o.titre)}">`:`<span>${safeText(o.titre)}</span>`}</div>
       <div class="oeuvre-head">
         <div class="oeuvre-info">
-          <h1>${o.titre}</h1>
+          <h1>${safeText(o.titre)} ${renderPasserelleIdBadgeV572(o.passerelle_id)}</h1>
           <div class="oeuvre-sub">${o.sagas?.nom || 'Œuvre indépendante'}</div>
           <span class="status-badge">${o.statut || 'Sans statut'}</span>
           <div id="oeuvre-head-progress" style="margin-top:10px;max-width:620px;">
@@ -4238,60 +4418,34 @@
   // ============================================================
   // PERSONNAGES
   // ============================================================
+  let characterCatalogV572={characters:[],links:[],works:[],sagas:[],subs:[],view:'gallery',search:'',work:'',saga:'',sub:'',selected:new Set(),pendingDelete:false};
   async function renderPersonnages(){
-    const content = document.getElementById('content');
-    const personnagesBanner = await getPageBanner('personnages');
-    content.innerHTML = `${renderPageImageBanner(personnagesBanner,'Personnages')}
-      <div class="head-row"><h2>Personnages</h2><button class="btn-primary" onclick="openPersonnageModal()">+ Créer un personnage</button></div>
-      <div id="personnages-zone"><div class="status-line">Chargement…</div></div>
-    `;
-    const { data, error } = await db().from('personnages').select('id, nom, resume, favori').order('created_at', { ascending:false });
-    const zone = document.getElementById('personnages-zone');
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    if (!data.length) { zone.innerHTML = `<div class="empty">Aucun personnage pour l'instant.<br><br><button class="btn-primary" onclick="openPersonnageModal()">Créer ton premier personnage</button></div>`; return; }
-    zone.innerHTML = `<div class="gallery">${data.map(p => `
-      <div class="char-card" onclick="openPersonnageModal('${p.id}')">
-        ${p.favori ? '<span class="fav-heart">♥</span>' : ''}
-        <div class="char-portrait" style="background:linear-gradient(160deg, var(--lavender)33, var(--bg-2));">${initials(p.nom)}</div>
-        <div class="char-name">${p.nom}</div>
-        <div class="char-role">${p.resume || '—'}</div>
-      </div>`).join('')}</div>`;
+    const content=document.getElementById('content');const personnagesBanner=await getPageBanner('personnages');content.innerHTML=`${renderPageImageBanner(personnagesBanner,'Personnages')}<div class="head-row"><div><h1>Personnages</h1><p style="color:var(--text-dim);margin:3px 0 0">Une base canonique. Les apparitions, états et rôles restent liés aux œuvres.</p></div><button class="btn-primary" onclick="openPersonnageModal()">+ Créer un personnage</button></div><div id="personnages-zone"><div class="status-line">Chargement…</div></div>`;
+    const [pr,lr,wr,sr,ssr]=await Promise.all([db().from('personnages').select('id,nom,resume,portrait_url,favori,archive,archive_manuel,passerelle_id,template_id').order('created_at',{ascending:false}),db().from('personnages_oeuvres').select('personnage_id,oeuvre_id,role,importance,pov,faction,etat,proprietes_contextuelles,notes_contexte'),db().from('oeuvres').select('id,titre,archive,saga_id,sous_saga_id,passerelle_id').order('titre'),db().from('sagas').select('id,nom,archive').order('nom'),db().from('sous_sagas').select('id,nom,saga_id,archive').order('nom')]);
+    const err=pr.error||lr.error||wr.error||sr.error||ssr.error;if(err){document.getElementById('personnages-zone').innerHTML=`<div class="empty">Migration V5.7.2 requise ou erreur : ${safeText(err.message)}</div>`;return}
+    characterCatalogV572={...characterCatalogV572,characters:pr.data||[],links:lr.data||[],works:wr.data||[],sagas:sr.data||[],subs:ssr.data||[],selected:new Set(),pendingDelete:false};renderCharacterCatalogBodyV572();
   }
+  function renderCharacterCatalogBodyV572(){
+    const z=document.getElementById('personnages-zone');if(!z)return;const st=characterCatalogV572;const subOptions=st.subs.filter(x=>!st.saga||x.saga_id===st.saga);z.innerHTML=`<div class="character-topbar"><div class="char-admin-tabs" style="margin:0;border:0"><button class="${st.view==='gallery'?'active':''}" onclick="setCharacterViewV572('gallery')">Galerie active</button><button class="${st.view==='table'?'active':''}" onclick="setCharacterViewV572('table')">Table complète</button><button class="${st.view==='archives'?'active':''}" onclick="setCharacterViewV572('archives')">Archives</button></div><span>${st.characters.length} personnage(s) au total</span></div><div class="character-filterbar"><input class="search-input" value="${safeText(st.search)}" placeholder="🔍 Rechercher…" oninput="characterCatalogV572.search=this.value;renderCharacterCatalogResultsV572()"><select onchange="characterCatalogV572.saga=this.value;characterCatalogV572.sub='';renderCharacterCatalogBodyV572()"><option value="">Toutes les sagas</option>${st.sagas.map(x=>`<option value="${x.id}" ${st.saga===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select><select onchange="characterCatalogV572.sub=this.value;renderCharacterCatalogResultsV572()"><option value="">Toutes les sous-sagas</option>${subOptions.map(x=>`<option value="${x.id}" ${st.sub===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select><select onchange="characterCatalogV572.work=this.value;renderCharacterCatalogResultsV572()"><option value="">Toutes les œuvres</option>${st.works.filter(x=>!x.archive).map(x=>`<option value="${x.id}" ${st.work===x.id?'selected':''}>${safeText(x.titre)}</option>`).join('')}</select></div><div id="character-bulk-zone"></div><div id="character-results"></div>`;renderCharacterCatalogResultsV572();renderCharacterBulkBarV572();
+  }
+  function setCharacterViewV572(v){characterCatalogV572.view=v;characterCatalogV572.selected=new Set();characterCatalogV572.pendingDelete=false;renderCharacterCatalogBodyV572()}
+  function characterRelationsV572(pid){return characterCatalogV572.links.filter(l=>l.personnage_id===pid).map(l=>{const work=characterCatalogV572.works.find(w=>w.id===l.oeuvre_id);const saga=characterCatalogV572.sagas.find(x=>x.id===work?.saga_id);const sub=characterCatalogV572.subs.find(x=>x.id===work?.sous_saga_id);return {...l,work,effectivelyArchived:!!(work?.archive||saga?.archive||sub?.archive)}})}
+  function filteredCharactersV572(){const st=characterCatalogV572,q=st.search.toLowerCase().trim();return st.characters.filter(p=>{if(st.view==='gallery'&&p.archive)return false;if(st.view==='archives'&&!p.archive)return false;const rels=characterRelationsV572(p.id);if(st.work&&!rels.some(r=>r.oeuvre_id===st.work))return false;if(st.saga&&!rels.some(r=>r.work?.saga_id===st.saga))return false;if(st.sub&&!rels.some(r=>r.work?.sous_saga_id===st.sub))return false;if(q){const hay=[p.nom,p.resume,...rels.map(r=>r.work?.titre),...rels.map(r=>r.role),...rels.map(r=>r.etat)].filter(Boolean).join(' ').toLowerCase();if(!hay.includes(q))return false}return true})}
+  function renderCharacterCatalogResultsV572(){const z=document.getElementById('character-results');if(!z)return;const arr=filteredCharactersV572(),st=characterCatalogV572;if(st.view==='table'){z.innerHTML=`<div style="overflow:auto"><table class="admin-table"><thead><tr><th><input class="char-select" type="checkbox" onchange="toggleAllCharacterSelectionV572(this.checked)"></th><th>Personnage</th><th>Œuvres / apparitions</th><th>État</th><th>ID</th></tr></thead><tbody>${arr.map(p=>{const rels=characterRelationsV572(p.id);return `<tr><td><input class="char-select" type="checkbox" ${st.selected.has(p.id)?'checked':''} onchange="toggleCharacterSelectionV572('${p.id}',this.checked)"></td><td><strong>${safeText(p.nom)}</strong><br><span style="font-size:11px;color:var(--text-dim)">${safeText(p.resume||'')}</span></td><td>${rels.map(r=>`<span class="tag">${safeText(r.work?.titre||'Œuvre inconnue')}${r.etat?' · '+safeText(r.etat):''}</span>`).join(' ')||'—'}</td><td>${p.archive?'🍂 Archivé':'🌿 Actif'}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td></tr>`}).join('')||'<tr><td colspan="5">Aucun personnage.</td></tr>'}</tbody></table></div>`}else{z.innerHTML=`<div class="gallery">${arr.map(p=>{const rels=characterRelationsV572(p.id),active=rels.filter(r=>!r.effectivelyArchived);return `<article class="char-card selectable ${p.archive?'archived':''}" onclick="if(event.target.type!=='checkbox')openPersonnageModal('${p.id}')"><label class="char-card-check" onclick="event.stopPropagation()"><input class="char-select" type="checkbox" ${st.selected.has(p.id)?'checked':''} onchange="toggleCharacterSelectionV572('${p.id}',this.checked)"></label>${p.favori?'<span class="fav-heart">♥</span>':''}${p.portrait_url?`<img class="char-portrait" src="${safeText(p.portrait_url)}" alt="">`:`<div class="char-portrait" style="background:linear-gradient(160deg,var(--lavender)33,var(--bg-2));">${initials(p.nom)}</div>`}<div class="char-name">${safeText(p.nom)}</div><div class="char-role">${safeText(p.resume||'—')}</div><div class="char-tags">${active.slice(0,4).map(r=>`<span class="tag">${safeText(r.work?.titre||'')}</span>`).join('')}${active.length>4?`<span class="tag">+${active.length-4}</span>`:''}</div><div class="char-card-id">${safeText(p.passerelle_id||'')}</div></article>`}).join('')||'<div class="empty">Aucun personnage dans cette vue.</div>'}</div>`}renderCharacterBulkBarV572()}
+  function toggleCharacterSelectionV572(id,on){on?characterCatalogV572.selected.add(id):characterCatalogV572.selected.delete(id);characterCatalogV572.pendingDelete=false;renderCharacterBulkBarV572()}
+  function toggleAllCharacterSelectionV572(on){characterCatalogV572.selected=new Set(on?filteredCharactersV572().map(p=>p.id):[]);renderCharacterCatalogResultsV572()}
+  function renderCharacterBulkBarV572(){const z=document.getElementById('character-bulk-zone');if(!z)return;const n=characterCatalogV572.selected.size;if(!n){z.innerHTML='';return}z.innerHTML=`<div class="character-bulkbar"><strong>${n} sélectionné(s)</strong><button class="tiny-btn" onclick="bulkArchiveCharactersV572(true)">Archiver</button><button class="tiny-btn" onclick="bulkArchiveCharactersV572(false)">Désarchiver</button><button class="tiny-btn danger-btn" onclick="requestBulkDeleteCharactersV572()">Supprimer définitivement</button><button class="tiny-btn" onclick="characterCatalogV572.selected.clear();renderCharacterCatalogResultsV572()">Tout désélectionner</button></div>${characterCatalogV572.pendingDelete?`<div class="danger-inline">La suppression efface définitivement les fiches sélectionnées et leurs liens. Pour une conservation normale, utilise Archiver.<div style="margin-top:8px"><button class="tiny-btn danger-btn" onclick="bulkDeleteCharactersV572()">Confirmer la suppression</button> <button class="tiny-btn" onclick="characterCatalogV572.pendingDelete=false;renderCharacterBulkBarV572()">Annuler</button></div></div>`:''}`}
+  async function bulkArchiveCharactersV572(on){const ids=[...characterCatalogV572.selected];const {error}=await db().from('personnages').update({archive_manuel:on,archive:on,updated_at:new Date().toISOString()}).in('id',ids);if(error)return showTransientStatusV572(error.message);for(const p of characterCatalogV572.characters.filter(x=>ids.includes(x.id))){p.archive_manuel=on;p.archive=on;if(!on){await db().rpc('refresh_personnage_archive',{p_personnage_id:p.id});const {data}=await db().from('personnages').select('archive').eq('id',p.id).single();p.archive=!!data?.archive}}characterCatalogV572.selected.clear();renderCharacterCatalogBodyV572()}
+  function requestBulkDeleteCharactersV572(){characterCatalogV572.pendingDelete=true;renderCharacterBulkBarV572()}
+  async function bulkDeleteCharactersV572(){const ids=[...characterCatalogV572.selected],{error}=await db().from('personnages').delete().in('id',ids);if(error)return showTransientStatusV572(error.message);characterCatalogV572.characters=characterCatalogV572.characters.filter(p=>!ids.includes(p.id));characterCatalogV572.selected.clear();characterCatalogV572.pendingDelete=false;renderCharacterCatalogBodyV572()}
 
   function personnageModalHtml(){
-    return `
-      <div class="modal-overlay" id="modal-personnage-overlay" onclick="if(event.target===this) closePersonnageModal()">
-        <div class="modal-box">
-          <div class="modal-head"><h2 id="modal-personnage-title">Nouveau personnage</h2><button onclick="closePersonnageModal()">✕</button></div>
-          <div class="modal-body">
-            <div><label>Nom</label><input id="pf-nom"></div>
-            <div><label>Résumé</label><textarea id="pf-resume"></textarea></div>
-            <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="pf-favori" style="width:auto;"><label style="margin:0;" for="pf-favori">Personnage favori</label></div>
-          </div>
-          <div class="modal-foot"><button class="btn-secondary" onclick="closePersonnageModal()">Annuler</button><button class="btn-primary" onclick="savePersonnage()">Enregistrer</button></div>
-        </div>
-      </div>`;
+    return `<div class="modal-overlay" id="modal-personnage-overlay" onclick="if(event.target===this) closePersonnageModal()"><div class="modal-box"><div class="modal-head"><h2 id="modal-personnage-title">Nouveau personnage</h2><button onclick="closePersonnageModal()">✕</button></div><div class="modal-body"><div><label>Nom</label><input id="pf-nom"></div><div><label>Résumé</label><textarea id="pf-resume"></textarea></div><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="pf-favori" style="width:auto"><label style="margin:0" for="pf-favori">Personnage favori</label></div><div id="pf-id-wrap"></div><div class="muted-box">La fiche détaillée utilisera le modèle hérité (par défaut, saga, sous-saga ou œuvre). Les états par tome restent stockés dans les relations Personnage ↔ Œuvre, indépendamment du modèle visuel.</div></div><div class="modal-foot"><button class="btn-secondary" onclick="closePersonnageModal()">Annuler</button><button class="btn-primary" onclick="savePersonnage()">Enregistrer</button></div></div></div>`;
   }
-  let editingPersonnageId = null;
-  async function openPersonnageModal(id){
-    editingPersonnageId = id || null;
-    document.getElementById('modal-personnage-title').textContent = id ? 'Modifier le personnage' : 'Nouveau personnage';
-    document.getElementById('pf-nom').value=''; document.getElementById('pf-resume').value=''; document.getElementById('pf-favori').checked=false;
-    if (id) {
-      const { data } = await db().from('personnages').select('nom, resume, favori').eq('id', id).single();
-      if (data) { document.getElementById('pf-nom').value=data.nom||''; document.getElementById('pf-resume').value=data.resume||''; document.getElementById('pf-favori').checked=!!data.favori; }
-    }
-    document.getElementById('modal-personnage-overlay').classList.add('open');
-  }
-  function closePersonnageModal(){ document.getElementById('modal-personnage-overlay').classList.remove('open'); }
-  async function savePersonnage(){
-    const payload = { nom: document.getElementById('pf-nom').value.trim()||'Sans nom', resume: document.getElementById('pf-resume').value.trim(), favori: document.getElementById('pf-favori').checked };
-    let error;
-    if (editingPersonnageId) ({ error } = await db().from('personnages').update(payload).eq('id', editingPersonnageId));
-    else { payload.user_id = currentUser.id; ({ error } = await db().from('personnages').insert(payload)); }
-    if (error) { alert('Erreur : ' + error.message); return; }
-    closePersonnageModal(); await renderPersonnages();
-  }
+  let editingPersonnageId=null;
+  async function openPersonnageModal(id){editingPersonnageId=id||null;document.getElementById('modal-personnage-title').textContent=id?'Modifier le personnage':'Nouveau personnage';document.getElementById('pf-nom').value='';document.getElementById('pf-resume').value='';document.getElementById('pf-favori').checked=false;document.getElementById('pf-id-wrap').innerHTML='';if(id){const {data}=await db().from('personnages').select('nom,resume,favori,passerelle_id').eq('id',id).single();if(data){document.getElementById('pf-nom').value=data.nom||'';document.getElementById('pf-resume').value=data.resume||'';document.getElementById('pf-favori').checked=!!data.favori;document.getElementById('pf-id-wrap').innerHTML=`<label>Identifiant Passerelle</label>${renderPasserelleIdBadgeV572(data.passerelle_id)}`}}document.getElementById('modal-personnage-overlay').classList.add('open')}
+  function closePersonnageModal(){document.getElementById('modal-personnage-overlay').classList.remove('open')}
+  async function savePersonnage(){const payload={nom:document.getElementById('pf-nom').value.trim()||'Sans nom',resume:document.getElementById('pf-resume').value.trim(),favori:document.getElementById('pf-favori').checked,updated_at:new Date().toISOString()};let error;if(editingPersonnageId)({error}=await db().from('personnages').update(payload).eq('id',editingPersonnageId));else{payload.user_id=currentUser.id;({error}=await db().from('personnages').insert(payload))}if(error){showTransientStatusV572('Erreur : '+error.message);return}closePersonnageModal();await renderPersonnages()}
 
   // ============================================================
   // IDÉES — PÉPINIÈRE V5.4
@@ -4492,7 +4646,7 @@
       <div class="oeuvre-head">
         ${r.couverture ? `<img src="${r.couverture}" style="width:100px; height:140px; object-fit:cover; border-radius:6px; flex-shrink:0; box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);">` : `<div class="cover-block">${initials(r.titre)}</div>`}
         <div class="oeuvre-info">
-          <h1>${r.titre}</h1>
+          <h1>${safeText(r.titre)} ${renderPasserelleIdBadgeV572(r.passerelle_id)}</h1>
           <div class="oeuvre-sub">${r.type_recueil||''} · ${r.theme_principal||''}</div>
           <span class="status-badge">${r.statut||'Sans statut'}</span>
         </div>
