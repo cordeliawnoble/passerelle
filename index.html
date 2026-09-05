@@ -3026,18 +3026,29 @@
         const url=await uploadAssetFile(m.file,`medias/${mediaUploadContextV566.level}/${mediaUploadContextV566.id}`,{skipOptimize:true,kind:m.type==='Couverture'?'cover':'generic'});
         if(!url)throw new Error(`Échec du téléversement de ${m.file.name}`);
         const payload={user_id:currentUser.id,url,titre:m.titre||cleanMediaFilenameV566(m.file.name),type:m.type};
-        if(mediaUploadContextV566.level==='saga')payload.saga_id=mediaUploadContextV566.id;
-        else payload.sous_saga_id=mediaUploadContextV566.id;
+        if(mediaUploadContextV566.level==='saga') payload.saga_id=mediaUploadContextV566.id;
+        else if(mediaUploadContextV566.level==='sous-saga') payload.sous_saga_id=mediaUploadContextV566.id;
+        else if(mediaUploadContextV566.level==='oeuvre') payload.oeuvre_id=mediaUploadContextV566.id;
+        else throw new Error('Contexte média inconnu : '+mediaUploadContextV566.level);
+
+        // Une œuvre peut désigner directement la couverture canonique pendant le multi-upload.
+        if(mediaUploadContextV566.level==='oeuvre' && m.type==='Couverture' && m.current){
+          await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',mediaUploadContextV566.id).eq('type','Couverture');
+          payload.est_couverture_actuelle=true;
+        }
+
         const {data,error}=await db().from('medias').insert(payload).select('id').single();
         if(error)throw error;
         if(m.type==='Couverture'&&m.current){
           if(mediaUploadContextV566.level==='saga') await db().from('sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
-          else await db().from('sous_sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
+          else if(mediaUploadContextV566.level==='sous-saga') await db().from('sous_sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
+          else if(mediaUploadContextV566.level==='oeuvre') await db().from('oeuvres').update({couverture:url}).eq('id',mediaUploadContextV566.id);
         }
       }
       closeDrawer();
-      if(mediaUploadContextV566.level==='saga')renderSagaMediasV565(document.getElementById('saga-tab-content'));
-      else renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
+      if(mediaUploadContextV566.level==='saga') renderSagaMediasV565(document.getElementById('saga-tab-content'));
+      else if(mediaUploadContextV566.level==='sous-saga') renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
+      else if(mediaUploadContextV566.level==='oeuvre') renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));
     }catch(err){
       showTransientStatusV572('Erreur pendant l’import : '+(err?.message||err));
       if(btn){btn.disabled=false;btn.textContent='Reprendre l’import'}
@@ -4417,8 +4428,8 @@
   }
 
   let mediaFilter='Tout';
-  async function renderOeuvreMedias(zone){const {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">Médias indisponibles : ${safeText(error.message)}</div>`;return;}const all=data||[];const rows=mediaFilter==='Tout'?all:all.filter(m=>m.type===mediaFilter);zone.innerHTML=`<div class="work-toolbar"><div class="segmented">${['Tout','Illustration','Promotion & Bonus','Couverture'].map(x=>`<button class="btn-secondary ${mediaFilter===x?'active':''}" onclick="mediaFilter='${x}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${x}</button>`).join('')}</div><button class="btn-primary" onclick="addMediaPrompt()">+ Ajouter des médias 🌸</button></div>${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaDrawer('${m.id}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="walter-empty">🖼</div>'}<div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}${m.est_couverture_actuelle?' · ★ Actuelle':''}</small></div></article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter examine le cadre vide.</strong><div>Aucun média ici pour le moment.</div></div>`}`;}
-  async function addMediaPrompt(){const url=prompt('URL du média (le multi-upload OVH/Scaleway sera branché ensuite) :');if(!url)return;const titre=prompt('Titre :','')||'';const type=prompt('Type : Illustration, Promotion & Bonus ou Couverture','Illustration')||'Illustration';await db().from('medias').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,url,titre,type});renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
+  async function renderOeuvreMedias(zone){const {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">Médias indisponibles : ${safeText(error.message)}</div>`;return;}const all=data||[];const rows=mediaFilter==='Tout'?all:all.filter(m=>m.type===mediaFilter);zone.innerHTML=`<div class="work-toolbar"><div class="segmented">${['Tout','Illustration','Promotion & Bonus','Couverture'].map(x=>`<button class="btn-secondary ${mediaFilter===x?'active':''}" onclick="mediaFilter='${x}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${x}</button>`).join('')}</div><button class="btn-primary" onclick="openMediaUploadDrawerV566('oeuvre',currentOeuvreId)">+ Ajouter des médias 🌸</button></div>${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaDrawer('${m.id}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="walter-empty">🖼</div>'}<div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}${m.est_couverture_actuelle?' · ★ Actuelle':''}</small></div></article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter examine le cadre vide.</strong><div>Aucun média ici pour le moment.</div></div>`}`;}
+  async function addMediaPrompt(){openMediaUploadDrawerV566('oeuvre',currentOeuvreId);}
   async function openMediaDrawer(id){const {data:m}=await db().from('medias').select('*').eq('id',id).single();openDrawer(m?.titre||'Média',`${m?.url?`<img src="${safeText(m.url)}" style="max-width:100%;border-radius:10px;margin-bottom:16px">`:''}<label>Titre</label><input id="media-title" value="${safeText(m?.titre||'')}"><label>Type</label><select id="media-type">${['Illustration','Promotion & Bonus','Couverture'].map(x=>`<option ${x===m?.type?'selected':''}>${x}</option>`).join('')}</select><label>Chapitre lié</label><input id="media-chapter" value="${safeText(m?.chapitre_id||'')}" placeholder="ID chapitre (sélecteur visuel ensuite)"><label>Description / notes</label><div id="media-desc" class="rich-editor" contenteditable="true" style="min-height:220px">${m?.description||''}</div><label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="media-current" style="width:auto" ${m?.est_couverture_actuelle?'checked':''}> Couverture actuelle</label><button class="btn-primary" style="margin-top:14px" onclick="saveMedia('${id}')">Enregistrer</button>`);}
   async function saveMedia(id){const payload={titre:document.getElementById('media-title').value,type:document.getElementById('media-type').value,chapitre_id:document.getElementById('media-chapter').value||null,description:document.getElementById('media-desc').innerHTML,est_couverture_actuelle:document.getElementById('media-current').checked};if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',currentOeuvreId).eq('type','Couverture');const {data:updated}=await db().from('medias').update(payload).eq('id',id).select('url').single();if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('oeuvres').update({couverture:updated?.url||null}).eq('id',currentOeuvreId);closeDrawer();renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
   function openDrawer(title,html){let ov=document.getElementById('passerelle-drawer');if(!ov){ov=document.createElement('div');ov.id='passerelle-drawer';ov.className='side-drawer-overlay';ov.innerHTML='<aside class="side-drawer"><div class="drawer-head"><h2 id="drawer-title"></h2><button class="drawer-close" onclick="closeDrawer()">✕</button></div><div class="drawer-body" id="drawer-body"></div></aside>';ov.addEventListener('click',e=>{if(e.target===ov)closeDrawer()});document.body.appendChild(ov);}document.getElementById('drawer-title').textContent=title;document.getElementById('drawer-body').innerHTML=html;ov.classList.add('open');}
