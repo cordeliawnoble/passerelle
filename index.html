@@ -509,6 +509,11 @@
   .character-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.character-edit-grid .full{grid-column:1/-1}.character-edit-grid textarea{min-height:110px}.character-empty{color:var(--text-dim);font-style:italic;padding:8px 0}.character-cap-block{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}.character-stat{display:grid;grid-template-columns:130px 1fr 42px;gap:10px;align-items:center;margin:8px 0}.character-stat-bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden}.character-stat-bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
   @media(max-width:900px){.character-hero-content{grid-template-columns:120px 1fr;padding:20px}.character-hero-portrait{width:110px;height:150px}.character-hero-side{display:none}.cp-4,.cp-5,.cp-6,.cp-7,.cp-8{grid-column:span 12}.character-edit-grid{grid-template-columns:1fr}.character-tome-row{grid-template-columns:1fr}}
 
+  /* V5.7.3b — stockage médias dédié + optimisation WebP */
+  .media-drop-v566{border:1.5px dashed var(--line);border-radius:14px;padding:24px;text-align:center;cursor:pointer;background:color-mix(in srgb,var(--accent) 4%,var(--card));transition:.16s;display:grid;gap:5px}.media-drop-v566.drag{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--card))}.media-drop-v566 span{font-size:11px;color:var(--text-dim)}
+  .media-batch-tools-v566{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 10px}.media-batch-item-v566{display:grid;grid-template-columns:86px 1fr auto;gap:11px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:8px}.media-batch-item-v566>img{width:86px;height:76px;object-fit:cover;border-radius:8px;background:var(--bg-2)}.media-batch-fields-v566{display:grid;gap:7px}.media-current-v566{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:5px}.media-opt-v573b{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--text-dim)}.media-opt-v573b strong{color:var(--accent)}.media-upload-footer-v566{display:flex;justify-content:flex-end;margin-top:12px}.media-upload-status-v573b{margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--bg-2);font-size:11px;color:var(--text-dim)}
+  @media(max-width:650px){.media-batch-item-v566{grid-template-columns:70px 1fr}.media-batch-item-v566>img{width:70px;height:64px}.media-batch-item-v566>button{grid-column:1/-1;justify-self:end}}
+
 </style>
 </head>
 <body>
@@ -521,13 +526,23 @@
   const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
   const db = () => sb.schema('passerelle');
 
+  // Projet Supabase séparé, dédié exclusivement aux fichiers médias.
+  const mediaSupabaseUrl = 'https://uvlzrfxecmaugdfuhjho.supabase.co';
+  const mediaSupabaseKey = 'sb_publishable_zwLt2TfBXWXLwhE4D74bHQ_opjd9UoD';
+  const mediaSb = window.supabase.createClient(mediaSupabaseUrl, mediaSupabaseKey, {auth:{storageKey:'passerelle-media-auth-v573b',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  const MEDIA_BUCKET = 'passerelle-medias';
+
   const app = document.getElementById('app');
   let currentUser = null;
+  let mediaUser = null;
+  let mediaAuthWarningV573b = '';
 
   async function init(){
     try{
       const { data: { session }, error } = await sb.auth.getSession();
       if(error) throw error;
+      const {data:{session:mediaSession}} = await mediaSb.auth.getSession();
+      mediaUser = mediaSession?.user || null;
       if (session) { currentUser = session.user; await loadGlobalAppearance(); ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
       else renderAuth();
     }catch(err){
@@ -564,8 +579,12 @@
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
     currentUser = data.user;
+    const mediaLogin = await mediaSb.auth.signInWithPassword({ email, password });
+    mediaUser = mediaLogin.data?.user || null;
+    mediaAuthWarningV573b = mediaLogin.error ? 'Le stockage médias n’est pas encore connecté. Crée le même utilisateur dans le projet Supabase Médias puis reconnecte-toi à Passerelle.' : '';
     ensureMonthlyBackupV561().catch(console.warn);
     renderShell(); navigate('accueil');
+    if(mediaAuthWarningV573b) setTimeout(()=>showTransientStatusV572('🖼 '+mediaAuthWarningV573b),250);
   }
 
   async function doSignup(){
@@ -576,11 +595,14 @@
     msg.textContent = 'Création du compte…'; msg.className = 'auth-msg';
     const { data, error } = await sb.auth.signUp({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
-    if (data.session) { currentUser = data.user; ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
+    const mediaSignup = await mediaSb.auth.signUp({ email, password });
+    if(mediaSignup.data?.session){ mediaUser = mediaSignup.data.user; mediaAuthWarningV573b=''; }
+    else if(mediaSignup.error){ mediaAuthWarningV573b='Le compte principal a été créé, mais pas le compte du stockage médias : '+mediaSignup.error.message; }
+    if (data.session) { currentUser = data.user; ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); if(mediaAuthWarningV573b)setTimeout(()=>showTransientStatusV572('🖼 '+mediaAuthWarningV573b),250); }
     else { msg.textContent = 'Compte créé — vérifie ta boîte mail, puis connecte-toi.'; msg.className = 'auth-msg ok'; }
   }
 
-  async function doLogout(){ await sb.auth.signOut(); currentUser = null; renderAuth(); }
+  async function doLogout(){ await Promise.allSettled([sb.auth.signOut(),mediaSb.auth.signOut()]); currentUser = null; mediaUser=null; renderAuth(); }
 
   const NAV = [
     { group: 'Passerelle', items: [
@@ -731,14 +753,50 @@
   function renderPageImageBanner(url,alt='Bannière'){
     return url ? `<div class="page-image-banner"><img src="${safeText(url)}" alt="${safeText(alt)}"></div>` : '';
   }
-  async function uploadAssetFile(file,folder='banners'){
+  function formatBytesV573b(bytes){
+    const n=Number(bytes)||0;if(n<1024)return `${n} o`;if(n<1024*1024)return `${(n/1024).toFixed(n<10240?1:0)} Ko`;return `${(n/1024/1024).toFixed(2)} Mo`;
+  }
+  function mediaProfileV573b(folder='',opts={}){
+    if(opts.profile)return opts.profile;
+    const f=String(folder||'').toLowerCase();
+    if(f.includes('banner'))return {maxW:1600,maxH:900,quality:.84,label:'Bannière'};
+    if(f.includes('avatar'))return {maxW:600,maxH:600,quality:.84,label:'Avatar'};
+    if(opts.kind==='cover')return {maxW:1200,maxH:1800,quality:.86,label:'Couverture'};
+    return {maxW:1600,maxH:1600,quality:.82,label:'Image'};
+  }
+  async function optimizeImageForUploadV573b(file,folder='',opts={}){
+    if(!file||!file.type?.startsWith('image/'))return {file,originalSize:file?.size||0,optimizedSize:file?.size||0,converted:false};
+    if(['image/svg+xml','image/gif'].includes(file.type))return {file,originalSize:file.size,optimizedSize:file.size,converted:false,skipped:true};
+    const profile=mediaProfileV573b(folder,opts);
+    const bitmap=await createImageBitmap(file);
+    const sourceWidth=bitmap.width,sourceHeight=bitmap.height;
+    const scale=Math.min(1,profile.maxW/sourceWidth,profile.maxH/sourceHeight);
+    const width=Math.max(1,Math.round(sourceWidth*scale)),height=Math.max(1,Math.round(sourceHeight*scale));
+    const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+    const ctx=canvas.getContext('2d',{alpha:true});ctx.drawImage(bitmap,0,0,width,height);bitmap.close?.();
+    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Conversion WebP impossible.')),'image/webp',profile.quality));
+    const stem=(file.name||'image').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9À-ÿ _.-]+/g,'').trim()||'image';
+    const optimized=new File([blob],`${stem}.webp`,{type:'image/webp',lastModified:Date.now()});
+    return {file:optimized,originalSize:file.size,optimizedSize:optimized.size,width,height,sourceWidth,sourceHeight,converted:true,profile};
+  }
+  async function ensureMediaSessionV573b(){
+    const {data:{session}}=await mediaSb.auth.getSession();mediaUser=session?.user||null;return !!mediaUser;
+  }
+  async function uploadAssetFile(file,folder='banners',opts={}){
     if(!file) return null;
-    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    if(!(await ensureMediaSessionV573b())){
+      mediaAuthWarningV573b='Stockage médias non connecté. Crée le même utilisateur dans le projet Supabase Médias, puis déconnecte/reconnecte Passerelle.';
+      showTransientStatusV572('🖼 '+mediaAuthWarningV573b);return null;
+    }
+    let prepared={file,originalSize:file.size,optimizedSize:file.size,converted:false};
+    try{if(!opts.skipOptimize)prepared=await optimizeImageForUploadV573b(file,folder,opts)}catch(err){console.warn('Optimisation WebP impossible, fichier original conservé',err)}
+    const upFile=prepared.file||file;
+    const ext=(upFile.name.split('.').pop()||'webp').toLowerCase().replace(/[^a-z0-9]/g,'')||'webp';
     const safeName=`${Date.now()}-${Math.random().toString(36).slice(2,9)}.${ext}`;
-    const path=`${currentUser.id}/${folder}/${safeName}`;
-    const {error}=await sb.storage.from('passerelle-assets').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||undefined});
-    if(error){alert('Upload impossible : '+error.message);return null;}
-    const {data}=sb.storage.from('passerelle-assets').getPublicUrl(path);
+    const path=`${mediaUser.id}/${folder}/${safeName}`;
+    const {error}=await mediaSb.storage.from(MEDIA_BUCKET).upload(path,upFile,{cacheControl:'31536000',upsert:false,contentType:upFile.type||undefined});
+    if(error){showTransientStatusV572('Upload impossible : '+error.message);return null;}
+    const {data}=mediaSb.storage.from(MEDIA_BUCKET).getPublicUrl(path);
     return data?.publicUrl||null;
   }
   async function uploadPageBanner(pageKey,input){
@@ -2611,18 +2669,22 @@
     return (name||'').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
   }
 
-  function prepareMediaFilesV566(fileList){
+  async function prepareMediaFilesV566(fileList){
     const files=[...fileList].filter(f=>f.type.startsWith('image/')).slice(0,20);
     if(!files.length)return;
-    if(fileList.length>20) alert('20 images maximum par envoi. Les 20 premières ont été retenues.');
-    mediaUploadBatchV566=files.map((file,i)=>({
-      key:`m${Date.now()}-${i}`,file,
-      preview:URL.createObjectURL(file),
-      titre:cleanMediaFilenameV566(file.name),
-      type:'Illustration',
-      current:false
-    }));
-    renderMediaBatchV566();
+    if(fileList.length>20) showTransientStatusV572('20 images maximum : les 20 premières ont été retenues.');
+    const list=document.getElementById('media-batch-list-v566');if(list)list.innerHTML='<div class="media-upload-status-v573b">🗜️ Optimisation WebP en cours…</div>';
+    const batch=[];
+    for(let i=0;i<files.length;i++){
+      const original=files[i];
+      try{
+        const optimized=await optimizeImageForUploadV573b(original,`medias/${mediaUploadContextV566?.level||'generic'}/${mediaUploadContextV566?.id||'new'}`);
+        batch.push({key:`m${Date.now()}-${i}`,file:optimized.file,originalFile:original,preview:URL.createObjectURL(optimized.file),titre:cleanMediaFilenameV566(original.name),type:'Illustration',current:false,originalSize:optimized.originalSize,optimizedSize:optimized.optimizedSize,width:optimized.width,height:optimized.height,converted:optimized.converted});
+      }catch(err){
+        batch.push({key:`m${Date.now()}-${i}`,file:original,originalFile:original,preview:URL.createObjectURL(original),titre:cleanMediaFilenameV566(original.name),type:'Illustration',current:false,originalSize:original.size,optimizedSize:original.size,converted:false});
+      }
+    }
+    mediaUploadBatchV566=batch;renderMediaBatchV566();
   }
 
   function renderMediaBatchV566(){
@@ -2647,6 +2709,7 @@
           <option ${m.type==='Couverture'?'selected':''}>Couverture</option>
         </select>
         ${m.type==='Couverture'?`<label class="media-current-v566"><input type="checkbox" ${m.current?'checked':''} onchange="mediaUploadBatchV566[${i}].current=this.checked"> ★ Couverture actuelle</label>`:''}
+        <div class="media-opt-v573b"><span>Original : ${formatBytesV573b(m.originalSize||m.file.size)}</span><span>→</span><strong>${formatBytesV573b(m.optimizedSize||m.file.size)} WebP</strong>${m.originalSize&&m.optimizedSize&&m.optimizedSize<m.originalSize?`<span>· −${Math.round((1-m.optimizedSize/m.originalSize)*100)}%</span>`:''}</div>
       </div>
       <button class="btn-secondary" onclick="removeMediaBatchV566(${i})">✕</button>
     </div>`).join('')+`<div class="media-upload-footer-v566"><button class="btn-primary" id="media-upload-go-v566" onclick="commitMediaBatchV566()">Importer les ${mediaUploadBatchV566.length} média${mediaUploadBatchV566.length>1?'s':''}</button></div>`;
@@ -2669,7 +2732,7 @@
       for(let i=0;i<mediaUploadBatchV566.length;i++){
         const m=mediaUploadBatchV566[i];
         if(btn)btn.textContent=`Téléversement ${i+1}/${mediaUploadBatchV566.length}…`;
-        const url=await uploadAssetFile(m.file,`medias/${mediaUploadContextV566.level}/${mediaUploadContextV566.id}`);
+        const url=await uploadAssetFile(m.file,`medias/${mediaUploadContextV566.level}/${mediaUploadContextV566.id}`,{skipOptimize:true,kind:m.type==='Couverture'?'cover':'generic'});
         if(!url)throw new Error(`Échec du téléversement de ${m.file.name}`);
         const payload={user_id:currentUser.id,url,titre:m.titre||cleanMediaFilenameV566(m.file.name),type:m.type};
         if(mediaUploadContextV566.level==='saga')payload.saga_id=mediaUploadContextV566.id;
@@ -2685,7 +2748,7 @@
       if(mediaUploadContextV566.level==='saga')renderSagaMediasV565(document.getElementById('saga-tab-content'));
       else renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
     }catch(err){
-      alert('Erreur pendant l’import : '+(err?.message||err));
+      showTransientStatusV572('Erreur pendant l’import : '+(err?.message||err));
       if(btn){btn.disabled=false;btn.textContent='Reprendre l’import'}
     }
   }
