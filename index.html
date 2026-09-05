@@ -3362,6 +3362,7 @@
           <div class="modal-head"><h2 id="modal-soussaga-title">Nouvelle sous-saga</h2><button onclick="closeSousSagaModal()">✕</button></div>
           <div class="modal-body">
             <div><label>Nom</label><input id="ssf-nom"></div>
+            <div><label>Saga parente</label><select id="ssf-saga"><option value="">— Choisir une saga —</option></select><div id="ssf-saga-help" style="font-size:11px;color:var(--text-dim);margin-top:5px">Une sous-saga doit obligatoirement appartenir à une saga.</div></div>
             <div class="row2">
               <div><label>Format</label><input id="ssf-format" placeholder="Trilogie, Série..."></div>
               <div><label>Statut</label><select id="ssf-statut"><option>En cours</option><option>À venir</option><option>Terminée</option></select></div>
@@ -3379,24 +3380,35 @@
     document.getElementById('modal-soussaga-title').textContent = id ? 'Modifier la sous-saga' : 'Nouvelle sous-saga';
     document.getElementById('ssf-nom').value=''; document.getElementById('ssf-format').value='';
     document.getElementById('ssf-statut').value='En cours'; document.getElementById('ssf-description').value=''; document.getElementById('ssf-banniere').value='';
+    document.getElementById('ssf-banner-upload').style.display='none';
+    const sagaSelect=document.getElementById('ssf-saga');
+    const {data:sagas,error:sagaErr}=await db().from('sagas').select('id,nom').eq('archive',false).order('nom');
+    sagaSelect.innerHTML='<option value="">— Choisir une saga —</option>'+((sagas||[]).map(s=>`<option value="${s.id}">${safeText(s.nom)}</option>`).join(''));
+    if(sagaErr) document.getElementById('ssf-saga-help').textContent='Impossible de charger les sagas : '+sagaErr.message;
     if (id) {
       document.getElementById('ssf-banner-upload').style.display='block'; document.getElementById('ssf-banner-file').onchange=(e)=>uploadEntityBanner('sous_sagas',id,e.target,'ssf-banniere');
-      const { data } = await db().from('sous_sagas').select('nom, format, statut, description, banniere, image_url').eq('id', id).single();
-      if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; document.getElementById('ssf-banniere').value=data.banniere||data.image_url||''; }
+      const { data } = await db().from('sous_sagas').select('nom, format, statut, description, banniere, image_url, saga_id').eq('id', id).single();
+      if (data) { document.getElementById('ssf-nom').value=data.nom||''; document.getElementById('ssf-format').value=data.format||''; document.getElementById('ssf-statut').value=data.statut||'En cours'; document.getElementById('ssf-description').value=data.description||''; document.getElementById('ssf-banniere').value=data.banniere||data.image_url||''; sagaSelect.value=data.saga_id||''; }
+    } else if (currentSagaId) {
+      sagaSelect.value=currentSagaId;
     }
     document.getElementById('modal-soussaga-overlay').classList.add('open');
   }
   function closeSousSagaModal(){ document.getElementById('modal-soussaga-overlay').classList.remove('open'); }
   async function saveSousSaga(){
-    const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim(), banniere:document.getElementById('ssf-banniere').value.trim()||null };
+    const sagaId=document.getElementById('ssf-saga')?.value||'';
+    const help=document.getElementById('ssf-saga-help');
+    if(!sagaId){ help.textContent='Choisis d’abord la saga parente.'; help.style.color='#b42318'; return; }
+    help.textContent='Une sous-saga doit obligatoirement appartenir à une saga.'; help.style.color='var(--text-dim)';
+    const payload = { nom: document.getElementById('ssf-nom').value.trim()||'Sans titre', saga_id:sagaId, format: document.getElementById('ssf-format').value.trim(), statut: document.getElementById('ssf-statut').value, description: document.getElementById('ssf-description').value.trim(), banniere:document.getElementById('ssf-banniere').value.trim()||null };
     let error, newId;
     if (editingSousSagaId) ({ error } = await db().from('sous_sagas').update(payload).eq('id', editingSousSagaId));
-    else { payload.user_id = currentUser.id; payload.saga_id = currentSagaId; const res = await db().from('sous_sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
-    if (error) { alert('Erreur : ' + error.message); return; }
+    else { payload.user_id = currentUser.id; const res = await db().from('sous_sagas').insert(payload).select('id').single(); error = res.error; newId = res.data?.id; }
+    if (error) { help.textContent='Erreur : '+error.message; help.style.color='#b42318'; return; }
     closeSousSagaModal();
     if (newId) { openSousSagaDetail(newId); return; }
     const zone = document.getElementById('saga-tab-content');
-    await renderSagaSousSagas(zone);
+    if(zone) await renderSagaSousSagas(zone); else await renderSousSagasCatalogueV570();
   }
 
   // ============================================================
