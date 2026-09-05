@@ -1199,7 +1199,7 @@
               <div style="margin-top:14px"><label>Métadonnées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._aowMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="aow-meta-check" value="${m.id}" style="width:auto" ${window._aowMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Choisis d’abord une saga pour utiliser ses métadonnées.</small>'}</div></div>
             </details>
             <details class="admin-section" open><summary>Apparence de la page</summary><p class="admin-section-sub">Le clair/sombre est désormais global. Ici, l’œuvre choisit son fond, son accent et sa bannière.</p><label>Couleur de page</label><input type="color" id="aow-page-color" value="${safeText(o.page_color||globalAppearance.themeColor||'#F6F3FB')}"><label style="margin-top:10px;">Couleur d’accent</label><input type="color" id="aow-accent" value="${safeText(o.accent_color||globalAppearance.accent||'#7C5CBF')}"><label style="margin-top:10px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">Image horizontale affichée en haut de la fiche Œuvre.</small></details>
-            <section class="admin-section admin-danger"><h2>Archivage</summary><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></details>
+            <details class="admin-section admin-danger" open><summary>Archivage</summary><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></details>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
         </div>
@@ -5406,7 +5406,7 @@
     ];
 
     const allSections=[...layout.querySelectorAll('.admin-section')];
-    const byTitle=new Map(allSections.map(section=>[section.querySelector('h2')?.textContent?.trim()||'',section]));
+    const byTitle=new Map(allSections.map(section=>[(section.querySelector(':scope > summary')?.textContent||section.querySelector(':scope > h2')?.textContent||'').trim(),section]));
     const tabs=document.createElement('div');
     tabs.className='admin-editor-tabs';
     const panels=document.createElement('div');
