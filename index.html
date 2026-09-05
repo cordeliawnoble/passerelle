@@ -52,6 +52,7 @@
   /* ---- bannière décorative ---- */
   /* ---- bannières des fiches catalogue ---- */
   .catalog-entity-banner{width:100%;height:220px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block;margin:0 0 18px;box-shadow:0 8px 24px rgba(0,0,0,.08);}
+  .catalog-entity-banner.empty{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg-2),color-mix(in srgb,var(--accent) 16%,var(--bg-2)));color:var(--accent);font-family:'Cormorant Garamond',serif;font-size:1.6rem;text-align:center;padding:20px;}
   @media (max-width:800px){.catalog-entity-banner{height:150px;border-radius:9px;}}
 
   .banner{ position:relative; border:1px solid var(--line); background:var(--bg-2); border-radius:6px; padding:36px 40px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:28px; }
@@ -818,7 +819,7 @@
   }
 
   function renderCatalogEntityBanner(url,title=''){
-    if(!url) return '';
+    if(!url) return `<div class="catalog-entity-banner empty"><span>${safeText(title)}</span></div>`;
     return `<img class="catalog-entity-banner" src="${safeText(url)}" alt="Bannière ${safeText(title)}">`;
   }
 
@@ -2522,9 +2523,8 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
-      ${renderCatalogEntityBanner(s.banniere||s.image_couverture,s.nom)}
+      ${renderCatalogEntityBanner(s.banniere,s.nom)}
       <div class="oeuvre-head">
-        <div class="cover-block">${initials(s.nom)}</div>
         <div class="oeuvre-info">
           <h1>${safeText(s.nom)} ${renderPasserelleIdBadgeV572(s.passerelle_id)}</h1>
           <div class="oeuvre-sub">${s.genre || '—'}</div>
@@ -2786,9 +2786,8 @@
 
     content.innerHTML = `
       <div class="back-link" onclick="openSagaDetail('${ss.saga_id}')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour à ${ss.sagas?.nom || 'la saga'}</div>
-      ${renderCatalogEntityBanner(ss.banniere||ss.image_url,ss.nom)}
+      ${renderCatalogEntityBanner(ss.banniere,ss.nom)}
       <div class="oeuvre-head">
-        <div class="cover-block">${initials(ss.nom)}</div>
         <div class="oeuvre-info">
           <h1>${safeText(ss.nom)} ${renderPasserelleIdBadgeV572(ss.passerelle_id)}</h1>
           <div class="oeuvre-sub">${ss.format || 'Sous-saga'} · ${ss.sagas?.nom || ''}</div>
