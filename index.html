@@ -1730,11 +1730,47 @@
           <div style="overflow:auto"><table class="admin-table"><thead><tr><th>Évolution</th><th>Module</th><th>Type</th><th>Origine</th><th>Statut</th><th>Notes</th><th></th></tr></thead><tbody>${(v2notes.data||[]).map(n=>`<tr><td><strong>${safeText(n.titre||'Sans titre')}</strong><div style="font-size:11px;color:var(--text-dim);margin-top:3px">${n.created_at?new Date(n.created_at).toLocaleDateString('fr-FR'):''}</div></td><td>${safeText(n.module||'—')}</td><td>${n.type_note==='adaptation_multi'?'Multi-utilisatrice':'Personnelle'}</td><td>${safeText(n.origine||'—')}</td><td><select style="min-width:130px;padding:6px 8px" onchange="updateV2EvolutionStatus('${n.id}',this.value)"><option value="idee" ${n.statut==='idee'?'selected':''}>Idée</option><option value="a_etudier" ${n.statut==='a_etudier'?'selected':''}>À étudier</option><option value="valide_v2" ${n.statut==='valide_v2'?'selected':''}>Validé V2</option><option value="ecarte" ${n.statut==='ecarte'?'selected':''}>Écarté</option></select></td><td style="max-width:360px;white-space:pre-wrap">${safeText(n.notes||'—')}</td><td><button class="tiny-btn danger-btn" onclick="deleteV2Evolution('${n.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="7"><div class="empty">Aucune note V2. Le futur est encore bien rangé. ✨</div></td></tr>'}</tbody></table></div>
         `}
       </div>
+      <div class="admin-section"><div class="admin-section-head"><div><h2>🖼️ Connexion Médias</h2><p class="admin-section-sub" style="margin:4px 0 0">Le stockage des images utilise le projet Supabase Médias séparé. La session est indépendante de la base principale.</p></div><span id="media-auth-badge-v576c2" class="badge">Vérification…</span></div><div id="media-auth-panel-v576c2" class="panel" style="background:var(--bg-2)"><div class="status-line">Vérification de la connexion Médias…</div></div></div>
       <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle ne modifie jamais le Google Sheet.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button></div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
     activateAdminConfigurationTabs(zone);
+    refreshMediaConnectionPanelV576c2().catch(console.warn);
+  }
+
+  async function refreshMediaConnectionPanelV576c2(){
+    const badge=document.getElementById('media-auth-badge-v576c2');
+    const panel=document.getElementById('media-auth-panel-v576c2');
+    if(!badge||!panel)return;
+    try{
+      const {data:{session},error}=await mediaSb.auth.getSession();
+      if(error)throw error;
+      mediaUser=session?.user||null;
+      if(mediaUser){
+        badge.textContent='🟢 Connectée';
+        panel.innerHTML=`<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong>Base Médias connectée</strong><div class="admin-section-sub" style="margin-top:4px">${safeText(mediaUser.email||currentUser?.email||'Compte connecté')} · bucket ${MEDIA_BUCKET}</div></div><button class="btn-secondary" onclick="disconnectMediaV576c2()">Déconnecter Médias</button></div>`;
+      }else{
+        badge.textContent='🔴 Non connectée';
+        panel.innerHTML=`<p style="margin-top:0">La base principale est connectée, mais pas le stockage Médias. Entre le mot de passe du même compte pour ouvrir la session du second projet Supabase.</p><div class="admin-section-grid"><div><label>Email</label><input id="media-email-v576c2" type="email" value="${safeText(currentUser?.email||'')}" autocomplete="username"></div><div><label>Mot de passe</label><input id="media-password-v576c2" type="password" autocomplete="current-password" placeholder="Mot de passe Passerelle"></div></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn-primary" onclick="connectMediaV576c2()">Connecter la base Médias</button><span id="media-connect-status-v576c2" class="admin-inline-status"></span></div>`;
+      }
+    }catch(err){badge.textContent='⚠️ Erreur';panel.innerHTML=`<div class="empty">Connexion Médias impossible : ${safeText(err?.message||err)}</div>`;}
+  }
+  async function connectMediaV576c2(){
+    const email=document.getElementById('media-email-v576c2')?.value.trim()||currentUser?.email||'';
+    const password=document.getElementById('media-password-v576c2')?.value||'';
+    const status=document.getElementById('media-connect-status-v576c2');
+    if(!email||!password){if(status)status.textContent='Email et mot de passe requis.';return;}
+    if(status)status.textContent='Connexion…';
+    const {data,error}=await mediaSb.auth.signInWithPassword({email,password});
+    if(error){if(status)status.textContent='Échec : '+error.message;return;}
+    mediaUser=data.user||data.session?.user||null; mediaAuthWarningV573b='';
+    showTransientStatusV572('🖼 Base Médias connectée.');
+    await refreshMediaConnectionPanelV576c2();
+  }
+  async function disconnectMediaV576c2(){
+    await mediaSb.auth.signOut(); mediaUser=null;
+    await refreshMediaConnectionPanelV576c2();
   }
 
   async function addKeywordCategoryV571(){const nom=document.getElementById('kw-new-cat')?.value.trim();if(!nom)return;const {error}=await db().from('keyword_categories').insert({user_id:currentUser.id,nom});if(error)return alert(error.message);keywordCacheV571=null;renderAdminConfiguration(document.getElementById('content'))}
