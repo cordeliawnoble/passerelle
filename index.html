@@ -1210,7 +1210,7 @@
                 <div><label>Objectif global de mots</label><input type="number" id="aow-objectif" value="${o.objectif_mots||''}"><button type="button" class="btn-secondary" style="margin-top:6px" onclick="distributeWorkWordTarget()">↻ Répartir sur le Plan</button></div>
                 <div><label>Identifiant Atelier</label><input id="aow-code-session" value="${safeText(o.atelier_project_id||o.code_session||'')}" placeholder="ex. EC-T2"></div>
               </div>
-              <div class="admin-work-note" id="atelier-sync-box-v576c">🔌 <strong>Atelier</strong> : Passerelle lit uniquement les chapitres marqués « Rédigé ». Les lignes planifiées restent dans le Plan et ne créent jamais de faux chapitres Manuscrit.<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn-primary" onclick="syncAtelierWorkV576c()">↻ Synchroniser maintenant</button><button type="button" class="btn-secondary" onclick="testAtelierConnectorV576c()">Tester la connexion</button><span id="atelier-sync-status-v576c" style="font-size:12px;color:var(--text-dim)">${o.atelier_last_sync_at?'Dernière synchro : '+new Date(o.atelier_last_sync_at).toLocaleString('fr-FR'):'Jamais synchronisé'}</span></div></div>
+              <div class="admin-work-note" id="atelier-sync-box-v576c">🔌 <strong>Atelier</strong> : connexion via relais Supabase. Passerelle lit uniquement les chapitres marqués « Rédigé ». Les lignes planifiées restent dans le Plan et ne créent jamais de faux chapitres Manuscrit.<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn-primary" onclick="syncAtelierWorkV576c()">↻ Synchroniser maintenant</button><button type="button" class="btn-secondary" onclick="testAtelierConnectorV576c()">Tester la connexion</button><span id="atelier-sync-status-v576c" style="font-size:12px;color:var(--text-dim)">${o.atelier_last_sync_at?'Dernière synchro : '+new Date(o.atelier_last_sync_at).toLocaleString('fr-FR'):'Jamais synchronisé'}</span></div></div>
             </details>
 
             <details class="admin-section" open><summary>Import Notion</summary><p class="admin-section-sub">Importe un paquet JSON préparé depuis Notion. Prévisualisation obligatoire, Manuscrit uniquement, Plan intact et import réexécutable sans doublon.</p><div id="notion-work-import-v575"></div></details>
@@ -1767,7 +1767,7 @@
         `}
       </div>
       <div class="admin-section"><div class="admin-section-head"><div><h2>🖼️ Connexion Médias</h2><p class="admin-section-sub" style="margin:4px 0 0">Le stockage des images utilise le projet Supabase Médias séparé. La session est indépendante de la base principale.</p></div><span id="media-auth-badge-v576c2" class="badge">Vérification…</span></div><div id="media-auth-panel-v576c2" class="panel" style="background:var(--bg-2)"><div class="status-line">Vérification de la connexion Médias…</div></div></div>
-      <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle ne modifie jamais le Google Sheet.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button></div>
+      <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle passe désormais par un relais Supabase sécurisé : le navigateur ne contacte plus Google directement.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button></div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
@@ -1826,36 +1826,33 @@
     const {data,error}=await db().from('configuration_utilisateur').select('atelier_connector_url').eq('user_id',currentUser.id).maybeSingle();
     if(error)throw error; return data?.atelier_connector_url||'';
   }
-  function atelierJsonpV576c(baseUrl,projectId){
-    // JSONP : le Web App Apps Script V3 renvoie callback(payload) en JavaScript.
-    return new Promise((resolve,reject)=>{
-      if(!/^https:\/\/script\.google\.com\//i.test(baseUrl||'')) return reject(new Error('URL Apps Script invalide. Configure-la dans BO → Configuration → Connecteur Atelier.'));
-      if(!projectId) return reject(new Error('ID Atelier manquant.'));
-      const callbackName='__passerelleAtelier_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-      const script=document.createElement('script');
-      let done=false;
-      const cleanup=()=>{clearTimeout(timer);try{delete window[callbackName]}catch(e){window[callbackName]=undefined}try{script.remove()}catch(e){}};
-      const finish=(err,data)=>{if(done)return;done=true;cleanup();err?reject(err):resolve(data)};
-      window[callbackName]=(payload)=>finish(null,payload);
-      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier a été chargé mais n’a pas renvoyé de réponse JSONP dans les 20 secondes.')),20000);
-      const sep=baseUrl.includes('?')?'&':'?';
-      script.src=baseUrl+sep+'project='+encodeURIComponent(projectId)+'&callback='+encodeURIComponent(callbackName)+'&_t='+Date.now();
-      script.async=true;
-      script.onerror=()=>finish(new Error('Impossible de charger la réponse JSONP du connecteur Atelier. Le Web App répond dans un onglet, mais son script n’a pas pu être exécuté par Passerelle.'));
-      document.head.appendChild(script);
-    });
+  async function atelierRelayV576c(projectId){
+    if(!projectId)throw new Error('ID Atelier manquant.');
+    const {data,error}=await sb.functions.invoke('atelier-proxy',{body:{projectId}});
+    if(error){
+      let detail='';
+      try{
+        if(error.context&&typeof error.context.json==='function'){
+          const body=await error.context.json();
+          detail=body?.error||body?.message||'';
+        }
+      }catch(_e){}
+      throw new Error(detail||error.message||'Le relais Supabase Atelier ne répond pas.');
+    }
+    if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide.');
+    return data;
   }
 
   async function testAtelierConnectorV576c(){
     const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
     if(!projectId){if(status)status.textContent='Renseigne d’abord l’ID Atelier.';return}
-    try{if(status)status.textContent='Test de connexion…';const url=await getAtelierConnectorUrlV576c();const data=await atelierJsonpV576c(url,projectId);if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');if(status)status.textContent=`✓ Atelier répond · ${data.project?.name||projectId} · ${(data.chapters||[]).length} chapitre(s)`;}catch(e){if(status)status.textContent='⚠ '+e.message}
+    try{if(status)status.textContent='Test du relais Supabase → Atelier…';const data=await atelierRelayV576c(projectId);if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');if(status)status.textContent=`✓ Atelier répond · ${data.project?.name||projectId} · ${(data.chapters||[]).length} chapitre(s)`;}catch(e){if(status)status.textContent='⚠ '+e.message}
   }
   async function syncAtelierWorkV576c(){
     const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
     if(!adminEditingOeuvreId||!projectId){if(status)status.textContent='Enregistre d’abord un ID Atelier sur cette œuvre.';return}
     try{
-      if(status)status.textContent='Synchronisation Atelier…'; const url=await getAtelierConnectorUrlV576c(); const data=await atelierJsonpV576c(url,projectId);
+      if(status)status.textContent='Synchronisation Atelier via Supabase…'; const data=await atelierRelayV576c(projectId);
       if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');
       const written=(data.chapters||[]).filter(c=>/r[ée]dig/i.test(c.state||''));
       const {data:existing,error:readErr}=await db().from('chapitres').select('id,numero,titre,nb_mots,etat').eq('oeuvre_id',adminEditingOeuvreId); if(readErr)throw readErr;
