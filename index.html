@@ -1827,33 +1827,25 @@
     if(error)throw error; return data?.atelier_connector_url||'';
   }
   function atelierJsonpV576c(baseUrl,projectId){
-    // Transport iframe + postMessage : évite les restrictions CORS/MIME des Web Apps Apps Script.
+    // JSONP : le Web App Apps Script V3 renvoie callback(payload) en JavaScript.
     return new Promise((resolve,reject)=>{
       if(!/^https:\/\/script\.google\.com\//i.test(baseUrl||'')) return reject(new Error('URL Apps Script invalide. Configure-la dans BO → Configuration → Connecteur Atelier.'));
       if(!projectId) return reject(new Error('ID Atelier manquant.'));
-      const token='atelier_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-      const iframe=document.createElement('iframe');
-      iframe.setAttribute('aria-hidden','true');
-      iframe.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:0;left:-9999px;top:-9999px';
+      const callbackName='__passerelleAtelier_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+      const script=document.createElement('script');
       let done=false;
-      const cleanup=()=>{window.removeEventListener('message',onMessage);clearTimeout(timer);try{iframe.remove()}catch(e){}};
+      const cleanup=()=>{clearTimeout(timer);try{delete window[callbackName]}catch(e){window[callbackName]=undefined}try{script.remove()}catch(e){}};
       const finish=(err,data)=>{if(done)return;done=true;cleanup();err?reject(err):resolve(data)};
-      const onMessage=(event)=>{
-        // Apps Script HtmlService peut publier depuis une origine opaque ("null")
-        // ou depuis un hôte Google intermédiaire. Le jeton aléatoire par requête est
-        // notre garde-fou fiable ici : on ne traite QUE le message portant ce jeton.
-        const msg=event.data;
-        if(!msg||msg.type!=='atelier-passerelle'||msg.token!==token) return;
-        finish(null,msg.payload);
-      };
-      window.addEventListener('message',onMessage);
-      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier ne répond pas. Vérifie le déploiement du Web App Atelier.')),20000);
+      window[callbackName]=(payload)=>finish(null,payload);
+      const timer=setTimeout(()=>finish(new Error('Le connecteur Atelier a été chargé mais n’a pas renvoyé de réponse JSONP dans les 20 secondes.')),20000);
       const sep=baseUrl.includes('?')?'&':'?';
-      iframe.src=baseUrl+sep+'project='+encodeURIComponent(projectId)+'&transport=iframe&token='+encodeURIComponent(token)+'&_='+Date.now();
-      iframe.onerror=()=>finish(new Error('Impossible de charger le connecteur Atelier.'));
-      document.body.appendChild(iframe);
+      script.src=baseUrl+sep+'project='+encodeURIComponent(projectId)+'&callback='+encodeURIComponent(callbackName)+'&_t='+Date.now();
+      script.async=true;
+      script.onerror=()=>finish(new Error('Impossible de charger la réponse JSONP du connecteur Atelier. Le Web App répond dans un onglet, mais son script n’a pas pu être exécuté par Passerelle.'));
+      document.head.appendChild(script);
     });
   }
+
   async function testAtelierConnectorV576c(){
     const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
     if(!projectId){if(status)status.textContent='Renseigne d’abord l’ID Atelier.';return}
