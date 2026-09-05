@@ -1249,7 +1249,7 @@ Pourquoi ? Parce que c'est hyper cinématographique ! J'ai imaginé la scène co
     if(workSource.error){status.textContent='Erreur sur la fiche œuvre : '+workSource.error.message;return}
     for(const d of notionImportPreviewV574.decisions){
       const ch=d.chapter;
-      const payload={notion_page_id:ch.notion_page_id,titre:ch.titre,numero:ch.numero,ordre:ch.ordre,acte:ch.acte,pov:ch.pov,etat:ch.etat,nb_mots:ch.nb_mots,resume:ch.resume,memo:noteHtmlV574(ch),updated_at:new Date().toISOString()};
+      const payload={notion_page_id:ch.notion_page_id,titre:ch.titre,numero:ch.numero,ordre:ch.ordre,acte:ch.acte,pov:ch.pov,etat:ch.etat,nb_mots:ch.nb_mots,resume:ch.resume,memo:noteHtmlV574(ch)};
       if(ch.date_ecriture)payload.date_ecriture=ch.date_ecriture;
       let r;
       if(d.action==='insert'){payload.user_id=currentUser.id;payload.oeuvre_id=adminEditingOeuvreId;r=await db().from('chapitres').insert(payload)}
