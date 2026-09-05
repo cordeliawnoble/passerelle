@@ -970,6 +970,8 @@
     ]);
     if(workRes.error){ content.innerHTML=adminEmpty('Erreur : '+safeText(workRes.error.message)); return; }
     const o=workRes.data;
+    const kwCacheV571=await loadKeywordsV571();
+    const kwSelectedV571=await keywordIdsForV571('oeuvre',o.id);
     adminOeuvreSagas=sagasRes.data||[];
     let ss=[];
     if(o.saga_id){ const r=await db().from('sous_sagas').select('id,nom').eq('saga_id',o.saga_id).order('ordre'); ss=r.data||[]; }
@@ -1571,8 +1573,6 @@
   // ============================================================
   async function renderAccueil(){
     const content = document.getElementById('content');
-    const kwCacheV571=await loadKeywordsV571();
-    const kwSelectedV571=await keywordIdsForV571('oeuvre',o.id);
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
     const now = new Date();
