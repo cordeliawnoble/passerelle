@@ -1471,7 +1471,7 @@
       publication_envisagee:document.getElementById('aow-publication').value.trim()||null,
       notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
       couverture:document.getElementById('aow-couverture').value.trim()||null,
-      ...graphicOverridePayloadV576c13('aow'),
+      ...(()=>{const g=graphicOverridePayloadV576c13('aow'); delete g.page_color; return g;})(),
       banniere:document.getElementById('aow-banniere')?.value.trim()||null,
       module_lore:document.getElementById('aow-module-lore').checked,
       module_chronologie:document.getElementById('aow-module-chrono').checked,
@@ -4791,11 +4791,28 @@
   }
   async function saveOeuvreApparence(){
     const st=document.getElementById('op-appearance-status');
+    if(!currentOeuvreId){ if(st)st.textContent='Erreur : œuvre introuvable.'; return; }
     try{
-      await persistGraphicOverrideV576c15('oeuvres',currentOeuvreId,'op','work');
-      if(st)st.textContent='✓ Apparence enregistrée';
+      if(st)st.textContent='Enregistrement…';
+      const payload=graphicOverridePayloadV576c13('op');
+      // soft_color est la source canonique du fond pour l’héritage graphique.
+      // page_color reste un ancien champ de compatibilité et ne doit pas bloquer la sauvegarde d’une œuvre.
+      delete payload.page_color;
+      const {data,error}=await db().from('oeuvres').update(payload).eq('id',currentOeuvreId)
+        .select('id,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id').single();
+      if(error) throw error;
+      if(!data) throw new Error('Supabase n’a renvoyé aucune œuvre après la sauvegarde.');
+      const resolved=await resolveGraphicThemeV576b('work',data);
+      applyObjectTheme(resolved.pageColor,resolved.accent);
       await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
-    }catch(error){if(st)st.textContent='Erreur : '+error.message;else alert('Erreur : '+error.message)}
+      const fresh=document.getElementById('op-appearance-status');
+      if(fresh)fresh.textContent='✓ Apparence enregistrée';
+    }catch(error){
+      console.error('Sauvegarde apparence œuvre',error);
+      const target=document.getElementById('op-appearance-status')||st;
+      if(target)target.textContent='Erreur : '+(error?.message||String(error));
+      else alert('Erreur : '+(error?.message||String(error)));
+    }
   }
   async function toggleArchiveOeuvre(currentlyArchived){
     const { error } = await db().from('oeuvres').update({ archive: !currentlyArchived }).eq('id', currentOeuvreId);
