@@ -1125,7 +1125,7 @@
     if(adminSagaTabV56==='configuration')z.innerHTML=`<div class="admin-section"><h2>Configuration graphique</h2>${graphicOverrideEditorV576c13('as56',s,inheritedGraphicV576c13)}<div style="margin-top:14px"><label>Bannière propre à la saga</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'banniere').then(()=>renderAdminSagaEditorV56())"></label></div>${renderCatalogEntityBanner(s.banniere||s.image_couverture,s.nom)}<button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaConfigV56()">Enregistrer l’apparence</button></div>`;
   }
   async function saveAdminSagaInfoV56(){const payload={nom:document.getElementById('as56-nom').value.trim()||'Sans titre',genre:document.getElementById('as56-genre').value.trim(),description:adminRichHtmlV567('as56-description'),mots_cles:document.getElementById('as56-tags').value.split(',').map(x=>x.trim()).filter(Boolean),periode_couverte:document.getElementById('as56-periode').value.trim()||null};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
-  async function saveAdminSagaConfigV56(){const payload=graphicOverridePayloadV576c13('as56');const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
+  async function saveAdminSagaConfigV56(){try{await persistGraphicOverrideV576c15('sagas',adminSagaIdV56,'as56','saga');await renderAdminSagaEditorV56();const z=document.getElementById('admin-saga-tab-v56');if(z)z.insertAdjacentHTML('afterbegin','<div class="admin-inline-status success">Apparence enregistrée ✓</div>')}catch(error){alert('Erreur : '+error.message)}}
   async function addSagaMetadataV56(){toggleSagaMetadataCreatorV567(true)}
   async function saveNewSagaMetadataV567(){
     const nom=document.getElementById('saga-meta-name-v567')?.value.trim();
@@ -1988,7 +1988,7 @@
     host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><h2>${id?'Modifier':'Nouvelle'} collection</h2><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div><label>Illustration de collection</label><input id="ac-illustration" value="${safeText(c.illustration_url||'')}" placeholder="URL de l’image"><small>Image d’identité du catalogue BO, distincte des bannières et couvertures.</small></div></div>${c.illustration_url?`<img class="collection-visual-v576b" src="${safeText(c.illustration_url)}">`:''}<h3 style="margin-top:18px">🎨 Charte graphique</h3><p class="admin-section-sub">La collection hérite du thème Passerelle par défaut. Ses enfants héritent ensuite d’elle : Collection → Saga → Sous-saga → Œuvre.</p>${graphicOverrideEditorV576c13('ac',c,inheritedCollectionGraphicV576c14)}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
     host.scrollIntoView({behavior:'smooth',block:'center'});
   }
-  async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10),illustration_url:document.getElementById('ac-illustration').value.trim()||null,...graphicOverridePayloadV576c13('ac')};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id):db().from('univers').insert({...payload,user_id:currentUser.id});const {error}=await q;if(error){alert('Erreur : '+error.message);return;}adminNavigate('collections');}
+  async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10),illustration_url:document.getElementById('ac-illustration').value.trim()||null,...graphicOverridePayloadV576c13('ac')};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id).select('*').single():db().from('univers').insert({...payload,user_id:currentUser.id}).select('*').single();const {data,error}=await q;if(error){alert('Erreur : '+error.message);return;}if(data){const resolved=await resolveGraphicThemeV576b('collection',data);applyObjectTheme(resolved.pageColor,resolved.accent)}adminNavigate('collections');}
 
 
   // ============================================================
@@ -3397,8 +3397,9 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Le mode clair/sombre reste global. La sous-saga personnalise son fond et son accent.</p><div class="row2"><div><label>Couleur de page</label><input type="color" id="ssp-page-color" value="${ss.page_color||globalAppearance.themeColor}" style="height:42px; padding:4px;"></div><div><label>Couleur d'accent</label><input type="color" id="ssp-accent" value="${ss.accent_color||globalAppearance.accent}" style="height:42px; padding:4px;"></div></div>
-        <button class="btn-primary" style="margin-top:16px;" onclick="saveSousSagaApparence()">Appliquer</button>
+        ${graphicOverrideEditorV576c13('ssp',ss,await inheritedThemeForEditorV576c13('sub',ss))}
+        <div id="ssp-appearance-status" class="status-line" style="margin-top:10px"></div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSousSagaApparence()">Enregistrer l’apparence</button>
       </div>
       <div class="panel">
         <h2>Archivage</h2>
@@ -3413,10 +3414,12 @@
     openSousSagaDetail(currentSousSagaId);
   }
   async function saveSousSagaApparence(){
-    const payload = { page_color: document.getElementById('ssp-page-color').value, accent_color: document.getElementById('ssp-accent').value };
-    const { error } = await db().from('sous_sagas').update(payload).eq('id', currentSousSagaId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    applyObjectTheme(payload.page_color, payload.accent_color);
+    const st=document.getElementById('ssp-appearance-status');
+    try{
+      await persistGraphicOverrideV576c15('sous_sagas',currentSousSagaId,'ssp','sub');
+      if(st)st.textContent='✓ Apparence enregistrée';
+      await renderSousSagaParametres(document.getElementById('sous-saga-tab-content'));
+    }catch(error){if(st)st.textContent='Erreur : '+error.message;else alert('Erreur : '+error.message)}
   }
   async function toggleArchiveSousSaga(currentlyArchived){
     const { error } = await db().from('sous_sagas').update({ archive: !currentlyArchived }).eq('id', currentSousSagaId);
@@ -3728,9 +3731,9 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le mode clair/sombre reste global. La saga personnalise son fond et son accent.</p>
-        <div class="row2"><div><label>Couleur de page</label><input type="color" id="sp-page-color" value="${s.page_color||globalAppearance.themeColor}" style="height:42px; padding:4px;"></div><div><label>Couleur d'accent</label><input type="color" id="sp-accent" value="${s.accent_color||globalAppearance.accent}" style="height:42px; padding:4px;"></div></div>
-        <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaApparence()">Appliquer</button>
+        ${graphicOverrideEditorV576c13('sp',s,await inheritedThemeForEditorV576c13('saga',s))}
+        <div id="sp-appearance-status" class="status-line" style="margin-top:10px"></div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSagaApparence()">Enregistrer l’apparence</button>
       </div>
       <div class="panel">
         <h2>Archivage</h2>
@@ -3740,10 +3743,12 @@
     `;
   }
   async function saveSagaApparence(){
-    const payload = { page_color: document.getElementById('sp-page-color').value, accent_color: document.getElementById('sp-accent').value };
-    const { error } = await db().from('sagas').update(payload).eq('id', currentSagaId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    applyObjectTheme(payload.page_color, payload.accent_color);
+    const st=document.getElementById('sp-appearance-status');
+    try{
+      await persistGraphicOverrideV576c15('sagas',currentSagaId,'sp','saga');
+      if(st)st.textContent='✓ Apparence enregistrée';
+      await renderSagaParametres(document.getElementById('saga-tab-content'));
+    }catch(error){if(st)st.textContent='Erreur : '+error.message;else alert('Erreur : '+error.message)}
   }
   async function saveSagaParametres(){
     const payload = { nom: document.getElementById('sp-nom').value.trim()||'Sans titre', sous_titre: document.getElementById('sp-sous-titre').value.trim(), genre: document.getElementById('sp-genre').value.trim(), statut: document.getElementById('sp-statut').value, description: document.getElementById('sp-description').value.trim(), lore_complet: document.getElementById('sp-lore').value.trim() };
@@ -4706,9 +4711,9 @@
       </div>
       <div class="panel">
         <h2>Apparence</h2>
-        <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Le mode clair/sombre est global. Cette œuvre personnalise son fond et son accent.</p>
-        <div class="row2"><div><label>Couleur de page</label><input type="color" id="op-page-color" value="${o.page_color||globalAppearance.themeColor}" style="height:42px;padding:4px"></div><div><label>Couleur d'accent</label><input type="color" id="op-accent" value="${o.accent_color||globalAppearance.accent}" style="height:42px;padding:4px"></div></div>
-        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Appliquer</button>
+        ${graphicOverrideEditorV576c13('op',o,await inheritedThemeForEditorV576c13('work',o))}
+        <div id="op-appearance-status" class="status-line" style="margin-top:10px"></div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Enregistrer l’apparence</button>
       </div>
       <div class="panel">
         <h2>Statuts de chapitres personnalisés</h2>
@@ -4785,10 +4790,12 @@
     alert('Enregistré.');
   }
   async function saveOeuvreApparence(){
-    const payload = { page_color: document.getElementById('op-page-color').value, accent_color: document.getElementById('op-accent').value };
-    const { error } = await db().from('oeuvres').update(payload).eq('id', currentOeuvreId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    applyObjectTheme(payload.page_color, payload.accent_color);
+    const st=document.getElementById('op-appearance-status');
+    try{
+      await persistGraphicOverrideV576c15('oeuvres',currentOeuvreId,'op','work');
+      if(st)st.textContent='✓ Apparence enregistrée';
+      await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
+    }catch(error){if(st)st.textContent='Erreur : '+error.message;else alert('Erreur : '+error.message)}
   }
   async function toggleArchiveOeuvre(currentlyArchived){
     const { error } = await db().from('oeuvres').update({ archive: !currentlyArchived }).eq('id', currentOeuvreId);
@@ -5589,7 +5596,17 @@
   function graphicOverridePayloadV576c13(prefix){
     const read=(key)=>document.getElementById(`${prefix}-${key}-custom`)?.checked?(document.getElementById(`${prefix}-${key}`)?.value||null):null;
     const p={accent_color:read('accent'),secondary_color:read('secondary'),soft_color:read('soft'),dark_color:read('dark')};
-    p.page_color=p.soft_color; p.charte_override=Object.values(p).some((v,k)=>k<4&&!!v); return p;
+    p.page_color=p.soft_color;
+    p.charte_override=!!(p.accent_color||p.secondary_color||p.soft_color||p.dark_color);
+    return p;
+  }
+  async function persistGraphicOverrideV576c15(table,id,prefix,type){
+    const payload=graphicOverridePayloadV576c13(prefix);
+    const {data,error}=await db().from(table).update(payload).eq('id',id).select('id,accent_color,secondary_color,soft_color,dark_color,page_color,charte_override').single();
+    if(error) throw error;
+    const resolved=await resolveGraphicThemeV576b(type,data||{id,...payload});
+    applyObjectTheme(resolved.pageColor,resolved.accent);
+    return {data,resolved,payload};
   }
   function applyTheme(themeBase,accentColor){globalAppearance.mode=themeBase==='sombre'?'sombre':'clair';globalAppearance.accent=accentColor||globalAppearance.accent;applyGlobalTheme();}
   function resetTheme(){applyGlobalTheme();}
@@ -5850,7 +5867,7 @@
     setTimeout(()=>openAdminSousSagaEditor(id),650);
   }
 
-  async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),trame_principale:document.getElementById('ass-trame')?.checked||false,mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:adminRichHtmlV567('ass-description'),citation:adminRichHtmlV567('ass-citation'),...graphicOverridePayloadV576c13('ass'),banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {error}=await db().from('sous_sagas').update(payload).eq('id',id);if(error)return alert(error.message);await db().from('sous_saga_metadonnees').delete().eq('sous_saga_id',id);const mids=[...document.querySelectorAll('.ass-meta-check:checked')].map(x=>x.value);if(mids.length){const ins=await db().from('sous_saga_metadonnees').insert(mids.map(metadata_id=>({sous_saga_id:id,metadata_id})));if(ins.error)return alert(ins.error.message)}alert('Sous-saga enregistrée ✨')}
+  async function saveAdminSousSagaEditor(id){const payload={nom:document.getElementById('ass-nom').value.trim()||'Sans titre',genre:document.getElementById('ass-genre').value.trim(),temporalite:document.getElementById('ass-temporalite').value.trim(),lieu_principal:document.getElementById('ass-lieu').value.trim(),trame_principale:document.getElementById('ass-trame')?.checked||false,mots_cles:document.getElementById('ass-tags').value.split(',').map(x=>x.trim()).filter(Boolean),description:adminRichHtmlV567('ass-description'),citation:adminRichHtmlV567('ass-citation'),...graphicOverridePayloadV576c13('ass'),banniere:document.getElementById('ass-banniere').value.trim()||null,archive:document.getElementById('ass-archive-check').checked};const {data,error}=await db().from('sous_sagas').update(payload).eq('id',id).select('*').single();if(error)return alert(error.message);await db().from('sous_saga_metadonnees').delete().eq('sous_saga_id',id);const mids=[...document.querySelectorAll('.ass-meta-check:checked')].map(x=>x.value);if(mids.length){const ins=await db().from('sous_saga_metadonnees').insert(mids.map(metadata_id=>({sous_saga_id:id,metadata_id})));if(ins.error)return alert(ins.error.message)}if(data){const resolved=await resolveGraphicThemeV576b('sub',data);applyObjectTheme(resolved.pageColor,resolved.accent)}alert('Sous-saga enregistrée ✨')}
 
   init();
 </script>
