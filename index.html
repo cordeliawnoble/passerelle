@@ -5576,7 +5576,7 @@
     const pickPage=(fallback)=>chain.reduce((v,x)=>(x?.soft_color||x?.page_color||v),fallback);
     return {pageColor:pickPage(globalAppearance.themeColor),accent:pick('accent_color',globalAppearance.accent),secondary:pick('secondary_color',null),dark:pick('dark_color',null)};
   }
-  function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);setRootPalette(p,accentColor||globalAppearance.accent);}
+  function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);p['--bg']=c;setRootPalette(p,accentColor||globalAppearance.accent);document.documentElement.style.setProperty('--page-color',c);}
   async function inheritedThemeForEditorV576c13(type,obj){
     const ghost={...obj,charte_override:false,accent_color:null,secondary_color:null,soft_color:null,dark_color:null,page_color:null};
     return resolveGraphicThemeV576b(type,ghost);
