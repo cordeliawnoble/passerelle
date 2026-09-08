@@ -1438,6 +1438,19 @@
     document.querySelectorAll('.admin-cover-choice').forEach(x=>x.classList.toggle('selected',x.dataset.coverId===id));
   }
 
+  function showSaveToastV20(message,kind='ok'){
+    let t=document.getElementById('passerelle-save-toast-v20');
+    if(!t){
+      t=document.createElement('div');t.id='passerelle-save-toast-v20';
+      t.style.cssText='position:fixed;right:24px;bottom:24px;z-index:99999;padding:12px 16px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.18);font-weight:700;max-width:360px';
+      document.body.appendChild(t);
+    }
+    t.textContent=message;
+    t.style.opacity='1';
+    clearTimeout(window._saveToastTimerV20);
+    window._saveToastTimerV20=setTimeout(()=>{t.style.opacity='0';},2600);
+  }
+
   async function saveAdminOeuvreEditor(){
     if(!adminEditingOeuvreId) return;
     const status=document.getElementById('aow-save-status');
@@ -1481,7 +1494,7 @@
       publication_envisagee:document.getElementById('aow-publication').value.trim()||null,
       notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
       couverture:document.getElementById('aow-couverture').value.trim()||null,
-      ...(()=>{const g=graphicOverridePayloadV576c13('aow'); delete g.page_color; return g;})(),
+      ...graphicOverridePayloadV576c13('aow'),
       banniere:document.getElementById('aow-banniere')?.value.trim()||null,
       module_lore:document.getElementById('aow-module-lore').checked,
       module_chronologie:document.getElementById('aow-module-chrono').checked,
@@ -1498,10 +1511,11 @@
     const metaIds=[...document.querySelectorAll('.aow-meta-check:checked')].map(x=>x.value);
     if(metaIds.length){ const mr=await db().from('oeuvre_metadonnees').insert(metaIds.map(metadata_id=>({oeuvre_id:adminEditingOeuvreId,metadata_id}))); if(mr.error){ if(status)status.textContent='Erreur métadonnées : '+mr.error.message; return alert(mr.error.message); } }
     const {error}=await db().from('oeuvres').update(payload).eq('id',adminEditingOeuvreId);
-    if(error){ if(status) status.textContent='Erreur : '+error.message; alert('Erreur : '+error.message); return; }
+    if(error){ if(status) status.textContent='Erreur : '+error.message; showSaveToastV20('⚠ Enregistrement impossible : '+error.message,'error'); return; }
     const resetCover=await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
     if(!resetCover.error && selectedCoverMediaId) await db().from('medias').update({est_couverture_actuelle:true}).eq('id',selectedCoverMediaId);
     if(status) status.textContent='✓ Enregistré';
+    showSaveToastV20('✓ Œuvre enregistrée');
     setTimeout(()=>{ if(status) status.textContent=''; },2200);
     await openAdminOeuvreEditor(adminEditingOeuvreId);
   }
@@ -4779,11 +4793,10 @@
     try{
       if(st)st.textContent='Enregistrement…';
       const payload=graphicOverridePayloadV576c13('op');
-      // soft_color est la source canonique du fond pour l’héritage graphique.
-      // page_color reste un ancien champ de compatibilité et ne doit pas bloquer la sauvegarde d’une œuvre.
-      delete payload.page_color;
+      // V20 : charte autonome. soft_color ET page_color reçoivent le fond choisi
+      // afin que toutes les vues historiques et nouvelles utilisent exactement la même couleur.
       const {data,error}=await db().from('oeuvres').update(payload).eq('id',currentOeuvreId)
-        .select('id,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id').single();
+        .select('id,accent_color,secondary_color,soft_color,page_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id').single();
       if(error) throw error;
       if(!data) throw new Error('Supabase n’a renvoyé aucune œuvre après la sauvegarde.');
       const resolved=await resolveGraphicThemeV576b('work',data);
@@ -4791,11 +4804,12 @@
       await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
       const fresh=document.getElementById('op-appearance-status');
       if(fresh)fresh.textContent='✓ Apparence enregistrée';
+      showSaveToastV20('✓ Apparence de l’œuvre enregistrée');
     }catch(error){
       console.error('Sauvegarde apparence œuvre',error);
       const target=document.getElementById('op-appearance-status')||st;
       if(target)target.textContent='Erreur : '+(error?.message||String(error));
-      else alert('Erreur : '+(error?.message||String(error)));
+      showSaveToastV20('⚠ Apparence non enregistrée : '+(error?.message||String(error)),'error');
     }
   }
   window.saveOeuvreApparence = saveOeuvreApparence;
