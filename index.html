@@ -1498,105 +1498,151 @@
   }
 
   async function saveAdminOeuvreEditor(){
-    if(!adminEditingOeuvreId) return;
     const status=document.getElementById('aow-save-status');
-    if(status) status.textContent='Enregistrement…';
-    const sagaId=document.getElementById('aow-saga').value||null;
-    const selectedCollectionId=document.getElementById('aow-collection').value||null;
-    const selectedCoverMediaId=document.getElementById('aow-cover-media-id')?.value||null;
-    const tropesRaw=document.getElementById('aow-tropes').value.trim();
-    const enjeuxRaw=document.getElementById('aow-enjeux').value.trim();
-    const newEditorial=document.getElementById('aow-editorial').value||null;
-    const payload={
-      titre:document.getElementById('aow-titre').value.trim()||'Sans titre',
-      sous_titre:document.getElementById('aow-sous-titre').value.trim()||null,
-      format_cible:document.getElementById('aow-format').value.trim()||null,
-      univers_id:sagaId?null:selectedCollectionId,
-      saga_id:sagaId,
-      sous_saga_id:sagaId?(document.getElementById('aow-sous-saga').value||null):null,
-      langue:document.getElementById('aow-langue').value.trim()||'Français',
-      pitch:document.getElementById('aow-pitch').value.trim()||null,
-      resume:document.getElementById('aow-resume').value.trim()||null,
-      a_propos:document.getElementById('aow-a-propos').value.trim()||null,
-      intentions:document.getElementById('aow-intentions').value.trim()||null,
-      tient_a_coeur:document.getElementById('aow-coeur').checked,
-      genre:document.getElementById('aow-genre').value.trim()||null,
-      sous_genre:document.getElementById('aow-sous-genre').value.trim()||null,
-      tonalite:document.getElementById('aow-tonalite').value.trim()||null,
-      temporalite:document.getElementById('aow-temporalite').value.trim()||null,
-      lieu_principal:document.getElementById('aow-lieu').value.trim()||null,
-      public_cible:document.getElementById('aow-public').value||null,
-      tropes:tropesRaw?tropesRaw.split(',').map(x=>x.trim()).filter(Boolean):null,
-      enjeu_principal:document.getElementById('aow-enjeu').value.trim()||null,
-      enjeux_secondaires:enjeuxRaw?enjeuxRaw.split('\n').map(x=>x.trim()).filter(Boolean):null,
-      statut:document.getElementById('aow-statut').value,
-      objectif_mots:document.getElementById('aow-objectif').value?Number(document.getElementById('aow-objectif').value):null,
-      code_session:document.getElementById('aow-code-session').value.trim()||null,
-      atelier_project_id:document.getElementById('aow-code-session').value.trim()||null,
-      destination_editoriale:document.getElementById('aow-destination').value||null,
-      niveau_editorial_cible:document.getElementById('aow-cible').value||null,
-      statut_editorial_actuel:newEditorial,
-      horizon_annee:document.getElementById('aow-horizon').value?Number(document.getElementById('aow-horizon').value):null,
-      publication_envisagee:document.getElementById('aow-publication').value.trim()||null,
-      notes_editoriales:document.getElementById('aow-notes-editoriales').value.trim()||null,
-      couverture:document.getElementById('aow-couverture').value.trim()||null,
-      ...graphicOverridePayloadV576c13('aow'),
-      banniere:document.getElementById('aow-banniere')?.value.trim()||null,
-      module_lore:document.getElementById('aow-module-lore').checked,
-      module_chronologie:document.getElementById('aow-module-chrono').checked,
-      archive:document.getElementById('aow-archive').checked,
-      updated_at:new Date().toISOString()
+    const val=(id, fallback='')=>{
+      const el=document.getElementById(id);
+      if(!el) return fallback;
+      return typeof el.value==='string' ? el.value : fallback;
     };
-    // V22 — ŒUVRE n'a pas la colonne legacy page_color.
-    // Le fond canonique d'une œuvre est soft_color. Ne jamais envoyer page_color
-    // dans un UPDATE de passerelle.oeuvres, sinon Supabase rejette TOUT le payload.
-    delete payload.page_color;
-    // V23 — lecture de la ligne réelle avant sauvegarde.
-    // On filtre le payload sur les colonnes effectivement exposées par Supabase.
-    // Ainsi une ancienne installation qui n'a pas encore une colonne optionnelle
-    // ne peut plus faire échouer TOUT l'enregistrement de l'œuvre.
-    const {data:old,error:readError}=await db().from('oeuvres').select('*').eq('id',adminEditingOeuvreId).single();
-    if(readError){
-      if(status) status.textContent='Erreur lecture : '+readError.message;
-      showSaveToastV20('⚠ Impossible de lire l’œuvre : '+readError.message,'error');
-      return;
-    }
-    if((old?.statut_editorial_actuel||null)!==newEditorial) payload.date_dernier_changement_editorial=new Date().toISOString();
+    const checked=(id)=>!!document.getElementById(id)?.checked;
 
-    const allowedKeys=new Set(Object.keys(old||{}));
-    const safePayload=Object.fromEntries(Object.entries(payload).filter(([key])=>allowedKeys.has(key)));
-    // Sécurité supplémentaire : page_color n'est jamais canonique pour Œuvre.
-    delete safePayload.page_color;
+    // Feedback immédiat, avant toute lecture de formulaire.
+    showSaveToastV20('⏳ Enregistrement de l’œuvre…');
+    if(status) status.textContent='Enregistrement…';
 
-    const {data:savedWork,error}=await db().from('oeuvres')
-      .update(safePayload)
-      .eq('id',adminEditingOeuvreId)
-      .select('*')
-      .single();
-    if(error){
-      console.error('V23 sauvegarde œuvre', {error, payload:safePayload, oeuvre_id:adminEditingOeuvreId});
-      if(status) status.textContent='Erreur : '+error.message;
-      showSaveToastV20('⚠ Enregistrement impossible : '+error.message,'error');
-      return;
-    }
+    try{
+      if(!adminEditingOeuvreId) throw new Error("Aucune œuvre active : identifiant introuvable.");
 
-    // Les relations secondaires sont volontairement APRÈS la fiche canonique.
-    if(sagaId){
-      const {error:sagaCollectionError}=await db().from('sagas').update({univers_id:selectedCollectionId}).eq('id',sagaId);
-      if(sagaCollectionError){
-        console.warn('Collection de saga non mise à jour',sagaCollectionError);
-        showSaveToastV20('✓ Œuvre enregistrée · ⚠ rattachement collection à revoir');
+      const sagaId=val('aow-saga').trim()||null;
+      const selectedCollectionId=val('aow-collection').trim()||null;
+      const selectedCoverMediaId=val('aow-cover-media-id').trim()||null;
+      const tropesRaw=val('aow-tropes').trim();
+      const enjeuxRaw=val('aow-enjeux').trim();
+      const newEditorial=val('aow-editorial').trim()||null;
+      const horizonRaw=val('aow-horizon').trim();
+      const objectifRaw=val('aow-objectif').trim();
+      const codeSession=val('aow-code-session').trim()||null;
+
+      // Payload métier. Les champs absents de cette version de la fiche ne font
+      // plus planter le clic : les helpers val()/checked() sont tolérants.
+      const payload={
+        titre:val('aow-titre').trim()||'Sans titre',
+        sous_titre:val('aow-sous-titre').trim()||null,
+        format_cible:val('aow-format').trim()||null,
+        univers_id:sagaId?null:selectedCollectionId,
+        saga_id:sagaId,
+        sous_saga_id:sagaId?(val('aow-sous-saga').trim()||null):null,
+        langue:val('aow-langue','Français').trim()||'Français',
+        pitch:val('aow-pitch').trim()||null,
+        resume:val('aow-resume').trim()||null,
+        a_propos:val('aow-a-propos').trim()||null,
+        intentions:val('aow-intentions').trim()||null,
+        tient_a_coeur:checked('aow-coeur'),
+        genre:val('aow-genre').trim()||null,
+        sous_genre:val('aow-sous-genre').trim()||null,
+        tonalite:val('aow-tonalite').trim()||null,
+        temporalite:val('aow-temporalite').trim()||null,
+        lieu_principal:val('aow-lieu').trim()||null,
+        public_cible:val('aow-public').trim()||null,
+        tropes:tropesRaw?tropesRaw.split(',').map(x=>x.trim()).filter(Boolean):null,
+        enjeu_principal:val('aow-enjeu').trim()||null,
+        enjeux_secondaires:enjeuxRaw?enjeuxRaw.split('\n').map(x=>x.trim()).filter(Boolean):null,
+        statut:val('aow-statut').trim()||null,
+        objectif_mots:objectifRaw?Number(objectifRaw):null,
+        code_session:codeSession,
+        atelier_project_id:codeSession,
+        destination_editoriale:val('aow-destination').trim()||null,
+        niveau_editorial_cible:val('aow-cible').trim()||null,
+        statut_editorial_actuel:newEditorial,
+        horizon_annee:horizonRaw?Number(horizonRaw):null,
+        publication_envisagee:val('aow-publication').trim()||null,
+        notes_editoriales:val('aow-notes-editoriales').trim()||null,
+        couverture:val('aow-couverture').trim()||null,
+        banniere:val('aow-banniere').trim()||null,
+        module_lore:checked('aow-module-lore'),
+        module_chronologie:checked('aow-module-chrono'),
+        archive:checked('aow-archive'),
+        updated_at:new Date().toISOString()
+      };
+
+      // La charte a son bouton dédié et validé. Le bouton général ne touche plus
+      // aux couleurs : une sauvegarde métier ne peut donc plus être bloquée par
+      // le sous-système graphique.
+      const {data:old,error:readError}=await db().from('oeuvres')
+        .select('*').eq('id',adminEditingOeuvreId).single();
+      if(readError) throw readError;
+
+      if((old?.statut_editorial_actuel||null)!==newEditorial){
+        payload.date_dernier_changement_editorial=new Date().toISOString();
       }
+
+      // On n'envoie que les colonnes réellement présentes dans la ligne Supabase.
+      const allowedKeys=new Set(Object.keys(old||{}));
+      const safePayload=Object.fromEntries(
+        Object.entries(payload).filter(([key])=>allowedKeys.has(key))
+      );
+
+      const {data:savedWork,error}=await db().from('oeuvres')
+        .update(safePayload)
+        .eq('id',adminEditingOeuvreId)
+        .select('*')
+        .single();
+      if(error) throw error;
+
+      // Vérification minimale réelle : le titre renvoyé doit correspondre au titre envoyé.
+      if(savedWork && safePayload.titre !== undefined && savedWork.titre !== safePayload.titre){
+        throw new Error("Supabase n’a pas renvoyé la valeur enregistrée attendue.");
+      }
+
+      // Les écritures secondaires ne peuvent plus annuler la sauvegarde canonique.
+      try{
+        if(sagaId){
+          const {error:sagaCollectionError}=await db().from('sagas')
+            .update({univers_id:selectedCollectionId}).eq('id',sagaId);
+          if(sagaCollectionError) console.warn('Collection de saga non mise à jour',sagaCollectionError);
+        }
+
+        const delMeta=await db().from('oeuvre_metadonnees').delete()
+          .eq('oeuvre_id',adminEditingOeuvreId);
+        if(delMeta.error) console.warn('Métadonnées : suppression',delMeta.error);
+
+        const metaIds=[...document.querySelectorAll('.aow-meta-check:checked')].map(x=>x.value);
+        if(metaIds.length){
+          const mr=await db().from('oeuvre_metadonnees')
+            .insert(metaIds.map(metadata_id=>({oeuvre_id:adminEditingOeuvreId,metadata_id})));
+          if(mr.error) console.warn('Métadonnées : insertion',mr.error);
+        }
+
+        const resetCover=await db().from('medias')
+          .update({est_couverture_actuelle:false})
+          .eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
+        if(!resetCover.error && selectedCoverMediaId){
+          const coverRes=await db().from('medias')
+            .update({est_couverture_actuelle:true}).eq('id',selectedCoverMediaId);
+          if(coverRes.error) console.warn('Couverture actuelle',coverRes.error);
+        }
+      }catch(secondaryError){
+        console.warn('V24 écritures secondaires',secondaryError);
+      }
+
+      if(status) status.textContent='✓ Enregistré';
+      showSaveToastV20('✓ Œuvre enregistrée');
+      console.info('V24 œuvre enregistrée', {
+        oeuvre_id:adminEditingOeuvreId,
+        sent:safePayload,
+        returned:savedWork
+      });
+
+      // On ne recharge plus immédiatement tout l'éditeur : cela évite l'effet
+      // "le clic n'a rien fait" et laisse le feedback visible.
+      setTimeout(()=>{ if(status) status.textContent=''; },3000);
+
+    }catch(error){
+      console.error('V24 sauvegarde générale œuvre',error);
+      const message=error?.message||String(error);
+      if(status) status.textContent='Erreur : '+message;
+      showSaveToastV20('⚠ Œuvre non enregistrée : '+message,'error');
     }
-    await db().from('oeuvre_metadonnees').delete().eq('oeuvre_id',adminEditingOeuvreId);
-    const metaIds=[...document.querySelectorAll('.aow-meta-check:checked')].map(x=>x.value);
-    if(metaIds.length){ const mr=await db().from('oeuvre_metadonnees').insert(metaIds.map(metadata_id=>({oeuvre_id:adminEditingOeuvreId,metadata_id}))); if(mr.error){ console.warn('Métadonnées œuvre non enregistrées',mr.error); showSaveToastV20('✓ Œuvre enregistrée · ⚠ métadonnées à revoir'); } }
-    const resetCover=await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
-    if(!resetCover.error && selectedCoverMediaId) await db().from('medias').update({est_couverture_actuelle:true}).eq('id',selectedCoverMediaId);
-    if(status) status.textContent='✓ Enregistré';
-    showSaveToastV20('✓ Œuvre enregistrée');
-    setTimeout(()=>{ if(status) status.textContent=''; },2200);
-    await openAdminOeuvreEditor(adminEditingOeuvreId);
   }
 
   function filterAdminWorksStatus(v){ document.querySelectorAll('#admin-works-grid .admin-catalog-card').forEach(c=>c.style.display=!v||c.dataset.status===v?'':'none'); }
