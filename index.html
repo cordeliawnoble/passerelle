@@ -4713,7 +4713,7 @@
         <h2>Apparence</h2>
         ${graphicOverrideEditorV576c13('op',o,await inheritedThemeForEditorV576c13('work',o))}
         <div id="op-appearance-status" class="status-line" style="margin-top:10px"></div>
-        <button class="btn-primary" style="margin-top:16px;" onclick="saveOeuvreApparence()">Enregistrer l’apparence</button>
+        <button class="btn-primary" id="op-save-appearance" type="button" style="margin-top:16px;">Enregistrer l’apparence</button>
       </div>
       <div class="panel">
         <h2>Statuts de chapitres personnalisés</h2>
@@ -4730,6 +4730,14 @@
         <button class="btn-secondary" onclick="toggleArchiveOeuvre(${o.archive})">${o.archive ? 'Désarchiver' : 'Archiver cette œuvre'}</button>
       </div>
     `;
+    const saveAppearanceBtn=document.getElementById('op-save-appearance');
+    if(saveAppearanceBtn){
+      saveAppearanceBtn.addEventListener('click', async (event)=>{
+        event.preventDefault();
+        event.stopPropagation();
+        await saveOeuvreApparence();
+      });
+    }
   }
   async function addStatutChapitre(){
     const nom = prompt('Nom du statut (ex : Bloqué) ?');
@@ -4814,6 +4822,8 @@
       else alert('Erreur : '+(error?.message||String(error)));
     }
   }
+  window.saveOeuvreApparence = saveOeuvreApparence;
+
   async function toggleArchiveOeuvre(currentlyArchived){
     const { error } = await db().from('oeuvres').update({ archive: !currentlyArchived }).eq('id', currentOeuvreId);
     if (error) { alert('Erreur : ' + error.message); return; }
