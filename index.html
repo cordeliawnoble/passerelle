@@ -1505,6 +1505,10 @@
       archive:document.getElementById('aow-archive').checked,
       updated_at:new Date().toISOString()
     };
+    // V22 — ŒUVRE n'a pas la colonne legacy page_color.
+    // Le fond canonique d'une œuvre est soft_color. Ne jamais envoyer page_color
+    // dans un UPDATE de passerelle.oeuvres, sinon Supabase rejette TOUT le payload.
+    delete payload.page_color;
     const {data:old}=await db().from('oeuvres').select('statut_editorial_actuel').eq('id',adminEditingOeuvreId).single();
     if((old?.statut_editorial_actuel||null)!==newEditorial) payload.date_dernier_changement_editorial=new Date().toISOString();
     if(sagaId){
@@ -4776,12 +4780,26 @@
     if(!currentOeuvreId){if(st)st.textContent='Erreur : œuvre introuvable.';return;}
     try{
       if(st)st.textContent='Enregistrement…';
-      // V21 : exactement le même mécanisme que Saga, qui est validé fonctionnellement.
-      await persistGraphicOverrideV576c15('oeuvres',currentOeuvreId,'op','work');
+      // V22 — sauvegarde dédiée aux œuvres.
+      // Contrairement à Saga/Sous-saga, passerelle.oeuvres n'a pas de page_color.
+      // soft_color est le fond canonique de la page Œuvre.
+      const payload=graphicOverridePayloadV576c13('op');
+      delete payload.page_color;
+      const {data,error}=await db().from('oeuvres')
+        .update(payload)
+        .eq('id',currentOeuvreId)
+        .select('id,accent_color,secondary_color,soft_color,dark_color,charte_override')
+        .single();
+      if(error) throw error;
+      applyObjectTheme(data?.soft_color||globalAppearance.themeColor,data?.accent_color||globalAppearance.accent);
       if(st)st.textContent='✓ Apparence enregistrée';
       showSaveToastV20('✓ Apparence de l’œuvre enregistrée');
       await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
-    }catch(error){console.error('Sauvegarde apparence œuvre',error);if(st)st.textContent='Erreur : '+(error?.message||String(error));showSaveToastV20('⚠ Apparence non enregistrée : '+(error?.message||String(error)),'error');}
+    }catch(error){
+      console.error('Sauvegarde apparence œuvre',error);
+      if(st)st.textContent='Erreur : '+(error?.message||String(error));
+      showSaveToastV20('⚠ Apparence non enregistrée : '+(error?.message||String(error)),'error');
+    }
   }
   window.saveOeuvreApparence = saveOeuvreApparence;
 
