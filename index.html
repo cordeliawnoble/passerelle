@@ -918,6 +918,25 @@
   .codex-category-chip{display:inline-flex;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);font-size:10px;margin:2px 4px 2px 0}
   @media(max-width:760px){.codex-import-row{grid-template-columns:1fr}}
 
+
+  /* ---- C39b · Archivage / suppression des fiches Codex ---- */
+  .codex-toolbar-v39b{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+  .codex-card-shell-v39b{position:relative}
+  .codex-card-actions-v39b{position:absolute;top:8px;right:8px;z-index:4;display:flex;gap:5px}
+  .codex-card-action-v39b{
+    border:1px solid color-mix(in srgb,var(--line) 75%,transparent);
+    background:color-mix(in srgb,var(--card) 92%,transparent);
+    color:var(--text);
+    border-radius:8px;
+    min-width:30px;height:30px;padding:0 8px;cursor:pointer;
+    display:grid;place-items:center;font-size:12px;
+    backdrop-filter:blur(7px)
+  }
+  .codex-card-action-v39b:hover{border-color:var(--accent);color:var(--accent)}
+  .codex-card-action-v39b.danger:hover{border-color:#b4465a;color:#b4465a}
+  .codex-card-shell-v39b.archived{opacity:.72;filter:saturate(.72)}
+  .codex-archive-note-v39b{font-size:11px;color:var(--text-dim);margin-left:auto}
+
 </style>
 </head>
 <body>
@@ -3541,11 +3560,84 @@
     }
   }
 
+
+  // ============================================================
+  // C39b — ARCHIVER / RESTAURER / SUPPRIMER UNE FICHE CODEX
+  // Le champ `archive` appartient à codex_pages.
+  // ============================================================
+  const codexArchiveViewV39b={saga:false,'sous-saga':false};
+
+  function codexPageIsArchivedV39b(p){ return p?.archive===true; }
+
+  function codexCardV39b(p,ctx,pageColor){
+    const archived=codexPageIsArchivedV39b(p);
+    const opener=ctx==='saga' ? `openSagaCodexPageV56('${p.id}')` : `openCodexPage('${p.id}')`;
+    const toggle=`toggleCodexArchiveV39b('${p.id}',${archived?'false':'true'},'${ctx}')`;
+    const del=`deleteCodexPageV39b('${p.id}','${ctx}')`;
+    return `<div class="codex-card-shell-v39b ${archived?'archived':''}">
+      ${entityGalleryCard({
+        title:p.titre,
+        image:p.banniere,
+        pageColor:p.page_color||pageColor,
+        tags:[...codexCategoryTagsV39(p.categorie),...(archived?['Archivée']:[])],
+        top:'Codex',
+        onclick:opener
+      })}
+      <div class="codex-card-actions-v39b" onclick="event.stopPropagation()">
+        <button class="codex-card-action-v39b" title="${archived?'Restaurer':'Archiver'}" onclick="event.stopPropagation();${toggle}">${archived?'↩':'📦'}</button>
+        <button class="codex-card-action-v39b danger" title="Supprimer définitivement" onclick="event.stopPropagation();${del}">🗑</button>
+      </div>
+    </div>`;
+  }
+
+  async function toggleCodexArchiveV39b(id,on,ctx){
+    const {error}=await db().from('codex_pages').update({archive:!!on,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){
+      if(String(error.message||'').toLowerCase().includes('archive')){
+        alert("Le champ d'archivage du Codex n'existe pas encore dans Supabase. Exécute d'abord la migration SQL C39b.");
+      }else alert(error.message);
+      return;
+    }
+    if(ctx==='saga') await renderSagaCodexV56(document.getElementById('saga-tab-content'));
+    else await renderSousSagaCodex(document.getElementById('soussaga-tab-content'));
+  }
+
+  async function deleteCodexPageV39b(id,ctx){
+    const {data:p,error:pe}=await db().from('codex_pages').select('titre').eq('id',id).single();
+    if(pe)return alert(pe.message);
+    const ok=confirm(`Supprimer définitivement « ${p?.titre||'cette fiche'} » ?\n\nSes blocs Codex seront également supprimés. Cette action est irréversible.\n\nPour simplement la retirer du catalogue actif, utilise Archiver.`);
+    if(!ok)return;
+    const br=await db().from('codex_blocks').delete().eq('page_id',id);
+    if(br.error)return alert("Impossible de supprimer les blocs : "+br.error.message);
+    const pr=await db().from('codex_pages').delete().eq('id',id);
+    if(pr.error)return alert("Impossible de supprimer la fiche : "+pr.error.message);
+    if(ctx==='saga') await renderSagaCodexV56(document.getElementById('saga-tab-content'));
+    else await renderSousSagaCodex(document.getElementById('soussaga-tab-content'));
+  }
+
+  function toggleCodexArchiveViewV39b(ctx){
+    codexArchiveViewV39b[ctx]=!codexArchiveViewV39b[ctx];
+    if(ctx==='saga') renderSagaCodexV56(document.getElementById('saga-tab-content'));
+    else renderSousSagaCodex(document.getElementById('soussaga-tab-content'));
+  }
+
   async function renderSagaCodexV56(zone){
-    const [pagesR,sagaR]=await Promise.all([db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre'),db().from('sagas').select('page_color,accent_color').eq('id',currentSagaId).single()]);
-    if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
-    const saga=sagaR.data||{};
-    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les catégories sont des balises propres à ce Codex, jamais une liste globale imposée.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div></div><div id="codex-import-zone-v39"></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||saga.page_color,tags:codexCategoryTagsV39(p.categorie),top:'Codex',onclick:`openSagaCodexPageV56('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+    const [pagesR,sagaR]=await Promise.all([
+      db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre'),
+      db().from('sagas').select('page_color,accent_color').eq('id',currentSagaId).single()
+    ]);
+    if(pagesR.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(pagesR.error.message)}</div>`;return}
+    const saga=sagaR.data||{},all=pagesR.data||[];
+    const archived=all.filter(codexPageIsArchivedV39b),active=all.filter(p=>!codexPageIsArchivedV39b(p));
+    const showArchives=codexArchiveViewV39b.saga,shown=showArchives?archived:active;
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les catégories sont des balises propres à ce Codex, jamais une liste globale imposée.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div></div>
+      <div id="codex-import-zone-v39"></div>
+      <div class="codex-toolbar-v39b">
+        <button class="${showArchives?'btn-secondary':'btn-primary'}" onclick="if(codexArchiveViewV39b.saga){toggleCodexArchiveViewV39b('saga')}">Fiches actives · ${active.length}</button>
+        <button class="${showArchives?'btn-primary':'btn-secondary'}" onclick="if(!codexArchiveViewV39b.saga){toggleCodexArchiveViewV39b('saga')}">📦 Archives · ${archived.length}</button>
+        <span class="codex-archive-note-v39b">${showArchives?'Les fiches archivées restent conservées et peuvent être restaurées.':'Archiver masque une fiche sans la supprimer.'}</span>
+      </div>
+      <div class="entity-gallery">${shown.map(p=>codexCardV39b(p,'saga',saga.page_color)).join('')||`<div class="empty">${showArchives?'Aucune fiche Codex archivée.':'Le Codex attend sa première page.'}</div>`}</div>`;
   }
   async function createSagaCodexPageV56(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,saga_id:currentSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openSagaCodexPageEditV570(data.id)}
   async function openSagaCodexPageV56(id){return openSagaCodexPageReadV570(id)}
@@ -4057,10 +4149,22 @@
   async function deleteSsSegment(id){if(!confirm('Supprimer ce segment du plan global ?'))return;await db().from('sous_saga_segments').delete().eq('id',id);renderSousSagaPlanGlobal(document.getElementById('soussaga-tab-content'))}
 
   async function renderSousSagaCodex(zone){
-    const [pagesR,ssR]=await Promise.all([db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre'),db().from('sous_sagas').select('page_color,accent_color').eq('id',currentSousSagaId).single()]);
-    if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
-    const ss=ssR.data||{};
-    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Les catégories sont des balises propres à ce Codex.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('sous-saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div></div><div id="codex-import-zone-v39"></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||ss.page_color,tags:codexCategoryTagsV39(p.categorie),top:'Codex',onclick:`openCodexPage('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+    const [pagesR,ssR]=await Promise.all([
+      db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre'),
+      db().from('sous_sagas').select('page_color,accent_color').eq('id',currentSousSagaId).single()
+    ]);
+    if(pagesR.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(pagesR.error.message)}</div>`;return}
+    const ss=ssR.data||{},all=pagesR.data||[];
+    const archived=all.filter(codexPageIsArchivedV39b),active=all.filter(p=>!codexPageIsArchivedV39b(p));
+    const showArchives=codexArchiveViewV39b['sous-saga'],shown=showArchives?archived:active;
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Les catégories sont des balises propres à ce Codex.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('sous-saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div></div>
+      <div id="codex-import-zone-v39"></div>
+      <div class="codex-toolbar-v39b">
+        <button class="${showArchives?'btn-secondary':'btn-primary'}" onclick="if(codexArchiveViewV39b['sous-saga']){toggleCodexArchiveViewV39b('sous-saga')}">Fiches actives · ${active.length}</button>
+        <button class="${showArchives?'btn-primary':'btn-secondary'}" onclick="if(!codexArchiveViewV39b['sous-saga']){toggleCodexArchiveViewV39b('sous-saga')}">📦 Archives · ${archived.length}</button>
+        <span class="codex-archive-note-v39b">${showArchives?'Les fiches archivées restent conservées et peuvent être restaurées.':'Archiver masque une fiche sans la supprimer.'}</span>
+      </div>
+      <div class="entity-gallery">${shown.map(p=>codexCardV39b(p,'sous-saga',ss.page_color)).join('')||`<div class="empty">${showArchives?'Aucune fiche Codex archivée.':'Le Codex attend sa première page.'}</div>`}</div>`;
   }
   async function createCodexPage(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openSousSagaCodexPageEditV570(data.id)}
   async function openCodexPage(id){return openSousSagaCodexPageReadV570(id)}
