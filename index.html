@@ -856,6 +856,39 @@
   .home-c38-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.home-c38-action{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--card);cursor:pointer;font-size:12px}.home-c38-action:hover{border-color:var(--accent)}
   @media(max-width:800px){.saga-info-c38{grid-template-columns:1fr}.entity-gallery.work-grid-compact-c38{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}.home-c38-actions{grid-template-columns:1fr}}
 
+
+
+  /* ============================================================
+     C38 · ACCUEIL conforme au mockup
+     Planning vertical + 4 KPI + Horizon généreux et canonique
+     ============================================================ */
+  .home-planning-panel-v38{padding-bottom:12px}
+  .home-week-head-v38{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-2px 0 8px;color:var(--text-dim);font-size:9px}
+  .home-week-list-v38{border-top:1px solid var(--line)}
+  .home-week-row-v38{display:grid;grid-template-columns:58px minmax(0,1fr) 46px;gap:9px;align-items:center;min-height:31px;padding:4px 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent);cursor:pointer;border-radius:7px}
+  .home-week-row-v38:hover{background:color-mix(in srgb,var(--accent) 5%,var(--card))}.home-week-row-v38.today{background:color-mix(in srgb,var(--accent) 7%,var(--card))}
+  .home-week-date-v38{display:flex;flex-direction:column;line-height:1.05}.home-week-date-v38 strong{font-size:9px;color:var(--text)}.home-week-date-v38 span{font-size:8px;color:var(--text-dim);margin-top:2px}
+  .home-week-session-v38{display:grid;grid-template-columns:10px minmax(0,1fr);gap:6px;align-items:center;min-width:0;font-size:9px}.home-week-session-v38 i{width:9px;height:9px;border-radius:50%;background:var(--session-color,var(--accent));box-shadow:0 0 0 1px color-mix(in srgb,var(--session-color,var(--accent)) 28%,transparent)}.home-week-session-v38 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.home-week-session-v38 b{font-weight:700;margin-right:4px;color:var(--session-color,var(--accent))}.home-week-session-v38.is-free{color:var(--text-dim)}.home-week-session-v38.is-free i{background:transparent;border:1.5px solid var(--lavender)}
+  .home-week-duration-v38{text-align:right;font-size:9px;font-weight:700;color:var(--text-dim);white-space:nowrap}
+
+  .home-kpis-v38{grid-template-columns:repeat(4,minmax(0,1fr))!important}.home-kpis-v38 .home-c36-kpi{min-height:62px}.home-c36-quote{display:none!important}
+
+  .home-horizon-v38{border:1px solid var(--line);border-radius:17px;background:var(--card);padding:18px;margin-top:14px;min-height:300px}
+  .home-horizon-head-v38{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:15px;padding-bottom:12px;border-bottom:1px solid color-mix(in srgb,var(--line) 76%,transparent)}
+  .home-horizon-title-v38{display:flex;gap:11px;align-items:center}.home-horizon-icon-v38{font-size:28px;line-height:1}.home-horizon-title-v38 h2{margin:0;color:var(--accent);font-size:20px}.home-horizon-title-v38 small{display:block;color:var(--text-dim);font-size:10px;margin-top:2px}
+  .home-horizon-tools-v38{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}.home-horizon-count-v38{font-size:10px;color:var(--text-dim);white-space:nowrap}.home-horizon-count-v38 strong{color:var(--text);font-size:12px}
+  .home-horizon-select{height:34px;padding:6px 28px 6px 9px!important;font-size:11px;width:auto!important;min-width:92px}
+  .home-horizon-cards-v38{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .home-horizon-card-v38{display:grid;grid-template-columns:112px minmax(0,1fr);gap:13px;min-height:184px;border:1px solid var(--line);border-radius:13px;background:var(--card);padding:9px;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;overflow:hidden}.home-horizon-card-v38:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 10px 24px rgba(35,24,60,.07)}
+  .home-horizon-cover-v38{width:112px;height:168px;border-radius:9px;overflow:hidden;background:var(--bg-2);border:1px solid color-mix(in srgb,var(--line) 80%,transparent);align-self:center}.home-horizon-cover-v38 img{width:100%;height:100%;object-fit:cover;display:block}.home-horizon-cover-empty-v38{width:100%;height:100%;display:grid;place-items:center;color:var(--accent);font:700 22px 'Cormorant Garamond',serif}
+  .home-horizon-copy-v38{min-width:0;padding:5px 2px 4px;display:flex;flex-direction:column;align-items:flex-start}.home-horizon-context-v38{display:flex;gap:4px;flex-wrap:wrap;min-height:21px;margin-bottom:7px}.home-horizon-context-v38 span{font-size:8px;padding:3px 6px;border-radius:999px;background:color-mix(in srgb,var(--accent) 10%,var(--bg-2));color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 12%,var(--line))}
+  .home-horizon-copy-v38 h3{font:700 14px/1.25 'Cormorant Garamond',serif;margin:0 0 9px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .home-editorial-pill-v38{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:8px;font-weight:700;margin-bottom:auto;border:1px solid transparent}.home-editorial-pill-v38.is-v1-current{background:#EEE6FA;color:#6747A1;border-color:#DCCCF3}.home-editorial-pill-v38.is-v1-next{background:#F3EFF9;color:#756685;border-color:#E4DCEC}.home-editorial-pill-v38.is-v1-done{background:#E7F4EC;color:#3E7656;border-color:#CFE7D8}.home-editorial-pill-v38.is-v15-current{background:#E6F0FA;color:#396B96;border-color:#C9DFF0}.home-editorial-pill-v38.is-v15-next{background:#EFF5FA;color:#5D748A;border-color:#DCE8F1}.home-editorial-pill-v38.is-v15-done{background:#E4F4F0;color:#337568;border-color:#C9E7DF}.home-editorial-pill-v38.is-v2-current{background:#F8E8EF;color:#964F6B;border-color:#ECCEDD}.home-editorial-pill-v38.is-v2-next{background:#FAF0F4;color:#896373;border-color:#EDDDE4}.home-editorial-pill-v38.is-v2-done{background:#F4E9D9;color:#7A5D31;border-color:#E9D6B8}.home-editorial-pill-v38.is-neutral{background:var(--bg-2);color:var(--text-dim);border-color:var(--line)}
+  .home-horizon-publication-v38{margin-top:13px;padding-top:9px;border-top:1px solid var(--line);width:100%}.home-horizon-publication-v38 span{display:block;font-size:8px;color:var(--text-dim);line-height:1.2}.home-horizon-publication-v38 strong{display:block;font-size:10px;margin-top:3px;color:var(--text)}
+  @media(max-width:1180px){.home-horizon-cards-v38{grid-template-columns:repeat(2,minmax(0,1fr))}.home-horizon-card-v38{grid-template-columns:120px 1fr}.home-horizon-cover-v38{width:120px;height:180px}}
+  @media(max-width:760px){.home-kpis-v38{grid-template-columns:repeat(2,minmax(0,1fr))!important}.home-horizon-head-v38{align-items:flex-start;flex-direction:column}.home-horizon-tools-v38{justify-content:flex-start}.home-horizon-card-v38{grid-template-columns:96px 1fr;min-height:156px}.home-horizon-cover-v38{width:96px;height:144px}}
+  @media(max-width:520px){.home-horizon-cards-v38{grid-template-columns:1fr}.home-week-row-v38{grid-template-columns:52px minmax(0,1fr) 38px}}
+
 </style>
 </head>
 <body>
@@ -2527,6 +2560,45 @@
   function setHomeHorizonYearV576c36(y){homeHorizonYearV576c36=Number(y)||new Date().getFullYear();renderAccueil()}
   function moveHomeWeekV576(dir){const base=homePlanningCursorV576||new Date();homePlanningCursorV576=new Date(base);homePlanningCursorV576.setDate(homePlanningCursorV576.getDate()+dir*7);renderAccueil()}
   function resetHomeWeekV576(){homePlanningCursorV576=null;renderAccueil()}
+  function homeEditorialStatusClassV38(status){
+    const v=String(status||'').toLowerCase();
+    if(v.includes('v2') && v.includes('termin')) return 'is-v2-done';
+    if(v.includes('v2') && v.includes('cours')) return 'is-v2-current';
+    if(v.includes('v2')) return 'is-v2-next';
+    if(v.includes('v1.5') && v.includes('termin')) return 'is-v15-done';
+    if(v.includes('v1.5') && v.includes('cours')) return 'is-v15-current';
+    if(v.includes('v1.5')) return 'is-v15-next';
+    if(v.includes('v1') && v.includes('termin')) return 'is-v1-done';
+    if(v.includes('v1') && v.includes('cours')) return 'is-v1-current';
+    if(v.includes('v1')) return 'is-v1-next';
+    return 'is-neutral';
+  }
+  function formatHomePublicationV38(value){
+    if(!value) return '';
+    const raw=String(value).trim();
+    const m=raw.match(/^(\d{4})-(\d{2})(?:-\d{2})?/);
+    if(!m) return raw;
+    const d=new Date(Number(m[1]),Number(m[2])-1,1);
+    return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,x=>x.toUpperCase());
+  }
+  function homeSessionDurationV38(s){
+    const mins=Number(s?.duree_minutes ?? s?.duration_minutes ?? s?.duree ?? 0);
+    if(Number.isFinite(mins) && mins>0){
+      const h=Math.floor(mins/60),m=mins%60;
+      return h ? `${h}h${m?String(m).padStart(2,'0'):''}` : `${m} min`;
+    }
+    const explicit=s?.duree_affichee || s?.duration_label || s?.heure_duree;
+    return explicit ? String(explicit) : '';
+  }
+  function horizonContextChipsV38(o){
+    const chips=[];
+    if(o.univers?.nom) chips.push(o.univers.nom);
+    else if(o.sagas?.nom) chips.push(o.sagas.nom);
+    if(o.sous_sagas?.nom) chips.push(o.sous_sagas.nom);
+    if(o.numero_sous_saga!=null && o.numero_sous_saga!=='') chips.push(`T${o.numero_sous_saga}`);
+    return [...new Set(chips.filter(Boolean))].slice(0,3);
+  }
+
   async function renderAccueil(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
@@ -2539,7 +2611,7 @@
 
     // horizon_annee est ajouté par la migration Back-office V1. Si elle n'est pas encore
     // installée, l'accueil reste utilisable et affiche simplement une invitation à la configurer.
-    const horizonQuery = await db().from('oeuvres').select('id,titre,statut,statut_editorial_actuel,date_publication_prevue,couverture,horizon_annee').eq('archive',false).eq('horizon_annee',homeHorizonYearV576c36).order('titre',{ascending:true}).limit(8);
+    const horizonQuery = await db().from('oeuvres').select('id,titre,statut,statut_editorial_actuel,date_publication_prevue,couverture,horizon_annee,univers_id,saga_id,sous_saga_id,numero_sous_saga,nature_sous_saga,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',false).eq('horizon_annee',homeHorizonYearV576c36).order('titre',{ascending:true}).limit(12);
 
     const [
       enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle, homeQuickLinks
@@ -2559,7 +2631,7 @@
 
     const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
     const [homePlanning, homeRelectures] = await Promise.all([
-      db().from('planning_sessions').select('id,oeuvre_id,chapitre_id,type_session,titre,date,couleur,statut').gte('date',homeWeekStart).lte('date',homeWeekEnd).neq('statut','annulée').order('date',{ascending:true}),
+      db().from('planning_sessions').select('*').gte('date',homeWeekStart).lte('date',homeWeekEnd).neq('statut','annulée').order('date',{ascending:true}),
       db().from('relectures').select('id,oeuvre_id,statut,date_debut,date_fin_prevue').is('date_terminee',null).limit(3),
     ]);
     const relectureIds=[...new Set((homeRelectures.data||[]).map(r=>r.oeuvre_id).filter(Boolean))];
@@ -2581,13 +2653,34 @@
     const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
     const writingCards=(enBureau.data||[]).slice(0,3).map(o=>{const pct=o.objectif_mots?Math.min(100,Math.round((o.mots_ecrits||0)/o.objectif_mots*100)):0;return `<article class="home-writing-card" onclick="openOeuvreDetail('${o.id}')"><div class="home-writing-cover">${o.couverture?`<img src="${safeText(o.couverture)}">`:''}</div><div class="home-writing-body"><div class="home-writing-title">${safeText(o.titre)}</div><div class="home-writing-progress"><i style="width:${pct}%"></i></div><div class="home-writing-meta"><span>${safeText(o.statut_editorial_actuel||o.statut||'En écriture')}</span><b>${pct}%</b></div></div></article>`}).join('');
-    const horizonYears=[...new Set([now.getFullYear(),now.getFullYear()+1,homeHorizonYearV576c36])].sort();
+    const horizonYears=[...new Set([now.getFullYear(),now.getFullYear()+1,homeHorizonYearV576c36,...(horizonQuery.data||[]).map(o=>Number(o.horizon_annee)).filter(Boolean)])].sort((a,b)=>a-b);
+    const horizonCards=(horizonQuery.data||[]).map(o=>{
+      const status=o.statut_editorial_actuel||o.statut||'Projet';
+      const chips=horizonContextChipsV38(o);
+      const pub=formatHomePublicationV38(o.date_publication_prevue);
+      return `<article class="home-horizon-card-v38" onclick="openOeuvreDetail('${o.id}')">
+        <div class="home-horizon-cover-v38">${o.couverture?`<img src="${safeText(o.couverture)}" alt="Couverture ${safeText(o.titre)}">`:`<div class="home-horizon-cover-empty-v38">${initials(o.titre)}</div>`}</div>
+        <div class="home-horizon-copy-v38">
+          <div class="home-horizon-context-v38">${chips.map(x=>`<span>${safeText(x)}</span>`).join('')}</div>
+          <h3>${safeText(o.titre)}</h3>
+          <span class="home-editorial-pill-v38 ${homeEditorialStatusClassV38(status)}">${safeText(status)}</span>
+          <div class="home-horizon-publication-v38"><span>📅 Publication prévue</span><strong>${pub?safeText(pub):'À définir'}</strong></div>
+        </div>
+      </article>`;
+    }).join('');
     content.innerHTML = `<div class="banner"><div><h1>${salutation} Cordélia ✨</h1><div class="sub"><span class="quote-hand">Écrire · imaginer · relier · faire grandir</span></div></div></div>
-      <div class="home-c36-top"><section class="home-c36-panel"><div class="home-c36-head"><h2>✎ Mes œuvres en cours d’écriture</h2><button class="tiny-btn" onclick="navigate('oeuvres')">Voir toutes →</button></div><div class="home-writing-cards">${writingCards||'<div class="empty">Aucune œuvre en écriture.</div>'}<article class="home-writing-card" onclick="openOeuvreModal()"><div class="home-writing-cover" style="display:grid;place-items:center;font-size:38px;color:var(--accent)">＋</div><div class="home-writing-body"><div class="home-writing-title">Nouvelle œuvre</div><small>Lancer une nouvelle aventure</small></div></article></div></section><section class="home-c36-panel"><div class="home-c36-head"><h2>📅 Mon planning cette semaine</h2><button class="tiny-btn" onclick="navigate('planning')">Voir le planning →</button></div>${renderHomeWeekV576(homeWeekDate,homePlanning.data||[],homeWorksMap)}</section></div>
-      <div class="home-c36-kpis"><div class="home-c36-kpi"><b>✎ ${nbEnEcriture??0}</b><span>œuvres en écriture</span></div><div class="home-c36-kpi"><b>▣ ${nbRelecturesEnCours??0}</b><span>en relecture</span></div><div class="home-c36-kpi"><b>▤ ${nbChapitresMois??0}</b><span>chapitres ce mois-ci</span></div><div class="home-c36-kpi home-c36-quote" style="grid-column:span 2">« Des idées d’aujourd’hui aux grandes histoires de demain. »</div></div>
-      <section class="home-horizon-c36"><div class="home-c36-head"><div><h2>🔭 Horizon · ${homeHorizonYearV576c36}</h2><small>Mes objectifs et projets pour cette année</small></div><div><select class="home-horizon-select" onchange="setHomeHorizonYearV576c36(this.value)">${horizonYears.map(y=>`<option value="${y}" ${y===homeHorizonYearV576c36?'selected':''}>${y}${y===now.getFullYear()?' · Y':y===now.getFullYear()+1?' · Y+1':''}</option>`).join('')}</select> <button class="tiny-btn" onclick="navigate('bureau-editorial')">Voir toutes →</button></div></div>${horizonQuery.error?`<div class="empty">Configure les horizons depuis le Bureau éditorial.</div>`:!horizonQuery.data?.length?`<div class="empty">Aucune œuvre dans l’horizon ${homeHorizonYearV576c36}.</div>`:`<div class="home-horizon-cards">${horizonQuery.data.map(o=>`<article class="home-horizon-card" onclick="openOeuvreDetail('${o.id}')">${o.couverture?`<img src="${safeText(o.couverture)}">`:`<div style="width:74px;height:110px;background:var(--bg-2);border-radius:8px"></div>`}<div><strong>${safeText(o.titre)}</strong><small>${safeText(o.statut_editorial_actuel||o.statut||'Projet')}</small>${o.date_publication_prevue?`<small>📅 ${safeText(o.date_publication_prevue)}</small>`:''}</div></article>`).join('')}</div>`}</section>
+      <div class="home-c36-top"><section class="home-c36-panel"><div class="home-c36-head"><h2>✎ Mes œuvres en cours d’écriture</h2><button class="tiny-btn" onclick="navigate('oeuvres')">Voir toutes →</button></div><div class="home-writing-cards">${writingCards||'<div class="empty">Aucune œuvre en écriture.</div>'}<article class="home-writing-card" onclick="openOeuvreModal()"><div class="home-writing-cover" style="display:grid;place-items:center;font-size:38px;color:var(--accent)">＋</div><div class="home-writing-body"><div class="home-writing-title">Nouvelle œuvre</div><small>Lancer une nouvelle aventure</small></div></article></div></section><section class="home-c36-panel home-planning-panel-v38"><div class="home-c36-head"><h2>📅 Mon planning cette semaine</h2><button class="tiny-btn" onclick="navigate('planning')">Voir le planning →</button></div>${renderHomeWeekV576(homeWeekDate,homePlanning.data||[],homeWorksMap)}</section></div>
+      <div class="home-c36-kpis home-kpis-v38"><div class="home-c36-kpi"><b>✎ ${nbEnEcriture??0}</b><span>œuvres en écriture</span></div><div class="home-c36-kpi"><b>▣ ${nbRelecturesEnCours??0}</b><span>en relecture</span></div><div class="home-c36-kpi"><b>▤ ${nbChapitresMois??0}</b><span>chapitres ce mois-ci</span></div><div class="home-c36-kpi"><b>💡 ${pepiniere.count??0}</b><span>idées en attente</span></div></div>
+      <section class="home-horizon-v38">
+        <div class="home-horizon-head-v38">
+          <div class="home-horizon-title-v38"><span class="home-horizon-icon-v38">🔭</span><div><h2>Horizon · ${homeHorizonYearV576c36}</h2><small>Mes objectifs et projets pour cette année</small></div></div>
+          <div class="home-horizon-tools-v38"><span class="home-horizon-count-v38"><strong>${(horizonQuery.data||[]).length}</strong> œuvre${(horizonQuery.data||[]).length>1?'s':''} dans cet Horizon</span><select class="home-horizon-select" aria-label="Choisir l’année de l’Horizon" onchange="setHomeHorizonYearV576c36(this.value)">${horizonYears.map(y=>`<option value="${y}" ${y===homeHorizonYearV576c36?'selected':''}>${y}${y===now.getFullYear()?' · Y':y===now.getFullYear()+1?' · Y+1':''}</option>`).join('')}</select><button class="tiny-btn" onclick="navigate('bureau-editorial')">Voir toutes →</button></div>
+        </div>
+        ${horizonQuery.error?`<div class="empty">Configure les horizons depuis le Bureau éditorial.</div>`:!horizonQuery.data?.length?`<div class="empty">Aucune œuvre dans l’horizon ${homeHorizonYearV576c36}.</div>`:`<div class="home-horizon-cards-v38">${horizonCards}</div>`}
+      </section>
       <div class="home-c38-actions"><div class="home-c38-action" onclick="navigate('oeuvres')">✍️ <span>Œuvres</span></div><div class="home-c38-action" onclick="navigate('relecture')">🔎 <span>Relecture</span></div><div class="home-c38-action" onclick="navigate('bureau-editorial')">🗂 <span>Bureau éditorial</span></div></div>`;
   }
+
   async function saveObjectifAnnuel(){
     const val = parseInt(document.getElementById('objectif-annuel-input').value);
     if (!val) return;
@@ -2622,12 +2715,24 @@
   function sessionColor(s){return s.couleur||(s.type_session==='relecture'?'#59A77A':'#7C5CBF');}
 
 
-  function renderHomeWeekV576(cursor,sessions,worksMap){const start=mondayOf(cursor),end=endOfWeek(cursor);let days='';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d),ds=sessions.filter(s=>s.date===iso);days+=`<div class="home-week-day ${iso===isoLocal(new Date())?'today':''}"><h4>${d.toLocaleDateString('fr-FR',{weekday:'short'})}</h4><small>${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</small>${ds.map(s=>{const o=worksMap.get(s.oeuvre_id);return `<div class="home-week-event" style="--event-color:${safeText(s.couleur||(s.type_session==='relecture'?'#59A77A':'#7C5CBF'))}" onclick="navigate('planning')"><strong>${safeText(s.titre||o?.titre||'Session')}</strong><small>${s.type_session==='relecture'?'Relecture':'Écriture'}</small></div>`}).join('')||'<span style="font-size:9px;color:var(--text-dim)">Libre</span>'}</div>`}return `<div class="home-week-head"><div><strong>${formatDateFr(isoLocal(start))} → ${formatDateFr(isoLocal(end))}</strong><div style="font-size:9px;color:var(--text-dim);margin-top:2px">${sessions.length} session${sessions.length>1?'s':''} prévue${sessions.length>1?'s':''}</div></div><div class="home-week-nav"><button class="tiny-btn" onclick="moveHomeWeekV576(-1)">←</button><button class="tiny-btn" onclick="resetHomeWeekV576()">Cette semaine</button><button class="tiny-btn" onclick="moveHomeWeekV576(1)">→</button></div></div><div class="home-week-grid">${days}</div>`}
-
-  function renderMiniPlanning(now,sessions,worksMap){
-    const y=now.getFullYear(),m=now.getMonth();const first=new Date(y,m,1);const start=mondayOf(first);const cells=[];
-    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=isoLocal(d);const ds=sessions.filter(s=>s.date===iso);cells.push(`<div class="mini-cal-day ${d.getMonth()!==m?'muted':''} ${iso===isoLocal(now)?'today':''}"><div class="mini-cal-num">${d.getDate()}</div><div class="mini-cal-dots">${ds.slice(0,5).map(s=>{const o=worksMap.get(s.oeuvre_id);const title=[o?.titre,s.titre,s.type_session==='relecture'?'Relecture':'Écriture'].filter(Boolean).join(' · ');const label=(s.titre||o?.titre||'•').replace(/Équation du Chaos/gi,'EC').replace(/Campus North/gi,'CN').slice(0,12);return `<span class="mini-cal-dot" style="background:${safeText(s.couleur|| (s.type_session==='relecture'?'#59A77A':'#7C5CBF'))}" title="${safeText(title)}">${safeText(label)}</span>`}).join('')}</div></div>`)}
-    return `<div class="mini-cal-head"><strong>${now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong><span style="font-size:10px;color:var(--text-dim)">${sessions.length} session${sessions.length>1?'s':''}</span></div><div class="mini-cal-week">${['L','M','M','J','V','S','D'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mini-cal-grid">${cells.join('')}</div>`;
+  function renderHomeWeekV576(cursor,sessions,worksMap){
+    const start=mondayOf(cursor),end=endOfWeek(cursor);
+    let rows='';
+    for(let i=0;i<7;i++){
+      const d=new Date(start);d.setDate(start.getDate()+i);
+      const iso=isoLocal(d),ds=sessions.filter(s=>s.date===iso);
+      const dayLabel=d.toLocaleDateString('fr-FR',{weekday:'short'}).replace(/^./,x=>x.toUpperCase());
+      const dateLabel=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+      if(!ds.length){
+        rows+=`<div class="home-week-row-v38 ${iso===isoLocal(new Date())?'today':''}"><div class="home-week-date-v38"><strong>${dayLabel}</strong><span>${dateLabel}</span></div><div class="home-week-session-v38 is-free"><i></i><span>Libre</span></div><div class="home-week-duration-v38"></div></div>`;
+        continue;
+      }
+      ds.forEach((s,index)=>{
+        const o=worksMap.get(s.oeuvre_id),isRead=s.type_session==='relecture',color=s.couleur||(isRead?'#59A77A':'#7C5CBF'),duration=homeSessionDurationV38(s);
+        rows+=`<div class="home-week-row-v38 ${iso===isoLocal(new Date())?'today':''}" onclick="navigate('planning')"><div class="home-week-date-v38">${index===0?`<strong>${dayLabel}</strong><span>${dateLabel}</span>`:''}</div><div class="home-week-session-v38" style="--session-color:${safeText(color)}"><i></i><span><b>${isRead?'Relecture':'Écriture'}</b>${safeText(s.titre||o?.titre||'Session')}</span></div><div class="home-week-duration-v38">${safeText(duration)}</div></div>`;
+      });
+    }
+    return `<div class="home-week-head-v38"><span>${formatDateFr(isoLocal(start))} → ${formatDateFr(isoLocal(end))}</span><div class="home-week-nav"><button class="tiny-btn" onclick="moveHomeWeekV576(-1)">←</button><button class="tiny-btn" onclick="resetHomeWeekV576()">Cette semaine</button><button class="tiny-btn" onclick="moveHomeWeekV576(1)">→</button></div></div><div class="home-week-list-v38">${rows}</div>`;
   }
 
   async function renderPlanning(){
