@@ -626,6 +626,15 @@
   .compact-filterbar-v576c14 .tiny-btn{height:36px;margin:0!important;white-space:nowrap}
   @media(max-width:780px){.compact-filterbar-v576c14 .filter-search{flex-basis:100%}.compact-filterbar-v576c14 select{flex:1 1 145px;max-width:none}.compact-filterbar-v576c14 .filter-sep,.compact-filterbar-v576c14 .filter-label{display:none}}
 
+
+  /* V5.7.6c19 — Relecture cockpit + chartes indépendantes */
+  .relecture-cockpit-v19{display:grid;grid-template-columns:minmax(0,3fr) minmax(320px,2fr);gap:18px;align-items:start}
+  .relecture-main-v19,.relecture-upcoming-v19{min-width:0}.relecture-zone-head-v19{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.relecture-zone-head-v19 h2{margin:0;font-family:'Lora',serif}.relecture-zone-head-v19 p{margin:3px 0 0;color:var(--text-dim);font-size:12px}
+  .relecture-current-grid-v19{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.relecture-horizon-v19{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px;margin-bottom:12px}.relecture-horizon-v19 h3{margin:0 0 10px;font-size:13px;color:var(--accent)}.relecture-mini-grid-v19{display:grid;grid-template-columns:1fr;gap:9px}
+  .relecture-card-v19{position:relative;min-height:160px;border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:var(--card-page,var(--bg-2));box-shadow:0 8px 22px rgba(20,12,35,.08)}.relecture-card-v19.compact{min-height:112px}.relecture-card-v19 .entity-card-bg{position:absolute;inset:0;background-position:center;background-size:cover}.relecture-card-v19:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--card-page) 0%,color-mix(in srgb,var(--card-page) 92%,transparent) 44%,transparent 100%)}.relecture-card-content-v19{position:relative;z-index:2;padding:15px;max-width:72%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;color:var(--gallery-text)}.relecture-card-v19.compact .relecture-card-content-v19{padding:11px;max-width:78%}.relecture-card-content-v19 h3{margin:0 0 4px;font-size:16px}.relecture-card-v19.compact h3{font-size:13px}.relecture-card-content-v19 small{color:var(--gallery-muted)}.relecture-card-badges-v19{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.relecture-card-badges-v19 span{font-size:10px;padding:3px 7px;border-radius:999px;background:var(--gallery-chip-bg);border:1px solid var(--gallery-chip-border)}
+  .relecture-drawer-v19{position:fixed;inset:0;z-index:1200;pointer-events:none}.relecture-drawer-v19.open{pointer-events:auto}.relecture-drawer-backdrop-v19{position:absolute;inset:0;background:rgba(16,10,25,.36);opacity:0;transition:.18s}.relecture-drawer-v19.open .relecture-drawer-backdrop-v19{opacity:1}.relecture-drawer-panel-v19{position:absolute;right:0;top:0;bottom:0;width:min(680px,94vw);background:var(--bg);border-left:1px solid var(--line);box-shadow:-20px 0 55px rgba(0,0,0,.2);transform:translateX(102%);transition:.22s;overflow:auto}.relecture-drawer-v19.open .relecture-drawer-panel-v19{transform:none}.relecture-drawer-hero-v19{height:180px;background:var(--bg-2) center/cover no-repeat;position:relative}.relecture-drawer-hero-v19:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--page-color,var(--bg)) 0%,transparent 80%)}.relecture-drawer-close-v19{position:absolute;right:12px;top:12px;z-index:3}.relecture-drawer-body-v19{padding:18px}.relecture-drawer-title-v19{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.relecture-drawer-title-v19 h2{margin:0}.relecture-work-link-v19{white-space:nowrap}.relecture-work-grid-v19{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}.relecture-axis-v19{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px;margin-bottom:9px}.relecture-axis-v19 h4{margin:0 0 5px}.relecture-axis-v19 p{font-size:12px;margin:5px 0;color:var(--text-dim)}.relecture-todo-v19{position:sticky;top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px}.relecture-todo-item-v19{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}.relecture-import-v19{border:1px dashed var(--accent);border-radius:10px;padding:13px;text-align:center;background:color-mix(in srgb,var(--accent) 6%,transparent);margin-bottom:14px}.relecture-import-v19 input{display:none}.relecture-strength-v19{border-left:3px solid var(--accent);padding:8px 10px;margin:7px 0;background:var(--bg-2);border-radius:0 8px 8px 0}.graphic-independent-v19 .graphic-field-v576c13 input[type=color]{width:100%;height:44px}.graphic-independent-v19 .inherit-note,.graphic-independent-v19 .graphic-field-actions-v576c14 button,.graphic-independent-v19 .graphic-inheritance-head-v576c13 button{display:none!important}
+  @media(max-width:1000px){.relecture-cockpit-v19{grid-template-columns:1fr}.relecture-current-grid-v19{grid-template-columns:1fr 1fr}.relecture-work-grid-v19{grid-template-columns:1fr}.relecture-todo-v19{position:static}}@media(max-width:680px){.relecture-current-grid-v19{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -655,7 +664,8 @@
       if(error) throw error;
       const {data:{session:mediaSession}} = await mediaSb.auth.getSession();
       mediaUser = mediaSession?.user || null;
-      if (session) { currentUser = session.user; await loadGlobalAppearance(); ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
+      if (session) { currentUser = session.user; await loadGlobalAppearance();
+    const deepWork=new URLSearchParams(location.search).get('openOeuvre'); if(deepWork){setTimeout(()=>openOeuvreDetail(deepWork),120);} ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
       else renderAuth();
     }catch(err){
       console.error('Passerelle init error', err);
@@ -1302,7 +1312,7 @@
               <div class="admin-check-row"><input type="checkbox" id="aow-module-chrono" ${o.module_chronologie?'checked':''}><div><strong>Chronologie</strong><small>Peut être activée même avant d’avoir du contenu.</small></div></div>
               <div style="margin-top:14px"><label>Métadonnées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._aowMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="aow-meta-check" value="${m.id}" style="width:auto" ${window._aowMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Choisis d’abord une saga pour utiliser ses métadonnées.</small>'}</div></div>
             </details>
-            <details class="admin-section" open><summary>Apparence de la page</summary><p class="admin-section-sub">L’œuvre hérite de sa sous-saga, de sa saga ou de sa collection. Tu peux ne surcharger qu’une seule couleur.</p>${graphicOverrideEditorV576c13('aow',o,inheritedWorkGraphicV576c13)}<label style="margin-top:12px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">La bannière n’est jamais héritée.</small></details>
+            <details class="admin-section" open><summary>Apparence de la page</summary><p class="admin-section-sub">L’œuvre possède sa propre charte graphique, indépendante de toute collection, saga ou sous-saga.</p>${graphicOverrideEditorV576c13('aow',o,inheritedWorkGraphicV576c13)}<label style="margin-top:12px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">La bannière n’est jamais héritée.</small></details>
             <details class="admin-section admin-danger" open><summary>Archivage</summary><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></details>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
@@ -1985,7 +1995,7 @@
   async function openAdminCollectionForm(id){
     const host=document.getElementById('admin-collection-form'); if(!host)return; let c={}; if(id){const {data}=await db().from('univers').select('*').eq('id',id).single();c=data||{};}
     const inheritedCollectionGraphicV576c14={pageColor:globalAppearance.themeColor,accent:globalAppearance.accent,secondary:'#D7C9ED',dark:'#3A3148'};
-    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><h2>${id?'Modifier':'Nouvelle'} collection</h2><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div><label>Illustration de collection</label><input id="ac-illustration" value="${safeText(c.illustration_url||'')}" placeholder="URL de l’image"><small>Image d’identité du catalogue BO, distincte des bannières et couvertures.</small></div></div>${c.illustration_url?`<img class="collection-visual-v576b" src="${safeText(c.illustration_url)}">`:''}<h3 style="margin-top:18px">🎨 Charte graphique</h3><p class="admin-section-sub">La collection hérite du thème Passerelle par défaut. Ses enfants héritent ensuite d’elle : Collection → Saga → Sous-saga → Œuvre.</p>${graphicOverrideEditorV576c13('ac',c,inheritedCollectionGraphicV576c14)}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
+    host.innerHTML=`<div class="panel" style="background:var(--bg-2);"><h2>${id?'Modifier':'Nouvelle'} collection</h2><div class="row2"><div><label>Nom</label><input id="ac-nom" value="${safeText(c.nom||'')}"></div><div><label>Sous-titre</label><input id="ac-sub" value="${safeText(c.sous_titre||'')}"></div></div><label>Description</label><textarea id="ac-desc">${safeText(c.description||'')}</textarea><div class="row2"><div><label>Ordre</label><input id="ac-ordre" type="number" value="${c.ordre||0}"></div><div><label>Illustration de collection</label><input id="ac-illustration" value="${safeText(c.illustration_url||'')}" placeholder="URL de l’image"><small>Image d’identité du catalogue BO, distincte des bannières et couvertures.</small></div></div>${c.illustration_url?`<img class="collection-visual-v576b" src="${safeText(c.illustration_url)}">`:''}<h3 style="margin-top:18px">🎨 Charte graphique</h3><p class="admin-section-sub">La collection possède sa propre charte graphique. Elle ne transmet plus ses couleurs aux autres entités.</p>${graphicOverrideEditorV576c13('ac',c,inheritedCollectionGraphicV576c14)}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="adminNavigate('collections')">Annuler</button><button class="btn-primary" onclick="saveAdminCollection('${id||''}')">Enregistrer</button></div></div>`;
     host.scrollIntoView({behavior:'smooth',block:'center'});
   }
   async function saveAdminCollection(id){const payload={nom:document.getElementById('ac-nom').value.trim(),sous_titre:document.getElementById('ac-sub').value.trim()||null,description:document.getElementById('ac-desc').value.trim()||null,ordre:parseInt(document.getElementById('ac-ordre').value||'0',10),illustration_url:document.getElementById('ac-illustration').value.trim()||null,...graphicOverridePayloadV576c13('ac')};if(!payload.nom){alert('Le nom est obligatoire.');return;}const q=id?db().from('univers').update(payload).eq('id',id).select('*').single():db().from('univers').insert({...payload,user_id:currentUser.id}).select('*').single();const {data,error}=await q;if(error){alert('Erreur : '+error.message);return;}if(data){const resolved=await resolveGraphicThemeV576b('collection',data);applyObjectTheme(resolved.pageColor,resolved.accent)}adminNavigate('collections');}
@@ -2440,96 +2450,62 @@
     }).join('')}</div>`;
   }
   async function renderRelecture(){
-    const content = document.getElementById('content');
-    const relectureBanner = await getPageBanner('relecture');
-    content.innerHTML = `<div class="status-line">Chargement…</div>`;
-
-    const now = new Date();
-    const yearY = now.getFullYear();
-    const yearY1 = yearY + 1;
-
-    // La page Relecture est une vue du Bureau éditorial :
-    // l'œuvre reste la donnée canonique, Horizon + statut éditorial décident de la colonne.
-    const worksResult = await db().from('oeuvres')
-      .select('id,titre,couverture,horizon_annee,statut_editorial_actuel,niveau_editorial_cible,archive,sagas(nom),sous_sagas(nom)')
-      .eq('archive', false)
-      .order('titre', { ascending:true });
-
-    if (worksResult.error) {
-      const missingCover = String(worksResult.error.message||'').includes('couverture');
-      content.innerHTML = `<div class="empty">Erreur : ${safeText(worksResult.error.message)}${missingCover ? '<br><br><strong>La petite migration Relecture V1 doit être exécutée dans Supabase pour ajouter la couverture canonique aux œuvres.</strong>' : ''}</div>`;
-      return;
-    }
-
-    // La vue existante fournit la progression lorsqu'une relecture a déjà été créée.
-    // Si elle n'est pas encore disponible, la page continue à fonctionner avec une progression à 0.
-    let progressByWork = {};
-    const progressResult = await db().from('relecture_file_travail').select('oeuvre_id,total_chapitres,chapitres_relus');
-    if (!progressResult.error) {
-      (progressResult.data||[]).forEach(r => { progressByWork[r.oeuvre_id] = r; });
-    }
-
-    const works = worksResult.data || [];
-    const isInProgress = o => ['V1.5 en cours','V2 en cours'].includes(o.statut_editorial_actuel);
-    const isPlanned = o => ['V1.5 à faire','V2 à écrire'].includes(o.statut_editorial_actuel);
-
-    const enCours = works.filter(isInProgress);
-    const horizonY = works.filter(o => !isInProgress(o) && isPlanned(o) && Number(o.horizon_annee) === yearY);
-    const horizonY1 = works.filter(o => !isInProgress(o) && isPlanned(o) && Number(o.horizon_annee) === yearY1);
-
-    function versionLabel(o){
-      const statut = o.statut_editorial_actuel || '';
-      if (statut.startsWith('V1.5')) return 'V1.5';
-      if (statut.startsWith('V2')) return 'V2';
-      return o.niveau_editorial_cible || 'Relecture';
-    }
-
-    function contextLabel(o){
-      const bits = [];
-      if (o.sagas?.nom) bits.push(o.sagas.nom);
-      if (o.sous_sagas?.nom) bits.push(o.sous_sagas.nom);
-      return bits.length ? bits.join(' · ') : 'Œuvre indépendante';
-    }
-
-    function card(o, current=false){
-      const p = progressByWork[o.id] || {};
-      const total = Number(p.total_chapitres||0);
-      const done = Number(p.chapitres_relus||0);
-      const pct = total ? Math.min(100, Math.round(done/total*100)) : 0;
-      const cover = o.couverture
-        ? `<img class="relecture-cover" src="${safeText(o.couverture)}" alt="Couverture de ${safeText(o.titre)}">`
-        : `<div class="relecture-cover relecture-cover-fallback">${safeText(initials(o.titre))}</div>`;
-      return `<article class="relecture-card" onclick="openOeuvreDetail('${o.id}')">
-        ${cover}
-        <div class="relecture-card-body">
-          <div class="relecture-card-title">${safeText(o.titre)}</div>
-          <div class="relecture-card-context">${safeText(contextLabel(o))}</div>
-          <span class="relecture-version">${safeText(versionLabel(o))}</span>
-          ${current ? `<div class="relecture-progress-row"><span>${done} / ${total || '—'} chapitres</span><span>${total ? pct+' %' : 'À démarrer'}</span></div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>` : `<div style="font-size:10px;color:var(--text-dim);margin-top:auto;margin-bottom:8px;">${safeText(o.statut_editorial_actuel||'À préparer')}</div>`}
-          <button class="btn-secondary relecture-action" type="button">${current ? 'Continuer la relecture' : 'Ouvrir l’œuvre'}</button>
-        </div>
-      </article>`;
-    }
-
-    function column(title, subtitle, items, current=false){
-      return `<section class="relecture-column">
-        <div class="relecture-column-title"><h2>${title}</h2><span>${subtitle}</span></div>
-        ${items.length ? items.map(o=>card(o,current)).join('') : `<div class="relecture-empty">Aucune œuvre dans cette colonne pour le moment.</div>`}
-      </section>`;
-    }
-
-    content.innerHTML = `<div class="relecture-page">
-      <div class="relecture-banner-slot">
-        <div><strong>Emplacement de ta bannière Relecture</strong><span>La bannière graphique complète remplacera ce cadre, sans titre ni texte ajouté par Passerelle.</span></div>
-      </div>
-      <div class="relecture-columns">
-        ${column('🔥 En cours', `${enCours.length} œuvre${enCours.length>1?'s':''}`, enCours, true)}
-        ${column(`📅 Horizon ${yearY}`, `${horizonY.length} prévue${horizonY.length>1?'s':''}`, horizonY)}
-        ${column(`🔭 Horizon ${yearY1}`, `${horizonY1.length} prévue${horizonY1.length>1?'s':''}`, horizonY1)}
-      </div>
-      <div class="walter-corner" aria-hidden="true" title="Walter supervise">🐈‍⬛</div>
-    </div>`;
+    const content=document.getElementById('content');
+    const relectureBanner=await getPageBanner('relecture');
+    content.innerHTML='<div class="status-line">Chargement du cockpit Relecture…</div>';
+    const yearY=new Date().getFullYear(),yearY1=yearY+1;
+    const {data:works,error}=await db().from('oeuvres').select('id,titre,couverture,banniere,page_color,soft_color,accent_color,horizon_annee,statut_editorial_actuel,niveau_editorial_cible,archive,saga_id,sous_saga_id,sagas(nom),sous_sagas(nom)').eq('archive',false).order('titre');
+    if(error){content.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    await hydrateCardThemesV576c13('work',works||[]);
+    const current=(works||[]).filter(o=>['V1.5 en cours','V2 en cours'].includes(o.statut_editorial_actuel));
+    const upcoming=(works||[]).filter(o=>['V1.5 à faire','V2 à écrire'].includes(o.statut_editorial_actuel)&&!current.some(c=>c.id===o.id));
+    const y=upcoming.filter(o=>Number(o.horizon_annee)===yearY),y1=upcoming.filter(o=>Number(o.horizon_annee)===yearY1);
+    const ctx=o=>[o.sagas?.nom,o.sous_sagas?.nom].filter(Boolean).join(' · ')||'Œuvre indépendante';
+    const ver=o=>(o.statut_editorial_actuel||'').startsWith('V1.5')?'V1.5':(o.statut_editorial_actuel||'').startsWith('V2')?'V2':(o.niveau_editorial_cible||'Relecture');
+    const card=(o,compact=false)=>{const c=o._resolved_page_color||o.soft_color||o.page_color||globalAppearance.themeColor,style=`--card-page:${safeText(c)};${galleryContrastVars(c)}`,img=safeText(o.banniere||o.couverture||'');return `<article class="relecture-card-v19 ${compact?'compact':''}" style="${style}" onclick="openRelectureWorkDrawerV19('${o.id}')">${img?`<div class="entity-card-bg" style="background-image:url('${img}')"></div>`:'<div class="entity-card-bg default"></div>'}<div class="relecture-card-content-v19"><small>${safeText(ctx(o))}</small><h3>${safeText(o.titre)}</h3><div class="relecture-card-badges-v19"><span>${safeText(ver(o))}</span><span>${safeText(o.statut_editorial_actuel||'')}</span></div></div></article>`};
+    const horizon=(label,items)=>`<section class="relecture-horizon-v19"><h3>${label} · ${items.length}</h3><div class="relecture-mini-grid-v19">${items.length?items.map(o=>card(o,true)).join(''):'<div class="relecture-empty" style="min-height:90px">Rien à l’horizon.</div>'}</div></section>`;
+    content.innerHTML=`${renderPageImageBanner(relectureBanner,'Relecture')}<div class="relecture-cockpit-v19"><section class="relecture-main-v19"><div class="relecture-zone-head-v19"><div><h2>🔥 En cours</h2><p>Uniquement les V1.5 et V2 actuellement en travail.</p></div><strong>${current.length}</strong></div><div class="relecture-current-grid-v19">${current.length?current.map(o=>card(o)).join(''):'<div class="relecture-empty">Aucune relecture en cours.</div>'}</div></section><aside class="relecture-upcoming-v19"><div class="relecture-zone-head-v19"><div><h2>🔭 À venir</h2><p>Le prochain travail éditorial, sans bruit autour.</p></div></div>${horizon(`Horizon ${yearY}`,y)}${horizon(`Horizon ${yearY1}`,y1)}</aside></div><div id="relecture-drawer-host-v19"></div>`;
   }
+
+  async function relectureWorkDataV19(oeuvreId){
+    const [w,a,t,r,m]=await Promise.all([
+      db().from('oeuvres').select('id,titre,banniere,couverture,page_color,soft_color,accent_color,statut_editorial_actuel,niveau_editorial_cible').eq('id',oeuvreId).single(),
+      db().from('relecture_axes').select('*').eq('oeuvre_id',oeuvreId).order('ordre'),
+      db().from('relecture_todos').select('*').eq('oeuvre_id',oeuvreId).order('ordre'),
+      db().from('relecture_rapports').select('*').eq('oeuvre_id',oeuvreId).order('created_at',{ascending:false}),
+      db().from('medias').select('*').eq('oeuvre_id',oeuvreId).limit(100)
+    ]);
+    return {work:w.data,axes:a.error?[]:(a.data||[]),todos:t.error?[]:(t.data||[]),reports:r.error?[]:(r.data||[]),medias:m.error?[]:(m.data||[])};
+  }
+  function relectureBannerV19(d){const m=(d.medias||[]).find(x=>/relecture/i.test([x.categorie,x.type,x.titre,x.nom].filter(Boolean).join(' ')));return mediaImage(m)||d.work?.banniere||d.work?.couverture||''}
+  async function openRelectureWorkDrawerV19(oeuvreId){
+    const host=document.getElementById('relecture-drawer-host-v19')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'relecture-drawer-host-v19'}));
+    host.innerHTML='<div class="relecture-drawer-v19 open"><div class="relecture-drawer-backdrop-v19" onclick="closeRelectureWorkDrawerV19()"></div><div class="relecture-drawer-panel-v19"><div class="status-line" style="padding:30px">Chargement…</div></div></div>';
+    const d=await relectureWorkDataV19(oeuvreId),o=d.work;if(!o)return;
+    const banner=relectureBannerV19(d),strengths=d.axes.filter(x=>x.type==='point_fort'),axes=d.axes.filter(x=>x.type!=='point_fort');
+    const axisHtml=axes.length?axes.map(x=>`<article class="relecture-axis-v19"><div style="display:flex;justify-content:space-between;gap:8px"><h4>${safeText(x.titre)}</h4><select onchange="updateRelectureAxisV19('${x.id}',this.value)"><option ${x.statut==='À faire'?'selected':''}>À faire</option><option ${x.statut==='En cours'?'selected':''}>En cours</option><option ${x.statut==='Fait'?'selected':''}>Fait</option></select></div>${x.diagnostic?`<p>${safeText(x.diagnostic)}</p>`:''}${x.recommandation?`<p><strong>Conseil :</strong> ${safeText(x.recommandation)}</p>`:''}<button class="tiny-btn" onclick="addAxisToTodoV19('${x.id}','${oeuvreId}')">+ Ajouter à la to-do</button></article>`).join(''):'<div class="empty">Aucun axe pour le moment.</div>';
+    const todoHtml=d.todos.length?d.todos.map(x=>`<label class="relecture-todo-item-v19"><input type="checkbox" ${x.fait?'checked':''} onchange="toggleRelectureTodoV19('${x.id}',this.checked)"><span>${safeText(x.libelle)}</span></label>`).join(''):'<div style="font-size:12px;color:var(--text-dim)">Aucune action décidée.</div>';
+    host.innerHTML=`<div class="relecture-drawer-v19 open"><div class="relecture-drawer-backdrop-v19" onclick="closeRelectureWorkDrawerV19()"></div><div class="relecture-drawer-panel-v19"><div class="relecture-drawer-hero-v19" style="${banner?`background-image:url('${safeText(banner)}')`:''}"><button class="btn-secondary relecture-drawer-close-v19" onclick="closeRelectureWorkDrawerV19()">✕</button></div><div class="relecture-drawer-body-v19"><div class="relecture-drawer-title-v19"><div><small>${safeText(o.statut_editorial_actuel||'Travail éditorial')}</small><h2>${safeText(o.titre)}</h2></div><button class="btn-secondary relecture-work-link-v19" onclick="openOeuvreInNewTabV19('${o.id}')">↗ Œuvre</button></div><div class="relecture-import-v19"><strong>📥 Importer une analyse éditoriale</strong><p style="font-size:11px;color:var(--text-dim)">DOCX ou PDF · extraction locale des points forts, axes et conseils.</p><label class="btn-secondary upload-file-btn">Choisir / glisser un rapport<input id="relecture-report-file-v19" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="importRelectureReportV19('${oeuvreId}',this.files[0])"></label><div id="relecture-import-status-v19" class="status-line"></div></div><div class="relecture-work-grid-v19"><main><h3>Axes d’amélioration</h3>${axisHtml}<details style="margin-top:14px"><summary><strong>✨ Points forts (${strengths.length})</strong></summary><div style="margin-top:8px">${strengths.map(x=>`<div class="relecture-strength-v19"><strong>${safeText(x.titre)}</strong>${x.diagnostic?`<div style="font-size:12px">${safeText(x.diagnostic)}</div>`:''}</div>`).join('')||'<div class="empty">Aucun point fort importé.</div>'}</div></details></main><aside class="relecture-todo-v19"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">☑ To-do</h3><span>${d.todos.filter(x=>x.fait).length}/${d.todos.length}</span></div><div>${todoHtml}</div><div class="check-add"><input id="relecture-new-todo-v19" placeholder="Ajouter une action…"><button class="btn-secondary" onclick="addRelectureTodoV19('${oeuvreId}')">Ajouter</button></div></aside></div></div></div></div>`;
+  }
+  function closeRelectureWorkDrawerV19(){const h=document.getElementById('relecture-drawer-host-v19');if(h)h.innerHTML=''}
+  function openOeuvreInNewTabV19(id){const u=new URL(location.href);u.searchParams.set('openOeuvre',id);window.open(u.toString(),'_blank','noopener')}
+  async function updateRelectureAxisV19(id,statut){await db().from('relecture_axes').update({statut,updated_at:new Date().toISOString()}).eq('id',id)}
+  async function toggleRelectureTodoV19(id,fait){await db().from('relecture_todos').update({fait,updated_at:new Date().toISOString()}).eq('id',id)}
+  async function addRelectureTodoV19(oeuvreId){const i=document.getElementById('relecture-new-todo-v19'),v=i?.value.trim();if(!v)return;await db().from('relecture_todos').insert({user_id:currentUser.id,oeuvre_id:oeuvreId,libelle:v,ordre:Date.now()%100000});openRelectureWorkDrawerV19(oeuvreId)}
+  async function addAxisToTodoV19(axisId,oeuvreId){const {data}=await db().from('relecture_axes').select('titre,recommandation').eq('id',axisId).single();if(!data)return;await db().from('relecture_todos').insert({user_id:currentUser.id,oeuvre_id:oeuvreId,axe_id:axisId,libelle:data.recommandation||data.titre,ordre:Date.now()%100000});openRelectureWorkDrawerV19(oeuvreId)}
+  async function ensureScriptV19(src,globalName){if(globalName&&window[globalName])return;await new Promise((res,rej)=>{const old=[...document.scripts].find(x=>x.src===src);if(old){old.addEventListener('load',res,{once:true});setTimeout(res,50);return}const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
+  async function extractRelectureTextV19(file){
+    if(/\.docx$/i.test(file.name)){await ensureScriptV19('https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js','mammoth');const r=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});return r.value||''}
+    if(/\.pdf$/i.test(file.name)){await ensureScriptV19('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','pdfjsLib');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;let out='';for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i),tc=await pg.getTextContent();out+='\n'+tc.items.map(x=>x.str).join(' ')}return out}
+    throw new Error('Format non pris en charge. Utilise DOCX ou PDF.')
+  }
+  function parseEditorialReportV19(text){
+    const clean=String(text||'').replace(/\r/g,'').replace(/[ \t]+/g,' ').trim(),lines=clean.split('\n').map(x=>x.trim()).filter(Boolean);let mode='',current=null;const strengths=[],axes=[];
+    const push=()=>{if(!current)return;(mode==='strengths'?strengths:axes).push(current);current=null};
+    for(const line of lines){if(/points forts/i.test(line)){push();mode='strengths';continue}if(/axes d['’]amélioration|pistes de réécriture|travail éditorial/i.test(line)){push();mode='axes';continue}if(/conclusion/i.test(line)&&mode){push();mode='';continue}const m=line.match(/^(\d+)[\.\)\-]\s*(.+)$/);if(m&&mode){push();current={titre:m[2],diagnostic:'',recommandation:''};continue}if(!current||!mode)continue;if(/^conseil de réécriture\s*:/i.test(line)){current.recommandation=line.replace(/^conseil de réécriture\s*:/i,'').trim();continue}if(current.recommandation)current.recommandation+=' '+line;else current.diagnostic+=(current.diagnostic?' ':'')+line}
+    push();return {strengths,axes}
+  }
+  async function importRelectureReportV19(oeuvreId,file){if(!file)return;const st=document.getElementById('relecture-import-status-v19');try{if(st)st.textContent='Analyse du rapport…';const text=await extractRelectureTextV19(file),parsed=parseEditorialReportV19(text);if(!parsed.strengths.length&&!parsed.axes.length)throw new Error('Je n’ai pas reconnu de sections « Points forts » / « Axes d’amélioration ».');const rr=await db().from('relecture_rapports').insert({user_id:currentUser.id,oeuvre_id:oeuvreId,nom_fichier:file.name,type_fichier:file.type||file.name.split('.').pop(),texte_source:text}).select('id').single();if(rr.error)throw rr.error;const rows=[...parsed.strengths.map((x,i)=>({user_id:currentUser.id,oeuvre_id:oeuvreId,rapport_id:rr.data.id,type:'point_fort',titre:x.titre,diagnostic:x.diagnostic,ordre:i})),...parsed.axes.map((x,i)=>({user_id:currentUser.id,oeuvre_id:oeuvreId,rapport_id:rr.data.id,type:'amelioration',titre:x.titre,diagnostic:x.diagnostic,recommandation:x.recommandation,statut:'À faire',ordre:i}))];const ins=await db().from('relecture_axes').insert(rows);if(ins.error)throw ins.error;if(st)st.textContent=`✓ ${parsed.strengths.length} point(s) fort(s) · ${parsed.axes.length} axe(s) importé(s)`;setTimeout(()=>openRelectureWorkDrawerV19(oeuvreId),700)}catch(e){console.error(e);if(st)st.textContent='Erreur : '+(e?.message||e)}}
 
 
   // ============================================================
@@ -5593,48 +5569,19 @@
   async function loadGlobalAppearance(){try{const {data,error}=await db().from('configuration_utilisateur').select('theme_mode,theme_color,accent_color').eq('user_id',currentUser.id).maybeSingle();if(!error&&data)globalAppearance={mode:data.theme_mode||'clair',themeColor:data.theme_color||'#F6F3FB',accent:data.accent_color||DEFAULT_ACCENT};}catch(e){console.warn('Configuration globale indisponible',e);}applyGlobalTheme();}
   function applyGlobalTheme(){const p=makePalette(globalAppearance.mode,globalAppearance.themeColor);setRootPalette(p,globalAppearance.accent);Object.entries(p).forEach(([k,v])=>document.documentElement.style.setProperty('--global'+k.slice(1),v));document.documentElement.style.setProperty('--global-accent',globalAppearance.accent||DEFAULT_ACCENT);}
   async function resolveGraphicThemeV576b(type,obj){
-    let collection=null,saga=null,sub=null;
-    if(type==='collection') collection=obj;
-    if(type==='saga'){saga=obj;if(obj.univers_id){const r=await db().from('univers').select('*').eq('id',obj.univers_id).maybeSingle();collection=r.data}}
-    if(type==='sub'){sub=obj;if(obj.saga_id){const r=await db().from('sagas').select('*').eq('id',obj.saga_id).maybeSingle();saga=r.data;if(saga?.univers_id){const c=await db().from('univers').select('*').eq('id',saga.univers_id).maybeSingle();collection=c.data}}}
-    if(type==='work'){if(obj.sous_saga_id){const r=await db().from('sous_sagas').select('*').eq('id',obj.sous_saga_id).maybeSingle();sub=r.data}const sagaId=obj.saga_id||sub?.saga_id;if(sagaId){const r=await db().from('sagas').select('*').eq('id',sagaId).maybeSingle();saga=r.data}const cid=saga?.univers_id||obj.univers_id;if(cid){const r=await db().from('univers').select('*').eq('id',cid).maybeSingle();collection=r.data}}
-    const chain=[collection?.charte_override?collection:null,saga?.charte_override?saga:null,sub?.charte_override?sub:null,obj?.charte_override?obj:null].filter(Boolean);
-    const pick=(k,fallback)=>chain.reduce((v,x)=>x?.[k]||v,fallback);
-    const pickPage=(fallback)=>chain.reduce((v,x)=>(x?.soft_color||x?.page_color||v),fallback);
-    return {pageColor:pickPage(globalAppearance.themeColor),accent:pick('accent_color',globalAppearance.accent),secondary:pick('secondary_color',null),dark:pick('dark_color',null)};
+    // V19 : aucune charte n'hérite d'une autre entité. Chaque objet est autonome.
+    return {pageColor:obj?.soft_color||obj?.page_color||globalAppearance.themeColor,accent:obj?.accent_color||globalAppearance.accent,secondary:obj?.secondary_color||'#D7C9ED',dark:obj?.dark_color||'#3A3148'};
   }
   function applyObjectTheme(pageColor,accentColor){const c=pageColor||globalAppearance.themeColor;const mode=luminance(c)<.45?'sombre':'clair';const p=makePalette(mode,c);p['--bg']=c;setRootPalette(p,accentColor||globalAppearance.accent);document.documentElement.style.setProperty('--page-color',c);}
-  async function inheritedThemeForEditorV576c13(type,obj){
-    const ghost={...obj,charte_override:false,accent_color:null,secondary_color:null,soft_color:null,dark_color:null,page_color:null};
-    return resolveGraphicThemeV576b(type,ghost);
-  }
+  async function inheritedThemeForEditorV576c13(type,obj){return resolveGraphicThemeV576b(type,obj)}
   function graphicOverrideEditorV576c13(prefix,obj,inherited){
-    const enabled=!!obj.charte_override;
-    const defs=[
-      ['accent','Accent principal','accent_color',inherited?.accent||globalAppearance.accent||'#7C5CBF'],
-      ['secondary','Secondaire','secondary_color',inherited?.secondary||'#D7C9ED'],
-      ['soft','Fond de page','soft_color',inherited?.pageColor||globalAppearance.themeColor||'#F6F3FB'],
-      ['dark','Sombre / texte','dark_color',inherited?.dark||'#3A3148']
-    ];
-    return `<div class="graphic-inheritance-v576c13"><div class="graphic-inheritance-head-v576c13"><div><strong>🎨 Charte graphique</strong><p>Sans surcharge, cette fiche hérite automatiquement du niveau parent. Chaque couleur peut être personnalisée séparément.</p></div><button type="button" class="btn-secondary" onclick="resetGraphicOverrideV576c13('${prefix}')">↺ Revenir à l’héritage</button></div><div class="graphic-fields-v576c13">${defs.map(([key,label,field,fallback])=>{const local=enabled&&!!obj[field];const val=local?obj[field]:fallback;return `<div class="graphic-field-v576c13"><input type="checkbox" id="${prefix}-${key}-custom" style="display:none" ${local?'checked':''}><div class="graphic-field-actions-v576c14"><strong>${label}</strong><button type="button" class="tiny-btn" id="${prefix}-${key}-toggle" onclick="toggleGraphicFieldV576c13('${prefix}','${key}')">${local?'↺ Hériter':'Personnaliser'}</button></div><input type="color" id="${prefix}-${key}" value="${safeText(val||'#7C5CBF')}" ${local?'':'disabled'}><span class="inherit-note" id="${prefix}-${key}-note">${local?'Personnalisée ici':'Héritée · '+safeText(fallback||'—')}</span></div>`}).join('')}</div></div>`;
+    const defs=[['accent','Accent principal','accent_color',obj?.accent_color||globalAppearance.accent||'#7C5CBF'],['secondary','Secondaire','secondary_color',obj?.secondary_color||'#D7C9ED'],['soft','Fond de page','soft_color',obj?.soft_color||obj?.page_color||globalAppearance.themeColor||'#F6F3FB'],['dark','Sombre / texte','dark_color',obj?.dark_color||'#3A3148']];
+    return `<div class="graphic-inheritance-v576c13 graphic-independent-v19"><div class="graphic-inheritance-head-v576c13"><div><strong>🎨 Charte graphique indépendante</strong><p>Cette fiche possède sa propre identité. Aucune couleur n’est héritée d’une collection, saga ou sous-saga.</p></div></div><div class="graphic-fields-v576c13">${defs.map(([key,label,field,val])=>`<div class="graphic-field-v576c13"><input type="checkbox" id="${prefix}-${key}-custom" checked style="display:none"><div class="graphic-field-actions-v576c14"><strong>${label}</strong></div><input type="color" id="${prefix}-${key}" value="${safeText(val)}"><span class="inherit-note">Propre à cette fiche</span></div>`).join('')}</div></div>`;
   }
-  function toggleGraphicFieldV576c13(prefix,key){const c=document.getElementById(`${prefix}-${key}-custom`),i=document.getElementById(`${prefix}-${key}`),b=document.getElementById(`${prefix}-${key}-toggle`),n=document.getElementById(`${prefix}-${key}-note`);if(!c)return;c.checked=!c.checked;if(i)i.disabled=!c.checked;if(b)b.textContent=c.checked?'↺ Hériter':'Personnaliser';if(n)n.textContent=c.checked?'Personnalisée ici':'Héritée du niveau parent';}
-  function resetGraphicOverrideV576c13(prefix){['accent','secondary','soft','dark'].forEach(k=>{const c=document.getElementById(`${prefix}-${k}-custom`),i=document.getElementById(`${prefix}-${k}`),b=document.getElementById(`${prefix}-${k}-toggle`),n=document.getElementById(`${prefix}-${k}-note`);if(c)c.checked=false;if(i)i.disabled=true;if(b)b.textContent='Personnaliser';if(n)n.textContent='Héritée du niveau parent';});}
-  function graphicOverridePayloadV576c13(prefix){
-    const read=(key)=>document.getElementById(`${prefix}-${key}-custom`)?.checked?(document.getElementById(`${prefix}-${key}`)?.value||null):null;
-    const p={accent_color:read('accent'),secondary_color:read('secondary'),soft_color:read('soft'),dark_color:read('dark')};
-    p.page_color=p.soft_color;
-    p.charte_override=!!(p.accent_color||p.secondary_color||p.soft_color||p.dark_color);
-    return p;
-  }
-  async function persistGraphicOverrideV576c15(table,id,prefix,type){
-    const payload=graphicOverridePayloadV576c13(prefix);
-    const {data,error}=await db().from(table).update(payload).eq('id',id).select('id,accent_color,secondary_color,soft_color,dark_color,page_color,charte_override').single();
-    if(error) throw error;
-    const resolved=await resolveGraphicThemeV576b(type,data||{id,...payload});
-    applyObjectTheme(resolved.pageColor,resolved.accent);
-    return {data,resolved,payload};
-  }
+  function toggleGraphicFieldV576c13(){}
+  function resetGraphicOverrideV576c13(){}
+  function graphicOverridePayloadV576c13(prefix){const val=k=>document.getElementById(`${prefix}-${k}`)?.value||null;const p={accent_color:val('accent'),secondary_color:val('secondary'),soft_color:val('soft'),dark_color:val('dark'),charte_override:true};p.page_color=p.soft_color;return p}
+  async function persistGraphicOverrideV576c15(table,id,prefix,type){const payload=graphicOverridePayloadV576c13(prefix);const {data,error}=await db().from(table).update(payload).eq('id',id).select('*').single();if(error)throw error;const resolved=await resolveGraphicThemeV576b(type,data||payload);applyObjectTheme(resolved.pageColor,resolved.accent);return {data,resolved,payload}}
   function applyTheme(themeBase,accentColor){globalAppearance.mode=themeBase==='sombre'?'sombre':'clair';globalAppearance.accent=accentColor||globalAppearance.accent;applyGlobalTheme();}
   function resetTheme(){applyGlobalTheme();}
 
