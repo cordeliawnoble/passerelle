@@ -905,6 +905,19 @@
   @media(max-width:900px){.saga-info-mock-c38c{grid-template-columns:1fr}.saga-info-side-c38c{grid-template-columns:1fr 1fr}.saga-general-row-c38c{grid-template-columns:22px 120px 1fr}}
   @media(max-width:680px){.saga-info-side-c38c{grid-template-columns:1fr}.saga-stat-grid-c38c{grid-template-columns:1fr 1fr}.saga-general-row-c38c{grid-template-columns:22px 105px 1fr}}
 
+
+  /* ---- C39 · Import Notion vers Codex Saga / Sous-saga ---- */
+  .codex-import-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .codex-import-drop{border:1px dashed var(--line);border-radius:10px;background:color-mix(in srgb,var(--accent) 5%,var(--card));padding:14px 16px;margin:0 0 18px;display:none}
+  .codex-import-drop.open{display:block}
+  .codex-import-drop strong{display:block;color:var(--accent);margin-bottom:4px}
+  .codex-import-drop p{margin:0;color:var(--text-dim);font-size:12px}
+  .codex-import-preview{display:grid;gap:8px;margin-top:12px}
+  .codex-import-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(120px,.7fr) minmax(140px,.8fr);gap:10px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 12px;font-size:12px}
+  .codex-import-row small{display:block;color:var(--text-dim)}
+  .codex-category-chip{display:inline-flex;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);font-size:10px;margin:2px 4px 2px 0}
+  @media(max-width:760px){.codex-import-row{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -3355,11 +3368,184 @@
       </div>`;
   }
 
+
+  // ============================================================
+  // C39 — IMPORT NOTION ZIP / MARKDOWN / CSV VERS CODEX
+  // Les catégories restent locales au Codex et sont stockées dans
+  // le champ existant `categorie` sous forme de liste séparée par " · ".
+  // Aucun vocabulaire de catégorie n'est codé en dur.
+  // ============================================================
+  let codexNotionImportV39={level:null,items:[],fileName:''};
+
+  function codexCategoryTagsV39(value){
+    return String(value||'').split(/\s*·\s*|\s*,\s*/).map(x=>x.trim()).filter(Boolean);
+  }
+  function normalizeNotionNameV39(name){
+    return String(name||'').split('/').pop()
+      .replace(/\.(md|markdown|csv)$/i,'')
+      .replace(/\s+[0-9a-f]{32}$/i,'')
+      .replace(/[-_]+/g,' ').trim();
+  }
+  function notionKeyV39(v){
+    return normalizeNotionNameV39(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function parseCsvV39(src){
+    const rows=[]; let row=[],cell='',q=false;
+    src=String(src||'').replace(/^\uFEFF/,'');
+    for(let i=0;i<src.length;i++){
+      const c=src[i],n=src[i+1];
+      if(c==='"'&&q&&n==='"'){cell+='"';i++;continue}
+      if(c==='"'){q=!q;continue}
+      if(c===','&&!q){row.push(cell);cell='';continue}
+      if((c==='\n'||c==='\r')&&!q){
+        if(c==='\r'&&n==='\n')i++;
+        row.push(cell); if(row.some(x=>String(x).trim()!==''))rows.push(row);
+        row=[];cell='';continue;
+      }
+      cell+=c;
+    }
+    row.push(cell); if(row.some(x=>String(x).trim()!==''))rows.push(row);
+    if(!rows.length)return [];
+    const heads=rows[0].map(x=>String(x).trim());
+    return rows.slice(1).map(r=>Object.fromEntries(heads.map((h,i)=>[h,String(r[i]??'').trim()])));
+  }
+  function markdownToCodexHtmlV39(md){
+    let s=String(md||'').replace(/\r\n?/g,'\n');
+    // Retire le titre H1 du fichier : le titre vit déjà sur la page Codex.
+    s=s.replace(/^#\s+.+\n+/,'');
+    const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const inline=x=>esc(x)
+      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+      .replace(/__([^_]+)__/g,'<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+      .replace(/_([^_]+)_/g,'<em>$1</em>')
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    const out=[]; let list=null;
+    const closeList=()=>{if(list){out.push(`</${list}>`);list=null}};
+    for(const raw of s.split('\n')){
+      const line=raw.trimEnd();
+      if(!line.trim()){closeList();continue}
+      let m;
+      if((m=line.match(/^(#{2,6})\s+(.+)$/))){closeList();const n=Math.min(6,m[1].length);out.push(`<h${n}>${inline(m[2])}</h${n}>`);continue}
+      if((m=line.match(/^>\s?(.*)$/))){closeList();out.push(`<blockquote>${inline(m[1])}</blockquote>`);continue}
+      if(/^---+$/.test(line.trim())){closeList();out.push('<hr>');continue}
+      if((m=line.match(/^\s*[-*+]\s+(.+)$/))){if(list!=='ul'){closeList();list='ul';out.push('<ul>')}out.push(`<li>${inline(m[1])}</li>`);continue}
+      if((m=line.match(/^\s*\d+\.\s+(.+)$/))){if(list!=='ol'){closeList();list='ol';out.push('<ol>')}out.push(`<li>${inline(m[1])}</li>`);continue}
+      closeList();out.push(`<p>${inline(line)}</p>`);
+    }
+    closeList(); return out.join('');
+  }
+  function detectCategoryColumnV39(headers){
+    const preferred=['type','catégorie','categorie','category','groupe','group','section','tag','tags'];
+    return preferred.find(x=>headers.some(h=>h.toLowerCase()===x))||null;
+  }
+  function detectTitleColumnV39(headers){
+    const preferred=['nom','name','titre','title'];
+    return preferred.find(x=>headers.some(h=>h.toLowerCase()===x))||headers[0]||null;
+  }
+  async function openCodexNotionImportV39(level){
+    codexNotionImportV39={level,items:[],fileName:''};
+    const zone=document.getElementById('codex-import-zone-v39'); if(!zone)return;
+    zone.innerHTML=`<div class="codex-import-drop open"><strong>Importer depuis Notion</strong><p>Dépose un export Notion ZIP complet, un Markdown ou un CSV. Chaque Markdown devient une page Codex. Les catégories trouvées dans les CSV deviennent des balises locales à ce Codex.</p><label class="btn-primary upload-file-btn" style="display:inline-flex;margin-top:10px">Choisir un export<input type="file" accept=".zip,.md,.markdown,.csv,application/zip,text/markdown,text/csv" onchange="previewCodexNotionImportV39(this.files?.[0])"></label></div>`;
+  }
+  async function previewCodexNotionImportV39(file){
+    if(!file)return;
+    const zone=document.getElementById('codex-import-zone-v39'); if(!zone)return;
+    zone.innerHTML='<div class="codex-import-drop open"><strong>Analyse de l’export…</strong><p>Passerelle démêle les parchemins Notion.</p></div>';
+    try{
+      const files=[];
+      if(/\.zip$/i.test(file.name)){
+        const JSZipLib=await ensureJsZipV576c27();
+        const zip=await JSZipLib.loadAsync(await file.arrayBuffer());
+        const entries=await collectNotionZipEntriesV576c28(zip);
+        for(const x of entries){
+          if(/\.(md|markdown|csv)$/i.test(x.name))files.push({name:x.name,text:await x.entry.async('string')});
+        }
+      }else files.push({name:file.name,text:await file.text()});
+      const md=files.filter(x=>/\.(md|markdown)$/i.test(x.name));
+      const csv=files.filter(x=>/\.csv$/i.test(x.name));
+      const categoryMap=new Map();
+      const csvTables=[];
+      for(const f of csv){
+        const rows=parseCsvV39(f.text); if(!rows.length)continue;
+        const headers=Object.keys(rows[0]), titleCol=detectTitleColumnV39(headers), catKey=detectCategoryColumnV39(headers);
+        const catCol=catKey?headers.find(h=>h.toLowerCase()===catKey):null;
+        const realTitle=titleCol?headers.find(h=>h.toLowerCase()===titleCol):headers[0];
+        if(realTitle&&catCol){
+          for(const r of rows){
+            const key=notionKeyV39(r[realTitle]); if(!key)continue;
+            const cats=String(r[catCol]||'').split(/[,;]+/).map(x=>x.trim()).filter(Boolean);
+            if(cats.length)categoryMap.set(key,cats);
+          }
+        }
+        csvTables.push({file:f,rows,headers});
+      }
+      const items=md.map((f,i)=>{
+        const title=normalizeNotionNameV39(f.name);
+        const cats=categoryMap.get(notionKeyV39(title))||[];
+        return {kind:'markdown',title,categories:cats,html:markdownToCodexHtmlV39(f.text),source:f.name,selected:true};
+      });
+      // Un CSV isolé sans Markdown reste importable comme page-tableau, pour ne pas perdre une base Notion.
+      if(!md.length){
+        for(const t of csvTables){
+          items.push({kind:'csv',title:normalizeNotionNameV39(t.file.name),categories:[],rows:t.rows,headers:t.headers,source:t.file.name,selected:true});
+        }
+      }
+      codexNotionImportV39.items=items;codexNotionImportV39.fileName=file.name;
+      if(!items.length)throw new Error('Aucune page Markdown ni base CSV exploitable trouvée dans cet export.');
+      renderCodexNotionPreviewV39();
+    }catch(err){
+      zone.innerHTML=`<div class="codex-import-drop open"><strong>Import impossible</strong><p>${safeText(err?.message||String(err))}</p></div>`;
+    }
+  }
+  function renderCodexNotionPreviewV39(){
+    const zone=document.getElementById('codex-import-zone-v39'); if(!zone)return;
+    const items=codexNotionImportV39.items;
+    zone.innerHTML=`<div class="codex-import-drop open"><strong>${items.length} page${items.length>1?'s':''} détectée${items.length>1?'s':''}</strong><p>${safeText(codexNotionImportV39.fileName)} · décoche ce que tu ne veux pas importer. Les balises restent propres à ${codexNotionImportV39.level==='saga'?'cette saga':'cette sous-saga'}.</p><div class="codex-import-preview">${items.map((it,i)=>`<div class="codex-import-row"><label style="margin:0;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" style="width:auto;margin-top:3px" ${it.selected?'checked':''} onchange="codexNotionImportV39.items[${i}].selected=this.checked"><span><strong>${safeText(it.title)}</strong><small>${safeText(it.source)}</small></span></label><div>${it.categories.length?it.categories.map(c=>`<span class="codex-category-chip">${safeText(c)}</span>`).join(''):'<small>Sans catégorie</small>'}</div><select onchange="codexNotionImportV39.items[${i}].mode=this.value"><option value="create">Créer une page</option><option value="ignore">Ignorer</option></select></div>`).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="document.getElementById('codex-import-zone-v39').innerHTML=''">Annuler</button><button class="btn-primary" onclick="commitCodexNotionImportV39(this)">Importer ${items.length} page${items.length>1?'s':''}</button></div></div>`;
+  }
+  function csvToHtmlTableV39(item){
+    const h=item.headers||[];const rows=item.rows||[];
+    return `<table><thead><tr>${h.map(x=>`<th>${safeText(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${h.map(x=>`<td>${safeText(r[x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  async function commitCodexNotionImportV39(btn){
+    const items=codexNotionImportV39.items.filter(x=>x.selected&&x.mode!=='ignore');
+    if(!items.length)return alert('Aucune page sélectionnée.');
+    if(btn){btn.disabled=true;btn.textContent='Import en cours…'}
+    try{
+      const parent=codexNotionImportV39.level==='saga'?{saga_id:currentSagaId}:{sous_saga_id:currentSousSagaId};
+      const existingR=await db().from('codex_pages').select('id,titre').match(parent);
+      if(existingR.error)throw existingR.error;
+      const existing=new Map((existingR.data||[]).map(x=>[notionKeyV39(x.titre),x]));
+      let created=0,skipped=0;
+      for(let i=0;i<items.length;i++){
+        const it=items[i];
+        // Protection anti-doublon simple et sûre : même titre = on n'écrase jamais silencieusement.
+        if(existing.has(notionKeyV39(it.title))){skipped++;continue}
+        const pagePayload={user_id:currentUser.id,...parent,titre:it.title||'Sans titre',categorie:(it.categories||[]).join(' · '),ordre:i};
+        const pr=await db().from('codex_pages').insert(pagePayload).select('id').single();
+        if(pr.error)throw pr.error;
+        const html=it.kind==='csv'?csvToHtmlTableV39(it):it.html;
+        if(html){
+          const br=await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pr.data.id,type:'texte',ordre:0,largeur:'1',contenu:{html}});
+          if(br.error)throw br.error;
+        }
+        existing.set(notionKeyV39(it.title),{id:pr.data.id,titre:it.title});created++;
+      }
+      const zone=document.getElementById('codex-import-zone-v39');
+      if(zone)zone.innerHTML=`<div class="admin-notice"><strong>${created} page${created!==1?'s':''} importée${created!==1?'s':''}.</strong>${skipped?` ${skipped} déjà présente${skipped!==1?'s':''} ignorée${skipped!==1?'s':''} pour éviter les doublons.`:''}</div>`;
+      setTimeout(()=>codexNotionImportV39.level==='saga'?renderSagaCodexV56(document.getElementById('saga-tab-content')):renderSousSagaCodex(document.getElementById('soussaga-tab-content')),700);
+    }catch(err){
+      alert('Import Notion : '+(err?.message||err));
+      if(btn){btn.disabled=false;btn.textContent='Reprendre l’import'}
+    }
+  }
+
   async function renderSagaCodexV56(zone){
     const [pagesR,sagaR]=await Promise.all([db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre'),db().from('sagas').select('page_color,accent_color').eq('id',currentSagaId).single()]);
     if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
     const saga=sagaR.data||{};
-    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les sous-sagas peuvent hériter de ces entrées sans les dupliquer.</p></div><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||saga.page_color,tags:[p.categorie],top:'Codex',onclick:`openSagaCodexPageV56('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Canon global de la saga. Les catégories sont des balises propres à ce Codex, jamais une liste globale imposée.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createSagaCodexPageV56()">+ Nouvelle entrée</button></div></div><div id="codex-import-zone-v39"></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||saga.page_color,tags:codexCategoryTagsV39(p.categorie),top:'Codex',onclick:`openSagaCodexPageV56('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
   }
   async function createSagaCodexPageV56(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,saga_id:currentSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openSagaCodexPageEditV570(data.id)}
   async function openSagaCodexPageV56(id){return openSagaCodexPageReadV570(id)}
@@ -3874,7 +4060,7 @@
     const [pagesR,ssR]=await Promise.all([db().from('codex_pages').select('*').eq('sous_saga_id',currentSousSagaId).order('ordre'),db().from('sous_sagas').select('page_color,accent_color').eq('id',currentSousSagaId).single()]);
     if(pagesR.error){zone.innerHTML=`<div class="empty">${safeText(pagesR.error.message)}</div>`;return}
     const ss=ssR.data||{};
-    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Le lore canonique de la saga parente reste hérité, pas dupliqué.</p></div><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||ss.page_color,tags:[p.categorie],top:'Codex',onclick:`openCodexPage('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
+    zone.innerHTML=`<div class="head-row"><div><h2>Codex</h2><p style="font-size:12px;color:var(--text-dim)">Pages libres de la sous-saga. Les catégories sont des balises propres à ce Codex.</p></div><div class="codex-import-actions"><button class="btn-secondary" onclick="openCodexNotionImportV39('sous-saga')">⇧ Importer Notion</button><button class="btn-primary" onclick="createCodexPage()">+ Nouvelle entrée</button></div></div><div id="codex-import-zone-v39"></div><div class="entity-gallery">${(pagesR.data||[]).map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color||ss.page_color,tags:codexCategoryTagsV39(p.categorie),top:'Codex',onclick:`openCodexPage('${p.id}')`})).join('')||'<div class="empty">Le Codex attend sa première page.</div>'}</div>`;
   }
   async function createCodexPage(){const title=prompt('Titre de la nouvelle entrée Codex :','Nouvelle entrée');if(title===null)return;const {data,error}=await db().from('codex_pages').insert({user_id:currentUser.id,sous_saga_id:currentSousSagaId,titre:title||'Nouvelle entrée'}).select('id').single();if(error)return alert(error.message);openSousSagaCodexPageEditV570(data.id)}
   async function openCodexPage(id){return openSousSagaCodexPageReadV570(id)}
