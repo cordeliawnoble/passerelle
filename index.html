@@ -635,6 +635,10 @@
   .relecture-drawer-v19{position:fixed;inset:0;z-index:1200;pointer-events:none}.relecture-drawer-v19.open{pointer-events:auto}.relecture-drawer-backdrop-v19{position:absolute;inset:0;background:rgba(16,10,25,.36);opacity:0;transition:.18s}.relecture-drawer-v19.open .relecture-drawer-backdrop-v19{opacity:1}.relecture-drawer-panel-v19{position:absolute;right:0;top:0;bottom:0;width:min(680px,94vw);background:var(--bg);border-left:1px solid var(--line);box-shadow:-20px 0 55px rgba(0,0,0,.2);transform:translateX(102%);transition:.22s;overflow:auto}.relecture-drawer-v19.open .relecture-drawer-panel-v19{transform:none}.relecture-drawer-hero-v19{height:180px;background:var(--bg-2) center/cover no-repeat;position:relative}.relecture-drawer-hero-v19:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--page-color,var(--bg)) 0%,transparent 80%)}.relecture-drawer-close-v19{position:absolute;right:12px;top:12px;z-index:3}.relecture-drawer-body-v19{padding:18px}.relecture-drawer-title-v19{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.relecture-drawer-title-v19 h2{margin:0}.relecture-work-link-v19{white-space:nowrap}.relecture-work-grid-v19{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}.relecture-axis-v19{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px;margin-bottom:9px}.relecture-axis-v19 h4{margin:0 0 5px}.relecture-axis-v19 p{font-size:12px;margin:5px 0;color:var(--text-dim)}.relecture-todo-v19{position:sticky;top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px}.relecture-todo-item-v19{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}.relecture-import-v19{border:1px dashed var(--accent);border-radius:10px;padding:13px;text-align:center;background:color-mix(in srgb,var(--accent) 6%,transparent);margin-bottom:14px}.relecture-import-v19 input{display:none}.relecture-strength-v19{border-left:3px solid var(--accent);padding:8px 10px;margin:7px 0;background:var(--bg-2);border-radius:0 8px 8px 0}.graphic-independent-v19 .graphic-field-v576c13 input[type=color]{width:100%;height:44px}.graphic-independent-v19 .inherit-note,.graphic-independent-v19 .graphic-field-actions-v576c14 button,.graphic-independent-v19 .graphic-inheritance-head-v576c13 button{display:none!important}
   @media(max-width:1000px){.relecture-cockpit-v19{grid-template-columns:1fr}.relecture-current-grid-v19{grid-template-columns:1fr 1fr}.relecture-work-grid-v19{grid-template-columns:1fr}.relecture-todo-v19{position:static}}@media(max-width:680px){.relecture-current-grid-v19{grid-template-columns:1fr}}
 
+
+/* ===== V21 · Bureau éditorial compact, sans scroll horizontal ===== */
+.be-top-grid{display:none!important}.be-title-row-v21{align-items:center;margin-bottom:12px}.be-kpis-v21{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden;margin:0 0 14px}.be-kpis-v21>div{padding:12px 14px;border-right:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center}.be-kpis-v21>div:last-child{border-right:0}.be-kpis-v21 strong{font:700 20px 'Lora',serif;color:var(--accent);grid-row:1/3}.be-kpis-v21 span{font-size:10px;color:var(--text-dim);line-height:1.25}.be-filters-v21{display:grid!important;grid-template-columns:minmax(180px,1.35fr) repeat(5,minmax(120px,.85fr)) auto!important;gap:7px!important;align-items:center}.be-reset-v21{white-space:nowrap;padding:8px 10px!important}.be-table-wrap-v21{overflow-x:hidden!important}.be-table-v21{min-width:0!important;width:100%!important;table-layout:fixed}.be-table-v21 th:nth-child(1){width:25%}.be-table-v21 th:nth-child(2){width:14%}.be-table-v21 th:nth-child(3){width:13%}.be-table-v21 th:nth-child(4){width:16%}.be-table-v21 th:nth-child(5){width:8%}.be-table-v21 th:nth-child(6){width:15%}.be-table-v21 th:nth-child(7){width:9%}.be-table-v21 td{padding:8px 7px}.be-table-v21 .be-work-cell{min-width:0}.be-table-v21 .be-work-cell img,.be-table-v21 .be-cover-empty{width:34px;height:48px;flex:0 0 34px}.be-table-v21 .be-work-cell>div:last-child{min-width:0}.be-table-v21 .be-work-cell strong,.be-table-v21 .be-work-cell small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.be-table-v21 .be-inline{width:100%;min-width:0!important;padding:6px 5px}.be-horizon-v21{text-align:center}.be-actions-v21{text-align:center;white-space:nowrap}.be-icon-btn{border:0;background:transparent;color:var(--accent);font-weight:800;font-size:16px;cursor:pointer;padding:5px 6px;border-radius:7px}.be-icon-btn:hover{background:var(--bg-2)}
+@media(max-width:1180px){.be-filters-v21{grid-template-columns:repeat(3,minmax(0,1fr))!important}.be-kpis-v21{grid-template-columns:repeat(3,1fr)}.be-kpis-v21>div:nth-child(3){border-right:0}.be-kpis-v21>div:nth-child(n+4){border-top:1px solid var(--line)}}
 </style>
 </head>
 <body>
@@ -1507,11 +1511,13 @@
       const {error:sagaCollectionError}=await db().from('sagas').update({univers_id:selectedCollectionId}).eq('id',sagaId);
       if(sagaCollectionError){ if(status) status.textContent='Erreur collection : '+sagaCollectionError.message; alert('Erreur collection : '+sagaCollectionError.message); return; }
     }
+    // V21 : la fiche canonique est enregistrée EN PREMIER. Les relations secondaires
+    // ne peuvent plus empêcher l'enregistrement de l'œuvre ou de sa charte.
+    const {data:savedWork,error}=await db().from('oeuvres').update(payload).eq('id',adminEditingOeuvreId).select('*').single();
+    if(error){ if(status) status.textContent='Erreur : '+error.message; showSaveToastV20('⚠ Enregistrement impossible : '+error.message,'error'); return; }
     await db().from('oeuvre_metadonnees').delete().eq('oeuvre_id',adminEditingOeuvreId);
     const metaIds=[...document.querySelectorAll('.aow-meta-check:checked')].map(x=>x.value);
-    if(metaIds.length){ const mr=await db().from('oeuvre_metadonnees').insert(metaIds.map(metadata_id=>({oeuvre_id:adminEditingOeuvreId,metadata_id}))); if(mr.error){ if(status)status.textContent='Erreur métadonnées : '+mr.error.message; return alert(mr.error.message); } }
-    const {error}=await db().from('oeuvres').update(payload).eq('id',adminEditingOeuvreId);
-    if(error){ if(status) status.textContent='Erreur : '+error.message; showSaveToastV20('⚠ Enregistrement impossible : '+error.message,'error'); return; }
+    if(metaIds.length){ const mr=await db().from('oeuvre_metadonnees').insert(metaIds.map(metadata_id=>({oeuvre_id:adminEditingOeuvreId,metadata_id}))); if(mr.error){ console.warn('Métadonnées œuvre non enregistrées',mr.error); showSaveToastV20('✓ Œuvre enregistrée · ⚠ métadonnées à revoir'); } }
     const resetCover=await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
     if(!resetCover.error && selectedCoverMediaId) await db().from('medias').update({est_couverture_actuelle:true}).eq('id',selectedCoverMediaId);
     if(status) status.textContent='✓ Enregistré';
@@ -2327,132 +2333,110 @@
     const bureauBanner = await getPageBanner('bureau-editorial');
     content.innerHTML = `<div class="status-line">Chargement du catalogue éditorial…</div>`;
     const [worksRes,sagasRes,ssRes,universRes] = await Promise.all([
-      db().from('oeuvres').select('id,titre,statut,saga_id,sous_saga_id,destination_editoriale,niveau_editorial_cible,statut_editorial_actuel,horizon_annee,publication_envisagee,notes_editoriales,couverture,archive').eq('archive',false).order('titre',{ascending:true}),
+      db().from('oeuvres').select('id,titre,statut,univers_id,saga_id,sous_saga_id,destination_editoriale,niveau_editorial_cible,statut_editorial_actuel,horizon_annee,publication_envisagee,notes_editoriales,couverture,archive').eq('archive',false).order('titre',{ascending:true}),
       db().from('sagas').select('*').order('ordre',{ascending:true}),
       db().from('sous_sagas').select('id,nom,saga_id').order('ordre',{ascending:true}),
       db().from('univers').select('id,nom').order('ordre',{ascending:true})
     ]);
-    if (worksRes.error) {
-      const missing = String(worksRes.error.message||'').includes('publication_envisagee') || String(worksRes.error.message||'').includes('notes_editoriales');
-      content.innerHTML = `<div class="empty">${missing ? 'La petite migration Bureau éditorial V1 doit être exécutée dans Supabase avant d’ouvrir cette page.' : 'Erreur : '+safeText(worksRes.error.message)}</div>`;
-      return;
-    }
-    beData = worksRes.data || [];
-    beSagas = sagasRes.data || [];
-    beSousSagas = ssRes.data || [];
-    beUnivers = universRes.data || [];
-
-    content.innerHTML = `
+    if (worksRes.error) { content.innerHTML = `<div class="empty">Erreur : ${safeText(worksRes.error.message)}</div>`; return; }
+    beData=worksRes.data||[]; beSagas=sagasRes.data||[]; beSousSagas=ssRes.data||[]; beUnivers=universRes.data||[];
+    const writing=beData.filter(o=>String(o.statut_editorial_actuel||'').includes('en cours')).length;
+    const reread=beData.filter(o=>['V1.5 à faire','V1.5 en cours','V2 à écrire','V2 en cours'].includes(o.statut_editorial_actuel)).length;
+    const done=beData.filter(o=>['V1 terminée','V1.5 terminée','V2 terminée'].includes(o.statut_editorial_actuel)).length;
+    const future=beData.filter(o=>Number(o.horizon_annee)>new Date().getFullYear()).length;
+    content.innerHTML=`
       ${renderPageImageBanner(bureauBanner,'Bureau éditorial')}
-      <div class="be-title-row">
-        <div><h2>Bureau éditorial</h2><p>Le catalogue complet et les décisions stratégiques de Passerelle.</p></div>
-        <div class="be-summary"><strong>${beData.length}</strong><span>œuvres au catalogue</span></div>
-      </div>
-      <div class="be-top-grid">
-        <div class="panel be-intro-card"><h3>Vue d’ensemble</h3><p>Une donnée unique dans la fiche Œuvre, plusieurs vues pour piloter le catalogue avec TomTom.</p><div class="be-mini-kpis"><span><strong>${beData.filter(o=>o.horizon_annee===new Date().getFullYear()).length}</strong> Horizon Y</span><span><strong>${beData.filter(o=>o.horizon_annee===new Date().getFullYear()+1).length}</strong> Horizon Y+1</span></div></div>
-        ${buildDestinationDonut(beData)}
+      <div class="be-title-row be-title-row-v21"><div><h2>Bureau éditorial</h2><p>Pilotez votre catalogue en un coup d’œil.</p></div><button class="btn-primary" onclick="openOeuvreModal()">＋ Ajouter une œuvre</button></div>
+      <div class="be-kpis-v21">
+        <div><strong>${beData.length}</strong><span>œuvres au catalogue</span></div>
+        <div><strong>${writing}</strong><span>en cours</span></div>
+        <div><strong>${reread}</strong><span>en relecture</span></div>
+        <div><strong>${done}</strong><span>terminées</span></div>
+        <div><strong>${future}</strong><span>datée à venir</span></div>
       </div>
       <div class="be-tabbar">${BE_TABS.map(t=>`<button id="betab-${t.key}" onclick="showBeTab('${t.key}')">${t.label}</button>`).join('')}</div>
-      <div id="be-tab-content"></div>
-    `;
+      <div id="be-tab-content"></div>`;
     showBeTab('catalogue');
   }
 
   function showBeTab(key){
     document.querySelectorAll('[id^="betab-"]').forEach(b=>b.classList.remove('active'));
     document.getElementById('betab-'+key)?.classList.add('active');
-    const zone = document.getElementById('be-tab-content');
-    if (key === 'catalogue') renderBeCatalogue(zone);
-    if (key === 'destinations') renderBeGroupe(zone,'destination_editoriale',DESTINATIONS,true);
-    if (key === 'niveau') renderBeGroupe(zone,'niveau_editorial_cible',NIVEAUX,false);
+    const zone=document.getElementById('be-tab-content');
+    if(key==='catalogue') renderBeCatalogue(zone);
+    if(key==='destinations') renderBeGroupe(zone,'destination_editoriale',DESTINATIONS,true);
+    if(key==='niveau') renderBeGroupe(zone,'niveau_editorial_cible',NIVEAUX,false);
   }
 
   function sagaName(id){ return beSagas.find(s=>s.id===id)?.nom || '—'; }
   function sousSagaName(id){ return beSousSagas.find(s=>s.id===id)?.nom || ''; }
-  function collectionName(o){
-    const saga = beSagas.find(s=>s.id===o.saga_id);
-    if (!saga) return '—';
-    const uid = saga.univers_id || saga.collection_id || null;
-    return beUnivers.find(u=>u.id===uid)?.nom || '—';
-  }
+  function collectionName(o){ const saga=beSagas.find(s=>s.id===o.saga_id); const uid=o.univers_id||saga?.univers_id||saga?.collection_id||null; return beUnivers.find(u=>u.id===uid)?.nom||'—'; }
 
   function renderBeCatalogue(zone){
-    const y = new Date().getFullYear();
-    const sagaOptions = beSagas.map(s=>`<option value="${s.id}">${safeText(s.nom)}</option>`).join('');
-    zone.innerHTML = `
-      <div class="be-filters">
+    const y=new Date().getFullYear();
+    const collectionOptions=beUnivers.map(u=>`<option value="${u.id}">${safeText(u.nom)}</option>`).join('');
+    const sagaOptions=beSagas.map(s=>`<option value="${s.id}">${safeText(s.nom)}</option>`).join('');
+    zone.innerHTML=`
+      <div class="be-filters be-filters-v21">
         <input id="be-search" placeholder="Rechercher une œuvre…" oninput="applyBeFilters()">
+        <select id="be-filter-collection" onchange="applyBeFilters()"><option value="">Toutes les collections</option>${collectionOptions}</select>
         <select id="be-filter-saga" onchange="applyBeFilters()"><option value="">Toutes les sagas</option>${sagaOptions}</select>
         <select id="be-filter-dest" onchange="applyBeFilters()"><option value="">Toutes les destinations</option>${DESTINATIONS.map(v=>`<option>${v}</option>`).join('')}<option value="__none">Non définie</option></select>
-        <select id="be-filter-cible" onchange="applyBeFilters()"><option value="">Toutes les cibles</option>${NIVEAUX.map(v=>`<option>${v}</option>`).join('')}<option value="__none">Non définie</option></select>
-        <select id="be-filter-statut" onchange="applyBeFilters()"><option value="">Tous les statuts éditoriaux</option>${STATUTS_EDITORIAUX.map(v=>`<option>${v}</option>`).join('')}</select>
-        <select id="be-filter-horizon" onchange="applyBeFilters()"><option value="">Tous les horizons</option><option value="${y}">Horizon Y · ${y}</option><option value="${y+1}">Horizon Y+1 · ${y+1}</option><option value="__none">N/A</option></select>
+        <select id="be-filter-horizon" onchange="applyBeFilters()"><option value="">Tous les horizons</option><option value="${y}">Y · ${y}</option><option value="${y+1}">Y+1 · ${y+1}</option><option value="__none">N/A</option></select>
+        <select id="be-filter-statut" onchange="applyBeFilters()"><option value="">Tous les statuts</option>${STATUTS_EDITORIAUX.map(v=>`<option>${v}</option>`).join('')}</select>
+        <button class="btn-secondary be-reset-v21" onclick="resetBeFiltersV21()">↶ Réinitialiser</button>
       </div>
-      <div class="be-table-wrap"><table class="be-table"><thead><tr>
-        <th>Œuvre</th><th>Collection</th><th>Saga / Sous-saga</th><th>Manuscrit</th><th>Destination</th><th>Cible</th><th>Éditorial actuel</th><th>Objectif</th><th>Horizon</th><th>Publication envisagée</th>
+      <div class="be-table-wrap be-table-wrap-v21"><table class="be-table be-table-v21"><thead><tr>
+        <th>Œuvre</th><th>Destination</th><th>Cible éditoriale</th><th>Éditorial actuel</th><th>Horizon</th><th>Date de publication</th><th>Actions</th>
       </tr></thead><tbody id="be-catalogue-body"></tbody></table></div>
       <div class="be-count" id="be-count"></div>`;
     drawBeRows(beData);
   }
 
   function drawBeRows(rows){
-    const tbody = document.getElementById('be-catalogue-body');
-    if (!tbody) return;
-    const y = new Date().getFullYear();
-    tbody.innerHTML = rows.map(o=>{
-      const ss = sousSagaName(o.sous_saga_id);
+    const tbody=document.getElementById('be-catalogue-body'); if(!tbody)return;
+    const y=new Date().getFullYear();
+    tbody.innerHTML=rows.map(o=>{
+      const context=[collectionName(o),sagaName(o.saga_id)!=='—'?sagaName(o.saga_id):'',sousSagaName(o.sous_saga_id)].filter(Boolean).join(' › ');
       return `<tr>
-        <td class="be-work-cell" onclick="openOeuvreDetail('${o.id}')">${o.couverture?`<img src="${safeText(o.couverture)}" alt="">`:'<div class="be-cover-empty">✒</div>'}<strong>${safeText(o.titre)}</strong></td>
-        <td>${safeText(collectionName(o))}</td>
-        <td>${safeText(sagaName(o.saga_id))}${ss?`<small>${safeText(ss)}</small>`:''}</td>
-        <td><span class="be-badge">${safeText(o.statut||'—')}</span></td>
+        <td class="be-work-cell" onclick="openOeuvreDetail('${o.id}')">${o.couverture?`<img src="${safeText(o.couverture)}" alt="">`:'<div class="be-cover-empty">✒</div>'}<div><strong>${safeText(o.titre)}</strong><small>${safeText(context||'Œuvre indépendante')}</small></div></td>
         <td><select class="be-inline" onchange="saveBeField('${o.id}','destination_editoriale',this.value)"><option value="">Non définie</option>${DESTINATIONS.map(v=>`<option ${o.destination_editoriale===v?'selected':''}>${v}</option>`).join('')}</select></td>
         <td><select class="be-inline" onchange="saveBeField('${o.id}','niveau_editorial_cible',this.value)"><option value="">Non définie</option>${NIVEAUX.map(v=>`<option ${o.niveau_editorial_cible===v?'selected':''}>${v}</option>`).join('')}</select></td>
         <td><select class="be-inline" onchange="saveBeField('${o.id}','statut_editorial_actuel',this.value)"><option value="">Non défini</option>${STATUTS_EDITORIAUX.map(v=>`<option ${o.statut_editorial_actuel===v?'selected':''}>${v}</option>`).join('')}</select></td>
-        <td><span class="be-objective">${editorialObjective(o)}</span></td>
-        <td><select class="be-inline" onchange="saveBeHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="${y}" ${Number(o.horizon_annee)===y?'selected':''}>Y · ${y}</option><option value="${y+1}" ${Number(o.horizon_annee)===y+1?'selected':''}>Y+1 · ${y+1}</option></select></td>
-        <td><input class="be-inline be-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="ex. 2029, T2 2030…" onchange="saveBeField('${o.id}','publication_envisagee',this.value)"></td>
+        <td><select class="be-inline be-horizon-v21" onchange="saveBeHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="${y}" ${Number(o.horizon_annee)===y?'selected':''}>Y</option><option value="${y+1}" ${Number(o.horizon_annee)===y+1?'selected':''}>Y+1</option></select></td>
+        <td><input class="be-inline be-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="—" onchange="saveBeField('${o.id}','publication_envisagee',this.value)"></td>
+        <td class="be-actions-v21"><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="10" class="empty">Aucune œuvre pour ces filtres.</td></tr>`;
-    const c = document.getElementById('be-count'); if(c) c.textContent = `${rows.length} œuvre${rows.length>1?'s':''} affichée${rows.length>1?'s':''} · aucun découpage en pages`;
+    }).join('')||`<tr><td colspan="7" class="empty">Aucune œuvre pour ces filtres.</td></tr>`;
+    const c=document.getElementById('be-count'); if(c)c.textContent=`${rows.length} œuvre${rows.length>1?'s':''} affichée${rows.length>1?'s':''}`;
   }
 
   function applyBeFilters(){
     const q=(document.getElementById('be-search')?.value||'').trim().toLowerCase();
+    const collection=document.getElementById('be-filter-collection')?.value||'';
     const saga=document.getElementById('be-filter-saga')?.value||'';
     const dest=document.getElementById('be-filter-dest')?.value||'';
-    const cible=document.getElementById('be-filter-cible')?.value||'';
     const statut=document.getElementById('be-filter-statut')?.value||'';
     const horizon=document.getElementById('be-filter-horizon')?.value||'';
     const rows=beData.filter(o=>{
-      if(q && !`${o.titre||''} ${sagaName(o.saga_id)} ${sousSagaName(o.sous_saga_id)} ${collectionName(o)}`.toLowerCase().includes(q)) return false;
-      if(saga && o.saga_id!==saga) return false;
-      if(dest && (dest==='__none' ? !!o.destination_editoriale : o.destination_editoriale!==dest)) return false;
-      if(cible && (cible==='__none' ? !!o.niveau_editorial_cible : o.niveau_editorial_cible!==cible)) return false;
-      if(statut && o.statut_editorial_actuel!==statut) return false;
-      if(horizon && (horizon==='__none' ? !!o.horizon_annee : Number(o.horizon_annee)!==Number(horizon))) return false;
+      if(q&&!`${o.titre||''} ${sagaName(o.saga_id)} ${sousSagaName(o.sous_saga_id)} ${collectionName(o)}`.toLowerCase().includes(q))return false;
+      if(collection&&collectionName(o)!==(beUnivers.find(u=>u.id===collection)?.nom||''))return false;
+      if(saga&&o.saga_id!==saga)return false;
+      if(dest&&(dest==='__none'?!!o.destination_editoriale:o.destination_editoriale!==dest))return false;
+      if(statut&&o.statut_editorial_actuel!==statut)return false;
+      if(horizon&&(horizon==='__none'?!!o.horizon_annee:Number(o.horizon_annee)!==Number(horizon)))return false;
       return true;
-    });
-    drawBeRows(rows);
+    }); drawBeRows(rows);
   }
+  function resetBeFiltersV21(){['be-search','be-filter-collection','be-filter-saga','be-filter-dest','be-filter-horizon','be-filter-statut'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});drawBeRows(beData);}
 
   async function saveBeField(id,field,value){
-    const payload = {}; payload[field] = value || null;
-    const old = beData.find(o=>o.id===id);
-    if (field === 'statut_editorial_actuel' && old?.statut_editorial_actuel !== (value||null)) payload.date_dernier_changement_editorial = new Date().toISOString();
-    const { error } = await db().from('oeuvres').update(payload).eq('id',id);
-    if(error){ alert('Erreur : '+error.message); return; }
-    if(old) Object.assign(old,payload);
-    if(field==='destination_editoriale') renderBureauEditorial();
-    else if(field==='niveau_editorial_cible' || field==='statut_editorial_actuel') drawBeRows(beData);
+    const payload={};payload[field]=value||null;const old=beData.find(o=>o.id===id);
+    if(field==='statut_editorial_actuel'&&old?.statut_editorial_actuel!==(value||null))payload.date_dernier_changement_editorial=new Date().toISOString();
+    const {error}=await db().from('oeuvres').update(payload).eq('id',id);if(error){showSaveToastV20('⚠ '+error.message,'error');return;}
+    if(old)Object.assign(old,payload);showSaveToastV20('✓ Bureau éditorial enregistré');
   }
-
-  async function saveBeHorizon(id,value){
-    const year = value ? Number(value) : null;
-    const { error } = await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);
-    if(error){ alert('Erreur : '+error.message); return; }
-    const old=beData.find(o=>o.id===id); if(old) old.horizon_annee=year;
-  }
+  async function saveBeHorizon(id,value){const year=value?Number(value):null;const {error}=await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);if(error){showSaveToastV20('⚠ '+error.message,'error');return;}const old=beData.find(o=>o.id===id);if(old)old.horizon_annee=year;showSaveToastV20('✓ Horizon enregistré');}
 
   function renderBeGroupe(zone,champ,valeurs,isDestination){
     const groups={}; valeurs.forEach(v=>groups[v]=[]); const none=[];
@@ -4789,28 +4773,15 @@
   }
   async function saveOeuvreApparence(){
     const st=document.getElementById('op-appearance-status');
-    if(!currentOeuvreId){ if(st)st.textContent='Erreur : œuvre introuvable.'; return; }
+    if(!currentOeuvreId){if(st)st.textContent='Erreur : œuvre introuvable.';return;}
     try{
       if(st)st.textContent='Enregistrement…';
-      const payload=graphicOverridePayloadV576c13('op');
-      // V20 : charte autonome. soft_color ET page_color reçoivent le fond choisi
-      // afin que toutes les vues historiques et nouvelles utilisent exactement la même couleur.
-      const {data,error}=await db().from('oeuvres').update(payload).eq('id',currentOeuvreId)
-        .select('id,accent_color,secondary_color,soft_color,page_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id').single();
-      if(error) throw error;
-      if(!data) throw new Error('Supabase n’a renvoyé aucune œuvre après la sauvegarde.');
-      const resolved=await resolveGraphicThemeV576b('work',data);
-      applyObjectTheme(resolved.pageColor,resolved.accent);
-      await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
-      const fresh=document.getElementById('op-appearance-status');
-      if(fresh)fresh.textContent='✓ Apparence enregistrée';
+      // V21 : exactement le même mécanisme que Saga, qui est validé fonctionnellement.
+      await persistGraphicOverrideV576c15('oeuvres',currentOeuvreId,'op','work');
+      if(st)st.textContent='✓ Apparence enregistrée';
       showSaveToastV20('✓ Apparence de l’œuvre enregistrée');
-    }catch(error){
-      console.error('Sauvegarde apparence œuvre',error);
-      const target=document.getElementById('op-appearance-status')||st;
-      if(target)target.textContent='Erreur : '+(error?.message||String(error));
-      showSaveToastV20('⚠ Apparence non enregistrée : '+(error?.message||String(error)),'error');
-    }
+      await renderOeuvreParametres(document.getElementById('oeuvre-tab-content'));
+    }catch(error){console.error('Sauvegarde apparence œuvre',error);if(st)st.textContent='Erreur : '+(error?.message||String(error));showSaveToastV20('⚠ Apparence non enregistrée : '+(error?.message||String(error)),'error');}
   }
   window.saveOeuvreApparence = saveOeuvreApparence;
 
