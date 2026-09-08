@@ -639,6 +639,135 @@
 /* ===== V21 · Bureau éditorial compact, sans scroll horizontal ===== */
 .be-top-grid{display:none!important}.be-title-row-v21{align-items:center;margin-bottom:12px}.be-kpis-v21{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden;margin:0 0 14px}.be-kpis-v21>div{padding:12px 14px;border-right:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center}.be-kpis-v21>div:last-child{border-right:0}.be-kpis-v21 strong{font:700 20px 'Lora',serif;color:var(--accent);grid-row:1/3}.be-kpis-v21 span{font-size:10px;color:var(--text-dim);line-height:1.25}.be-filters-v21{display:grid!important;grid-template-columns:minmax(180px,1.35fr) repeat(5,minmax(120px,.85fr)) auto!important;gap:7px!important;align-items:center}.be-reset-v21{white-space:nowrap;padding:8px 10px!important}.be-table-wrap-v21{overflow-x:hidden!important}.be-table-v21{min-width:0!important;width:100%!important;table-layout:fixed}.be-table-v21 th:nth-child(1){width:25%}.be-table-v21 th:nth-child(2){width:14%}.be-table-v21 th:nth-child(3){width:13%}.be-table-v21 th:nth-child(4){width:16%}.be-table-v21 th:nth-child(5){width:8%}.be-table-v21 th:nth-child(6){width:15%}.be-table-v21 th:nth-child(7){width:9%}.be-table-v21 td{padding:8px 7px}.be-table-v21 .be-work-cell{min-width:0}.be-table-v21 .be-work-cell img,.be-table-v21 .be-cover-empty{width:34px;height:48px;flex:0 0 34px}.be-table-v21 .be-work-cell>div:last-child{min-width:0}.be-table-v21 .be-work-cell strong,.be-table-v21 .be-work-cell small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.be-table-v21 .be-inline{width:100%;min-width:0!important;padding:6px 5px}.be-horizon-v21{text-align:center}.be-actions-v21{text-align:center;white-space:nowrap}.be-icon-btn{border:0;background:transparent;color:var(--accent);font-weight:800;font-size:16px;cursor:pointer;padding:5px 6px;border-radius:7px}.be-icon-btn:hover{background:var(--bg-2)}
 @media(max-width:1180px){.be-filters-v21{grid-template-columns:repeat(3,minmax(0,1fr))!important}.be-kpis-v21{grid-template-columns:repeat(3,1fr)}.be-kpis-v21>div:nth-child(3){border-right:0}.be-kpis-v21>div:nth-child(n+4){border-top:1px solid var(--line)}}
+
+  /* ============================================================
+     V5.7.6c26 — Accueil compact + sidebar repliable
+     ============================================================ */
+
+  /* Cartes "Sur le bureau" : format compact, proche d'une petite fiche/livre */
+  .desk-pep-carousel{
+    gap:10px;
+    overflow-x:auto;
+    padding:2px 2px 8px;
+  }
+  .desk-pep-wrap{
+    flex:0 0 188px;
+    width:188px;
+    max-width:188px;
+  }
+  .desk-pep-wrap .entity-card{
+    height:220px!important;
+    min-height:220px!important;
+    border-radius:11px;
+  }
+  .desk-pep-wrap .entity-card-body{
+    min-height:70px;
+    padding:10px 11px 9px;
+  }
+  .desk-pep-wrap .entity-card-body h3{
+    font-size:18px!important;
+    line-height:1.05;
+    margin-bottom:5px!important;
+    max-width:88%;
+  }
+  .desk-pep-wrap .entity-card-tags{
+    max-width:90%;
+    gap:4px;
+  }
+  .desk-pep-wrap .entity-card-tags span{
+    font-size:8px;
+    padding:3px 6px;
+  }
+  .desk-pep-wrap .entity-card-kind{
+    min-height:22px;
+    padding:4px 7px;
+    font-size:8px;
+  }
+  .desk-pep-footer{
+    margin-top:-43px;
+    padding:7px 11px 9px;
+  }
+  .desk-pep-footer strong{font-size:11px}
+  .desk-pep-footer small{font-size:8px}
+  .desk-pep-progress{
+    min-width:38px;
+    font-size:13px;
+  }
+
+  /* Relecture du cockpit : cartes plus petites également */
+  .relecture-current-grid-v19{
+    grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+    gap:10px;
+  }
+  .relecture-card-v19{
+    min-height:126px;
+    border-radius:10px;
+  }
+  .relecture-card-v19.compact{min-height:92px}
+  .relecture-card-content-v19{padding:11px;max-width:78%}
+  .relecture-card-content-v19 h3{font-size:14px}
+  .relecture-card-v19.compact h3{font-size:12px}
+
+  /* Sidebar totalement repliable */
+  .sidebar{
+    transition:width .22s ease, border-color .22s ease, opacity .18s ease;
+  }
+  .sidebar-toggle-v26{
+    position:fixed;
+    top:16px;
+    left:208px;
+    z-index:1400;
+    width:34px;
+    height:34px;
+    border:1px solid var(--global-line);
+    border-radius:999px;
+    background:var(--global-card);
+    color:var(--global-accent);
+    box-shadow:0 6px 18px rgba(20,12,35,.13);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    transition:left .22s ease, transform .15s ease, background .15s ease;
+  }
+  .sidebar-toggle-v26:hover{
+    transform:scale(1.06);
+    background:var(--global-bg-2);
+  }
+  .shell.sidebar-collapsed-v26 .sidebar{
+    width:0!important;
+    min-width:0!important;
+    padding-left:0!important;
+    padding-right:0!important;
+    border-right-color:transparent!important;
+    opacity:0;
+    pointer-events:none;
+  }
+  .shell.sidebar-collapsed-v26 .sidebar-toggle-v26{
+    left:14px;
+  }
+  .shell.sidebar-collapsed-v26 .main{
+    width:100%;
+  }
+  .shell.sidebar-collapsed-v26 .wrap{
+    max-width:1240px;
+  }
+
+  @media(max-width:760px){
+    .desk-pep-wrap{
+      flex-basis:168px;
+      width:168px;
+      max-width:168px;
+    }
+    .desk-pep-wrap .entity-card{
+      height:205px!important;
+      min-height:205px!important;
+    }
+    .sidebar-toggle-v26{left:208px}
+    .shell.sidebar-collapsed-v26 .sidebar-toggle-v26{left:10px}
+  }
+
 </style>
 </head>
 <body>
@@ -779,6 +908,8 @@
             <button onclick="doLogout()">Déconnexion</button>
           </div>
         </div>
+        <button class="sidebar-toggle-v26" id="sidebar-toggle-v26" type="button"
+                onclick="toggleSidebarV26()" aria-label="Replier le menu" title="Replier le menu">‹</button>
         <div class="main"><div class="wrap" id="content"></div></div>
       </div>
       ${sagaModalHtml()}
@@ -805,6 +936,33 @@
         <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="addMemo()">Ajouter</button>
       </div>`;
     loadSidebarQuickLinks();
+    applySidebarStateV26();
+  }
+
+  function applySidebarStateV26(){
+    const shell=document.querySelector('.shell');
+    const btn=document.getElementById('sidebar-toggle-v26');
+    if(!shell||!btn) return;
+    let collapsed=false;
+    try{ collapsed=localStorage.getItem('passerelle_sidebar_collapsed')==='1'; }catch(e){}
+    shell.classList.toggle('sidebar-collapsed-v26',collapsed);
+    btn.textContent=collapsed?'›':'‹';
+    btn.setAttribute('aria-label',collapsed?'Déplier le menu':'Replier le menu');
+    btn.title=collapsed?'Déplier le menu':'Replier le menu';
+  }
+
+  function toggleSidebarV26(){
+    const shell=document.querySelector('.shell');
+    const btn=document.getElementById('sidebar-toggle-v26');
+    if(!shell) return;
+    const collapsed=!shell.classList.contains('sidebar-collapsed-v26');
+    shell.classList.toggle('sidebar-collapsed-v26',collapsed);
+    if(btn){
+      btn.textContent=collapsed?'›':'‹';
+      btn.setAttribute('aria-label',collapsed?'Déplier le menu':'Replier le menu');
+      btn.title=collapsed?'Déplier le menu':'Replier le menu';
+    }
+    try{ localStorage.setItem('passerelle_sidebar_collapsed',collapsed?'1':'0'); }catch(e){}
   }
 
   function toggleSpaceMenu(event){
@@ -2183,8 +2341,8 @@
     ]);
     const relectureIds=[...new Set((homeRelectures.data||[]).map(r=>r.oeuvre_id).filter(Boolean))];
     let homeRelectureWorks=[];
-    if(relectureIds.length){const rr=await db().from('oeuvres').select('id,titre,couverture,banniere,page_color,mots_ecrits,objectif_mots').in('id',relectureIds);homeRelectureWorks=rr.data||[];}
-    const homePlanningWorkIds=[...new Set((homePlanning.data||[]).map(s=>s.oeuvre_id).filter(Boolean))];let homePlanningWorks=[];if(homePlanningWorkIds.length){const hw=await db().from('oeuvres').select('id,titre,couverture,banniere,page_color').in('id',homePlanningWorkIds);homePlanningWorks=hw.data||[];}
+    if(relectureIds.length){const rr=await db().from('oeuvres').select('id,titre,couverture,banniere,soft_color,page_color,mots_ecrits,objectif_mots').in('id',relectureIds);homeRelectureWorks=rr.data||[];}
+    const homePlanningWorkIds=[...new Set((homePlanning.data||[]).map(s=>s.oeuvre_id).filter(Boolean))];let homePlanningWorks=[];if(homePlanningWorkIds.length){const hw=await db().from('oeuvres').select('id,titre,couverture,banniere,soft_color,page_color').in('id',homePlanningWorkIds);homePlanningWorks=hw.data||[];}
     const homeWorksMap=new Map([...(enBureau.data||[]),...homeRelectureWorks,...homePlanningWorks].map(o=>[o.id,o]));
     const homeRelectureProgress=new Map();
     if(relectureIds.length){
@@ -2212,11 +2370,11 @@
           <h2>Sur le bureau</h2>
           <div class="desk-project-section">
             <div class="desk-project-title">✍️ Écriture</div>
-            ${!enBureau.data?.length ? `<div class="empty" style="padding:22px 14px">Aucune œuvre en écriture.</div>` : `<div class="desk-pep-carousel">${enBureau.data.map(o=>{const pct=o.objectif_mots?Math.min(100,Math.round((o.mots_ecrits||0)/o.objectif_mots*100)):0;return `<div class="desk-pep-wrap">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[o.statut_editorial_actuel||o.statut],top:'Écriture',onclick:`openOeuvreDetail('${o.id}')`})}<div class="desk-pep-footer" style="${galleryContrastVars(o.page_color||'#EDE7F6')}"><div><strong>${(o.mots_ecrits||0).toLocaleString('fr-FR')} mots</strong><small>écrits</small></div><div class="desk-pep-progress">${pct}%</div></div></div>`}).join('')}</div>`}
+            ${!enBureau.data?.length ? `<div class="empty" style="padding:22px 14px">Aucune œuvre en écriture.</div>` : `<div class="desk-pep-carousel">${enBureau.data.map(o=>{const pct=o.objectif_mots?Math.min(100,Math.round((o.mots_ecrits||0)/o.objectif_mots*100)):0;return `<div class="desk-pep-wrap">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.soft_color||o.page_color,tags:[o.statut_editorial_actuel||o.statut],top:'Écriture',onclick:`openOeuvreDetail('${o.id}')`})}<div class="desk-pep-footer" style="${galleryContrastVars(o.soft_color||o.page_color||'#EDE7F6')}"><div><strong>${(o.mots_ecrits||0).toLocaleString('fr-FR')} mots</strong><small>écrits</small></div><div class="desk-pep-progress">${pct}%</div></div></div>`}).join('')}</div>`}
           </div>
           <div class="desk-project-section">
             <div class="desk-project-title">📖 Relecture</div>
-            ${!homeRelectures.data?.length?`<div class="empty" style="padding:22px 14px">Aucune relecture active.</div>`:`<div class="desk-pep-carousel">${homeRelectures.data.map(r=>{const o=homeWorksMap.get(r.oeuvre_id);if(!o)return '';const prog=homeRelectureProgress.get(o.id)||{done:0,total:0};const pct=prog.total?Math.round(prog.done/prog.total*100):0;return `<div class="desk-pep-wrap">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.page_color,tags:[r.statut||'Relecture en cours'],top:'Relecture',onclick:`openOeuvreDetail('${o.id}')`})}<div class="desk-pep-footer" style="${galleryContrastVars(o.page_color||'#EDE7F6')}"><div><strong>${(o.mots_ecrits||0).toLocaleString('fr-FR')} mots</strong><small>dans le manuscrit</small></div><div class="desk-pep-progress">${pct}%</div></div></div>`}).join('')}</div>`}
+            ${!homeRelectures.data?.length?`<div class="empty" style="padding:22px 14px">Aucune relecture active.</div>`:`<div class="desk-pep-carousel">${homeRelectures.data.map(r=>{const o=homeWorksMap.get(r.oeuvre_id);if(!o)return '';const prog=homeRelectureProgress.get(o.id)||{done:0,total:0};const pct=prog.total?Math.round(prog.done/prog.total*100):0;return `<div class="desk-pep-wrap">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o.soft_color||o.page_color,tags:[r.statut||'Relecture en cours'],top:'Relecture',onclick:`openOeuvreDetail('${o.id}')`})}<div class="desk-pep-footer" style="${galleryContrastVars(o.soft_color||o.page_color||'#EDE7F6')}"><div><strong>${(o.mots_ecrits||0).toLocaleString('fr-FR')} mots</strong><small>dans le manuscrit</small></div><div class="desk-pep-progress">${pct}%</div></div></div>`}).join('')}</div>`}
           </div>
         </div>
         <div class="panel">
