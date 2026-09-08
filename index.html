@@ -1068,21 +1068,31 @@
     const {data:{session}}=await mediaSb.auth.getSession();mediaUser=session?.user||null;return !!mediaUser;
   }
   async function uploadAssetFile(file,folder='banners',opts={}){
-    if(!file) return null;
+    if(!file){if(opts.throwOnError)throw new Error('Aucun fichier reçu.');return null;}
     if(!(await ensureMediaSessionV573b())){
-      mediaAuthWarningV573b='Stockage médias non connecté. Crée le même utilisateur dans le projet Supabase Médias, puis déconnecte/reconnecte Passerelle.';
-      showTransientStatusV572('🖼 '+mediaAuthWarningV573b);return null;
+      mediaAuthWarningV573b='Stockage médias non connecté. Reconnecte-toi à Passerelle pour renouveler aussi la session du projet Médias.';
+      showTransientStatusV572('🖼 '+mediaAuthWarningV573b);
+      if(opts.throwOnError)throw new Error(mediaAuthWarningV573b);
+      return null;
     }
     let prepared={file,originalSize:file.size,optimizedSize:file.size,converted:false};
-    try{if(!opts.skipOptimize)prepared=await optimizeImageForUploadV573b(file,folder,opts)}catch(err){console.warn('Optimisation WebP impossible, fichier original conservé',err)}
+    try{if(!opts.skipOptimize)prepared=await optimizeImageForUploadV573b(file,folder,opts)}catch(err){console.warn('Optimisation WebP impossible, fichier original conservé',err);if(opts.requireOptimize)throw err}
     const upFile=prepared.file||file;
+    if(!upFile.size){const e=new Error('Le fichier extrait du ZIP est vide (0 octet).');if(opts.throwOnError)throw e;return null}
     const ext=(upFile.name.split('.').pop()||'webp').toLowerCase().replace(/[^a-z0-9]/g,'')||'webp';
     const safeName=`${Date.now()}-${Math.random().toString(36).slice(2,9)}.${ext}`;
-    const path=`${mediaUser.id}/${folder}/${safeName}`;
+    const cleanFolder=String(folder||'medias').replace(/^\/+|\/+$/g,'').replace(/[^a-zA-Z0-9_\/-]/g,'-');
+    const path=`${mediaUser.id}/${cleanFolder}/${safeName}`;
     const {error}=await mediaSb.storage.from(MEDIA_BUCKET).upload(path,upFile,{cacheControl:'31536000',upsert:false,contentType:upFile.type||undefined});
-    if(error){showTransientStatusV572('Upload impossible : '+error.message);return null;}
+    if(error){
+      const detail=`${error.message||'Erreur Storage'}${error.statusCode?` (HTTP ${error.statusCode})`:''} · bucket ${MEDIA_BUCKET} · ${upFile.type||'type inconnu'} · ${upFile.size} octets`;
+      showTransientStatusV572('Upload impossible : '+detail);
+      if(opts.throwOnError)throw new Error(detail);
+      return null;
+    }
     const {data}=mediaSb.storage.from(MEDIA_BUCKET).getPublicUrl(path);
-    return data?.publicUrl||null;
+    if(!data?.publicUrl){const e=new Error('Fichier envoyé mais URL publique introuvable.');if(opts.throwOnError)throw e;return null}
+    return data.publicUrl;
   }
   async function uploadPageBanner(pageKey,input){
     const file=input?.files?.[0]; if(!file)return;
@@ -2123,8 +2133,10 @@
           for(let ai=0;ai<notionAssets.length;ai++){
             const asset=notionAssets[ai];
             say(`Import en cours… ${pos+1}/${indexes.length} · ${name} · média ${ai+1}/${notionAssets.length}`);
-            const url=await uploadAssetFile(asset.file,`medias/personnage/${p.id}`,{kind:asset.role==='portrait'?'portrait':'generic'});
-            if(!url){errors.push(`${name} / média ${asset.name}: téléversement impossible`);continue}
+            let url=null;
+            try{url=await uploadAssetFile(asset.file,`medias/personnage/${p.id}`,{kind:asset.role==='portrait'?'portrait':'generic',throwOnError:true})}
+            catch(uploadErr){errors.push(`${name} / média ${asset.name}: ${uploadErr?.message||uploadErr}`);continue}
+            if(!url){errors.push(`${name} / média ${asset.name}: aucune URL retournée`);continue}
             const mediaPayload={user_id:currentUser.id,personnage_id:p.id,url,titre:cleanMediaFilenameV566(asset.file.name),type:asset.role==='portrait'?'Portrait':'Illustration'};
             const {error:me}=await db().from('medias').insert(mediaPayload);
             if(me){errors.push(`${name} / média ${asset.name}: ${me.message}`);continue}
