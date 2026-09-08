@@ -889,6 +889,22 @@
   @media(max-width:760px){.home-kpis-v38{grid-template-columns:repeat(2,minmax(0,1fr))!important}.home-horizon-head-v38{align-items:flex-start;flex-direction:column}.home-horizon-tools-v38{justify-content:flex-start}.home-horizon-card-v38{grid-template-columns:96px 1fr;min-height:156px}.home-horizon-cover-v38{width:96px;height:144px}}
   @media(max-width:520px){.home-horizon-cards-v38{grid-template-columns:1fr}.home-week-row-v38{grid-template-columns:52px minmax(0,1fr) 38px}}
 
+  /* ============================================================
+     C38c · Saga conforme au mockup
+     ============================================================ */
+  .saga-info-mock-c38c{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(310px,.95fr);gap:14px;align-items:start}
+  .saga-info-side-c38c{display:grid;gap:14px}
+  .saga-mock-panel-c38c{border:1px solid var(--line);border-radius:14px;padding:18px;background:color-mix(in srgb,var(--bg) 88%,#fff 12%);box-shadow:0 6px 20px rgba(18,12,28,.045)}
+  .saga-mock-panel-c38c h2{display:flex;align-items:center;gap:9px;margin:0 0 14px;font:600 17px 'Lora',serif;color:var(--text)}
+  .saga-presentation-c38c{font-size:13px;line-height:1.72}
+  .saga-presentation-c38c .rich-readable-v576c37{font-size:13px;line-height:1.72}
+  .saga-general-c38c{display:grid}.saga-general-row-c38c{display:grid;grid-template-columns:24px minmax(112px,.75fr) minmax(0,1.35fr);gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.saga-general-row-c38c:last-child{border-bottom:0}.saga-general-row-c38c .ico{color:var(--text-dim);text-align:center}.saga-general-row-c38c .label{color:var(--text-dim)}.saga-general-row-c38c strong{font-weight:600}
+  .saga-status-pill-c38c{display:inline-flex;align-items:center;gap:6px;width:max-content;max-width:100%;padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));color:var(--text);font-size:10px}.saga-status-pill-c38c:before{content:'';width:7px;height:7px;border-radius:50%;background:#6bcf78;box-shadow:0 0 0 2px color-mix(in srgb,#6bcf78 18%,transparent)}
+  .saga-stat-grid-c38c{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.saga-stat-card-c38c{border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--bg) 92%,#fff 8%);padding:12px;text-align:center;min-width:0}.saga-stat-card-c38c span{display:block;font-size:9px;color:var(--text-dim);margin-bottom:9px}.saga-stat-card-c38c b{display:block;font:600 24px 'Cormorant Garamond',serif;color:var(--text)}
+  .saga-catalog-grid-c38c.entity-gallery.work-grid-compact-c38{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}.saga-catalog-grid-c38c.entity-gallery:not(.work-grid-compact-c38){grid-template-columns:repeat(auto-fill,minmax(200px,250px));align-items:start}
+  @media(max-width:900px){.saga-info-mock-c38c{grid-template-columns:1fr}.saga-info-side-c38c{grid-template-columns:1fr 1fr}.saga-general-row-c38c{grid-template-columns:22px 120px 1fr}}
+  @media(max-width:680px){.saga-info-side-c38c{grid-template-columns:1fr}.saga-stat-grid-c38c{grid-template-columns:1fr 1fr}.saga-general-row-c38c{grid-template-columns:22px 105px 1fr}}
+
 </style>
 </head>
 <body>
@@ -3084,65 +3100,90 @@
   function metadataNames(defs,rels,id,key){const ids=rels.filter(r=>r[key]===id).map(r=>r.metadata_id);return defs.filter(d=>ids.includes(d.id)).map(d=>(d.emoji?d.emoji+' ':'')+d.nom)}
   function mediaImage(m){return m?.url||m?.image_url||m?.fichier_url||m?.source_url||null}
 
+  function renderStoredRichC38c(value){
+    const raw=String(value||'').trim();
+    if(!raw)return '<div class="character-empty">Pas encore de présentation.</div>';
+    return /<\/?[a-z][\s\S]*>/i.test(raw)?`<div class="rich-readable-v576c37">${raw}</div>`:renderSimpleRichText(raw);
+  }
   async function renderSagaInformations(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
     try{
-      const [sr,ssr,wr,chr,mr,codr]=await Promise.all([
+      const [sr,ssr,wr]=await Promise.all([
         db().from('sagas').select('*').eq('id',currentSagaId).single(),
         db().from('sous_sagas').select('id').eq('saga_id',currentSagaId),
-        db().from('oeuvres').select('id').eq('saga_id',currentSagaId),
-        db().from('chronologie_evenements').select('*').order('periode_ordre'),
-        db().from('medias').select('*').limit(80),
-        db().from('codex_pages').select('*').eq('saga_id',currentSagaId).order('ordre')
+        db().from('oeuvres').select('id,sous_saga_id').eq('saga_id',currentSagaId).eq('archive',false)
       ]);
-
-      const firstError=[sr,ssr,wr,chr,mr,codr].find(r=>r?.error)?.error;
-      if(firstError) throw firstError;
-
-      const s=sr.data||{};
-      const ssIds=(ssr.data||[]).map(x=>x.id);
-      const allWorks=(wr.data||[]);
-      const childWorks=ssIds.length
-        ? await db().from('oeuvres').select('id').in('sous_saga_id',ssIds)
-        : {data:[],error:null};
-
-      if(childWorks.error) throw childWorks.error;
-
-      const nbWorks=new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)]).size;
-      const events=(chr.data||[]).filter(e=>e.saga_id===currentSagaId||ssIds.includes(e.sous_saga_id));
-      const keyEvents=events.filter(e=>e.repere_cle_saga).slice(0,6);
-      const periods=events.map(e=>e.periode_label||e.date_evenement).filter(Boolean);
-      const period=s.periode_couverte||((periods.length>1)?`${periods[0]} → ${periods[periods.length-1]}`:(periods[0]||'—'));
-
-      const rawTags=Array.isArray(s.mots_cles)
-        ? s.mots_cles
-        : (typeof s.mots_cles==='string' ? s.mots_cles.split(',').map(x=>x.trim()).filter(Boolean) : []);
-      const tags=rawTags.map(x=>`<span class="tag">${safeText(x)}</span>`).join('');
-
-      const codexPlaces=(codr.data||[]).filter(p=>p.categorie==='Lieu'&&p.emblematique).slice(0,4);
-      const workIds=[...new Set([...allWorks.map(x=>x.id),...(childWorks.data||[]).map(x=>x.id)])];
-      const media=(mr.data||[]).filter(m=>mediaImage(m)&&(m.saga_id===currentSagaId||ssIds.includes(m.sous_saga_id)||workIds.includes(m.oeuvre_id))).slice(0,9);
-
-      zone.innerHTML=`<div class="saga-info-c38"><section class="panel"><h2>À propos</h2><div>${renderSimpleRichText(s.description||s.a_propos||'Pas encore de résumé.')}</div>${rawTags.length?`<div class="saga-tags-c38">${tags}</div>`:''}</section><aside class="panel"><h2>En bref</h2><div class="saga-facts-c38"><div class="saga-fact-c38"><span>Sous-sagas</span><strong>${ssIds.length}</strong></div><div class="saga-fact-c38"><span>Tomes / œuvres</span><strong>${nbWorks}</strong></div><div class="saga-fact-c38"><span>Période couverte</span><strong>${safeText(period)}</strong></div></div></aside></div><section class="panel"><h2>⭐ Repères clés de l’histoire</h2>${keyEvents.length?`<div style="display:grid;gap:9px">${keyEvents.map(e=>`<div style="display:grid;grid-template-columns:130px 14px 1fr;gap:10px;align-items:center;cursor:pointer" onclick="openChronoDrawer('${e.id}')"><strong>${safeText(e.periode_label||e.date_evenement||'~')}</strong><span style="width:10px;height:10px;border-radius:50%;background:${safeText(e.couleur||'var(--accent)')}"></span><span>${safeText(e.titre)}</span></div>`).join('')}</div>`:'<div class="empty">Coche « Repère clé Saga » dans la Chronologie pour faire remonter un événement ici.</div>'}</section><div class="saga-lower-grid"><section class="panel"><h2>🗺️ Lieux emblématiques</h2>${codexPlaces.length?`<div class="entity-gallery">${codexPlaces.map(p=>entityGalleryCard({title:p.titre,image:p.banniere,pageColor:p.page_color,tags:['Lieu'],onclick:`openSagaCodexPageV56('${p.id}')`})).join('')}</div>`:'<div class="empty">Les entrées Codex de catégorie « Lieu » marquées emblématiques apparaîtront ici.</div>'}</section><section class="panel"><h2>🖼️ Moodboard</h2>${media.length?`<div class="mini-moodboard">${media.slice(((new Date().getHours()<12)?0:3),((new Date().getHours()<12)?0:3)+6).map(m=>`<img src="${safeText(mediaImage(m))}" alt="">`).join('')}</div>`:'<div class="empty">Les médias liés à la saga et à ses enfants nourriront ce moodboard.</div>'}</section></div>`;
-    }catch(err){
-      console.error('Saga Informations',err);
-      zone.innerHTML=`<div class="empty"><strong>Impossible de charger les informations de la saga.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`;
-    }
+      const firstError=[sr,ssr,wr].find(r=>r?.error)?.error;if(firstError)throw firstError;
+      const s=sr.data||{},ssIds=(ssr.data||[]).map(x=>x.id);
+      const child=ssIds.length?await db().from('oeuvres').select('id,sous_saga_id').in('sous_saga_id',ssIds).eq('archive',false):{data:[],error:null};if(child.error)throw child.error;
+      const workIds=[...new Set([...(wr.data||[]).map(x=>x.id),...(child.data||[]).map(x=>x.id)])];
+      let universeName='—',characterCount=0;
+      if(s.univers_id){const ur=await db().from('univers').select('nom').eq('id',s.univers_id).maybeSingle();universeName=ur.data?.nom||'—'}
+      if(workIds.length){const pr=await db().from('personnages_oeuvres').select('personnage_id,oeuvre_id').in('oeuvre_id',workIds);if(!pr.error)characterCount=new Set((pr.data||[]).map(x=>x.personnage_id).filter(Boolean)).size}
+      const period=s.periode_couverte||s.temporalite||'—';
+      const code=s.passerelle_id||'—';
+      const status=s.statut||'Sans statut';
+      zone.innerHTML=`<div class="saga-info-mock-c38c">
+        <section class="saga-mock-panel-c38c"><h2>📖 Présentation</h2><div class="saga-presentation-c38c">${renderStoredRichC38c(s.description||s.a_propos||'')}</div></section>
+        <div class="saga-info-side-c38c">
+          <section class="saga-mock-panel-c38c"><h2>ⓘ Informations générales</h2><div class="saga-general-c38c">
+            <div class="saga-general-row-c38c"><span class="ico">⌘</span><span class="label">Code</span><strong>${safeText(code)}</strong></div>
+            <div class="saga-general-row-c38c"><span class="ico">⌘</span><span class="label">Genre principal</span><strong>${safeText(s.genre||'—')}</strong></div>
+            <div class="saga-general-row-c38c"><span class="ico">◫</span><span class="label">Statut</span><span class="saga-status-pill-c38c">${safeText(status)}</span></div>
+            <div class="saga-general-row-c38c"><span class="ico">⌛</span><span class="label">Période couverte</span><strong>${safeText(period)}</strong></div>
+            <div class="saga-general-row-c38c"><span class="ico">▣</span><span class="label">Nombre de tomes</span><strong>${workIds.length}</strong></div>
+            <div class="saga-general-row-c38c"><span class="ico">♙</span><span class="label">Univers principal</span><strong>${safeText(universeName)}</strong></div>
+          </div></section>
+          <section class="saga-mock-panel-c38c"><h2>▥ Statistiques</h2><div class="saga-stat-grid-c38c">
+            <div class="saga-stat-card-c38c"><span>Sous-sagas</span><b>${ssIds.length}</b></div>
+            <div class="saga-stat-card-c38c"><span>Tomes / œuvres</span><b>${workIds.length}</b></div>
+            <div class="saga-stat-card-c38c"><span>Personnages</span><b>${characterCount||'—'}</b></div>
+          </div></section>
+        </div>
+      </div>`;
+    }catch(err){console.error('Saga Informations',err);zone.innerHTML=`<div class="empty"><strong>Impossible de charger les informations de la saga.</strong><br><span style="font-size:11px">${safeText(err?.message||String(err))}</span></div>`}
   }
 
+  function sagaSubCardC38c(x,names=[]){
+    const img=x.image_url||x.banniere||'';const detail=workCardViewC38==='detailed';
+    const tags=[x.trame_principale?'Trame principale':null,x.genre||null,...names].filter(Boolean).slice(0,2);
+    return `<article class="work-card-c38 ${detail?'detailed':'compact'}" onclick="openSousSagaDetail('${x.id}')"><div class="cover">${img?`<img src="${safeText(img)}" alt="">`:`<div style="padding:10px;text-align:center;color:var(--text-dim);font-size:10px">${safeText(x.nom)}</div>`}</div><div class="body"><h3 title="${safeText(x.nom)}">${safeText(x.nom)}</h3><div class="chips">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div></div></article>`;
+  }
+  let sagaSousSagasC38c=[],sagaSousMetaC38c=null;
   async function renderSagaSousSagasV56(zone){
     const [r,meta]=await Promise.all([db().from('sous_sagas').select('*').eq('saga_id',currentSagaId).order('trame_principale',{ascending:false}).order('ordre'),sagaMetadataBundle()]);
-    const data=r.data||[]; await hydrateCardThemesV576c13('sub',data); const opts=meta.defs.map(d=>`<option value="${d.id}">${safeText((d.emoji?d.emoji+' ':'')+d.nom)}</option>`).join('');
-    zone.innerHTML=`<div class="head-row"><div><h2>Sous-sagas</h2></div><button class="btn-primary" onclick="openSousSagaModal()">+ Créer une sous-saga</button></div><div class="admin-filterbar"><input class="search-input" id="saga-ss-q" placeholder="🔍 Rechercher…" oninput="filterSagaEntityCards('saga-ss-grid',this.value,document.getElementById('saga-ss-meta').value)"><select id="saga-ss-meta" onchange="filterSagaEntityCards('saga-ss-grid',document.getElementById('saga-ss-q').value,this.value)"><option value="">Toutes les métadonnées</option>${opts}</select></div><div class="entity-gallery" id="saga-ss-grid">${data.map(x=>{const names=metadataNames(meta.defs,meta.ss,x.id,'sous_saga_id');const relIds=meta.ss.filter(r=>r.sous_saga_id===x.id).map(r=>r.metadata_id).join(' ');return `<div data-search="${safeText((x.nom+' '+names.join(' ')).toLowerCase())}" data-meta="${relIds}">${entityGalleryCard({title:x.nom,image:x.banniere||x.image_url,pageColor:x._resolved_page_color,tags:[x.trame_principale?'👑 Trame principale':null,...names],top:'Sous-saga',onclick:`openSousSagaDetail('${x.id}')`})}</div>`}).join('')||'<div class="empty">Aucune sous-saga.</div>'}</div>`;
+    sagaSousSagasC38c=r.data||[];sagaSousMetaC38c=meta;
+    const opts=meta.defs.map(d=>`<option value="${d.id}">${safeText((d.emoji?d.emoji+' ':'')+d.nom)}</option>`).join('');
+    zone.innerHTML=`<div class="head-row"><div><h2>Sous-sagas</h2></div><button class="btn-primary" onclick="openSousSagaModal()">+ Créer une sous-saga</button></div><div class="compact-filterbar-v576c14"><input class="filter-search" id="saga-ss-q" placeholder="🔍 Rechercher une sous-saga…" oninput="renderSagaSousSagasGridC38c()"><select id="saga-ss-meta" onchange="renderSagaSousSagasGridC38c()"><option value="">Métadonnées · Toutes</option>${opts}</select>${workViewSwitchC38('renderSagaSousSagasGridC38c')}</div><div id="saga-ss-grid"></div>`;
+    renderSagaSousSagasGridC38c();
   }
+  function renderSagaSousSagasGridC38c(){
+    const z=document.getElementById('saga-ss-grid');if(!z)return;const q=(document.getElementById('saga-ss-q')?.value||'').toLowerCase(),mid=document.getElementById('saga-ss-meta')?.value||'',meta=sagaSousMetaC38c||{defs:[],ss:[]};
+    const rows=sagaSousSagasC38c.filter(x=>{const names=metadataNames(meta.defs,meta.ss,x.id,'sous_saga_id');const ids=meta.ss.filter(r=>r.sous_saga_id===x.id).map(r=>r.metadata_id);return(!q||[x.nom,x.genre,...names].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!mid||ids.includes(mid))});
+    z.innerHTML=rows.length?`<div class="entity-gallery saga-catalog-grid-c38c ${workCardViewC38==='compact'?'work-grid-compact-c38':''}">${rows.map(x=>sagaSubCardC38c(x,metadataNames(meta.defs,meta.ss,x.id,'sous_saga_id'))).join('')}</div>`:'<div class="empty">Aucune sous-saga.</div>';
+  }
+
   function filterSagaEntityCards(gridId,q,metaId){q=(q||'').toLowerCase();document.querySelectorAll(`#${gridId}>div[data-search]`).forEach(x=>{const okq=!q||x.dataset.search.includes(q);const okm=!metaId||(x.dataset.meta||'').split(' ').includes(metaId);x.style.display=(okq&&okm)?'':'none'})}
 
+  let sagaWorksC38c=[];
   async function renderSagaOeuvresV56(zone){
-    const [ssr,wr,meta]=await Promise.all([db().from('sous_sagas').select('id,nom').eq('saga_id',currentSagaId),db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').eq('saga_id',currentSagaId).eq('archive',false).order('created_at',{ascending:false}),sagaMetadataBundle()]);
-    const ssIds=(ssr.data||[]).map(x=>x.id); const child=ssIds.length?await db().from('oeuvres').select('id,titre,genre,statut,couverture,banniere,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id,numero_sous_saga,nature_sous_saga,sous_sagas(nom)').in('sous_saga_id',ssIds).eq('archive',false):{data:[]};
-    const map=new Map([...(wr.data||[]),...(child.data||[])].map(x=>[x.id,x])); const data=[...map.values()]; await hydrateCardThemesV576c13('work',data); const opts=meta.defs.map(d=>`<option value="${d.id}">${safeText((d.emoji?d.emoji+' ':'')+d.nom)}</option>`).join('');
-    zone.innerHTML=`<div class="head-row"><h2>Toutes les œuvres de la saga</h2><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div class="admin-filterbar"><input class="search-input" id="saga-work-q" placeholder="🔍 Rechercher…" oninput="filterSagaEntityCards('saga-work-grid',this.value,document.getElementById('saga-work-meta').value)"><select id="saga-work-meta" onchange="filterSagaEntityCards('saga-work-grid',document.getElementById('saga-work-q').value,this.value)"><option value="">Toutes les métadonnées</option>${opts}</select></div><div class="entity-gallery" id="saga-work-grid">${data.map(o=>{const names=metadataNames(meta.defs,meta.works,o.id,'oeuvre_id');const relIds=meta.works.filter(r=>r.oeuvre_id===o.id).map(r=>r.metadata_id).join(' ');const origin=o.sous_saga_id?(o.sous_sagas?.nom||'Sous-saga'):'✨ Indépendante';return `<div data-search="${safeText((o.titre+' '+origin+' '+names.join(' ')).toLowerCase())}" data-meta="${relIds}">${entityGalleryCard({title:o.titre,image:o.banniere||o.couverture,pageColor:o._resolved_page_color,tags:[origin,...names,o.numero_sous_saga!=null?'T'+o.numero_sous_saga:null],top:'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,preview:`openSagaWorkPreviewV56('${o.id}')`})}</div>`}).join('')||'<div class="empty">Aucune œuvre.</div>'}</div>`;
+    const [ssr,wr]=await Promise.all([
+      db().from('sous_sagas').select('id,nom').eq('saga_id',currentSagaId),
+      db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,couverture,banniere,saga_id,sous_saga_id,univers_id,numero_sous_saga,sous_sagas(nom),sagas(nom),univers(nom)').eq('saga_id',currentSagaId).eq('archive',false).order('titre')
+    ]);
+    const ssIds=(ssr.data||[]).map(x=>x.id),child=ssIds.length?await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,couverture,banniere,saga_id,sous_saga_id,univers_id,numero_sous_saga,sous_sagas(nom),sagas(nom),univers(nom)').in('sous_saga_id',ssIds).eq('archive',false).order('titre'):{data:[]};
+    sagaWorksC38c=[...new Map([...(wr.data||[]),...(child.data||[])].map(x=>[x.id,x])).values()];
+    const subOpts=[...new Map(sagaWorksC38c.filter(x=>x.sous_saga_id&&x.sous_sagas?.nom).map(x=>[x.sous_saga_id,x.sous_sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
+    const edOpts=[...new Set(sagaWorksC38c.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('');
+    zone.innerHTML=`<div class="head-row"><div><h2>Œuvres</h2></div><button class="btn-primary" onclick="openOeuvreModalForSaga()">+ Créer une œuvre</button></div><div class="compact-filterbar-v576c14"><input class="filter-search" id="saga-work-q" placeholder="🔍 Rechercher une œuvre…" oninput="renderSagaWorksGridC38c()"><select id="saga-work-ss" onchange="renderSagaWorksGridC38c()"><option value="">Sous-saga · Toutes</option>${subOpts}</select><select id="saga-work-ed" onchange="renderSagaWorksGridC38c()"><option value="">Éditorial · Tous</option>${edOpts}</select>${workViewSwitchC38('renderSagaWorksGridC38c')}</div><div id="saga-work-grid"></div>`;
+    renderSagaWorksGridC38c();
   }
+  function renderSagaWorksGridC38c(){
+    const z=document.getElementById('saga-work-grid');if(!z)return;const q=(document.getElementById('saga-work-q')?.value||'').toLowerCase(),ss=document.getElementById('saga-work-ss')?.value||'',ed=document.getElementById('saga-work-ed')?.value||'';
+    const rows=sagaWorksC38c.filter(o=>(!q||[o.titre,o.genre,o.sous_sagas?.nom,o.statut_editorial_actuel,o.statut].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!ss||o.sous_saga_id===ss)&&(!ed||o.statut_editorial_actuel===ed));
+    z.innerHTML=rows.length?`<div class="entity-gallery saga-catalog-grid-c38c ${workCardViewC38==='compact'?'work-grid-compact-c38':''}">${rows.map(workCatalogCardV576c36).join('')}</div>`:'<div class="empty">Aucune œuvre avec ces filtres.</div>';
+  }
+
   async function openSagaWorkPreviewV56(id){const {data:o}=await db().from('oeuvres').select('*,sous_sagas(nom)').eq('id',id).single();document.getElementById('v55-drawer')?.remove();document.body.insertAdjacentHTML('beforeend',`<aside class="drawer-v55" id="v55-drawer"><button class="btn-secondary" onclick="this.parentElement.remove()">✕ Fermer</button>${o.couverture?`<img src="${safeText(o.couverture)}" style="width:110px;border-radius:10px;margin-top:12px">`:''}<h2>${safeText(o.titre)}</h2><p>${safeText(o.sous_sagas?.nom||'Œuvre indépendante')}</p><div>${renderSimpleRichText(o.resume||o.pitch||'Pas encore de résumé.')}</div><button class="btn-primary" style="margin-top:14px" onclick="document.getElementById('v55-drawer')?.remove();openOeuvreDetail('${o.id}')">Ouvrir la fiche complète ↗</button></aside>`)}
 
   async function renderSagaPersonnagesV56(zone){
