@@ -831,6 +831,15 @@
 .home-horizon-c36{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:16px}.home-horizon-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.home-horizon-card{display:grid;grid-template-columns:74px 1fr;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;background:var(--card)}.home-horizon-card img{width:74px;height:110px;object-fit:cover;border-radius:8px;background:var(--bg-2)}.home-horizon-card strong{font-size:12px}.home-horizon-card small{display:block;margin-top:5px;color:var(--text-dim);font-size:10px}.home-horizon-select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--text)}
 .work-catalog-card-c36{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);cursor:pointer;max-width:230px}.work-catalog-cover-c36{aspect-ratio:2/3;background:var(--bg-2);overflow:hidden}.work-catalog-cover-c36 img{width:100%;height:100%;object-fit:cover}.work-catalog-body-c36{padding:11px}.work-catalog-title-c36{font:600 13px 'Lora',serif;margin-bottom:8px}.work-catalog-tags-c36{display:flex;gap:5px;flex-wrap:wrap}.work-catalog-tags-c36 span{font-size:9px;padding:4px 7px;border-radius:999px;background:var(--bg-2)}
 @media(max-width:1000px){.home-c36-top{grid-template-columns:1fr}.home-writing-cards,.home-horizon-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.home-c36-kpis{grid-template-columns:repeat(2,1fr)}.home-c36-quote{grid-column:span 2}}
+
+    /* V5.7.6c37 · résumé riche dans le drawer œuvre */
+    .character-work-summary-v576c37{margin-top:14px;max-height:58vh;overflow:auto;padding-right:8px}
+    .rich-readable-v576c37{font-size:15px;line-height:1.72;color:var(--text)}
+    .rich-readable-v576c37 p{margin:0 0 14px}
+    .rich-readable-v576c37 p:last-child{margin-bottom:0}
+    .rich-readable-v576c37 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+    .rich-readable-v576c37 ul{margin:8px 0 16px;padding-left:22px;display:grid;gap:7px}
+    .rich-readable-v576c37 li{padding-left:2px}
 </style>
 </head>
 <body>
@@ -4918,13 +4927,29 @@
   function closeDrawer(){document.getElementById('passerelle-drawer')?.classList.remove('open');}
 
   function renderSimpleRichText(value){
-    const escaped = safeText(value || '');
-    return escaped
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/__(.+?)__/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/_(.+?)_/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>');
+    let raw=String(value||'').replace(/\r\n?/g,'\n').trim();
+    if(!raw)return '';
+    // Les imports Notion utilisent parfois --- comme séparateur au milieu d'une ligne.
+    raw=raw.replace(/\s+---\s+/g,'\n\n---\n\n');
+    const inline=(text)=>safeText(text||'')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/__(.+?)__/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/_(.+?)_/g,'<em>$1</em>');
+    const blocks=raw.split(/\n{2,}/).map(x=>x.trim()).filter(Boolean);
+    return `<div class="rich-readable-v576c37">${blocks.map(block=>{
+      if(/^---+$/.test(block))return '<hr>';
+      const lines=block.split('\n').map(x=>x.trim()).filter(Boolean);
+      if(lines.length&&lines.every(x=>/^[-•]\s+/.test(x))){
+        return `<ul>${lines.map(x=>`<li>${inline(x.replace(/^[-•]\s+/,''))}</li>`).join('')}</ul>`;
+      }
+      // Une liste Notion peut arriver aplatie sur une seule ligne : "- item - item".
+      if(/^[-•]\s+/.test(block)&&/\s+-\s+/.test(block)){
+        const items=block.replace(/^[-•]\s+/,'').split(/\s+-\s+/).map(x=>x.trim()).filter(Boolean);
+        return `<ul>${items.map(x=>`<li>${inline(x)}</li>`).join('')}</ul>`;
+      }
+      return `<p>${lines.map(inline).join('<br>')}</p>`;
+    }).join('')}</div>`;
   }
 
   let keywordCacheV571=null;
@@ -5439,7 +5464,7 @@
       <div id="character-detail-body" class="character-page"></div></div>`;
     renderCharacterTabV573(document.getElementById('character-detail-body'),p,d,linkedWorks,rels,medias,tab,contextWork);
   }
-  async function openCharacterWorkDrawerV575(workId){const {data:w,error}=await db().from('oeuvres').select('id,titre,resume,banniere,couverture,statut,format_cible,accent_color,soft_color,dark_color').eq('id',workId).single();if(error)return showTransientStatusV572(error.message);openDrawer(w.titre,`<div>${w.banniere||w.couverture?`<img src="${safeText(w.banniere||w.couverture)}" style="width:100%;aspect-ratio:8/3;object-fit:cover;border-radius:12px;margin-bottom:12px">`:''}<div class="work-pill">${safeText(w.format_cible||w.statut||'Œuvre')}</div><p style="line-height:1.6">${safeText(w.resume||'Aucun résumé.')}</p><button class="btn-primary" onclick="closeDrawer();openOeuvreDetail('${w.id}')">Ouvrir la fiche complète ↗</button></div>`)}
+  async function openCharacterWorkDrawerV575(workId){const {data:w,error}=await db().from('oeuvres').select('id,titre,resume,banniere,couverture,statut,format_cible,accent_color,soft_color,dark_color').eq('id',workId).single();if(error)return showTransientStatusV572(error.message);openDrawer(w.titre,`<div class="character-work-preview-v576c37">${w.banniere||w.couverture?`<img src="${safeText(w.banniere||w.couverture)}" style="width:100%;aspect-ratio:8/3;object-fit:cover;border-radius:12px;margin-bottom:12px">`:''}<div class="work-pill">${safeText(w.format_cible||w.statut||'Œuvre')}</div><div class="character-work-summary-v576c37">${renderSimpleRichText(w.resume||'Aucun résumé.')}</div><button class="btn-primary" style="margin-top:14px" onclick="closeDrawer();openOeuvreDetail('${w.id}')">Ouvrir la fiche complète ↗</button></div>`)}
   function toggleCharacterClampV575(btn){const el=btn.previousElementSibling;el.classList.toggle('expanded');btn.textContent=el.classList.contains('expanded')?'Réduire ↑':'Lire la suite ↓'}
   function renderCharacterTabV573(z,p,d,linkedWorks,rels,medias,tab,contextWork=null){
     const head=characterTabHeaderV575(p,tab),portrait=p.portrait_url||characterMediaUrlV575(medias.find(x=>/portrait/i.test(x.type||'')))||'';
@@ -5468,14 +5493,22 @@
     const workOptions=(linkedWorks||[]).map(x=>`<option value="${safeText(x.work.titre)}">${safeText(x.work.titre)}</option>`).join('');
     return `<div class="full"><div class="character-edit-toolbar"><div><button type="button" class="btn-secondary" onclick="addCharacterRelationRowV576c36()">+ Ajouter une relation</button></div><span class="hint">Tab circule de cellule en cellule. Sur la dernière cellule, Tab crée une nouvelle ligne.</span></div><div style="overflow:auto"><table class="character-inline-editor" id="ctab-rel-table"><thead><tr><th>Personnage</th><th>Relation</th><th>Description</th><th>Évolution</th><th>Apparition</th><th></th></tr></thead><tbody>${rows.map(r=>characterRelationRowV576c36(r,workOptions)).join('')}</tbody></table></div></div>`;
   }
-  function characterRelationRowV576c36(r={},workOptions=''){return `<tr><td><input data-rel="nom" value="${safeText(r.nom||'')}" placeholder="Nom"></td><td><select data-rel="type"><option value="">Relation</option>${['Partenaire','Ami·e','Famille','Allié·e','Mentor','Antagoniste','Autre'].map(x=>`<option ${r.type===x?'selected':''}>${x}</option>`).join('')}</select></td><td><textarea data-rel="description" placeholder="Description">${safeText(r.description||'')}</textarea></td><td><select data-rel="evolution"><option value="">—</option>${['↗ Se rapproche','↘ Se dégrade','↔ Stable','✦ Complexe'].map(x=>`<option ${r.evolution===x||r.evolution===x.replace(/^.. /,'')?'selected':''}>${x}</option>`).join('')}</select></td><td><select data-rel="oeuvre"><option value="">—</option>${workOptions}</select></td><td class="row-action"><button type="button" title="Supprimer" onclick="this.closest('tr').remove()">×</button></td></tr>`}
+  function characterRelationRowV576c36(r={},workOptions=''){return `<tr><td><input data-rel="nom" value="${safeText(r.nom||'')}" placeholder="Nom"></td><td><select data-rel="type"><option value="">Relation</option>${['Partenaire','Ami·e','Famille','Allié·e','Mentor','Antagoniste','Autre'].map(x=>`<option ${r.type===x?'selected':''}>${x}</option>`).join('')}</select></td><td><textarea data-rel="description" placeholder="Description">${safeText(r.description||'')}</textarea></td><td><select data-rel="evolution"><option value="">—</option>${['↗ Se rapproche','↘ Se dégrade','↔ Stable','✦ Complexe'].map(x=>`<option ${r.evolution===x||r.evolution===x.replace(/^.. /,'')?'selected':''}>${x}</option>`).join('')}</select></td><td><select data-rel="oeuvre" onkeydown="relationLastTabV576c37(event,this)"><option value="">—</option>${workOptions}</select></td><td class="row-action"><button type="button" title="Supprimer" onclick="this.closest('tr').remove()">×</button></td></tr>`}
   function addCharacterRelationRowV576c36(){const tb=document.querySelector('#ctab-rel-table tbody');if(!tb)return;const tr=document.createElement('tbody');const opts=[...document.querySelectorAll('#ctab-rel-table tbody tr:first-child select[data-rel="oeuvre"] option')].slice(1).map(o=>`<option value="${safeText(o.value)}">${safeText(o.textContent)}</option>`).join('');tb.insertAdjacentHTML('beforeend',characterRelationRowV576c36({},opts));tb.lastElementChild?.querySelector('input')?.focus()}
+  function relationLastTabV576c37(e,el){if(e.key!=='Tab'||e.shiftKey)return;const row=el.closest('tr'),tb=row?.parentElement;if(tb&&row===tb.lastElementChild){e.preventDefault();addCharacterRelationRowV576c36()}}
   function characterJourneyEditorV576c36(d,linkedWorks){const rows=Array.isArray(d.chronologie)&&d.chronologie.length?d.chronologie.map(x=>typeof x==='object'?x:{date:'',description:String(x),oeuvre:''}):[{date:'',description:'',oeuvre:''}];const opts=(linkedWorks||[]).filter(x=>x.work.saga_id||x.work.sous_saga_id).map(x=>`<option value="${safeText(x.work.titre)}">${safeText(x.work.numero_sous_saga?`T${x.work.numero_sous_saga} · `:'')}${safeText(x.work.titre)}</option>`).join('');return `<div class="full"><div class="character-edit-toolbar"><button type="button" class="btn-secondary" onclick="addCharacterTimelineRowV576c36()">+ Ajouter une étape</button><span class="hint">Date → Tab → Description → Tab → Tome → Tab = nouvelle ligne.</span></div><div style="overflow:auto"><table class="character-inline-editor" id="ctab-timeline-table"><thead><tr><th>Date</th><th>Description</th><th>Événement lié à un tome</th><th></th></tr></thead><tbody>${rows.map(r=>characterTimelineRowV576c36(r,opts)).join('')}</tbody></table></div></div><div class="full"><label>Avant le récit</label><textarea data-char-field="avant_recit">${safeText(d.avant_recit||'')}</textarea></div><div class="full"><label>Évolution générale</label><textarea data-char-field="evolution">${safeText(d.evolution||'')}</textarea></div>`}
   function characterTimelineRowV576c36(r={},opts=''){return `<tr><td><input data-tl="date" value="${safeText(r.date||'')}" placeholder="2026 / Printemps…"></td><td><textarea data-tl="description" placeholder="Événement">${safeText(r.description||'')}</textarea></td><td><select data-tl="oeuvre" onkeydown="timelineLastTabV576c36(event,this)"><option value="">Vie générale</option>${opts}</select></td><td class="row-action"><button type="button" onclick="this.closest('tr').remove()">×</button></td></tr>`}
   function addCharacterTimelineRowV576c36(){const tb=document.querySelector('#ctab-timeline-table tbody');if(!tb)return;const opts=[...document.querySelectorAll('#ctab-timeline-table tbody tr:first-child select[data-tl="oeuvre"] option')].slice(1).map(o=>`<option value="${safeText(o.value)}">${safeText(o.textContent)}</option>`).join('');tb.insertAdjacentHTML('beforeend',characterTimelineRowV576c36({},opts));tb.lastElementChild?.querySelector('input')?.focus()}
   function timelineLastTabV576c36(e,el){if(e.key!=='Tab'||e.shiftKey)return;const row=el.closest('tr'),tb=row?.parentElement;if(tb&&row===tb.lastElementChild){e.preventDefault();addCharacterTimelineRowV576c36()}}
   async function editCharacterTabV575(id,tab){
-    const [{data:p,error},{data:medias}]=await Promise.all([db().from('personnages').select('*').eq('id',id).single(),db().from('medias').select('*').eq('personnage_id',id).order('created_at',{ascending:false})]);if(error)return showTransientStatusV572(error.message);const d=characterDataV573(p),z=document.getElementById('character-detail-body');if(!z)return;const mediaOpts=(medias||[]).map(m=>`<option value="${safeText(characterMediaUrlV575(m))}">${safeText(m.titre||m.type||'Média')}</option>`).join('');
+    const [{data:p,error},{data:medias},{data:links},{data:works}]=await Promise.all([
+      db().from('personnages').select('*').eq('id',id).single(),
+      db().from('medias').select('*').eq('personnage_id',id).order('created_at',{ascending:false}),
+      db().from('personnages_oeuvres').select('*').eq('personnage_id',id),
+      db().from('oeuvres').select('id,titre,saga_id,sous_saga_id,numero_sous_saga,ordre_sous_saga').order('ordre_sous_saga',{ascending:true})
+    ]);if(error)return showTransientStatusV572(error.message);
+    const linkedWorks=(links||[]).map(l=>({...l,work:(works||[]).find(w=>w.id===l.oeuvre_id)})).filter(x=>x.work);
+    const d=characterDataV573(p),z=document.getElementById('character-detail-body');if(!z)return;const mediaOpts=(medias||[]).map(m=>`<option value="${safeText(characterMediaUrlV575(m))}">${safeText(m.titre||m.type||'Média')}</option>`).join('');
     let fields='';
     if(tab==='apercu')fields=`<div><label>Devise / citation signature</label><input data-char-field="citation" value="${safeText(d.citation||'')}"></div><div><label>Résumé rapide pour les vignettes</label><input data-char-field="resume_rapide" value="${safeText(d.resume_rapide||p.resume||'')}"></div><div><label>Portrait</label><select id="ctab-portrait"><option value="">— conserver / aucun —</option>${mediaOpts}</select></div><div><label>Bannière personnage</label><select id="ctab-banner"><option value="">— conserver / aucune —</option>${mediaOpts}</select></div>`;
     else if(tab==='profil')fields=`${[['nom_complet','Nom complet'],['surnom','Surnom'],['age','Âge'],['naissance','Date de naissance'],['origine','Origine'],['nationalite','Nationalité'],['lieu_vie','Lieu de vie'],['profession','Profession']].map(([k,l])=>`<div><label>${l}</label><input data-char-field="${k}" value="${safeText(d[k]||'')}"></div>`).join('')}<div class="full"><label>Apparence · une information par ligne (ex. Taille : 1m85)</label><textarea data-char-field="apparence">${safeText(d.apparence||'')}</textarea></div><div class="full"><label>Petits + · une ligne par élément</label><textarea data-char-array="petits_plus">${safeText(characterListItemsV575(d.petits_plus).join('\n'))}</textarea></div><div><label>Illustration verticale Profil</label><select data-char-field-select="profil_media_url"><option value="">— aucune —</option>${mediaOpts}</select></div><div class="full"><label>4 images Apparence · sélectionne leurs URLs dans Médias puis colle une URL par ligne si besoin</label><textarea data-char-array="apparence_media_urls">${safeText(characterListItemsV575(d.apparence_media_urls).join('\n'))}</textarea></div>`;
