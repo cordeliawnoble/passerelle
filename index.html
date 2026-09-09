@@ -993,6 +993,30 @@
   .codex-imported-table-v41 th,.codex-imported-table-v41 td{border:1px solid var(--line);padding:7px 9px;vertical-align:top}
   .oeuvre-collection-v41{margin-bottom:26px}
 
+
+  /* C42 · panneaux latéraux et Relecture unifiée */
+  .side-drawer{background:color-mix(in srgb,var(--bg) 28%,#fff 72%);border-left:2px solid color-mix(in srgb,var(--accent) 42%,var(--line));box-shadow:-18px 0 46px rgba(30,20,50,.14)}
+  .drawer-head{background:color-mix(in srgb,var(--bg) 18%,#fff 82%);border-bottom:1px solid color-mix(in srgb,var(--accent) 28%,var(--line))}
+  .drawer-body{background:color-mix(in srgb,var(--bg) 22%,#fff 78%)}
+  .drawer-body input,.drawer-body textarea,.drawer-body select,.drawer-body [contenteditable="true"]{background:color-mix(in srgb,#fff 92%,var(--bg));border:1px solid color-mix(in srgb,var(--accent) 24%,#cfc8d8)}
+  .drawer-body input:focus,.drawer-body textarea:focus,.drawer-body select:focus,.drawer-body [contenteditable="true"]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .idea-drawer,.relecture-drawer-panel-v19,.side-panel{background:color-mix(in srgb,var(--bg) 25%,#fff 75%);border-left:2px solid color-mix(in srgb,var(--accent) 38%,var(--line))}
+  .idea-drawer-body input,.idea-drawer-body textarea,.idea-drawer-body select,.relecture-drawer-panel-v19 input,.relecture-drawer-panel-v19 textarea,.relecture-drawer-panel-v19 select{background:color-mix(in srgb,#fff 92%,var(--bg));border-color:color-mix(in srgb,var(--accent) 24%,#cfc8d8)}
+  .relecture-subtabs-v42{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:0 0 18px;padding:0 2px}
+  .relecture-subtabs-v42 button{border:0;background:transparent;padding:10px 14px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;font:inherit}
+  .relecture-subtabs-v42 button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:650}
+  .relecture-info-v42{display:grid;gap:16px}.relecture-analysis-head-v42{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.relecture-analysis-head-v42 h2{margin:0}.relecture-analysis-head-v42 p{font-size:12px;color:var(--text-dim);max-width:650px}
+  .relecture-fold-v42{border:1px solid var(--line);border-radius:10px;margin-top:12px;background:color-mix(in srgb,var(--card) 86%,var(--bg))}.relecture-fold-v42 summary{cursor:pointer;padding:12px 14px;font-weight:650;display:flex;justify-content:space-between}.relecture-fold-body-v42{padding:0 14px 14px}.relecture-axis-source-v42{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.relecture-axis-source-v42 article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:9px 0;border-bottom:1px solid var(--line)}.relecture-axis-source-v42 small{grid-column:1;color:var(--text-dim)}.relecture-axis-source-v42 button{grid-column:2;grid-row:1/3}
+  .relecture-chapter-link-v42{border:0;background:none;padding:0;color:var(--text);font-weight:650;cursor:pointer;text-align:left}.relecture-chapter-link-v42:hover{color:var(--accent)}
+  .relecture-journal-v42{display:grid;gap:0}.relecture-journal-v42 article{display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;padding:14px 2px;border-bottom:1px solid var(--line)}.relecture-journal-v42 time{font-size:11px;color:var(--text-dim)}.relecture-journal-v42 article>div>div{margin-top:5px;font-size:12px;line-height:1.55}
+  .sous-saga-work-grid-v42{margin-top:12px}
+
+
+  .home-horizon-card-v38.is-relecture-v42{background:var(--accent);border-color:var(--accent);color:#fff}
+  .home-horizon-card-v38.is-relecture-v42 h3,.home-horizon-card-v38.is-relecture-v42 .home-horizon-publication-v38 strong,.home-horizon-card-v38.is-relecture-v42 .home-horizon-publication-v38 span{color:#fff}
+  .home-horizon-card-v38.is-relecture-v42 .home-horizon-context-v38 span{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.38)}
+  .home-horizon-card-v38.is-relecture-v42 .home-editorial-pill-v38{background:#fff!important;color:var(--accent)!important;border-color:#fff!important}
+
 </style>
 </head>
 <body>
@@ -1096,7 +1120,6 @@
       { key:'personnages', label:'Personnages', real:true },
     ]},
     { group: 'Atelier', items: [
-      { key:'relecture', label:'Relecture', real:true },
       { key:'planning', label:'Planning', real:true },
       { key:'idees', label:'Pépinière', real:true },
     ]},
@@ -2760,7 +2783,8 @@
       const status=o.statut_editorial_actuel||o.statut||'Projet';
       const chips=horizonContextChipsV38(o);
       const pub=formatHomePublicationV38(o.date_publication_prevue);
-      return `<article class="home-horizon-card-v38" onclick="openOeuvreDetail('${o.id}')">
+      const relectureCard=/V1\.5|V2|relecture|correction/i.test(status);
+      return `<article class="home-horizon-card-v38 ${relectureCard?'is-relecture-v42':''}" onclick="openOeuvreDetail('${o.id}')">
         <div class="home-horizon-cover-v38">${o.couverture?`<img src="${safeText(o.couverture)}" alt="Couverture ${safeText(o.titre)}">`:`<div class="home-horizon-cover-empty-v38">${initials(o.titre)}</div>`}</div>
         <div class="home-horizon-copy-v38">
           <div class="home-horizon-context-v38">${chips.map(x=>`<span>${safeText(x)}</span>`).join('')}</div>
@@ -4221,7 +4245,8 @@
     const works=(data||[]).sort((a,b)=>{const ao=Number.isFinite(Number(a.ordre_sous_saga))?Number(a.ordre_sous_saga):Number.isFinite(Number(a.numero_sous_saga))?Number(a.numero_sous_saga):9999;const bo=Number.isFinite(Number(b.ordre_sous_saga))?Number(b.ordre_sous_saga):Number.isFinite(Number(b.numero_sous_saga))?Number(b.numero_sous_saga):9999;return ao-bo||String(a.titre||'').localeCompare(String(b.titre||''),'fr')}); const ids=works.map(x=>x.id); let counts={};
     if(ids.length){const r=await db().from('chapitres').select('oeuvre_id,etat,nb_mots,objectif_mots').in('oeuvre_id',ids);(r.data||[]).forEach(c=>{counts[c.oeuvre_id]??={all:0,written:0};counts[c.oeuvre_id].all++;if((c.nb_mots||0)>0||/écrit|rédig|relu/i.test(c.etat||''))counts[c.oeuvre_id].written++})}
     await hydrateCardThemesV576c13('work',works);
-    zone.innerHTML=`<div class="head-row"><h2>Les œuvres de la sous-saga</h2><button class="btn-primary" onclick="openOeuvreModalForSousSaga()">+ Créer une œuvre</button></div><div class="entity-gallery">${works.map(o=>{const n=o.numero_sous_saga!=null?'T'+o.numero_sous_saga:null;return entityGalleryCard({id:o.id,title:o.titre,image:o.banniere||o.couverture,pageColor:o._resolved_page_color,tags:[n,o.nature_sous_saga,o.statut_editorial_actuel||o.statut],top:n||'Œuvre',onclick:`openOeuvreDetail('${o.id}')`,imageMode:o.couverture?'portrait':'auto'})}).join('')||'<div class="empty">Aucune œuvre liée.</div>'}</div>`;
+    zone.innerHTML=`<div class="head-row"><h2>Les œuvres de la sous-saga</h2><button class="btn-primary" onclick="openOeuvreModalForSousSaga()">+ Créer une œuvre</button></div>
+      <div class="oeuvres-saga-grid-v40 sous-saga-work-grid-v42">${works.map(o=>oeuvreSagaTileV40(o)).join('')||'<div class="empty">Aucune œuvre liée.</div>'}</div>`;
   }
   async function openOeuvreModalForSousSaga(){await openOeuvreModal(null,currentSousSagaParentSagaId);await loadSousSagaOptions(currentSousSagaParentSagaId,currentSousSagaId)}
 
@@ -4874,8 +4899,8 @@
     if(err){zone.innerHTML=`<div class="empty">Erreur : ${safeText(err.message)}</div>`;return}
 
     oeuvresSagaStateV40={
-      sagas:sagasR.data||[],
-      sousSagas:ssR.data||[],
+      sagas:(sagasR.data||[]).slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
+      sousSagas:(ssR.data||[]).slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
       oeuvres:(oeuvresR.data||[]).filter(o=>o.saga_id||o.sous_saga_id),
       activeSagaId:oeuvresSagaStateV40.activeSagaId
     };
@@ -4909,10 +4934,10 @@
     const groups=sagaSubs.map(ss=>({
       id:ss.id,
       nom:ss.nom,
-      oeuvres:oeuvres.filter(o=>o.sous_saga_id===ss.id)
+      oeuvres:oeuvres.filter(o=>o.sous_saga_id===ss.id).sort((a,b)=>(Number(a.numero_sous_saga)||9999)-(Number(b.numero_sous_saga)||9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'))
     })).filter(g=>g.oeuvres.length);
 
-    const direct=oeuvres.filter(o=>o.saga_id===saga.id&&!o.sous_saga_id);
+    const direct=oeuvres.filter(o=>o.saga_id===saga.id&&!o.sous_saga_id).sort((a,b)=>(Number(a.numero_sous_saga)||9999)-(Number(b.numero_sous_saga)||9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'));
     if(direct.length)groups.push({id:null,nom:'Hors sous-saga',oeuvres:direct});
 
     zone.innerHTML=`<div class="oeuvres-saga-tabs-v40">
@@ -5241,21 +5266,17 @@
   let personnageFilter = 'tous';
   let personnageView = 'gallery';
   async function renderOeuvrePersonnages(zone){
-    zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const { data, error } = await db().from('personnages_oeuvres').select('personnage_id, role, importance, pov, faction, etat, personnages(id, nom, favori, portrait_url, resume, contenu)').eq('oeuvre_id', currentOeuvreId);
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${safeText(error.message)}</div>`; return; }
-    opoLinks = data || [];
-    const filtered = opoLinks.filter(d => personnageFilter==='tous' || (d.importance||'').toLowerCase()===personnageFilter);
-    zone.innerHTML = `<div class="work-toolbar"><div class="segmented">
+    zone.innerHTML=`<div class="status-line">Chargement…</div>`;
+    const {data,error}=await db().from('personnages_oeuvres').select('personnage_id, role, importance, pov, faction, etat, personnages(id, nom, favori, portrait_url, resume, contenu, passerelle_id)').eq('oeuvre_id',currentOeuvreId);
+    if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    opoLinks=data||[];
+    const filtered=opoLinks.filter(d=>personnageFilter==='tous'||(d.importance||'').toLowerCase()===personnageFilter);
+    zone.innerHTML=`<div class="work-toolbar"><div class="segmented">
       <button class="btn-secondary ${personnageFilter==='principal'?'active':''}" onclick="personnageFilter='principal';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Principaux</button>
       <button class="btn-secondary ${personnageFilter==='secondaire'?'active':''}" onclick="personnageFilter='secondaire';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Secondaires</button>
       <button class="btn-secondary ${personnageFilter==='tous'?'active':''}" onclick="personnageFilter='tous';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Tous</button>
-      <span style="width:10px"></span>
-      <button class="btn-secondary ${personnageView==='gallery'?'active':''}" onclick="personnageView='gallery';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Galerie</button>
-      <button class="btn-secondary ${personnageView==='table'?'active':''}" onclick="personnageView='table';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Tableau</button>
-      <button class="btn-secondary ${personnageView==='relations'?'active':''}" onclick="personnageView='relations';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Relations</button>
     </div><input class="search-input" placeholder="Rechercher…" style="max-width:230px" oninput="filterCharacterCards(this.value)"></div>
-    ${personnageView==='gallery'?`<div class="character-layout"><div class="gallery" id="work-character-gallery">${filtered.map(d=>`<div class="char-card" data-search="${safeText((d.personnages?.nom||'')+' '+(d.role||'')+' '+(d.faction||'')+' '+(d.etat||''))}" onclick="openCharacterFromWorkV575('${d.personnage_id}')">${d.personnages?.portrait_url?`<img class="char-portrait" src="${safeText(d.personnages.portrait_url)}" alt="">`:`<div class="char-portrait" style="background:linear-gradient(160deg,var(--lavender)33,var(--bg-2));">${initials(d.personnages?.nom)}</div>`}<div class="char-name">${safeText(d.personnages?.nom||'—')}</div>${d.pov?`<div class="char-role">POV : ${safeText(d.pov)}</div>`:''}${d.role?`<div class="char-role">Rôle : ${safeText(d.role)}</div>`:''}<button class="tiny-btn" style="margin:8px" onclick="event.stopPropagation();openPersonnageOeuvreModal('${d.personnage_id}')">Modifier le lien</button></div>`).join('')||'<div class="empty">Aucun personnage.</div>'}</div><aside class="panel relation-preview"><h2>Relations clés</h2><div style="font-size:13px;color:var(--text-dim)">Aperçu des relations de cette œuvre.</div><button class="btn-secondary" style="margin-top:12px" onclick="personnageView='relations';renderOeuvrePersonnages(document.getElementById('oeuvre-tab-content'))">Voir toutes les relations</button></aside></div>`:personnageView==='table'?`<div class="panel"><table class="ch-table"><thead><tr><th>Personnage</th><th>Importance</th><th>POV</th><th>Rôle</th><th>Propriétés contextuelles</th></tr></thead><tbody>${filtered.map(d=>`<tr onclick="openCharacterFromWorkV575('${d.personnage_id}')"><td>${safeText(d.personnages?.nom||'—')}</td><td>${safeText(d.importance||'—')}</td><td>${safeText(d.pov||'—')}</td><td>${safeText(d.role||'—')}</td><td>${[d.faction&&'Faction : '+d.faction,d.etat&&'État : '+d.etat].filter(Boolean).map(safeText).join('<br>')||'—'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="panel"><h2>Relations</h2><div class="empty">La vue relationnelle utilisera les relations canoniques entre personnages. Le cadre est prêt ; le modèle de fiches Personnage sera construit dans son chantier dédié.</div></div>`}`;
+    <div class="gallery" id="work-character-gallery">${filtered.map(d=>{const p=d.personnages||{};return `<article class="char-card" data-search="${safeText([p.nom,d.role,d.faction,d.etat].filter(Boolean).join(' '))}" onclick="openCharacterFromWorkV575('${d.personnage_id}')">${p.favori?'<span class="fav-heart">♥</span>':''}${p.portrait_url?`<img class="char-portrait" src="${safeText(p.portrait_url)}" alt="">`:`<div class="char-portrait" style="background:linear-gradient(160deg,var(--lavender)33,var(--bg-2));">${initials(p.nom)}</div>`}<div class="char-name">${safeText(p.nom||'—')}</div><div class="char-role">${safeText(p.resume||d.role||'—')}</div><div class="char-tags">${[d.role,d.pov?`POV · ${d.pov}`:null,d.etat].filter(Boolean).map(x=>`<span class="tag">${safeText(x)}</span>`).join('')}</div>${p.passerelle_id?`<div class="char-card-id">${safeText(p.passerelle_id)}</div>`:''}<button class="tiny-btn" style="margin:8px" onclick="event.stopPropagation();openPersonnageOeuvreModal('${d.personnage_id}')">Modifier le lien</button></article>`}).join('')||'<div class="empty">Aucun personnage.</div>'}</div>`;
   }
   function filterCharacterCards(q){document.querySelectorAll('#work-character-gallery .char-card').forEach(c=>c.style.display=(c.dataset.search||'').toLowerCase().includes((q||'').toLowerCase())?'':'none');}
   function personnageOeuvreModalHtml(){
@@ -5444,26 +5465,66 @@
   let relectureChapitres = [];
 
   let currentRelectureV2=null; let relectureView='table';
+  let oeuvreRelectureTabV42=sessionStorage.getItem('passerelle_oeuvre_relecture_tab')||'informations';
+  function setOeuvreRelectureTabV42(tab){oeuvreRelectureTabV42=tab;sessionStorage.setItem('passerelle_oeuvre_relecture_tab',tab);renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))}
+  function relectureSubnavV42(){return `<div class="relecture-subtabs-v42">${[['informations','Informations'],['suivi','Suivi de correction'],['journal','Journal de correction']].map(([k,l])=>`<button class="${oeuvreRelectureTabV42===k?'active':''}" onclick="setOeuvreRelectureTabV42('${k}')">${l}</button>`).join('')}</div>`}
+  async function ensureOeuvreRelectureV42(zone){
+    let {data:rs,error}=await db().from('relectures').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false}).limit(1);
+    if(error)throw error;
+    if(!rs?.length){
+      const {data:manuscriptChaps}=await db().from('chapitres').select('id,nb_mots').eq('oeuvre_id',currentOeuvreId);
+      const hasManuscript=(manuscriptChaps||[]).some(c=>(c.nb_mots||0)>0);
+      if(!hasManuscript){zone.innerHTML=`${relectureSubnavV42()}<div class="empty"><strong>Aucun chapitre écrit dans le Manuscrit.</strong><br><br>Dès qu’un chapitre écrit existe, le suivi de relecture pourra commencer ici.</div>`;return null}
+      const created=await db().from('relectures').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,type:'Relecture manuscrit',statut:'en cours',date_debut:new Date().toISOString().slice(0,10)}).select().single();
+      if(created.error)throw created.error;rs=[created.data];
+    }
+    currentRelectureV2=rs[0];currentRelectureId=rs[0].id;return rs[0];
+  }
   async function renderOeuvreRelectureV2(zone){
     zone.innerHTML=`<div class="status-line">Chargement…</div>`;
-    let {data:rs}=await db().from('relectures').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false}).limit(1);
-    if(!rs?.length){const {data:manuscriptChaps}=await db().from('chapitres').select('id,nb_mots').eq('oeuvre_id',currentOeuvreId);const hasManuscript=(manuscriptChaps||[]).some(c=>(c.nb_mots||0)>0);if(!hasManuscript){zone.innerHTML=`<div class="empty"><strong>Aucun chapitre écrit dans le Manuscrit.</strong><br><br>Dès qu’un chapitre écrit existe, il apparaît automatiquement ici.</div>`;return;}const created=await db().from('relectures').insert({user_id:currentUser.id,oeuvre_id:currentOeuvreId,type:'Relecture manuscrit',statut:'en cours',date_debut:new Date().toISOString().slice(0,10)}).select().single();if(created.error){zone.innerHTML=`<div class="empty">Erreur de création du suivi de relecture : ${safeText(created.error.message)}</div>`;return;}rs=[created.data];}
-    currentRelectureV2=rs[0];
-    const [{data:chaps},{data:states},{data:checks},{data:links}]=await Promise.all([
-      db().from('chapitres').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre'),
-      db().from('relecture_chapitres').select('*').eq('relecture_id',currentRelectureV2.id),
-      db().from('relecture_checklist').select('*').eq('relecture_id',currentRelectureV2.id).order('ordre'),
-      db().from('notes_liees').select('*').or(`oeuvre_cible_id.eq.${currentOeuvreId},oeuvre_source_id.eq.${currentOeuvreId}`).order('created_at',{ascending:false})
+    try{
+      const relecture=await ensureOeuvreRelectureV42(zone);if(!relecture)return;
+      if(oeuvreRelectureTabV42==='informations')return renderOeuvreRelectureInfoV42(zone,relecture);
+      if(oeuvreRelectureTabV42==='suivi')return renderOeuvreRelectureSuiviV42(zone,relecture);
+      return renderOeuvreRelectureJournalV42(zone,relecture);
+    }catch(e){zone.innerHTML=`${relectureSubnavV42()}<div class="empty">Erreur : ${safeText(e?.message||e)}</div>`}
+  }
+  async function renderOeuvreRelectureInfoV42(zone,relecture){
+    const [{data:chaps},{data:states},{data:axes},{data:todos}]=await Promise.all([
+      db().from('chapitres').select('id,nb_mots').eq('oeuvre_id',currentOeuvreId).order('ordre'),
+      db().from('relecture_chapitres').select('*').eq('relecture_id',relecture.id),
+      db().from('relecture_axes').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre'),
+      db().from('relecture_todos').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre')
     ]);
-    const sm=Object.fromEntries((states||[]).map(x=>[x.chapitre_id,x])); const cm={};(checks||[]).forEach(x=>(cm[x.chapitre_id]??=[]).push(x));
-    const rows=(chaps||[]).filter(c=>(c.nb_mots||0)>0 || sm[c.id]); const relus=rows.filter(c=>(sm[c.id]?.statut||'à relire')==='relu').length; const pct=rows.length?Math.round(relus/rows.length*100):0;
-    const milestones=[currentRelectureV2.date_debut&&`Relecture démarrée · ${currentRelectureV2.date_debut}`,currentOeuvre?.statut&&`Manuscrit · ${currentOeuvre.statut}`,currentOeuvre?.publication_envisagee&&`Objectif · ${currentOeuvre.publication_envisagee}`].filter(Boolean);
-    const rowHtml=c=>{const st=sm[c.id]||{};const cl=cm[c.id]||[];const done=cl.filter(x=>x.fait).length;return `<tr><td><button style="border:0;background:none;cursor:pointer;font-weight:600;color:var(--text);padding:0" onclick="openRelectureDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\'"))}')">${safeText(c.titre||'Chapitre '+(c.numero??''))}</button></td><td><select class="status-select" onchange="saveRelectureStatus('${c.id}',this.value)">${['à écrire','à relire','en cours','bloqué','relu'].map(x=>`<option ${x===(st.statut||'à relire')?'selected':''}>${x}</option>`).join('')}</select></td><td>${cl.length?`${done}/${cl.length}`:'—'}</td><td>${st.updated_at?`${st.statut==='relu'?'✓ ':''}${new Date(st.updated_at).toLocaleDateString('fr-FR')}`:'—'}</td><td>${st.notes_html?'📝':'—'}</td></tr>`};
-    const statuses=['à écrire','à relire','en cours','bloqué','relu'];
-    zone.innerHTML=`<div class="panel"><h2>Jalons</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${milestones.map(x=>`<span class="keyword-chip">${safeText(x)}</span>`).join('')||'<span style="color:var(--text-dim);font-size:12px">Aucun jalon.</span>'}</div><h2 style="margin-top:18px">Progression</h2><strong>${relus} / ${rows.length} chapitres relus · ${pct}%</strong><div class="progress-bar-outer" style="max-width:none;margin-top:8px"><div class="progress-bar-inner" style="width:${pct}%"></div></div></div><div class="relecture-grid"><section class="panel"><div class="work-toolbar"><h2 style="margin:0">Suivi des chapitres</h2><div class="segmented"><button class="btn-secondary ${relectureView==='table'?'active':''}" onclick="relectureView='table';renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))">Tableau</button><button class="btn-secondary ${relectureView==='kanban'?'active':''}" onclick="relectureView='kanban';renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))">Kanban</button></div></div>${relectureView==='table'?`<table class="ch-table"><thead><tr><th>Chapitre</th><th>Statut</th><th>Progression</th><th>Dernière mise à jour</th><th>Notes</th></tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody></table>`:`<div style="display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:10px;overflow:auto">${statuses.map(status=>`<div style="background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px"><strong style="text-transform:capitalize">${status}</strong>${rows.filter(c=>(sm[c.id]?.statut||'à relire')===status).map(c=>`<div class="memo-item" style="margin-top:9px;cursor:pointer" onclick="openRelectureDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\'"))}')">${safeText(c.titre||'Chapitre')}</div>`).join('')||'<small style="color:var(--text-dim)">Vide</small>'}</div>`).join('')}</div>`}</section><aside class="panel"><h2>🔗 Notes liées</h2>${links?.length?links.map(n=>`<div class="linked-note"><small>${n.oeuvre_source_id===currentOeuvreId?'↗ Créée ici':'↙ Reçue'}</small><div>${n.contenu_html||'Note liée'}</div></div>`).join(''):`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter garde la continuité.</strong><div>Aucune note liée pour le moment.</div></div>`}</aside></div>`;
+    const rows=(chaps||[]).filter(c=>(c.nb_mots||0)>0),sm=Object.fromEntries((states||[]).map(x=>[x.chapitre_id,x]));
+    const relus=rows.filter(c=>(sm[c.id]?.statut||'à relire')==='relu').length,pct=rows.length?Math.round(relus/rows.length*100):0;
+    const strengths=(axes||[]).filter(x=>x.type==='point_fort'),improvements=(axes||[]).filter(x=>x.type!=='point_fort');
+    const todoHtml=(todos||[]).map(x=>`<label class="relecture-todo-item-v19"><input type="checkbox" ${x.fait?'checked':''} onchange="toggleRelectureTodoV19('${x.id}',this.checked)"><span>${safeText(x.libelle)}</span></label>`).join('')||'<div class="empty">Aucun point à reprendre.</div>';
+    zone.innerHTML=`${relectureSubnavV42()}<div class="relecture-info-v42">
+      <div class="stat-cards-row"><div class="stat-card"><h3>État</h3><div class="stat-big" style="font-size:1.2rem">${safeText(relecture.statut||'en cours')}</div></div><div class="stat-card"><h3>Avancement</h3><div class="stat-big">${pct}%</div></div><div class="stat-card"><h3>Chapitres relus</h3><div class="stat-big">${relus} / ${rows.length}</div></div></div>
+      <div class="panel"><div class="relecture-analysis-head-v42"><div><h2>Analyse éditoriale</h2><p>Importe ton rapport pour transformer les axes d’amélioration en éléments de travail sans perdre les points forts.</p></div><label class="btn-primary upload-file-btn">📥 Importer des axes d’amélioration<input id="relecture-report-file-v19" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="importRelectureReportV19('${currentOeuvreId}',this.files[0]).then(()=>renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content')))"></label></div><div id="relecture-import-status-v19" class="status-line"></div>
+        <details class="relecture-fold-v42" open><summary>☑ Points à reprendre <span>${(todos||[]).filter(x=>x.fait).length}/${(todos||[]).length}</span></summary><div class="relecture-fold-body-v42">${todoHtml}<div class="check-add"><input id="relecture-new-todo-v19" placeholder="Ajouter une action…"><button class="btn-secondary" onclick="addRelectureTodoV42('${currentOeuvreId}')">Ajouter</button></div>${improvements.length?`<div class="relecture-axis-source-v42"><strong>Axes détectés dans les analyses</strong>${improvements.map(x=>`<article><span>${safeText(x.titre)}</span>${x.recommandation?`<small>${safeText(x.recommandation)}</small>`:''}<button class="tiny-btn" onclick="addAxisToTodoV42('${x.id}','${currentOeuvreId}')">+ To-do</button></article>`).join('')}</div>`:''}</div></details>
+        <details class="relecture-fold-v42"><summary>✨ Points forts <span>${strengths.length}</span></summary><div class="relecture-fold-body-v42">${strengths.map(x=>`<article class="relecture-strength-v19"><strong>${safeText(x.titre)}</strong>${x.diagnostic?`<div>${safeText(x.diagnostic)}</div>`:''}</article>`).join('')||'<div class="empty">Aucun point fort importé.</div>'}</div></details>
+      </div></div>`;
+  }
+  async function addRelectureTodoV42(oeuvreId){await addRelectureTodoV19(oeuvreId);renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))}
+  async function addAxisToTodoV42(axisId,oeuvreId){const {data}=await db().from('relecture_axes').select('titre,recommandation').eq('id',axisId).single();if(!data)return;await db().from('relecture_todos').insert({user_id:currentUser.id,oeuvre_id:oeuvreId,axe_id:axisId,libelle:data.recommandation||data.titre,ordre:Date.now()%100000});renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))}
+  async function renderOeuvreRelectureSuiviV42(zone,relecture){
+    const [{data:chaps},{data:states},{data:checks}]=await Promise.all([
+      db().from('chapitres').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre'),db().from('relecture_chapitres').select('*').eq('relecture_id',relecture.id),db().from('relecture_checklist').select('*').eq('relecture_id',relecture.id).order('ordre')]);
+    relectureChapitres=chaps||[];const sm=Object.fromEntries((states||[]).map(x=>[x.chapitre_id,x])),cm={};(checks||[]).forEach(x=>(cm[x.chapitre_id]??=[]).push(x));
+    const rows=(chaps||[]).filter(c=>(c.nb_mots||0)>0||sm[c.id]);
+    const rowHtml=c=>{const st=sm[c.id]||{},cl=cm[c.id]||[],done=cl.filter(x=>x.fait).length;return `<tr><td><button class="relecture-chapter-link-v42" onclick="openRelectureDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\\'"))}')">${safeText(c.titre||'Chapitre '+(c.numero??''))}</button></td><td><select class="status-select" onchange="saveRelectureStatus('${c.id}',this.value)">${['à écrire','à relire','en cours','bloqué','relu'].map(x=>`<option ${x===(st.statut||'à relire')?'selected':''}>${x}</option>`).join('')}</select></td><td>${cl.length?`${done}/${cl.length}`:'—'}</td><td>${st.updated_at?new Date(st.updated_at).toLocaleDateString('fr-FR'):'—'}</td><td>${st.notes_html?'📝':'—'}</td></tr>`};
+    zone.innerHTML=`${relectureSubnavV42()}<div class="panel"><div class="work-toolbar"><div><h2 style="margin:0">Suivi de correction</h2><p style="margin:4px 0 0;color:var(--text-dim);font-size:12px">Clique sur un chapitre pour ouvrir sa checklist, son résumé de bêta-lecture et ses notes.</p></div></div><table class="ch-table"><thead><tr><th>Chapitre</th><th>Statut</th><th>Checklist</th><th>Mise à jour</th><th>Notes</th></tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody></table></div>`;
+  }
+  async function renderOeuvreRelectureJournalV42(zone,relecture){
+    const [{data:corrections},{data:reports},{data:links}]=await Promise.all([
+      db().from('corrections').select('*').eq('relecture_id',relecture.id).order('created_at',{ascending:false}),db().from('relecture_rapports').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false}),db().from('notes_liees').select('*').or(`oeuvre_cible_id.eq.${currentOeuvreId},oeuvre_source_id.eq.${currentOeuvreId}`).order('created_at',{ascending:false})]);
+    const events=[];(reports||[]).forEach(x=>events.push({date:x.created_at,title:'Analyse éditoriale importée',body:x.nom_fichier||'Rapport'}));(corrections||[]).forEach(x=>events.push({date:x.created_at||x.updated_at,title:x.titre||'Correction',body:x.notes||x.contenu_html||x.etat||''}));(links||[]).forEach(x=>events.push({date:x.created_at,title:'Note liée',body:x.contenu_html||'Note liée à cette œuvre'}));events.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    zone.innerHTML=`${relectureSubnavV42()}<div class="panel"><div class="head-row"><div><h2>Journal de correction</h2><p style="font-size:12px;color:var(--text-dim)">La mémoire de la relecture : analyses importées, corrections et notes liées.</p></div></div><div class="relecture-journal-v42">${events.map(e=>`<article><time>${e.date?new Date(e.date).toLocaleDateString('fr-FR'):'—'}</time><div><strong>${safeText(e.title)}</strong>${e.body?`<div>${typeof e.body==='string'&&/<[a-z][\\s\\S]*>/i.test(e.body)?e.body:safeText(e.body)}</div>`:''}</div></article>`).join('')||'<div class="empty">Le journal est encore vide.</div>'}</div></div>`;
   }
   async function ensureRelectureState(chapitreId){let {data}=await db().from('relecture_chapitres').select('*').eq('relecture_id',currentRelectureV2.id).eq('chapitre_id',chapitreId).maybeSingle();if(!data){const r=await db().from('relecture_chapitres').insert({user_id:currentUser.id,relecture_id:currentRelectureV2.id,chapitre_id:chapitreId,statut:'à relire'}).select().single();data=r.data;}return data;}
-  async function saveRelectureStatus(chapitreId,statut){const st=await ensureRelectureState(chapitreId);await db().from('relecture_chapitres').update({statut,updated_at:new Date().toISOString()}).eq('id',st.id);renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'));}
+  async function saveRelectureStatus(chapitreId,statut){const st=await ensureRelectureState(chapitreId);await db().from('relecture_chapitres').update({statut,updated_at:new Date().toISOString()}).eq('id',st.id);oeuvreRelectureTabV42='suivi';renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'));}
   async function openRelectureDrawer(chapitreId,title){const st=await ensureRelectureState(chapitreId);const {data:checks}=await db().from('relecture_checklist').select('*').eq('relecture_id',currentRelectureV2.id).eq('chapitre_id',chapitreId).order('ordre');openDrawer(title,`<h3>Checklist</h3><div id="checklist-box">${(checks||[]).map(x=>`<label class="check-item"><input type="checkbox" ${x.fait?'checked':''} onchange="toggleCheck('${x.id}',this.checked)"><span>${safeText(x.libelle)}</span></label>`).join('')||'<div style="font-size:12px;color:var(--text-dim)">Aucun contrôle pour ce chapitre.</div>'}</div><div class="check-add"><input id="new-check-label" placeholder="Ajouter un contrôle…"><button class="btn-secondary" onclick="addCheck('${chapitreId}')">Ajouter</button></div><h3 style="margin-top:22px">Retour bêta-lecture</h3><div class="rich-editor" id="beta-editor" contenteditable="true" style="min-height:140px">${st.retour_beta_html||''}</div><h3 style="margin-top:22px">Notes de relecture</h3><div class="rich-toolbar"><button onclick="document.execCommand('bold')"><b>B</b></button><button onclick="document.execCommand('italic')"><i>I</i></button><button onclick="document.execCommand('underline')"><u>U</u></button><button onclick="document.execCommand('hiliteColor',false,'#fff1a8')">Surligner</button><button onclick="insertRichImage()">🖼 Image</button></div><div id="relecture-note-editor" class="rich-editor" contenteditable="true">${st.notes_html||''}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn-primary" onclick="saveRelectureDrawer('${st.id}')">Enregistrer</button><button class="btn-secondary" onclick="linkCurrentRelectureNote('${chapitreId}')">🔗 Lier cette note</button></div>`);}
   async function toggleCheck(id,fait){await db().from('relecture_checklist').update({fait}).eq('id',id);}
   async function addCheck(chapitreId){const libelle=document.getElementById('new-check-label').value.trim();if(!libelle)return;await db().from('relecture_checklist').insert({user_id:currentUser.id,relecture_id:currentRelectureV2.id,chapitre_id:chapitreId,libelle,ordre:Date.now()%100000});openRelectureDrawer(chapitreId,'Chapitre');}
