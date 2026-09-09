@@ -6,7 +6,63 @@
 <title>Passerelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  // ============================================================
+  // C40 — FRONT : ŒUVRES INDÉPENDANTES / ŒUVRES SAGA
+  // Le BO Œuvres reste unique et inchangé.
+  // ============================================================
+  let frontSagaSelectedV40=null;
+  let frontSagaDataV40={sagas:[],subs:[],works:[]};
+
+  async function renderFrontOeuvresSagaV40(zone){
+    if(!zone)return;
+    zone.innerHTML='<div class="empty">Chargement des œuvres saga…</div>';
+    const [sr,ssr,wr]=await Promise.all([
+      db().from('sagas').select('id,nom,ordre').order('ordre'),
+      db().from('sous_sagas').select('id,nom,saga_id,ordre').order('ordre'),
+      db().from('oeuvres').select('id,titre,couverture,saga_id,sous_saga_id,numero_sous_saga,statut,statut_editorial_actuel').eq('archive',false)
+    ]);
+    if(sr.error||ssr.error||wr.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(sr.error?.message||ssr.error?.message||wr.error?.message)}</div>`;return}
+    frontSagaDataV40={sagas:sr.data||[],subs:ssr.data||[],works:(wr.data||[]).filter(w=>w.saga_id||w.sous_saga_id)};
+    if(!frontSagaSelectedV40||!frontSagaDataV40.sagas.some(s=>s.id===frontSagaSelectedV40))frontSagaSelectedV40=frontSagaDataV40.sagas[0]?.id||null;
+    paintFrontOeuvresSagaV40(zone);
+  }
+  function setFrontSagaV40(id){
+    frontSagaSelectedV40=id;
+    const zone=document.getElementById('front-oeuvres-saga-v40');
+    if(zone)paintFrontOeuvresSagaV40(zone);
+  }
+  function frontWorkTileV40(w){
+    const img=w.couverture?`<img src="${safeText(w.couverture)}" alt="">`:`<div style="aspect-ratio:16/7;display:grid;place-items:center;background:var(--bg-2);color:var(--text-dim)">Sans visuel</div>`;
+    return `<div class="saga-work-tile-front-v40" onclick="openOeuvreDetail('${w.id}')">${img}<div class="saga-work-tile-title-v40">${safeText(w.titre||'Sans titre')}</div></div>`;
+  }
+  function paintFrontOeuvresSagaV40(zone){
+    const {sagas,subs,works}=frontSagaDataV40;
+    const saga=sagas.find(s=>s.id===frontSagaSelectedV40);
+    if(!saga){zone.innerHTML='<div class="empty">Aucune saga.</div>';return}
+    const sagaSubs=subs.filter(s=>s.saga_id===saga.id);
+    const direct=works.filter(w=>w.saga_id===saga.id&&!w.sous_saga_id);
+    const groups=sagaSubs.map(ss=>({name:ss.nom,works:works.filter(w=>w.sous_saga_id===ss.id)})).filter(g=>g.works.length);
+    if(direct.length)groups.push({name:'Hors sous-saga',works:direct});
+    zone.innerHTML=`<div class="saga-works-front-v40">
+      <div class="saga-tabs-front-v40">${sagas.map(s=>`<button class="saga-tab-front-v40 ${s.id===saga.id?'active':''}" onclick="setFrontSagaV40('${s.id}')">${safeText(s.nom)}</button>`).join('')}</div>
+      ${groups.map(g=>`<section class="saga-group-front-v40"><div class="saga-group-title-front-v40">${safeText(g.name)}</div><div class="saga-work-grid-front-v40">${g.works.map(frontWorkTileV40).join('')}</div></section>`).join('')||'<div class="empty">Aucune œuvre rattachée à cette saga.</div>'}
+    </div>`;
+  }
+
+  async function renderFrontOeuvresIndependantesV40(zone){
+    if(!zone)return;
+    const r=await db().from('oeuvres').select('id,titre,couverture,saga_id,sous_saga_id,statut,statut_editorial_actuel').eq('archive',false);
+    if(r.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(r.error.message)}</div>`;return}
+    const rows=(r.data||[]).filter(w=>!w.saga_id&&!w.sous_saga_id);
+    zone.innerHTML=`<div class="entity-gallery">${rows.map(w=>frontWorkTileV40(w)).join('')||'<div class="empty">Aucune œuvre indépendante.</div>'}</div>`;
+  }
+
+
+  // C40 · Le nettoyage est volontairement limité aux raccourcis de l'accueil.
+  window.addEventListener('load',()=>setTimeout(cleanHomeQuickLinksV40,250));
+
+</script>
 <style>
   :root{
     --bg: #FFFFFF; --bg-2: #F6F3FB; --card: #FFFFFF;
@@ -936,6 +992,24 @@
   .codex-card-action-v39b.danger:hover{border-color:#b4465a;color:#b4465a}
   .codex-card-shell-v39b.archived{opacity:.72;filter:saturate(.72)}
   .codex-archive-note-v39b{font-size:11px;color:var(--text-dim);margin-left:auto}
+
+
+  /* ---- C40 · Front Œuvres Saga + accueil allégé ---- */
+  .home-banner-v40{width:100%;min-height:170px;border-radius:16px;overflow:hidden;margin:0 0 18px;background:var(--bg-2);border:1px solid var(--line);display:grid;place-items:center;background-size:cover;background-position:center}
+  .home-banner-placeholder-v40{font-family:var(--font-title);font-size:20px;color:var(--text-dim);opacity:.55}
+  .saga-works-front-v40{display:grid;gap:18px}
+  .saga-tabs-front-v40{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+  .saga-tab-front-v40{white-space:nowrap;border:1px solid var(--line);background:var(--card);color:var(--text-dim);border-radius:999px;padding:8px 12px;cursor:pointer;font-weight:700;font-size:12px}
+  .saga-tab-front-v40.active{background:color-mix(in srgb,var(--accent) 14%,var(--card));border-color:var(--accent);color:var(--accent)}
+  .saga-group-front-v40{margin-top:8px}
+  .saga-group-title-front-v40{display:inline-flex;padding:5px 10px;border-radius:7px;background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--text);font-weight:800;font-size:13px;margin-bottom:10px}
+  .saga-work-grid-front-v40{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .saga-work-tile-front-v40{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);cursor:pointer;transition:.18s ease;min-width:0}
+  .saga-work-tile-front-v40:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .saga-work-tile-front-v40 img{width:100%;aspect-ratio:16/7;display:block;object-fit:cover;background:var(--bg-2)}
+  .saga-work-tile-title-v40{padding:8px 10px;font-weight:750;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media(max-width:900px){.saga-work-grid-front-v40{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.saga-work-grid-front-v40{grid-template-columns:1fr}.home-banner-v40{min-height:120px}}
 
 </style>
 </head>
@@ -2647,7 +2721,22 @@
     return [...new Set(chips.filter(Boolean))].slice(0,3);
   }
 
-  async function renderAccueil(){
+  
+  // C40 · Ajustements d'accueil sans toucher au menu latéral.
+  function cleanHomeQuickLinksV40(){
+    const root=document.querySelector('#page-accueil, #accueil-page, .home-page, #main-content')||document;
+    const headings=[...root.querySelectorAll('h2,h3,h4')];
+    const h=headings.find(x=>/liens rapides/i.test(x.textContent||''));
+    if(!h)return;
+    const box=h.closest('.panel,.card,.home-panel,.section')||h.parentElement;
+    if(!box)return;
+    [...box.querySelectorAll('a,button,.quick-link,.quick-card')].forEach(el=>{
+      const s=(el.textContent||'').trim().toLowerCase();
+      if(s==='œuvres'||s==='oeuvres'||s==='relecture'||s==='bureau éditorial'||s==='bureau editorial')el.remove();
+    });
+  }
+
+async function renderAccueil(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
