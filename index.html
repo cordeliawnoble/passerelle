@@ -3536,23 +3536,64 @@
       const existingR=await db().from('codex_pages').select('id,titre').match(parent);
       if(existingR.error)throw existingR.error;
       const existing=new Map((existingR.data||[]).map(x=>[notionKeyV39(x.titre),x]));
-      let created=0,skipped=0;
+      let created=0,repaired=0,skipped=0;
       for(let i=0;i<items.length;i++){
         const it=items[i];
-        // Protection anti-doublon simple et sûre : même titre = on n'écrase jamais silencieusement.
-        if(existing.has(notionKeyV39(it.title))){skipped++;continue}
+        const key=notionKeyV39(it.title);
+        const html=it.kind==='csv'?csvToHtmlTableV39(it):it.html;
+        const already=existing.get(key);
+
+        // C39c : si le premier essai a créé la fiche avant d'échouer sur le bloc,
+        // on répare cette fiche vide au lieu de la considérer comme un doublon.
+        if(already){
+          const existingBlocks=await db().from('codex_blocks').select('id').eq('page_id',already.id).limit(1);
+          if(existingBlocks.error)throw existingBlocks.error;
+          if(!(existingBlocks.data||[]).length && html){
+            const br=await db().from('codex_blocks').insert({
+              user_id:currentUser.id,
+              page_id:already.id,
+              type:'texte',
+              titre:'Contenu importé',
+              ordre:1,
+              largeur:100,
+              contenu:{html}
+            });
+            if(br.error)throw br.error;
+            repaired++;
+          }else{
+            skipped++;
+          }
+          continue;
+        }
+
         const pagePayload={user_id:currentUser.id,...parent,titre:it.title||'Sans titre',categorie:(it.categories||[]).join(' · '),ordre:i};
         const pr=await db().from('codex_pages').insert(pagePayload).select('id').single();
         if(pr.error)throw pr.error;
-        const html=it.kind==='csv'?csvToHtmlTableV39(it):it.html;
-        if(html){
-          const br=await db().from('codex_blocks').insert({user_id:currentUser.id,page_id:pr.data.id,type:'texte',ordre:0,largeur:'1',contenu:{html}});
-          if(br.error)throw br.error;
+
+        try{
+          if(html){
+            const br=await db().from('codex_blocks').insert({
+              user_id:currentUser.id,
+              page_id:pr.data.id,
+              type:'texte',
+              titre:'Contenu importé',
+              ordre:1,
+              largeur:100,
+              contenu:{html}
+            });
+            if(br.error)throw br.error;
+          }
+        }catch(blockErr){
+          // Ne laisse plus de fiche orpheline si l'insertion du contenu échoue.
+          await db().from('codex_pages').delete().eq('id',pr.data.id);
+          throw blockErr;
         }
-        existing.set(notionKeyV39(it.title),{id:pr.data.id,titre:it.title});created++;
+
+        existing.set(key,{id:pr.data.id,titre:it.title});
+        created++;
       }
       const zone=document.getElementById('codex-import-zone-v39');
-      if(zone)zone.innerHTML=`<div class="admin-notice"><strong>${created} page${created!==1?'s':''} importée${created!==1?'s':''}.</strong>${skipped?` ${skipped} déjà présente${skipped!==1?'s':''} ignorée${skipped!==1?'s':''} pour éviter les doublons.`:''}</div>`;
+      if(zone)zone.innerHTML=`<div class="admin-notice"><strong>${created} page${created!==1?'s':''} importée${created!==1?'s':''}.</strong>${repaired?` ${repaired} fiche${repaired!==1?'s':''} incomplète${repaired!==1?'s':''} réparée${repaired!==1?'s':''}.`:''}${skipped?` ${skipped} déjà présente${skipped!==1?'s':''} ignorée${skipped!==1?'s':''} pour éviter les doublons.`:''}</div>`;
       setTimeout(()=>codexNotionImportV39.level==='saga'?renderSagaCodexV56(document.getElementById('saga-tab-content')):renderSousSagaCodex(document.getElementById('soussaga-tab-content')),700);
     }catch(err){
       alert('Import Notion : '+(err?.message||err));
