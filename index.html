@@ -985,6 +985,14 @@
   @media(max-width:900px){.oeuvres-saga-grid-v40{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:560px){.oeuvres-saga-grid-v40{grid-template-columns:1fr}}
 
+
+  /* C41 · Codex V2 + catalogue Œuvres */
+  .codex-rich-editor .codex-rich-image-v41,.codex-block .codex-rich-image-v41{display:block;max-width:100%;height:auto;border-radius:10px;margin:14px auto}
+  .codex-imported-table-v41{overflow-x:auto;margin:14px 0}
+  .codex-imported-table-v41 table{width:100%;border-collapse:collapse}
+  .codex-imported-table-v41 th,.codex-imported-table-v41 td{border:1px solid var(--line);padding:7px 9px;vertical-align:top}
+  .oeuvre-collection-v41{margin-bottom:26px}
+
 </style>
 </head>
 <body>
@@ -1510,7 +1518,7 @@
     const [sr,mr]=await Promise.all([db().from('sagas').select('*').eq('id',adminSagaIdV56).single(),db().from('saga_metadonnees').select('*').eq('saga_id',adminSagaIdV56).order('ordre')]);const s=sr.data||{};window._adminSagaMetaV56=mr.data||[];
     const inheritedGraphicV576c13=await inheritedThemeForEditorV576c13('saga',s);
     content.innerHTML=`${adminPageHead(s.nom||'Saga','Administration de la saga.',`<button class="btn-secondary" onclick="openSagaDetail('${s.id}')">Voir la fiche ↗</button>`)}<div class="admin-tabs">${[['information','Informations'],['metadata','Métadonnées'],['configuration','Configuration']].map(([k,l])=>`<button class="${adminSagaTabV56===k?'active':''}" onclick="adminSagaTabV56='${k}';renderAdminSagaEditorV56()">${l}</button>`).join('')}</div><div id="admin-saga-tab-v56"></div>`;
-    const z=document.getElementById('admin-saga-tab-v56');if(adminSagaTabV56==='information')z.innerHTML=`<div class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div><label>Nom</label><input id="as56-nom" value="${safeText(s.nom||'')}"></div><div><label>Genre</label><input id="as56-genre" value="${safeText(s.genre||'')}"></div></div><label>À propos de la saga</label>${adminRichFieldV567('as56-description',s.description||'',170)}<label>Mots-clés (séparés par des virgules)</label><input id="as56-tags" value="${safeText((s.mots_cles||[]).join(', '))}"><label>Période couverte (facultatif, sinon calcul chronologie)</label><input id="as56-periode" value="${safeText(s.periode_couverte||'')}"><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaInfoV56()">Enregistrer</button></div>`;
+    const z=document.getElementById('admin-saga-tab-v56');if(adminSagaTabV56==='information')z.innerHTML=`<div class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div><label>Nom</label><input id="as56-nom" value="${safeText(s.nom||'')}"></div><div><label>Genre</label><input id="as56-genre" value="${safeText(s.genre||'')}"></div><div><label>Ordre d’affichage</label><input id="as56-ordre" type="number" min="0" step="1" value="${Number(s.ordre)||0}"><small>Les plus petits nombres apparaissent en premier dans Œuvres saga.</small></div></div><label>À propos de la saga</label>${adminRichFieldV567('as56-description',s.description||'',170)}<label>Mots-clés (séparés par des virgules)</label><input id="as56-tags" value="${safeText((s.mots_cles||[]).join(', '))}"><label>Période couverte (facultatif, sinon calcul chronologie)</label><input id="as56-periode" value="${safeText(s.periode_couverte||'')}"><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaInfoV56()">Enregistrer</button></div>`;
     if(adminSagaTabV56==='metadata')z.innerHTML=`<div class="admin-section"><div class="admin-section-head"><div><h2>Métadonnées de la saga</h2><p class="admin-section-sub">Vocabulaire héritable par les sous-sagas et les œuvres : Meute, Coven, Hockey, Basket…</p></div><button class="btn-primary" onclick="toggleSagaMetadataCreatorV567(true)">+ Ajouter</button></div>
       <div id="saga-meta-create-v567" class="inline-create-panel">
         <div class="inline-create-grid">
@@ -1523,7 +1531,7 @@
       <div>${window._adminSagaMetaV56.map(m=>`<div class="metadata-row"><input value="${safeText(m.emoji||'')}" maxlength="4" onchange="saveSagaMetadataFieldV56('${m.id}','emoji',this.value)"><input value="${safeText(m.nom)}" onchange="saveSagaMetadataFieldV56('${m.id}','nom',this.value)"><input type="color" value="${safeText(m.couleur||'#8C7FB0')}" onchange="saveSagaMetadataFieldV56('${m.id}','couleur',this.value)"><button class="btn-secondary" onclick="deleteSagaMetadataV56('${m.id}')">Supprimer</button></div>`).join('')||'<div class="empty">Aucune métadonnée.</div>'}</div></div>`;
     if(adminSagaTabV56==='configuration')z.innerHTML=`<div class="admin-section"><h2>Configuration graphique</h2>${graphicOverrideEditorV576c13('as56',s,inheritedGraphicV576c13)}<div style="margin-top:14px"><label>Bannière propre à la saga</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'banniere').then(()=>renderAdminSagaEditorV56())"></label></div>${renderCatalogEntityBanner(s.banniere||s.image_couverture,s.nom)}<button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaConfigV56()">Enregistrer l’apparence</button></div>`;
   }
-  async function saveAdminSagaInfoV56(){const payload={nom:document.getElementById('as56-nom').value.trim()||'Sans titre',genre:document.getElementById('as56-genre').value.trim(),description:adminRichHtmlV567('as56-description'),mots_cles:document.getElementById('as56-tags').value.split(',').map(x=>x.trim()).filter(Boolean),periode_couverte:document.getElementById('as56-periode').value.trim()||null};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
+  async function saveAdminSagaInfoV56(){const payload={nom:document.getElementById('as56-nom').value.trim()||'Sans titre',genre:document.getElementById('as56-genre').value.trim(),description:adminRichHtmlV567('as56-description'),mots_cles:document.getElementById('as56-tags').value.split(',').map(x=>x.trim()).filter(Boolean),periode_couverte:document.getElementById('as56-periode').value.trim()||null,ordre:Number(document.getElementById('as56-ordre')?.value||0)};const {error}=await db().from('sagas').update(payload).eq('id',adminSagaIdV56);if(error)return alert(error.message);renderAdminSagaEditorV56()}
   async function saveAdminSagaConfigV56(){try{await persistGraphicOverrideV576c15('sagas',adminSagaIdV56,'as56','saga');await renderAdminSagaEditorV56();const z=document.getElementById('admin-saga-tab-v56');if(z)z.insertAdjacentHTML('afterbegin','<div class="admin-inline-status success">Apparence enregistrée ✓</div>')}catch(error){alert('Erreur : '+error.message)}}
   async function addSagaMetadataV56(){toggleSagaMetadataCreatorV567(true)}
   async function saveNewSagaMetadataV567(){
@@ -3283,6 +3291,7 @@
       <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','insertUnorderedList')">• Liste</button>
       <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','insertOrderedList')">1. Liste</button>
       <button class="btn-secondary" type="button" onclick="codexLink('${blockId}')">🔗</button>
+      <label class="btn-secondary upload-file-btn" style="display:inline-flex">🖼 Image<input type="file" accept="image/*" onmousedown="rememberCodexSelectionV41('${blockId}')" onchange="insertCodexRichImageV41('${blockId}',this)"></label>
       <button class="btn-secondary" type="button" onclick="codexExec('${blockId}','removeFormat')">Effacer format</button>
     </div>`;
   }
@@ -3297,6 +3306,26 @@
   }
   function codexLink(blockId){
     const url=prompt('Lien :','https://'); if(!url)return; codexExec(blockId,'createLink',url);
+  }
+
+  let codexSelectionV41={blockId:null,range:null};
+  function rememberCodexSelectionV41(blockId){
+    const sel=window.getSelection();
+    codexSelectionV41={blockId,range:sel&&sel.rangeCount?sel.getRangeAt(0).cloneRange():null};
+  }
+  async function insertCodexRichImageV41(blockId,input){
+    const file=input?.files?.[0];if(!file)return;
+    const ed=document.getElementById(`codex-edit-${blockId}`);if(!ed)return;
+    try{
+      const url=await uploadAssetFile(file,`codex/rich/${blockId}`,{throwOnError:true});
+      ed.focus();const sel=window.getSelection();
+      if(codexSelectionV41.blockId===blockId&&codexSelectionV41.range){sel.removeAllRanges();sel.addRange(codexSelectionV41.range)}
+      const img=document.createElement('img');img.src=url;img.alt=file.name||'';img.className='codex-rich-image-v41';
+      const range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+      if(range){range.deleteContents();range.insertNode(img);range.setStartAfter(img);range.collapse(true);sel.removeAllRanges();sel.addRange(range)}
+      else ed.appendChild(img);
+      await saveCodexBlock(blockId,ed.innerHTML);input.value='';
+    }catch(err){alert('Image Codex : '+(err?.message||err))}
   }
 
   function codexTablePaste(e,blockId){
@@ -3441,7 +3470,7 @@
   // le champ existant `categorie` sous forme de liste séparée par " · ".
   // Aucun vocabulaire de catégorie n'est codé en dur.
   // ============================================================
-  let codexNotionImportV39={level:null,items:[],fileName:''};
+  let codexNotionImportV39={level:null,items:[],fileName:'',entries:[]};
 
   function codexCategoryTagsV39(value){
     return String(value||'').split(/\s*·\s*|\s*,\s*/).map(x=>x.trim()).filter(Boolean);
@@ -3476,22 +3505,24 @@
     return rows.slice(1).map(r=>Object.fromEntries(heads.map((h,i)=>[h,String(r[i]??'').trim()])));
   }
   function markdownToCodexHtmlV39(md){
-    let s=String(md||'').replace(/\r\n?/g,'\n');
-    // Retire le titre H1 du fichier : le titre vit déjà sur la page Codex.
-    s=s.replace(/^#\s+.+\n+/,'');
+    let s=String(md||'').replace(/\r\n?/g,'\n').replace(/^#\s+.+\n+/,'');
     const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const inline=x=>esc(x)
-      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-      .replace(/__([^_]+)__/g,'<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g,'<em>$1</em>')
-      .replace(/_([^_]+)_/g,'<em>$1</em>')
-      .replace(/`([^`]+)`/g,'<code>$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-    const out=[]; let list=null;
+    const inline=x=>{
+      let y=esc(x);
+      y=y.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,(m,alt,src)=>`<img data-notion-src="${encodeURIComponent(src.trim().replace(/^<|>$/g,''))}" alt="${alt||''}" class="codex-rich-image-v41">`);
+      return y.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/__([^_]+)__/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/_([^_]+)_/g,'<em>$1</em>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    };
+    const lines=s.split('\n'),out=[];let list=null;
     const closeList=()=>{if(list){out.push(`</${list}>`);list=null}};
-    for(const raw of s.split('\n')){
-      const line=raw.trimEnd();
-      if(!line.trim()){closeList();continue}
+    const splitTable=line=>line.trim().replace(/^\||\|$/g,'').split('|').map(x=>x.trim());
+    const isDivider=line=>/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i].trimEnd();if(!line.trim()){closeList();continue}
+      if(line.includes('|')&&i+1<lines.length&&isDivider(lines[i+1])){
+        closeList();const heads=splitTable(line);i+=2;const rows=[];
+        while(i<lines.length&&lines[i].includes('|')&&lines[i].trim()){rows.push(splitTable(lines[i]));i++}i--;
+        out.push(`<div class="codex-table-editor codex-imported-table-v41"><table><thead><tr>${heads.map(x=>`<th>${inline(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${heads.map((_,j)=>`<td>${inline(r[j]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);continue;
+      }
       let m;
       if((m=line.match(/^(#{2,6})\s+(.+)$/))){closeList();const n=Math.min(6,m[1].length);out.push(`<h${n}>${inline(m[2])}</h${n}>`);continue}
       if((m=line.match(/^>\s?(.*)$/))){closeList();out.push(`<blockquote>${inline(m[1])}</blockquote>`);continue}
@@ -3500,7 +3531,7 @@
       if((m=line.match(/^\s*\d+\.\s+(.+)$/))){if(list!=='ol'){closeList();list='ol';out.push('<ol>')}out.push(`<li>${inline(m[1])}</li>`);continue}
       closeList();out.push(`<p>${inline(line)}</p>`);
     }
-    closeList(); return out.join('');
+    closeList();return out.join('');
   }
   function detectCategoryColumnV39(headers){
     const preferred=['type','catégorie','categorie','category','groupe','group','section','tag','tags'];
@@ -3511,7 +3542,7 @@
     return preferred.find(x=>headers.some(h=>h.toLowerCase()===x))||headers[0]||null;
   }
   async function openCodexNotionImportV39(level){
-    codexNotionImportV39={level,items:[],fileName:''};
+    codexNotionImportV39={level,items:[],fileName:'',entries:[]};
     const zone=document.getElementById('codex-import-zone-v39'); if(!zone)return;
     zone.innerHTML=`<div class="codex-import-drop open"><strong>Importer depuis Notion</strong><p>Dépose un export Notion ZIP complet, un Markdown ou un CSV. Chaque Markdown devient une page Codex. Les catégories trouvées dans les CSV deviennent des balises locales à ce Codex.</p><label class="btn-primary upload-file-btn" style="display:inline-flex;margin-top:10px">Choisir un export<input type="file" accept=".zip,.md,.markdown,.csv,application/zip,text/markdown,text/csv" onchange="previewCodexNotionImportV39(this.files?.[0])"></label></div>`;
   }
@@ -3525,6 +3556,7 @@
         const JSZipLib=await ensureJsZipV576c27();
         const zip=await JSZipLib.loadAsync(await file.arrayBuffer());
         const entries=await collectNotionZipEntriesV576c28(zip);
+        codexNotionImportV39.entries=entries;
         for(const x of entries){
           if(/\.(md|markdown|csv)$/i.test(x.name))files.push({name:x.name,text:await x.entry.async('string')});
         }
@@ -3550,7 +3582,7 @@
       const items=md.map((f,i)=>{
         const title=normalizeNotionNameV39(f.name);
         const cats=categoryMap.get(notionKeyV39(title))||[];
-        return {kind:'markdown',title,categories:cats,html:markdownToCodexHtmlV39(f.text),source:f.name,selected:true};
+        return {kind:'markdown',title,categories:cats,html:markdownToCodexHtmlV39(f.text),markdown:f.text,source:f.name,selected:true};
       });
       // Un CSV isolé sans Markdown reste importable comme page-tableau, pour ne pas perdre une base Notion.
       if(!md.length){
@@ -3570,6 +3602,30 @@
     const items=codexNotionImportV39.items;
     zone.innerHTML=`<div class="codex-import-drop open"><strong>${items.length} page${items.length>1?'s':''} détectée${items.length>1?'s':''}</strong><p>${safeText(codexNotionImportV39.fileName)} · décoche ce que tu ne veux pas importer. Les balises restent propres à ${codexNotionImportV39.level==='saga'?'cette saga':'cette sous-saga'}.</p><div class="codex-import-preview">${items.map((it,i)=>`<div class="codex-import-row"><label style="margin:0;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" style="width:auto;margin-top:3px" ${it.selected?'checked':''} onchange="codexNotionImportV39.items[${i}].selected=this.checked"><span><strong>${safeText(it.title)}</strong><small>${safeText(it.source)}</small></span></label><div>${it.categories.length?it.categories.map(c=>`<span class="codex-category-chip">${safeText(c)}</span>`).join(''):'<small>Sans catégorie</small>'}</div><select onchange="codexNotionImportV39.items[${i}].mode=this.value"><option value="create">Créer une page</option><option value="ignore">Ignorer</option></select></div>`).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="document.getElementById('codex-import-zone-v39').innerHTML=''">Annuler</button><button class="btn-primary" onclick="commitCodexNotionImportV39(this)">Importer ${items.length} page${items.length>1?'s':''}</button></div></div>`;
   }
+
+  function resolveNotionAssetEntryV41(sourceName,ref){
+    let raw=String(ref||'');try{raw=decodeURIComponent(raw)}catch{}
+    raw=raw.replace(/^<|>$/g,'').split('#')[0].split('?')[0];
+    const entries=codexNotionImportV39.entries||[],norm=notionPathNormV576c33;
+    const dir=sourceName&&sourceName.includes('/')?sourceName.slice(0,sourceName.lastIndexOf('/')+1):'';
+    const targets=[norm(dir+raw),norm(raw)],base=norm(raw).split('/').pop();
+    return entries.find(x=>targets.includes(norm(x.name)))||entries.find(x=>norm(x.name).split('/').pop()===base)||null;
+  }
+  async function materializeCodexNotionHtmlV41(it){
+    let html=String(it.html||'');
+    const refs=[...new Set([...html.matchAll(/<img[^>]+data-notion-src="([^"]+)"[^>]*>/g)].map(m=>m[1]))];
+    for(const encoded of refs){
+      let raw=encoded;try{raw=decodeURIComponent(encoded)}catch{}
+      if(/^https?:/i.test(raw)){html=html.replaceAll(`data-notion-src="${encoded}"`,`src="${safeText(raw)}"`);continue}
+      const hit=resolveNotionAssetEntryV41(it.source,raw);if(!hit)continue;
+      const blob=await hit.entry.async('blob'),base=String(hit.name||'image').split('/').pop();
+      const file=new File([blob],base,{type:notionAssetMimeV576c33(base),lastModified:Date.now()});
+      const url=await uploadAssetFile(file,'codex/notion',{throwOnError:true});
+      html=html.replaceAll(`data-notion-src="${encoded}"`,`src="${safeText(url)}"`);
+    }
+    return html.replace(/<img[^>]+data-notion-src="[^"]+"[^>]*>/g,'');
+  }
+
   function csvToHtmlTableV39(item){
     const h=item.headers||[];const rows=item.rows||[];
     return `<table><thead><tr>${h.map(x=>`<th>${safeText(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${h.map(x=>`<td>${safeText(r[x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -3587,7 +3643,7 @@
       for(let i=0;i<items.length;i++){
         const it=items[i];
         const key=notionKeyV39(it.title);
-        const html=it.kind==='csv'?csvToHtmlTableV39(it):it.html;
+        const html=it.kind==='csv'?csvToHtmlTableV39(it):await materializeCodexNotionHtmlV41(it);
         const already=existing.get(key);
 
         // C39c : si le premier essai a créé la fiche avant d'échouer sur le bloc,
@@ -3600,7 +3656,7 @@
               user_id:currentUser.id,
               page_id:already.id,
               type:'texte',
-              titre:'Contenu importé',
+              titre:'',
               ordre:1,
               largeur:100,
               contenu:{html}
@@ -3623,7 +3679,7 @@
               user_id:currentUser.id,
               page_id:pr.data.id,
               type:'texte',
-              titre:'Contenu importé',
+              titre:'',
               ordre:1,
               largeur:100,
               contenu:{html}
@@ -4835,7 +4891,7 @@
   }
 
   function oeuvreSagaTileV40(o){
-    const visual=o.banniere||o.couverture||'';
+    const visual=o.banniere||'';
     return `<article class="oeuvre-saga-tile-v40" onclick="openOeuvreDetail('${o.id}')">
       <div class="oeuvre-saga-visual-v40">${visual?`<img src="${safeText(visual)}" alt="${safeText(o.titre||'Œuvre')}">`:`<div class="oeuvre-saga-empty-v40">${initials(o.titre||'Œuvre')}</div>`}</div>
       <div class="oeuvre-saga-caption-v40">${safeText(o.titre||'Sans titre')}</div>
@@ -4884,7 +4940,7 @@
   async function renderOeuvreCataloguePageV571(archived=false,scope='all'){
     const content=document.getElementById('content');
     const title=archived?'Archives':'Œuvres';
-    const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':scope==='independent'?'Mes œuvres indépendantes.':'Explorateur du catalogue.';
+    const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':scope==='independent'?'Mes œuvres.':'Explorateur du catalogue.';
     const banner=archived?'':renderPageImageBanner(await getPageBanner('oeuvres'),'Œuvres');
     const action=archived?'':`<button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button>`;
     content.innerHTML=`${banner}<div class="head-row"><div><h2>${title}</h2><p style="font-size:12px;color:var(--text-dim)">${subtitle}</p></div>${action}</div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
@@ -4893,15 +4949,25 @@
     if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
     oeuvreCatalogueDataV571=(data||[]).filter(o=>scope!=='independent'||(!o.saga_id&&!o.sous_saga_id));
     await hydrateCardThemesV576c13('work',oeuvreCatalogueDataV571);
-    const sagaOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.saga_id&&x.sagas?.nom).map(x=>[x.saga_id,x.sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join(''),colOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.univers_id&&x.univers?.nom).map(x=>[x.univers_id,x.univers.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
-    z.innerHTML=`<div class="compact-filterbar-v576c14"><input class="filter-search" id="oc-q" placeholder="🔍 Rechercher une œuvre…" oninput="renderOeuvreCatalogueV571()"><span class="filter-label">Regrouper</span><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select><span class="filter-sep"></span><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Collection · Toutes</option>${colOpts}</select><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Saga · Toutes</option>${sagaOpts}</select><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Sous-saga · Toutes</option></select><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Éditorial · Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select><button class="tiny-btn" onclick="resetOeuvreCatalogueFiltersV576c14()">↺ Réinitialiser</button>${workViewSwitchC38('renderOeuvreCatalogueV571')}</div><div id="oc-grid"></div>`;
-    syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();
+    z.innerHTML=`<div id="oc-grid"></div>`;
+    renderOeuvreCatalogueV571();
   }
   function resetOeuvreCatalogueFiltersV576c14(){['oc-q','oc-col','oc-saga','oc-ss','oc-ed'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571();}
   function syncOeuvreSousSagaFilterV571(){const el=document.getElementById('oc-ss');if(!el)return;const saga=document.getElementById('oc-saga')?.value||'',old=el.value,rows=oeuvreCatalogueDataV571.filter(x=>x.sous_saga_id&&x.sous_sagas?.nom&&(!saga||x.saga_id===saga));el.innerHTML='<option value="">Sous-saga · Toutes</option>'+[...new Map(rows.map(x=>[x.sous_saga_id,x.sous_sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old}
 
   function workCatalogCardV576c36(o){const img=o.couverture||'';const tags=[o.sous_sagas?.nom||o.sagas?.nom||null,o.univers?.nom||null,o.statut_editorial_actuel||o.statut||null].filter(Boolean).slice(0,2);const detail=workCardViewC38==='detailed';return `<article class="work-card-c38 ${detail?'detailed':'compact'}" onclick="openOeuvreDetail('${o.id}')"><div class="cover">${img?`<img src="${safeText(img)}" alt="">`:`<div style="padding:10px;text-align:center;color:var(--text-dim);font-size:10px">${safeText(o.titre)}</div>`}</div><div class="body"><h3 title="${safeText(o.titre)}">${safeText(o.titre)}</h3><div class="chips">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div></div></article>`}
-  function renderOeuvreCatalogueV571(){const q=(document.getElementById('oc-q')?.value||'').toLowerCase(),col=document.getElementById('oc-col')?.value||'',saga=document.getElementById('oc-saga')?.value||'',ss=document.getElementById('oc-ss')?.value||'',ed=document.getElementById('oc-ed')?.value||'',group=document.getElementById('oc-group')?.value||oeuvreCatalogueGroupV571,rows=oeuvreCatalogueDataV571.filter(o=>(!q||[o.titre,o.genre,o.sagas?.nom,o.sous_sagas?.nom,o.univers?.nom,o.statut_editorial_actuel].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!col||o.univers_id===col)&&(!saga||o.saga_id===saga)&&(!ss||o.sous_saga_id===ss)&&(!ed||o.statut_editorial_actuel===ed)),key=o=>group==='collection'?(o.univers?.nom||'Sans collection'):group==='saga'?(o.sagas?.nom||'Œuvres indépendantes'):group==='soussaga'?(o.sous_sagas?.nom||'Sans sous-saga'):group==='editorial'?(o.statut_editorial_actuel||'Non défini'):'',groups=new Map();rows.forEach(o=>{const k=key(o);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(o)});const card=o=>workCatalogCardV576c36(o);document.getElementById('oc-grid').innerHTML=!rows.length?'<div class="empty">Aucune œuvre avec ces filtres.</div>':group==='none'?`<div class="entity-gallery ${workCardViewC38==='compact'?'work-grid-compact-c38':''}">${rows.map(card).join('')}</div>`:[...groups.entries()].map(([k,a])=>`<section><h3 class="catalog-group-title">${safeText(k)} <small style="color:var(--text-dim)">· ${a.length}</small></h3><div class="entity-gallery ${workCardViewC38==='compact'?'work-grid-compact-c38':''}">${a.map(card).join('')}</div></section>`).join('')}
+  function renderOeuvreCatalogueV571(){
+    const rows=oeuvreCatalogueDataV571;
+    const groups=new Map();
+    rows.forEach(o=>{
+      const k=o.univers?.nom||'Sans collection';
+      if(!groups.has(k))groups.set(k,[]);
+      groups.get(k).push(o);
+    });
+    const grid=document.getElementById('oc-grid');if(!grid)return;
+    grid.innerHTML=!rows.length?'<div class="empty">Aucune œuvre.</div>':
+      [...groups.entries()].map(([k,a])=>`<section class="oeuvre-collection-v41"><h3 class="catalog-group-title">${safeText(k)} <small style="color:var(--text-dim)">· ${a.length}</small></h3><div class="entity-gallery ${workCardViewC38==='compact'?'work-grid-compact-c38':''}">${a.map(workCatalogCardV576c36).join('')}</div></section>`).join('');
+  }
   // ============================================================
   // ŒUVRE — page détail, avec onglets
   // ============================================================
@@ -4929,7 +4995,7 @@
 
     const pct = o.objectif_mots ? Math.min(100, Math.round((o.mots_ecrits||0)/o.objectif_mots*100)) : 0;
     content.innerHTML = `
-      <div class="back-link" onclick="navigate('oeuvres')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux œuvres</div>
+      <div class="back-link" onclick="${(o.saga_id||o.sous_saga_id)?`navigate('oeuvres-saga')`:`navigate('oeuvres')`}" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux œuvres</div>
       <div class="work-hero-banner ${o.banniere?'':'empty'}">${o.banniere?`<img src="${safeText(o.banniere)}" alt="Bannière de ${safeText(o.titre)}">`:`<span>${safeText(o.titre)}</span>`}</div>
       <div class="oeuvre-head">
         <div class="oeuvre-info">
