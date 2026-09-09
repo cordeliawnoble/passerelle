@@ -6,63 +6,7 @@
 <title>Passerelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  // ============================================================
-  // C40 — FRONT : ŒUVRES INDÉPENDANTES / ŒUVRES SAGA
-  // Le BO Œuvres reste unique et inchangé.
-  // ============================================================
-  let frontSagaSelectedV40=null;
-  let frontSagaDataV40={sagas:[],subs:[],works:[]};
-
-  async function renderFrontOeuvresSagaV40(zone){
-    if(!zone)return;
-    zone.innerHTML='<div class="empty">Chargement des œuvres saga…</div>';
-    const [sr,ssr,wr]=await Promise.all([
-      db().from('sagas').select('id,nom,ordre').order('ordre'),
-      db().from('sous_sagas').select('id,nom,saga_id,ordre').order('ordre'),
-      db().from('oeuvres').select('id,titre,couverture,saga_id,sous_saga_id,numero_sous_saga,statut,statut_editorial_actuel').eq('archive',false)
-    ]);
-    if(sr.error||ssr.error||wr.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(sr.error?.message||ssr.error?.message||wr.error?.message)}</div>`;return}
-    frontSagaDataV40={sagas:sr.data||[],subs:ssr.data||[],works:(wr.data||[]).filter(w=>w.saga_id||w.sous_saga_id)};
-    if(!frontSagaSelectedV40||!frontSagaDataV40.sagas.some(s=>s.id===frontSagaSelectedV40))frontSagaSelectedV40=frontSagaDataV40.sagas[0]?.id||null;
-    paintFrontOeuvresSagaV40(zone);
-  }
-  function setFrontSagaV40(id){
-    frontSagaSelectedV40=id;
-    const zone=document.getElementById('front-oeuvres-saga-v40');
-    if(zone)paintFrontOeuvresSagaV40(zone);
-  }
-  function frontWorkTileV40(w){
-    const img=w.couverture?`<img src="${safeText(w.couverture)}" alt="">`:`<div style="aspect-ratio:16/7;display:grid;place-items:center;background:var(--bg-2);color:var(--text-dim)">Sans visuel</div>`;
-    return `<div class="saga-work-tile-front-v40" onclick="openOeuvreDetail('${w.id}')">${img}<div class="saga-work-tile-title-v40">${safeText(w.titre||'Sans titre')}</div></div>`;
-  }
-  function paintFrontOeuvresSagaV40(zone){
-    const {sagas,subs,works}=frontSagaDataV40;
-    const saga=sagas.find(s=>s.id===frontSagaSelectedV40);
-    if(!saga){zone.innerHTML='<div class="empty">Aucune saga.</div>';return}
-    const sagaSubs=subs.filter(s=>s.saga_id===saga.id);
-    const direct=works.filter(w=>w.saga_id===saga.id&&!w.sous_saga_id);
-    const groups=sagaSubs.map(ss=>({name:ss.nom,works:works.filter(w=>w.sous_saga_id===ss.id)})).filter(g=>g.works.length);
-    if(direct.length)groups.push({name:'Hors sous-saga',works:direct});
-    zone.innerHTML=`<div class="saga-works-front-v40">
-      <div class="saga-tabs-front-v40">${sagas.map(s=>`<button class="saga-tab-front-v40 ${s.id===saga.id?'active':''}" onclick="setFrontSagaV40('${s.id}')">${safeText(s.nom)}</button>`).join('')}</div>
-      ${groups.map(g=>`<section class="saga-group-front-v40"><div class="saga-group-title-front-v40">${safeText(g.name)}</div><div class="saga-work-grid-front-v40">${g.works.map(frontWorkTileV40).join('')}</div></section>`).join('')||'<div class="empty">Aucune œuvre rattachée à cette saga.</div>'}
-    </div>`;
-  }
-
-  async function renderFrontOeuvresIndependantesV40(zone){
-    if(!zone)return;
-    const r=await db().from('oeuvres').select('id,titre,couverture,saga_id,sous_saga_id,statut,statut_editorial_actuel').eq('archive',false);
-    if(r.error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(r.error.message)}</div>`;return}
-    const rows=(r.data||[]).filter(w=>!w.saga_id&&!w.sous_saga_id);
-    zone.innerHTML=`<div class="entity-gallery">${rows.map(w=>frontWorkTileV40(w)).join('')||'<div class="empty">Aucune œuvre indépendante.</div>'}</div>`;
-  }
-
-
-  // C40 · Le nettoyage est volontairement limité aux raccourcis de l'accueil.
-  window.addEventListener('load',()=>setTimeout(cleanHomeQuickLinksV40,250));
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg: #FFFFFF; --bg-2: #F6F3FB; --card: #FFFFFF;
@@ -994,22 +938,52 @@
   .codex-archive-note-v39b{font-size:11px;color:var(--text-dim);margin-left:auto}
 
 
-  /* ---- C40 · Front Œuvres Saga + accueil allégé ---- */
-  .home-banner-v40{width:100%;min-height:170px;border-radius:16px;overflow:hidden;margin:0 0 18px;background:var(--bg-2);border:1px solid var(--line);display:grid;place-items:center;background-size:cover;background-position:center}
-  .home-banner-placeholder-v40{font-family:var(--font-title);font-size:20px;color:var(--text-dim);opacity:.55}
-  .saga-works-front-v40{display:grid;gap:18px}
-  .saga-tabs-front-v40{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
-  .saga-tab-front-v40{white-space:nowrap;border:1px solid var(--line);background:var(--card);color:var(--text-dim);border-radius:999px;padding:8px 12px;cursor:pointer;font-weight:700;font-size:12px}
-  .saga-tab-front-v40.active{background:color-mix(in srgb,var(--accent) 14%,var(--card));border-color:var(--accent);color:var(--accent)}
-  .saga-group-front-v40{margin-top:8px}
-  .saga-group-title-front-v40{display:inline-flex;padding:5px 10px;border-radius:7px;background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--text);font-weight:800;font-size:13px;margin-bottom:10px}
-  .saga-work-grid-front-v40{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-  .saga-work-tile-front-v40{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);cursor:pointer;transition:.18s ease;min-width:0}
-  .saga-work-tile-front-v40:hover{transform:translateY(-2px);border-color:var(--accent)}
-  .saga-work-tile-front-v40 img{width:100%;aspect-ratio:16/7;display:block;object-fit:cover;background:var(--bg-2)}
-  .saga-work-tile-title-v40{padding:8px 10px;font-weight:750;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  @media(max-width:900px){.saga-work-grid-front-v40{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:560px){.saga-work-grid-front-v40{grid-template-columns:1fr}.home-banner-v40{min-height:120px}}
+  /* ---- C40 · Accueil + Œuvres saga ---- */
+  .home-banner-placeholder-v40{
+    min-height:150px;border:1px dashed var(--line);border-radius:16px;
+    display:grid;place-items:center;margin-bottom:18px;
+    background:color-mix(in srgb,var(--card) 72%,var(--bg));
+    color:var(--text-dim);font-size:12px
+  }
+  .oeuvres-saga-tabs-v40{
+    display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;margin-bottom:8px
+  }
+  .oeuvres-saga-tab-v40{
+    flex:0 0 auto;border:1px solid var(--line);background:var(--card);
+    color:var(--text-dim);border-radius:999px;padding:8px 13px;
+    font:inherit;font-size:12px;font-weight:750;cursor:pointer
+  }
+  .oeuvres-saga-tab-v40:hover{border-color:var(--accent);color:var(--accent)}
+  .oeuvres-saga-tab-v40.active{
+    border-color:var(--accent);color:var(--accent);
+    background:color-mix(in srgb,var(--accent) 12%,var(--card))
+  }
+  .oeuvres-saga-groups-v40{display:grid;gap:26px}
+  .oeuvres-saga-group-v40{display:grid;gap:10px}
+  .oeuvres-saga-group-title-v40{
+    justify-self:start;border:0;border-radius:7px;padding:5px 9px;
+    background:color-mix(in srgb,var(--accent) 16%,var(--card));
+    color:var(--text);font:inherit;font-weight:800;font-size:13px;cursor:pointer
+  }
+  .oeuvres-saga-group-title-v40.static{cursor:default}
+  .oeuvres-saga-group-title-v40 span{margin-left:5px;color:var(--accent)}
+  .oeuvres-saga-grid-v40{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px
+  }
+  .oeuvre-saga-tile-v40{
+    min-width:0;border:1px solid var(--line);border-radius:13px;
+    overflow:hidden;background:var(--card);cursor:pointer;transition:.18s ease
+  }
+  .oeuvre-saga-tile-v40:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .oeuvre-saga-visual-v40{aspect-ratio:16/7;background:var(--bg-2);overflow:hidden}
+  .oeuvre-saga-visual-v40 img{width:100%;height:100%;display:block;object-fit:cover}
+  .oeuvre-saga-empty-v40{width:100%;height:100%;display:grid;place-items:center;color:var(--text-dim);font-size:24px}
+  .oeuvre-saga-caption-v40{
+    padding:8px 10px;font-size:12px;font-weight:750;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  @media(max-width:900px){.oeuvres-saga-grid-v40{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.oeuvres-saga-grid-v40{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -1109,7 +1083,7 @@
     { group: 'Bibliothèque', items: [
       { key:'oeuvres', label:'Œuvres', real:true },
       { key:'sagas', label:'Sagas', real:true },
-      { key:'sous-sagas', label:'Sous-sagas', real:true },
+      { key:'oeuvres-saga', label:'Œuvres saga', real:true },
       { key:'poesie', label:'Recueils de poésie', real:true },
       { key:'personnages', label:'Personnages', real:true },
     ]},
@@ -1252,7 +1226,7 @@
     if (key === 'accueil') renderAccueil();
     if (key === 'oeuvres') renderOeuvres();
     if (key === 'sagas') renderSagas();
-    if (key === 'sous-sagas') renderSousSagasCatalogueV570();
+    if (key === 'oeuvres-saga') renderOeuvresSagaV40();
     if (key === 'personnages') renderPersonnages();
     if (key === 'idees') renderIdees();
     if (key === 'relecture') renderRelecture();
@@ -1270,7 +1244,7 @@
   function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   const PAGE_BANNER_LABELS = {
-    accueil:'Accueil', oeuvres:'Œuvres', sagas:'Sagas', 'sous-sagas':'Sous-sagas', poesie:'Recueils de poésie', personnages:'Personnages',
+    accueil:'Accueil', oeuvres:'Œuvres', sagas:'Sagas', 'oeuvres-saga':'Œuvres saga', poesie:'Recueils de poésie', personnages:'Personnages',
     relecture:'Relecture', planning:'Planning', pepiniere:'Pépinière', 'bureau-editorial':'Bureau éditorial'
   };
   async function getPageBanner(pageKey){
@@ -2721,22 +2695,7 @@
     return [...new Set(chips.filter(Boolean))].slice(0,3);
   }
 
-  
-  // C40 · Ajustements d'accueil sans toucher au menu latéral.
-  function cleanHomeQuickLinksV40(){
-    const root=document.querySelector('#page-accueil, #accueil-page, .home-page, #main-content')||document;
-    const headings=[...root.querySelectorAll('h2,h3,h4')];
-    const h=headings.find(x=>/liens rapides/i.test(x.textContent||''));
-    if(!h)return;
-    const box=h.closest('.panel,.card,.home-panel,.section')||h.parentElement;
-    if(!box)return;
-    [...box.querySelectorAll('a,button,.quick-link,.quick-card')].forEach(el=>{
-      const s=(el.textContent||'').trim().toLowerCase();
-      if(s==='œuvres'||s==='oeuvres'||s==='relecture'||s==='bureau éditorial'||s==='bureau editorial')el.remove();
-    });
-  }
-
-async function renderAccueil(){
+  async function renderAccueil(){
     const content = document.getElementById('content');
     content.innerHTML = `<div class="status-line">Chargement…</div>`;
 
@@ -2753,11 +2712,11 @@ async function renderAccueil(){
     const [
       enBureau, pepiniere, dernierGraine, atelierStats, objectifAnnuel, sommeAnnuelle, homeQuickLinks
     ] = await Promise.all([
-      db().from('oeuvres').select('id,titre,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,banniere,soft_color,archive').eq('archive',false).or('statut.eq.En écriture,statut_editorial_actuel.eq.V1 en cours,statut_editorial_actuel.eq.V2 en cours').order('updated_at',{ascending:false}).limit(3),
+      db().from('oeuvres').select('id,titre,statut,statut_editorial_actuel,mots_ecrits,objectif_mots,couverture,banniere,soft_color,archive').eq('archive',false).eq('statut_editorial_actuel','V1 en cours').order('updated_at',{ascending:false}).limit(3),
       db().from('idees').select('statut', { count:'exact' }).in('statut', ['À creuser','Prometteuse']),
       db().from('idees').select('titre, note').order('created_at', { ascending:false }).limit(1).maybeSingle(),
       Promise.all([
-        db().from('oeuvres').select('*',{count:'exact',head:true}).eq('archive',false).or('statut.eq.En écriture,statut_editorial_actuel.eq.V1 en cours,statut_editorial_actuel.eq.V2 en cours'),
+        db().from('oeuvres').select('*',{count:'exact',head:true}).eq('archive',false).eq('statut_editorial_actuel','V1 en cours'),
         db().from('chapitres').select('*', { count:'exact', head:true }).gte('date_ecriture', startOfMonth),
         db().from('relectures').select('*', { count:'exact', head:true }).is('date_terminee', null),
       ]),
@@ -2786,8 +2745,6 @@ async function renderAccueil(){
     const motsAnnee = (sommeAnnuelle.data||[]).reduce((sum,r)=>sum+(r.mots_ecrits||0), 0);
     const objectifAnnee = objectifAnnuel.data?.objectif_mots;
     const pctAnnee = objectifAnnee ? Math.min(100, Math.round(motsAnnee/objectifAnnee*100)) : 0;
-    const hour = now.getHours();
-    const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
     const writingCards=(enBureau.data||[]).slice(0,3).map(o=>{const pct=o.objectif_mots?Math.min(100,Math.round((o.mots_ecrits||0)/o.objectif_mots*100)):0;return `<article class="home-writing-card" onclick="openOeuvreDetail('${o.id}')"><div class="home-writing-cover">${o.couverture?`<img src="${safeText(o.couverture)}">`:''}</div><div class="home-writing-body"><div class="home-writing-title">${safeText(o.titre)}</div><div class="home-writing-progress"><i style="width:${pct}%"></i></div><div class="home-writing-meta"><span>${safeText(o.statut_editorial_actuel||o.statut||'En écriture')}</span><b>${pct}%</b></div></div></article>`}).join('');
     const horizonYears=[...new Set([now.getFullYear(),now.getFullYear()+1,homeHorizonYearV576c36,...(horizonQuery.data||[]).map(o=>Number(o.horizon_annee)).filter(Boolean)])].sort((a,b)=>a-b);
@@ -2805,7 +2762,9 @@ async function renderAccueil(){
         </div>
       </article>`;
     }).join('');
-    content.innerHTML = `<div class="banner"><div><h1>${salutation} Cordélia ✨</h1><div class="sub"><span class="quote-hand">Écrire · imaginer · relier · faire grandir</span></div></div></div>
+    content.innerHTML = `${accueilBanner
+        ? renderPageImageBanner(accueilBanner,'Accueil')
+        : `<div class="home-banner-placeholder-v40"><span>Bannière d’accueil à ajouter</span></div>`}
       <div class="home-c36-top"><section class="home-c36-panel"><div class="home-c36-head"><h2>✎ Mes œuvres en cours d’écriture</h2><button class="tiny-btn" onclick="navigate('oeuvres')">Voir toutes →</button></div><div class="home-writing-cards">${writingCards||'<div class="empty">Aucune œuvre en écriture.</div>'}<article class="home-writing-card" onclick="openOeuvreModal()"><div class="home-writing-cover" style="display:grid;place-items:center;font-size:38px;color:var(--accent)">＋</div><div class="home-writing-body"><div class="home-writing-title">Nouvelle œuvre</div><small>Lancer une nouvelle aventure</small></div></article></div></section><section class="home-c36-panel home-planning-panel-v38"><div class="home-c36-head"><h2>📅 Mon planning cette semaine</h2><button class="tiny-btn" onclick="navigate('planning')">Voir le planning →</button></div>${renderHomeWeekV576(homeWeekDate,homePlanning.data||[],homeWorksMap)}</section></div>
       <div class="home-c36-kpis home-kpis-v38"><div class="home-c36-kpi"><b>✎ ${nbEnEcriture??0}</b><span>œuvres en écriture</span></div><div class="home-c36-kpi"><b>▣ ${nbRelecturesEnCours??0}</b><span>en relecture</span></div><div class="home-c36-kpi"><b>▤ ${nbChapitresMois??0}</b><span>chapitres ce mois-ci</span></div><div class="home-c36-kpi"><b>💡 ${pepiniere.count??0}</b><span>idées en attente</span></div></div>
       <section class="home-horizon-v38">
@@ -2814,8 +2773,7 @@ async function renderAccueil(){
           <div class="home-horizon-tools-v38"><span class="home-horizon-count-v38"><strong>${(horizonQuery.data||[]).length}</strong> œuvre${(horizonQuery.data||[]).length>1?'s':''} dans cet Horizon</span><select class="home-horizon-select" aria-label="Choisir l’année de l’Horizon" onchange="setHomeHorizonYearV576c36(this.value)">${horizonYears.map(y=>`<option value="${y}" ${y===homeHorizonYearV576c36?'selected':''}>${y}${y===now.getFullYear()?' · Y':y===now.getFullYear()+1?' · Y+1':''}</option>`).join('')}</select><button class="tiny-btn" onclick="navigate('bureau-editorial')">Voir toutes →</button></div>
         </div>
         ${horizonQuery.error?`<div class="empty">Configure les horizons depuis le Bureau éditorial.</div>`:!horizonQuery.data?.length?`<div class="empty">Aucune œuvre dans l’horizon ${homeHorizonYearV576c36}.</div>`:`<div class="home-horizon-cards-v38">${horizonCards}</div>`}
-      </section>
-      <div class="home-c38-actions"><div class="home-c38-action" onclick="navigate('oeuvres')">✍️ <span>Œuvres</span></div><div class="home-c38-action" onclick="navigate('relecture')">🔎 <span>Relecture</span></div><div class="home-c38-action" onclick="navigate('bureau-editorial')">🗂 <span>Bureau éditorial</span></div></div>`;
+      </section>`;
   }
 
   async function saveObjectifAnnuel(){
@@ -4837,6 +4795,83 @@ async function renderAccueil(){
     if(zone) await renderSagaSousSagas(zone); else await renderSousSagasCatalogueV570();
   }
 
+
+  // ============================================================
+  // C40 — ŒUVRES SAGA
+  // Vue Front : onglets par Saga puis regroupement par Sous-saga.
+  // Les pages Sous-saga restent accessibles depuis les Sagas.
+  // ============================================================
+  let oeuvresSagaStateV40={sagas:[],sousSagas:[],oeuvres:[],activeSagaId:null};
+
+  async function renderOeuvresSagaV40(){
+    const content=document.getElementById('content');
+    const banner=renderPageImageBanner(await getPageBanner('oeuvres-saga'),'Œuvres saga');
+    content.innerHTML=`${banner}<div class="head-row"><div><h2>Œuvres saga</h2><p style="font-size:12px;color:var(--text-dim)">Mes œuvres regroupées par saga puis par sous-saga.</p></div></div><div id="oeuvres-saga-zone-v40"><div class="status-line">Chargement…</div></div>`;
+
+    const [sagasR,ssR,oeuvresR]=await Promise.all([
+      db().from('sagas').select('id,nom,ordre,page_color,accent_color').order('ordre',{ascending:true}),
+      db().from('sous_sagas').select('id,nom,saga_id,ordre,page_color,accent_color').order('ordre',{ascending:true}),
+      db().from('oeuvres').select('id,titre,couverture,banniere,saga_id,sous_saga_id,numero_sous_saga,statut,statut_editorial_actuel,archive').eq('archive',false).order('titre',{ascending:true})
+    ]);
+    const zone=document.getElementById('oeuvres-saga-zone-v40');
+    const err=sagasR.error||ssR.error||oeuvresR.error;
+    if(err){zone.innerHTML=`<div class="empty">Erreur : ${safeText(err.message)}</div>`;return}
+
+    oeuvresSagaStateV40={
+      sagas:sagasR.data||[],
+      sousSagas:ssR.data||[],
+      oeuvres:(oeuvresR.data||[]).filter(o=>o.saga_id||o.sous_saga_id),
+      activeSagaId:oeuvresSagaStateV40.activeSagaId
+    };
+    if(!oeuvresSagaStateV40.sagas.some(s=>s.id===oeuvresSagaStateV40.activeSagaId)){
+      oeuvresSagaStateV40.activeSagaId=oeuvresSagaStateV40.sagas[0]?.id||null;
+    }
+    renderOeuvresSagaGridV40();
+  }
+
+  function selectOeuvresSagaV40(id){
+    oeuvresSagaStateV40.activeSagaId=id;
+    renderOeuvresSagaGridV40();
+  }
+
+  function oeuvreSagaTileV40(o){
+    const visual=o.banniere||o.couverture||'';
+    return `<article class="oeuvre-saga-tile-v40" onclick="openOeuvreDetail('${o.id}')">
+      <div class="oeuvre-saga-visual-v40">${visual?`<img src="${safeText(visual)}" alt="${safeText(o.titre||'Œuvre')}">`:`<div class="oeuvre-saga-empty-v40">${initials(o.titre||'Œuvre')}</div>`}</div>
+      <div class="oeuvre-saga-caption-v40">${safeText(o.titre||'Sans titre')}</div>
+    </article>`;
+  }
+
+  function renderOeuvresSagaGridV40(){
+    const zone=document.getElementById('oeuvres-saga-zone-v40');
+    if(!zone)return;
+    const {sagas,sousSagas,oeuvres,activeSagaId}=oeuvresSagaStateV40;
+    if(!sagas.length){zone.innerHTML='<div class="empty">Aucune saga.</div>';return}
+
+    const saga=sagas.find(s=>s.id===activeSagaId)||sagas[0];
+    const sagaSubs=sousSagas.filter(ss=>ss.saga_id===saga.id);
+    const groups=sagaSubs.map(ss=>({
+      id:ss.id,
+      nom:ss.nom,
+      oeuvres:oeuvres.filter(o=>o.sous_saga_id===ss.id)
+    })).filter(g=>g.oeuvres.length);
+
+    const direct=oeuvres.filter(o=>o.saga_id===saga.id&&!o.sous_saga_id);
+    if(direct.length)groups.push({id:null,nom:'Hors sous-saga',oeuvres:direct});
+
+    zone.innerHTML=`<div class="oeuvres-saga-tabs-v40">
+        ${sagas.map(s=>`<button class="oeuvres-saga-tab-v40 ${s.id===saga.id?'active':''}" onclick="selectOeuvresSagaV40('${s.id}')">${safeText(s.nom)}</button>`).join('')}
+      </div>
+      <div class="oeuvres-saga-groups-v40">
+        ${groups.map(g=>`<section class="oeuvres-saga-group-v40">
+          ${g.id
+            ? `<button class="oeuvres-saga-group-title-v40" onclick="openSousSagaDetail('${g.id}')">${safeText(g.nom)} <span>›</span></button>`
+            : `<div class="oeuvres-saga-group-title-v40 static">${safeText(g.nom)}</div>`}
+          <div class="oeuvres-saga-grid-v40">${g.oeuvres.map(oeuvreSagaTileV40).join('')}</div>
+        </section>`).join('')||'<div class="empty">Aucune œuvre rattachée à cette saga.</div>'}
+      </div>`;
+  }
+
   // ============================================================
   // ŒUVRES
   // ============================================================
@@ -4844,19 +4879,19 @@ async function renderAccueil(){
   let workCardViewC38=(()=>{try{return localStorage.getItem('passerelle_workcard_view')||'compact'}catch(e){return 'compact'}})();
   function setWorkCardViewC38(v,rerender){workCardViewC38=v==='detailed'?'detailed':'compact';try{localStorage.setItem('passerelle_workcard_view',workCardViewC38)}catch(e){} if(typeof rerender==='function')rerender();}
   function workViewSwitchC38(rerenderName='renderOeuvreCatalogueV571'){return `<div class="work-view-switch-c38"><button class="${workCardViewC38==='compact'?'active':''}" onclick="setWorkCardViewC38('compact',${rerenderName})">Compacte</button><button class="${workCardViewC38==='detailed'?'active':''}" onclick="setWorkCardViewC38('detailed',${rerenderName})">Détaillée</button></div>`}
-  async function renderOeuvres(){ return renderOeuvreCataloguePageV571(false); }
-  async function renderArchives(){ return renderOeuvreCataloguePageV571(true); }
-  async function renderOeuvreCataloguePageV571(archived=false){
+  async function renderOeuvres(){ return renderOeuvreCataloguePageV571(false,'independent'); }
+  async function renderArchives(){ return renderOeuvreCataloguePageV571(true,'all'); }
+  async function renderOeuvreCataloguePageV571(archived=false,scope='all'){
     const content=document.getElementById('content');
     const title=archived?'Archives':'Œuvres';
-    const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':'Explorateur du catalogue.';
+    const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':scope==='independent'?'Mes œuvres indépendantes.':'Explorateur du catalogue.';
     const banner=archived?'':renderPageImageBanner(await getPageBanner('oeuvres'),'Œuvres');
     const action=archived?'':`<button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button>`;
     content.innerHTML=`${banner}<div class="head-row"><div><h2>${title}</h2><p style="font-size:12px;color:var(--text-dim)">${subtitle}</p></div>${action}</div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
     const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',archived).order('titre');
     const z=document.getElementById('oeuvres-zone');
     if(error){z.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
-    oeuvreCatalogueDataV571=data||[];
+    oeuvreCatalogueDataV571=(data||[]).filter(o=>scope!=='independent'||(!o.saga_id&&!o.sous_saga_id));
     await hydrateCardThemesV576c13('work',oeuvreCatalogueDataV571);
     const sagaOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.saga_id&&x.sagas?.nom).map(x=>[x.saga_id,x.sagas.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join(''),colOpts=[...new Map(oeuvreCatalogueDataV571.filter(x=>x.univers_id&&x.univers?.nom).map(x=>[x.univers_id,x.univers.nom])).entries()].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('');
     z.innerHTML=`<div class="compact-filterbar-v576c14"><input class="filter-search" id="oc-q" placeholder="🔍 Rechercher une œuvre…" oninput="renderOeuvreCatalogueV571()"><span class="filter-label">Regrouper</span><select id="oc-group" onchange="oeuvreCatalogueGroupV571=this.value;sessionStorage.setItem('passerelle-oeuvres-group',this.value);renderOeuvreCatalogueV571()">${[['none','Aucun'],['collection','Collection'],['saga','Saga'],['soussaga','Sous-saga'],['editorial','Statut éditorial']].map(([v,l])=>`<option value="${v}" ${oeuvreCatalogueGroupV571===v?'selected':''}>${l}</option>`).join('')}</select><span class="filter-sep"></span><select id="oc-col" onchange="renderOeuvreCatalogueV571()"><option value="">Collection · Toutes</option>${colOpts}</select><select id="oc-saga" onchange="syncOeuvreSousSagaFilterV571();renderOeuvreCatalogueV571()"><option value="">Saga · Toutes</option>${sagaOpts}</select><select id="oc-ss" onchange="renderOeuvreCatalogueV571()"><option value="">Sous-saga · Toutes</option></select><select id="oc-ed" onchange="renderOeuvreCatalogueV571()"><option value="">Éditorial · Tous</option>${[...new Set(oeuvreCatalogueDataV571.map(x=>x.statut_editorial_actuel).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select><button class="tiny-btn" onclick="resetOeuvreCatalogueFiltersV576c14()">↺ Réinitialiser</button>${workViewSwitchC38('renderOeuvreCatalogueV571')}</div><div id="oc-grid"></div>`;
