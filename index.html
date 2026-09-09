@@ -1726,9 +1726,10 @@
       return {
         type:'Intrigue principale',titre,acte:acte||null,pov_source:pov||null,
         statut:etat||'À relire',resume_source:resume||null,
-        ordre:Number.isFinite(n)&&n>0?n:i+1,
+        ordre:i+1,
+        numero_source:String(numero||'').trim()||String(i+1),
         mots_source:words||null,
-        source_key:`notion:${sourceId}:${Number.isFinite(n)&&n>0?n:i+1}`,
+        source_key:`notion:${sourceId}:${String(numero||'').trim()||String(i+1)}`,
         source_csv:csvName,source_oeuvre:workTitle
       };
     }).filter(x=>x.titre);
@@ -1837,7 +1838,7 @@
       if(!workId){const rr=await db().from('oeuvres').select('id').eq('titre',s.titre).limit(1);workId=rr.data?.[0]?.id}
       if(!workId){st.textContent=`Œuvre « ${s.titre} » enregistrée, mais impossible de retrouver son identifiant pour importer le Plan.`;return}
       for(const p of (s.plans_importables||[])){
-        const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À relire',transformation:p.resume_source||null,ordre:Number(p.ordre)||0,notion_source_key:p.source_key};
+        const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À relire',transformation:p.resume_source||null,ordre:Number.isFinite(Number(p.ordre))?Math.trunc(Number(p.ordre)):0,notion_source_key:p.source_key};
         const {data:existing,error:ee}=await db().from('plans').select('id').eq('oeuvre_id',workId).eq('notion_source_key',p.source_key).limit(1);
         if(ee){st.textContent=`Œuvre « ${s.titre} » importée, mais lecture du Plan impossible : ${ee.message}`;return}
         let pr;
