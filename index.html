@@ -1018,6 +1018,16 @@
   .home-horizon-card-v38.is-relecture-v42 .home-editorial-pill-v38{background:#fff!important;color:var(--accent)!important;border-color:#fff!important}
 
 </style>
+
+<style id="c43-ui">
+.saga-sort-card-v43{position:relative}.saga-sort-card-v43.dragging-v43{opacity:.48;outline:2px dashed var(--accent)}
+.saga-drag-handle-v43{position:absolute;z-index:4;top:8px;left:8px;border:1px solid var(--line);background:rgba(255,255,255,.92);border-radius:8px;padding:5px 8px;cursor:grab;font-size:18px;line-height:1}
+.saga-drag-handle-v43:active{cursor:grabbing}
+.relecture-analysis-columns-v43{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:12px}
+.relecture-analysis-columns-v43 .relecture-fold-v42{margin:0;height:auto}
+@media(max-width:900px){.relecture-analysis-columns-v43{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 
@@ -1485,8 +1495,16 @@
     const content=document.getElementById('content');
     const {data,error}=await db().from('sagas').select('id,nom,genre,statut,archive,ordre').order('ordre',{ascending:true});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"></div><div class="admin-catalog-grid" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" onclick="openAdminSagaEditorV56('${x.id}')"><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas. Attrape une carte par la poignée pour changer son ordre dans Œuvres saga.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"><span id="saga-order-status-v43" class="status-line"></span></div><div class="admin-catalog-grid saga-sort-grid-v43" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card saga-sort-card-v43" draggable="true" data-saga-id="${x.id}" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" ondragstart="sagaDragStartV43(event)" ondragover="sagaDragOverV43(event)" ondrop="sagaDropV43(event)" ondragend="sagaDragEndV43(event)" onclick="openAdminSagaEditorV56('${x.id}')"><button class="saga-drag-handle-v43" type="button" title="Glisser pour réordonner" onclick="event.stopPropagation()">⠿</button><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
   }
+
+
+  let sagaDraggedIdV43=null;
+  function sagaDragStartV43(e){sagaDraggedIdV43=e.currentTarget.dataset.sagaId;e.currentTarget.classList.add('dragging-v43');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',sagaDraggedIdV43)}
+  function sagaDragOverV43(e){e.preventDefault();const card=e.currentTarget;if(!sagaDraggedIdV43||card.dataset.sagaId===sagaDraggedIdV43)return;const grid=card.parentElement,drag=grid.querySelector(`[data-saga-id="${sagaDraggedIdV43}"]`);if(!drag)return;const r=card.getBoundingClientRect(),before=e.clientY<r.top+r.height/2||(Math.abs(e.clientY-(r.top+r.height/2))<r.height*.2&&e.clientX<r.left+r.width/2);grid.insertBefore(drag,before?card:card.nextSibling)}
+  async function sagaDropV43(e){e.preventDefault();await persistSagaOrderV43()}
+  async function sagaDragEndV43(e){e.currentTarget.classList.remove('dragging-v43');if(sagaDraggedIdV43)await persistSagaOrderV43();sagaDraggedIdV43=null}
+  async function persistSagaOrderV43(){const cards=[...document.querySelectorAll('#admin-sagas-grid [data-saga-id]')].filter(x=>x.style.display!=='none');if(!cards.length)return;const st=document.getElementById('saga-order-status-v43');if(st)st.textContent='Enregistrement de l’ordre…';for(let i=0;i<cards.length;i++){const {error}=await db().from('sagas').update({ordre:i+1}).eq('id',cards[i].dataset.sagaId);if(error){if(st)st.textContent='Erreur : '+error.message;return}}if(st)st.textContent='✓ Ordre enregistré';}
 
 
 
@@ -1615,7 +1633,80 @@
 
   let worksPackageV576=null, worksPreviewV576=null;
   function normV576(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
-  function openWorksImportV576(){const h=document.getElementById('works-import-host-v576');if(!h)return;h.innerHTML=`<div class="works-import-box"><h3 style="margin:0 0 5px">📦 Import multi-œuvres Notion</h3><p style="margin:0 0 10px;color:var(--text-dim);font-size:11px">Prévisualisation obligatoire. Les personnages sont ignorés. Les archives sans page complète peuvent être créées avec leurs métadonnées puis enrichies plus tard.</p><label class="btn-primary" style="display:inline-block;cursor:pointer">Choisir le paquet JSON<input type="file" accept=".json,application/json" style="display:none" onchange="readWorksPackageV576(this.files[0])"></label><div id="works-import-preview-v576" class="works-import-preview"></div><div id="works-import-status-v576" class="notion-import-status"></div></div>`}
+  function openWorksImportV576(){const h=document.getElementById('works-import-host-v576');if(!h)return;h.innerHTML=`<div class="works-import-box"><h3 style="margin:0 0 5px">📦 Import multi-œuvres Notion</h3><p style="margin:0 0 10px;color:var(--text-dim);font-size:11px">Dépose directement l’export ZIP Markdown & CSV de Notion. La base « Mes œuvres » sert de source de vérité : personnages, chapitres et autres sous-pages ne deviennent jamais des œuvres.</p><label class="btn-primary" style="display:inline-block;cursor:pointer">📦 Choisir le ZIP Notion<input type="file" accept=".zip,application/zip,.json,application/json" style="display:none" onchange="readWorksNotionFileV43(this.files[0])"></label><div id="works-import-preview-v576" class="works-import-preview"></div><div id="works-import-status-v576" class="notion-import-status"></div></div>`}
+
+  function worksHeaderV43(row,names){const ks=Object.keys(row||{});for(const n of names){const k=ks.find(x=>normV576(x)===normV576(n));if(k)return row[k]}return ''}
+  function worksUuidFromNameV43(name){return (String(name||'').match(/([0-9a-f]{32})(?=\.(?:md|markdown|csv)$)/i)||[])[1]||null}
+  function worksMarkdownTitleV43(md){return ((String(md||'').match(/^#\s+(.+)$/m)||[])[1]||'').trim()}
+  function worksResumeFromMarkdownV43(md){const s=String(md||'');const m=s.match(/(?:^|\n)#{1,4}\s*(?:Résumé|Resume|Synopsis)\s*\n+([\s\S]*?)(?=\n#{1,4}\s|\n---|\Z)/i);return m?m[1].trim():''}
+  async function parseWorksNotionZipV43(file){
+    const JSZipLib=await ensureJsZipV576c27();const zip=await JSZipLib.loadAsync(await file.arrayBuffer()),entries=await collectNotionZipEntriesV576c28(zip);
+    const csvs=[],mds=[];
+    for(const x of entries){if(/\.csv$/i.test(x.name))csvs.push({name:x.name,text:await x.entry.async('string')});else if(/\.(md|markdown)$/i.test(x.name))mds.push({name:x.name,text:await x.entry.async('string')})}
+    const candidates=csvs.map(c=>({c,rows:parseCsvV572(c.text)})).filter(x=>x.rows.length&&Object.keys(x.rows[0]).some(h=>['titre','title','nom','name'].includes(normV576(h))));
+    const allCandidates=candidates.filter(x=>/_all\.csv$/i.test(x.c.name));
+    const scoreAll=x=>{const hs=Object.keys(x.rows[0]||{}).map(normV576);return (hs.includes('titre')?30:0)+(hs.includes('collection')?20:0)+(hs.includes('niveau editorial')?10:0)+(hs.includes('resume')?10:0)+Math.min(x.rows.length,100)/100};
+    const all=allCandidates.sort((a,b)=>scoreAll(b)-scoreAll(a))[0];
+    if(!all)throw new Error('Je ne trouve pas la base complète des œuvres (_all.csv) dans ce ZIP Notion.');
+    const stem=all.c.name.replace(/_all\.csv$/i,'').replace(/[\\/].*$/,'');
+    let filtered=candidates.filter(x=>!/_all\.csv$/i.test(x.c.name)&&x.c.name.replace(/\.csv$/i,'')===all.c.name.replace(/_all\.csv$/i,'')).sort((a,b)=>a.rows.length-b.rows.length)[0];
+    if(!filtered)filtered=candidates.filter(x=>!/_all\.csv$/i.test(x.c.name)&&x.rows.length<all.rows.length).sort((a,b)=>a.rows.length-b.rows.length)[0];
+    const titleOf=r=>String(worksHeaderV43(r,['Titre','Title','Nom','Name'])||'').trim();
+    const selectedTitles=new Set((filtered?.rows||all.rows).map(titleOf).filter(Boolean).map(normV576));
+    const mdByTitle=new Map();for(const m of mds){const title=worksMarkdownTitleV43(m.text)||m.name.split('/').pop().replace(/\s+[0-9a-f]{32}\.(?:md|markdown)$/i,'');if(title)mdByTitle.set(normV576(title),m)}
+    const works=all.rows.filter(r=>selectedTitles.has(normV576(titleOf(r)))).map(r=>{const titre=titleOf(r),md=mdByTitle.get(normV576(titre));return{
+      titre,
+      notion_page_id:md?worksUuidFromNameV43(md.name):null,
+      avancement:worksHeaderV43(r,['Avancement']),
+      collection:worksHeaderV43(r,['Collection']),
+      couple:worksHeaderV43(r,['Couple']),
+      destination_editoriale:worksHeaderV43(r,['Destination']),
+      niveau_editorial:worksHeaderV43(r,['Niveau éditorial','Niveau editorial']),
+      objectif_mots:worksHeaderV43(r,['Objectif mots']),
+      resume_csv:worksHeaderV43(r,['Résumé','Resume']),
+      statut_source:worksHeaderV43(r,['Statut']),
+      decision_editoriale:worksHeaderV43(r,['Décision éditoriale','Decision editoriale']),
+      estimation_publication:worksHeaderV43(r,['estimation de publication','Estimation de publication']),
+      google_doc:worksHeaderV43(r,['Google Doc']),
+      contenu_source_markdown:md?.text||'',
+      resume_extrait:md?worksResumeFromMarkdownV43(md.text):'',
+      import_mode:md?'full':'metadata_only',
+      plans_importables:[]
+    }});
+    return {format:'passerelle-notion-works-import',version:43,oeuvres:works,collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:works.length,filteredName:filtered?.c.name||null,allName:all.c.name}};
+  }
+  async function readWorksNotionFileV43(file){
+    if(!file)return;const st=document.getElementById('works-import-status-v576'),z=document.getElementById('works-import-preview-v576');worksPackageV576=null;worksPreviewV576=null;
+    try{
+      if(/\.json$/i.test(file.name))return readWorksPackageV576(file);
+      if(!/\.zip$/i.test(file.name))throw new Error('Choisis le ZIP exporté par Notion.');
+      st.textContent='Ouverture du ZIP Notion…';
+      const pkg=await parseWorksNotionZipV43(file);worksPackageV576=pkg;
+      st.textContent=`${pkg.oeuvres.length} œuvre(s) sélectionnée(s) · ${pkg.__stats.entries} fichiers parcourus. Les sous-pages non-œuvres sont ignorées.`;
+      await previewWorksPackageV43();
+    }catch(e){console.error(e);st.textContent='ZIP refusé : '+(e?.message||e);if(z)z.innerHTML=''}
+  }
+  async function previewWorksPackageV43(){
+    if(!worksPackageV576)return;const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');
+    const [{data:cols,error:ce},{data:works,error:we}]=await Promise.all([db().from('univers').select('id,nom'),db().from('oeuvres').select('id,titre,archive,notion_page_id,univers_id')]);
+    if(ce||we){st.textContent='Erreur de lecture du catalogue : '+(ce||we).message;return}
+    worksPreviewV576=(worksPackageV576.oeuvres||[]).map(src=>{const byId=src.notion_page_id?(works||[]).find(o=>String(o.notion_page_id||'').replace(/-/g,'')===String(src.notion_page_id||'').replace(/-/g,'')):null;const byTitle=(works||[]).find(o=>normV576(o.titre)===normV576(src.titre));const target=byId||byTitle||null;const col=(cols||[]).find(c=>normV576(c.nom)===normV576(String(src.collection||'').replace(/^[^A-Za-zÀ-ÿ0-9]+/,'').trim()))||null;return{src,target,action:target?'update':'create',collection:col,selected:true}});renderWorksPreviewV43();
+  }
+  function renderWorksPreviewV43(){
+    const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');if(!z)return;const rows=worksPreviewV576||[],sel=rows.filter(x=>x.selected),missing=sel.filter(x=>x.src.collection&&!x.collection).length;
+    z.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${sel.length}</strong><span>sélectionnées</span></div><div class="notion-import-kpi"><strong>${sel.filter(x=>x.action==='create').length}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${sel.filter(x=>x.action==='update').length}</strong><span>à enrichir</span></div><div class="notion-import-kpi"><strong>${missing}</strong><span>collection à vérifier</span></div></div>
+      <div>${rows.map((x,i)=>`<div class="works-import-row"><label style="display:flex;gap:10px;align-items:center;min-width:0"><input type="checkbox" style="width:auto" ${x.selected?'checked':''} onchange="worksPreviewV576[${i}].selected=this.checked;renderWorksPreviewV43()"><span><strong>${safeText(x.src.titre)}</strong><br><small style="color:var(--text-dim)">${safeText(x.src.avancement||x.src.niveau_editorial||'')} · ${safeText(x.src.collection||'Sans collection')}${x.collection?' ✓':' ⚠'} · ${x.src.contenu_source_markdown?'page Markdown trouvée':'métadonnées CSV'}</small></span></label><span class="works-import-badge ${x.action}">${x.action==='create'?'Créer':'Enrichir'}</span></div>`).join('')}</div>
+      <div class="notion-import-actions"><button class="btn-primary" ${!sel.length?'disabled':''} onclick="importWorksNotionZipV43()">Importer ${sel.length} œuvre(s)</button></div>`;
+    st.textContent=`Prévisualisation prête. ${rows.length} œuvre(s) détectée(s) depuis la base Œuvres. Personnages et autres sous-pages : ignorés.`;
+  }
+  async function importWorksNotionZipV43(){
+    const rows=(worksPreviewV576||[]).filter(x=>x.selected);if(!rows.length)return;const st=document.getElementById('works-import-status-v576');let done=0;
+    for(const x of rows){const s=x.src,p={titre:s.titre,updated_at:new Date().toISOString()};if(x.collection)p.univers_id=x.collection.id;if(s.notion_page_id)p.notion_page_id=s.notion_page_id;if(s.statut_source)p.statut=s.statut_source;if(s.avancement)p.avancement=s.avancement;if(s.couple)p.couple=s.couple;if(s.destination_editoriale)p.destination_editoriale=s.destination_editoriale;if(s.objectif_mots!==''&&s.objectif_mots!=null)p.objectif_mots=Number(String(s.objectif_mots).replace(/[^\d.-]/g,''))||null;const resume=s.resume_extrait||s.resume_csv;if(resume)p.resume=resume;if(s.contenu_source_markdown)p.notion_source_markdown=s.contenu_source_markdown;
+      let r;if(x.target?.id)r=await db().from('oeuvres').update(p).eq('id',x.target.id);else r=await db().from('oeuvres').insert({...p,user_id:currentUser.id});
+      if(r.error){st.textContent=`Erreur sur « ${s.titre} » : ${r.error.message}`;return}done++;st.textContent=`Import… ${done}/${rows.length}`}
+    st.textContent=`✓ ${done} œuvre(s) importée(s)/enrichie(s). Les personnages, chapitres et autres sous-pages du ZIP n’ont pas été créés comme œuvres.`;setTimeout(()=>renderAdminOeuvresPage(),900)
+  }
+
   async function readWorksPackageV576(file){const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');worksPackageV576=null;worksPreviewV576=null;if(!file)return;try{const pkg=JSON.parse(await file.text());if(pkg.format!=='passerelle-notion-works-import'||!Array.isArray(pkg.oeuvres))throw new Error('Ce fichier n’est pas un paquet multi-œuvres Passerelle.');worksPackageV576=pkg;st.textContent=`${pkg.oeuvres.length} œuvre(s) détectée(s). Analyse du catalogue…`;await previewWorksPackageV576()}catch(e){st.textContent='Paquet refusé : '+e.message;if(z)z.innerHTML=''}}
   async function previewWorksPackageV576(){if(!worksPackageV576)return;const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');const [{data:cols,error:ce},{data:works,error:we}]=await Promise.all([db().from('univers').select('id,nom'),db().from('oeuvres').select('id,titre,archive,notion_page_id,univers_id')]);if(ce||we){st.textContent='Erreur de lecture du catalogue : '+(ce||we).message;return}const colName=worksPackageV576.collection?.nom||worksPackageV576.oeuvres[0]?.collection||'';const col=(cols||[]).find(c=>normV576(c.nom)===normV576(colName));worksPreviewV576=(worksPackageV576.oeuvres||[]).map(src=>{const byId=src.notion_page_id?(works||[]).find(o=>o.notion_page_id===src.notion_page_id):null;const byTitle=(works||[]).find(o=>normV576(o.titre)===normV576(src.titre));const target=byId||byTitle||null;const conflict=!!(byId&&normV576(byId.titre)!==normV576(src.titre));return{src,target,action:conflict?'conflict':target?'update':'create',collection:col}});const conflicts=worksPreviewV576.filter(x=>x.action==='conflict').length,creates=worksPreviewV576.filter(x=>x.action==='create').length,updates=worksPreviewV576.filter(x=>x.action==='update').length,archives=worksPreviewV576.filter(x=>x.src.archive).length,resumes=worksPreviewV576.filter(x=>x.src.resume_extrait||x.src.resume_csv).length,plans=worksPreviewV576.reduce((n,x)=>n+(x.src.plans_importables?.length||0),0);z.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${creates}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${updates}</strong><span>à enrichir</span></div><div class="notion-import-kpi"><strong>${resumes}</strong><span>résumé(s)</span></div><div class="notion-import-kpi"><strong>${plans}</strong><span>entrée(s) Plan</span></div><div class="notion-import-kpi"><strong>${archives}</strong><span>archivée(s)</span></div></div>${!col?`<div class="admin-work-note">⚠ Collection « ${safeText(colName)} » introuvable. Crée-la d’abord ou corrige son nom.</div>`:''}<div>${worksPreviewV576.map(x=>{const pc=x.src.plans_importables?.length||0,hasResume=!!(x.src.resume_extrait||x.src.resume_csv);return `<div class="works-import-row"><div><strong>${safeText(x.src.titre)}</strong><br><small style="color:var(--text-dim)">${x.src.import_mode==='metadata_only'?'Métadonnées uniquement':x.src.contenu_source_markdown?'Page complète disponible':'Métadonnées disponibles'}${x.src.archive?' · archive':''} · ${hasResume?'Résumé ✓':'Résumé —'} · Plan ${pc?pc+' entrées':'—'}</small></div><span class="works-import-badge ${x.action==='conflict'?'conflict':x.src.archive?'archive':x.action}">${x.action==='create'?'Créer':x.action==='update'?'Enrichir':'Conflit'}${x.src.archive?' · archivée':''}</span></div>`}).join('')}</div><div class="notion-import-actions"><button class="btn-primary" ${conflicts||!col?'disabled':''} onclick="importWorksPackageV576()">Importer ${worksPreviewV576.length} œuvre(s)</button></div>`;st.textContent=conflicts?`${conflicts} conflit(s) à résoudre avant import.`:!col?'Import bloqué tant que la collection n’est pas retrouvée.':`Prévisualisation prête. ${resumes} résumé(s), ${plans} entrées Plan. Personnages : 0 écriture.`}
   async function importWorksPackageV576(){if(!worksPreviewV576?.length)return;const st=document.getElementById('works-import-status-v576');if(worksPreviewV576.some(x=>x.action==='conflict')){st.textContent='Import bloqué : conflit détecté.';return}let done=0,planDone=0;for(const x of worksPreviewV576){const src=x.src;const payload={titre:src.titre,archive:!!src.archive,univers_id:x.collection?.id||null,updated_at:new Date().toISOString()};if(src.notion_page_id)payload.notion_page_id=src.notion_page_id;if(src.statut_source)payload.statut=src.statut_source;if(src.avancement)payload.avancement=src.avancement;if(src.couple)payload.couple=src.couple;if(src.destination_editoriale)payload.destination_editoriale=src.destination_editoriale;if(src.objectif_mots!=null&&src.objectif_mots!=='')payload.objectif_mots=Number(src.objectif_mots)||null;const importedResume=src.resume_extrait||src.resume_csv;if(importedResume)payload.resume=importedResume;if(src.contenu_source_markdown)payload.notion_source_markdown=src.contenu_source_markdown;let workId=x.target?.id||null,r;if(workId){r=await db().from('oeuvres').update(payload).eq('id',workId)}else{r=await db().from('oeuvres').insert({...payload,user_id:currentUser.id}).select('id').single();if(!r.error)workId=r.data?.id}if(r.error){st.textContent=`Erreur sur « ${src.titre} » : ${r.error.message}`;return}for(const p of (src.plans_importables||[])){const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À écrire',transformation:p.resume_source||p.transformation||null,ordre:Number(p.ordre)||0,notion_source_key:p.source_key};const {error:pe}=await db().from('plans').upsert(pp,{onConflict:'user_id,notion_source_key'});if(pe){st.textContent=`Œuvre « ${src.titre} » importée, mais erreur Plan : ${pe.message}`;return}planDone++}done++;st.textContent=`Import en cours… ${done}/${worksPreviewV576.length} · ${planDone} entrées Plan`}st.textContent=`✓ ${done} œuvre(s) enrichie(s), ${planDone} entrées Plan synchronisées. Résumés récupérés. Archives conservées. Personnages ignorés.`;setTimeout(()=>renderAdminOeuvresPage(),900)}
@@ -4899,8 +4990,8 @@
     if(err){zone.innerHTML=`<div class="empty">Erreur : ${safeText(err.message)}</div>`;return}
 
     oeuvresSagaStateV40={
-      sagas:(sagasR.data||[]).slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
-      sousSagas:(ssR.data||[]).slice().sort((a,b)=>(Number(a.ordre)||0)-(Number(b.ordre)||0)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
+      sagas:(sagasR.data||[]).slice().sort((a,b)=>(Number.isFinite(Number(a.ordre))?Number(a.ordre):999999)-(Number.isFinite(Number(b.ordre))?Number(b.ordre):999999)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
+      sousSagas:(ssR.data||[]).slice().sort((a,b)=>(Number.isFinite(Number(a.ordre))?Number(a.ordre):999999)-(Number.isFinite(Number(b.ordre))?Number(b.ordre):999999)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
       oeuvres:(oeuvresR.data||[]).filter(o=>o.saga_id||o.sous_saga_id),
       activeSagaId:oeuvresSagaStateV40.activeSagaId
     };
@@ -4934,10 +5025,10 @@
     const groups=sagaSubs.map(ss=>({
       id:ss.id,
       nom:ss.nom,
-      oeuvres:oeuvres.filter(o=>o.sous_saga_id===ss.id).sort((a,b)=>(Number(a.numero_sous_saga)||9999)-(Number(b.numero_sous_saga)||9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'))
+      oeuvres:oeuvres.filter(o=>o.sous_saga_id===ss.id).sort((a,b)=>(a.numero_sous_saga!==null&&a.numero_sous_saga!==''?Number(a.numero_sous_saga):9999)-(b.numero_sous_saga!==null&&b.numero_sous_saga!==''?Number(b.numero_sous_saga):9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'))
     })).filter(g=>g.oeuvres.length);
 
-    const direct=oeuvres.filter(o=>o.saga_id===saga.id&&!o.sous_saga_id).sort((a,b)=>(Number(a.numero_sous_saga)||9999)-(Number(b.numero_sous_saga)||9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'));
+    const direct=oeuvres.filter(o=>o.saga_id===saga.id&&!o.sous_saga_id).sort((a,b)=>(a.numero_sous_saga!==null&&a.numero_sous_saga!==''?Number(a.numero_sous_saga):9999)-(b.numero_sous_saga!==null&&b.numero_sous_saga!==''?Number(b.numero_sous_saga):9999)||String(a.titre||'').localeCompare(String(b.titre||''),'fr'));
     if(direct.length)groups.push({id:null,nom:'Hors sous-saga',oeuvres:direct});
 
     zone.innerHTML=`<div class="oeuvres-saga-tabs-v40">
@@ -5503,8 +5594,10 @@
     zone.innerHTML=`${relectureSubnavV42()}<div class="relecture-info-v42">
       <div class="stat-cards-row"><div class="stat-card"><h3>État</h3><div class="stat-big" style="font-size:1.2rem">${safeText(relecture.statut||'en cours')}</div></div><div class="stat-card"><h3>Avancement</h3><div class="stat-big">${pct}%</div></div><div class="stat-card"><h3>Chapitres relus</h3><div class="stat-big">${relus} / ${rows.length}</div></div></div>
       <div class="panel"><div class="relecture-analysis-head-v42"><div><h2>Analyse éditoriale</h2><p>Importe ton rapport pour transformer les axes d’amélioration en éléments de travail sans perdre les points forts.</p></div><label class="btn-primary upload-file-btn">📥 Importer des axes d’amélioration<input id="relecture-report-file-v19" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="importRelectureReportV19('${currentOeuvreId}',this.files[0]).then(()=>renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content')))"></label></div><div id="relecture-import-status-v19" class="status-line"></div>
+        <div class="relecture-analysis-columns-v43">
         <details class="relecture-fold-v42" open><summary>☑ Points à reprendre <span>${(todos||[]).filter(x=>x.fait).length}/${(todos||[]).length}</span></summary><div class="relecture-fold-body-v42">${todoHtml}<div class="check-add"><input id="relecture-new-todo-v19" placeholder="Ajouter une action…"><button class="btn-secondary" onclick="addRelectureTodoV42('${currentOeuvreId}')">Ajouter</button></div>${improvements.length?`<div class="relecture-axis-source-v42"><strong>Axes détectés dans les analyses</strong>${improvements.map(x=>`<article><span>${safeText(x.titre)}</span>${x.recommandation?`<small>${safeText(x.recommandation)}</small>`:''}<button class="tiny-btn" onclick="addAxisToTodoV42('${x.id}','${currentOeuvreId}')">+ To-do</button></article>`).join('')}</div>`:''}</div></details>
-        <details class="relecture-fold-v42"><summary>✨ Points forts <span>${strengths.length}</span></summary><div class="relecture-fold-body-v42">${strengths.map(x=>`<article class="relecture-strength-v19"><strong>${safeText(x.titre)}</strong>${x.diagnostic?`<div>${safeText(x.diagnostic)}</div>`:''}</article>`).join('')||'<div class="empty">Aucun point fort importé.</div>'}</div></details>
+        <details class="relecture-fold-v42" open><summary>✨ Points forts <span>${strengths.length}</span></summary><div class="relecture-fold-body-v42">${strengths.map(x=>`<article class="relecture-strength-v19"><strong>${safeText(x.titre)}</strong>${x.diagnostic?`<div>${safeText(x.diagnostic)}</div>`:''}</article>`).join('')||'<div class="empty">Aucun point fort importé.</div>'}</div></details>
+        </div>
       </div></div>`;
   }
   async function addRelectureTodoV42(oeuvreId){await addRelectureTodoV19(oeuvreId);renderOeuvreRelectureV2(document.getElementById('oeuvre-tab-content'))}
