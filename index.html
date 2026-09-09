@@ -1028,6 +1028,11 @@
 @media(max-width:900px){.relecture-analysis-columns-v43{grid-template-columns:1fr}}
 </style>
 
+
+<style id="c44-import-preview">
+.works-import-fields-v44{display:inline-block;margin-top:4px;line-height:1.45;color:var(--text-dim)}
+</style>
+
 </head>
 <body>
 
@@ -1638,7 +1643,63 @@
   function worksHeaderV43(row,names){const ks=Object.keys(row||{});for(const n of names){const k=ks.find(x=>normV576(x)===normV576(n));if(k)return row[k]}return ''}
   function worksUuidFromNameV43(name){return (String(name||'').match(/([0-9a-f]{32})(?=\.(?:md|markdown|csv)$)/i)||[])[1]||null}
   function worksMarkdownTitleV43(md){return ((String(md||'').match(/^#\s+(.+)$/m)||[])[1]||'').trim()}
-  function worksResumeFromMarkdownV43(md){const s=String(md||'');const m=s.match(/(?:^|\n)#{1,4}\s*(?:Résumé|Resume|Synopsis)\s*\n+([\s\S]*?)(?=\n#{1,4}\s|\n---|\Z)/i);return m?m[1].trim():''}
+  function worksHeadingNormV44(s){return normV576(String(s||'').replace(/[*_`#]/g,'').replace(/\s+/g,'')).replace(/[^a-z0-9]/g,'')}
+  function worksSectionFromMarkdownV44(md,names){
+    const s=String(md||''), lines=s.split(/\r?\n/), wanted=new Set(names.map(worksHeadingNormV44));
+    let start=-1,level=0;
+    for(let i=0;i<lines.length;i++){
+      const m=lines[i].match(/^(#{1,6})\s+(.+?)\s*$/); if(!m)continue;
+      if(wanted.has(worksHeadingNormV44(m[2]))){start=i+1;level=m[1].length;break}
+    }
+    if(start<0)return '';
+    const buf=[];
+    for(let i=start;i<lines.length;i++){
+      const h=lines[i].match(/^(#{1,6})\s+(.+?)\s*$/);
+      if(h && h[1].length<=level)break;
+      if(/^---\s*$/.test(lines[i]) && buf.some(x=>x.trim()))break;
+      buf.push(lines[i]);
+    }
+    return buf.join('\n').replace(/^\s+|\s+$/g,'');
+  }
+  function worksCleanImportedSectionV44(s){
+    return String(s||'')
+      .replace(/!\[[^\]]*\]\([^)]+\)/g,'')
+      .replace(/\[[^\]]+\]\([^)]+\)/g,'')
+      .replace(/^\s*[-*]\s*\[[ xX]\]\s+.*$/gm,'')
+      .replace(/\n{3,}/g,'\n\n').trim();
+  }
+  function worksResumeFromMarkdownV43(md){
+    const resume=worksSectionFromMarkdownV44(md,['Résumé','Resume','Synopsis','R é s u m é']);
+    const cover=worksSectionFromMarkdownV44(md,['4ème de couverture','4e de couverture','4ème couverture','4e couv','4ème de couv','Quatrième de couverture']);
+    return worksCleanImportedSectionV44(resume||cover);
+  }
+  function worksBackCoverFromMarkdownV44(md){
+    return worksCleanImportedSectionV44(worksSectionFromMarkdownV44(md,['4ème de couverture','4e de couverture','4ème couverture','4e couv','4ème de couv','Quatrième de couverture']));
+  }
+  function worksEditorialTargetV44(v){
+    const s=normV576(v); if(s.includes('v1.5'))return 'V1.5'; if(s.includes('v2'))return 'V2'; if(s.includes('v1'))return 'V1'; return null;
+  }
+  function worksEditorialStatusV44(v){
+    const s=normV576(v);
+    if(s.includes('v2')&&(s.includes('faite')||s.includes('terminee')||s==='v2'))return 'V2 terminée';
+    if(s.includes('v1.5')&&(s.includes('faite')||s.includes('terminee')||s==='v1.5'))return 'V1.5 terminée';
+    if(s==='v1'||(s.includes('v1')&&(s.includes('faite')||s.includes('terminee'))))return 'V1 terminée';
+    if(s.includes('v2')&&s.includes('cours'))return 'V2 en cours';
+    if(s.includes('v1.5')&&s.includes('cours'))return 'V1.5 en cours';
+    if(s.includes('v1')&&s.includes('cours'))return 'V1 en cours';
+    if(s.includes('v2')&&(s.includes('ecrire')||s.includes('faire')))return 'V2 à écrire';
+    if(s.includes('v1.5')&&(s.includes('ecrire')||s.includes('faire')))return 'V1.5 à faire';
+    if(s.includes('v1')&&(s.includes('ecrire')||s.includes('faire')))return 'V1 à écrire';
+    return null;
+  }
+  function worksDestinationV44(v){
+    const s=normV576(v);
+    if(s.includes('librairie'))return 'Librairie';
+    if(s.includes('exclusivite')&&s.includes('abonnement'))return 'Exclusivité abonnement';
+    if(s.includes('decouverte'))return 'Découverte';
+    if(s.includes('passerelle'))return 'Passerelle';
+    return null;
+  }
   async function parseWorksNotionZipV43(file){
     const JSZipLib=await ensureJsZipV576c27();const zip=await JSZipLib.loadAsync(await file.arrayBuffer()),entries=await collectNotionZipEntriesV576c28(zip);
     const csvs=[],mds=[];
@@ -1670,6 +1731,10 @@
       google_doc:worksHeaderV43(r,['Google Doc']),
       contenu_source_markdown:md?.text||'',
       resume_extrait:md?worksResumeFromMarkdownV43(md.text):'',
+      quatrieme_extrait:md?worksBackCoverFromMarkdownV44(md.text):'',
+      destination_normalisee:worksDestinationV44(worksHeaderV43(r,['Destination'])),
+      cible_editoriale_normalisee:worksEditorialTargetV44(worksHeaderV43(r,['Niveau éditorial','Niveau editorial'])),
+      statut_editorial_normalise:worksEditorialStatusV44(worksHeaderV43(r,['Avancement'])),
       import_mode:md?'full':'metadata_only',
       plans_importables:[]
     }});
@@ -1688,23 +1753,66 @@
   }
   async function previewWorksPackageV43(){
     if(!worksPackageV576)return;const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');
-    const [{data:cols,error:ce},{data:works,error:we}]=await Promise.all([db().from('univers').select('id,nom'),db().from('oeuvres').select('id,titre,archive,notion_page_id,univers_id')]);
+    const [{data:cols,error:ce},{data:works,error:we}]=await Promise.all([db().from('univers').select('id,nom'),db().from('oeuvres').select('*')]);
     if(ce||we){st.textContent='Erreur de lecture du catalogue : '+(ce||we).message;return}
     worksPreviewV576=(worksPackageV576.oeuvres||[]).map(src=>{const byId=src.notion_page_id?(works||[]).find(o=>String(o.notion_page_id||'').replace(/-/g,'')===String(src.notion_page_id||'').replace(/-/g,'')):null;const byTitle=(works||[]).find(o=>normV576(o.titre)===normV576(src.titre));const target=byId||byTitle||null;const col=(cols||[]).find(c=>normV576(c.nom)===normV576(String(src.collection||'').replace(/^[^A-Za-zÀ-ÿ0-9]+/,'').trim()))||null;return{src,target,action:target?'update':'create',collection:col,selected:true}});renderWorksPreviewV43();
   }
   function renderWorksPreviewV43(){
     const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');if(!z)return;const rows=worksPreviewV576||[],sel=rows.filter(x=>x.selected),missing=sel.filter(x=>x.src.collection&&!x.collection).length;
     z.innerHTML=`<div class="notion-import-kpis"><div class="notion-import-kpi"><strong>${sel.length}</strong><span>sélectionnées</span></div><div class="notion-import-kpi"><strong>${sel.filter(x=>x.action==='create').length}</strong><span>à créer</span></div><div class="notion-import-kpi"><strong>${sel.filter(x=>x.action==='update').length}</strong><span>à enrichir</span></div><div class="notion-import-kpi"><strong>${missing}</strong><span>collection à vérifier</span></div></div>
-      <div>${rows.map((x,i)=>`<div class="works-import-row"><label style="display:flex;gap:10px;align-items:center;min-width:0"><input type="checkbox" style="width:auto" ${x.selected?'checked':''} onchange="worksPreviewV576[${i}].selected=this.checked;renderWorksPreviewV43()"><span><strong>${safeText(x.src.titre)}</strong><br><small style="color:var(--text-dim)">${safeText(x.src.avancement||x.src.niveau_editorial||'')} · ${safeText(x.src.collection||'Sans collection')}${x.collection?' ✓':' ⚠'} · ${x.src.contenu_source_markdown?'page Markdown trouvée':'métadonnées CSV'}</small></span></label><span class="works-import-badge ${x.action}">${x.action==='create'?'Créer':'Enrichir'}</span></div>`).join('')}</div>
+      <div>${rows.map((x,i)=>`<div class="works-import-row"><label style="display:flex;gap:10px;align-items:center;min-width:0"><input type="checkbox" style="width:auto" ${x.selected?'checked':''} onchange="worksPreviewV576[${i}].selected=this.checked;renderWorksPreviewV43()"><span><strong>${safeText(x.src.titre)}</strong><br><small style="color:var(--text-dim)">${safeText(x.src.avancement||x.src.niveau_editorial||'')} · ${safeText(x.src.collection||'Sans collection')}${x.collection?' ✓':' ⚠'} · ${x.src.contenu_source_markdown?'page Markdown trouvée':'métadonnées CSV'}</small><br><small class="works-import-fields-v44">${[
+        x.src.resume_extrait?'Résumé/4e ✓':'Résumé absent',
+        x.src.destination_normalisee?`Destination ${x.src.destination_normalisee} ✓`:'Destination non mappable',
+        x.src.cible_editoriale_normalisee?`Cible ${x.src.cible_editoriale_normalisee} ✓`:'Cible absente',
+        x.src.statut_editorial_normalise?`Éditorial ${x.src.statut_editorial_normalise} ✓`:'Éditorial non mappable',
+        x.src.estimation_publication?`Publication ${x.src.estimation_publication} ✓`:''
+      ].filter(Boolean).map(safeText).join(' · ')}</small></span></label><span class="works-import-badge ${x.action}">${x.action==='create'?'Créer':'Enrichir'}</span></div>`).join('')}</div>
       <div class="notion-import-actions"><button class="btn-primary" ${!sel.length?'disabled':''} onclick="importWorksNotionZipV43()">Importer ${sel.length} œuvre(s)</button></div>`;
     st.textContent=`Prévisualisation prête. ${rows.length} œuvre(s) détectée(s) depuis la base Œuvres. Personnages et autres sous-pages : ignorés.`;
   }
   async function importWorksNotionZipV43(){
-    const rows=(worksPreviewV576||[]).filter(x=>x.selected);if(!rows.length)return;const st=document.getElementById('works-import-status-v576');let done=0;
-    for(const x of rows){const s=x.src,p={titre:s.titre,updated_at:new Date().toISOString()};if(x.collection)p.univers_id=x.collection.id;if(s.notion_page_id)p.notion_page_id=s.notion_page_id;if(s.statut_source)p.statut=s.statut_source;if(s.avancement)p.avancement=s.avancement;if(s.couple)p.couple=s.couple;if(s.destination_editoriale)p.destination_editoriale=s.destination_editoriale;if(s.objectif_mots!==''&&s.objectif_mots!=null)p.objectif_mots=Number(String(s.objectif_mots).replace(/[^\d.-]/g,''))||null;const resume=s.resume_extrait||s.resume_csv;if(resume)p.resume=resume;if(s.contenu_source_markdown)p.notion_source_markdown=s.contenu_source_markdown;
-      let r;if(x.target?.id)r=await db().from('oeuvres').update(p).eq('id',x.target.id);else r=await db().from('oeuvres').insert({...p,user_id:currentUser.id});
-      if(r.error){st.textContent=`Erreur sur « ${s.titre} » : ${r.error.message}`;return}done++;st.textContent=`Import… ${done}/${rows.length}`}
-    st.textContent=`✓ ${done} œuvre(s) importée(s)/enrichie(s). Les personnages, chapitres et autres sous-pages du ZIP n’ont pas été créés comme œuvres.`;setTimeout(()=>renderAdminOeuvresPage(),900)
+    const rows=(worksPreviewV576||[]).filter(x=>x.selected);if(!rows.length)return;
+    const st=document.getElementById('works-import-status-v576');let done=0;
+    const schemaKeys=new Set(Object.keys((worksPreviewV576||[]).find(x=>x.target)?.target||{}));
+    if(!schemaKeys.size){
+      const {data:sample,error:se}=await db().from('oeuvres').select('*').limit(1);
+      if(se){st.textContent='Impossible de lire la structure des œuvres : '+se.message;return}
+      Object.keys(sample?.[0]||{}).forEach(k=>schemaKeys.add(k));
+    }
+    for(const x of rows){
+      const s=x.src;
+      const editorialNotes=[
+        s.decision_editoriale?`Décision éditoriale Notion :\n${s.decision_editoriale}`:'',
+        s.destination_editoriale&&!s.destination_normalisee?`Destination Notion : ${s.destination_editoriale}`:'',
+        s.resume_csv?`Repères éditoriaux Notion :\n${s.resume_csv}`:''
+      ].filter(Boolean).join('\n\n');
+      const rawPayload={
+        titre:s.titre,
+        univers_id:x.collection?.id||null,
+        notion_page_id:s.notion_page_id||undefined,
+        statut:s.statut_source||undefined,
+        objectif_mots:(s.objectif_mots!==''&&s.objectif_mots!=null)?(Number(String(s.objectif_mots).replace(/[^\d.-]/g,''))||null):undefined,
+        resume:s.resume_extrait||s.quatrieme_extrait||undefined,
+        destination_editoriale:s.destination_normalisee||undefined,
+        niveau_editorial_cible:s.cible_editoriale_normalisee||undefined,
+        statut_editorial_actuel:s.statut_editorial_normalise||undefined,
+        publication_envisagee:s.estimation_publication||undefined,
+        notes_editoriales:editorialNotes||undefined,
+        updated_at:new Date().toISOString()
+      };
+      const payload=Object.fromEntries(Object.entries(rawPayload).filter(([k,v])=>v!==undefined && (!schemaKeys.size||schemaKeys.has(k))));
+      let r;
+      if(x.target?.id) r=await db().from('oeuvres').update(payload).eq('id',x.target.id);
+      else{
+        const insertPayload={...payload,user_id:currentUser.id};
+        if(schemaKeys.size && !schemaKeys.has('user_id'))delete insertPayload.user_id;
+        r=await db().from('oeuvres').insert(insertPayload);
+      }
+      if(r.error){st.textContent=`Erreur sur « ${s.titre} » : ${r.error.message}`;return}
+      done++;st.textContent=`Import… ${done}/${rows.length}`;
+    }
+    st.textContent=`✓ ${done} œuvre(s) enrichie(s). Résumés/4e, destination, cible éditoriale, statut éditorial, publication et notes éditoriales ont été repris quand Notion les fournissait.`;
+    setTimeout(()=>renderAdminOeuvresPage(),900);
   }
 
   async function readWorksPackageV576(file){const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');worksPackageV576=null;worksPreviewV576=null;if(!file)return;try{const pkg=JSON.parse(await file.text());if(pkg.format!=='passerelle-notion-works-import'||!Array.isArray(pkg.oeuvres))throw new Error('Ce fichier n’est pas un paquet multi-œuvres Passerelle.');worksPackageV576=pkg;st.textContent=`${pkg.oeuvres.length} œuvre(s) détectée(s). Analyse du catalogue…`;await previewWorksPackageV576()}catch(e){st.textContent='Paquet refusé : '+e.message;if(z)z.innerHTML=''}}
