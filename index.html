@@ -1700,11 +1700,53 @@
     if(s.includes('passerelle'))return 'Passerelle';
     return null;
   }
+
+  function worksCsvIdV45(name){return (String(name||'').match(/([0-9a-f]{32})(?=(?:_all)?\.csv$)/i)||[])[1]||null}
+  function worksCsvIsPlanV45(rows){
+    if(!rows?.length)return false;
+    const hs=Object.keys(rows[0]).map(normV576);
+    const hasNum=hs.some(h=>['numero','nu','chapitre'].includes(h));
+    const hasContent=hs.some(h=>['resume','description','scene','nom','chapitre'].includes(h));
+    const characterSignals=hs.some(h=>['avatar pour site','protagoniste','resume du personnage'].includes(h));
+    const promoSignals=hs.includes('type')&&hs.includes('contenu')&&hs.includes('date');
+    return hasNum&&hasContent&&!characterSignals&&!promoSignals;
+  }
+  function worksPlanRowsV45(rows,csvName,workTitle){
+    return (rows||[]).map((r,i)=>{
+      const numero=worksHeaderV43(r,['Numéro','Numero','nu','Chapitre']);
+      const rawTitle=worksHeaderV43(r,['Nom','Chapitre','Scène','Scene']);
+      const n=Number(String(numero||'').replace(/[^\d.-]/g,''));
+      const titre=String(rawTitle||((Number.isFinite(n)&&n>0)?`Chapitre ${n}`:`Chapitre ${i+1}`)).trim();
+      const resume=worksHeaderV43(r,['Résumé','Resume','Description','Action']);
+      const acte=worksHeaderV43(r,['Acte']);
+      const etat=worksHeaderV43(r,['État','Etat']);
+      const pov=worksHeaderV43(r,['POV','Point de vue']);
+      const words=worksHeaderV43(r,['NB mots 1er jet','Nb mots 1er jet','NB de mots -1er jet','Nb de mots']);
+      const sourceId=worksCsvIdV45(csvName)||normV576(csvName);
+      return {
+        type:'Intrigue principale',titre,acte:acte||null,pov_source:pov||null,
+        statut:etat||'À relire',resume_source:resume||null,
+        ordre:Number.isFinite(n)&&n>0?n:i+1,
+        mots_source:words||null,
+        source_key:`notion:${sourceId}:${Number.isFinite(n)&&n>0?n:i+1}`,
+        source_csv:csvName,source_oeuvre:workTitle
+      };
+    }).filter(x=>x.titre);
+  }
+  function worksPlanCsvForMarkdownV45(workMd,csvParsed){
+    const md=String(workMd||'');
+    const ids=[...md.matchAll(/([0-9a-f]{32})(?=(?:_all)?\.csv)/ig)].map(m=>m[1].toLowerCase());
+    const direct=csvParsed.filter(x=>x.id&&ids.includes(x.id.toLowerCase())&&worksCsvIsPlanV45(x.rows));
+    if(direct.length)return direct.filter(x=>!/_all\.csv$/i.test(x.name)).length?direct.filter(x=>!/_all\.csv$/i.test(x.name)):direct;
+    return [];
+  }
+
   async function parseWorksNotionZipV43(file){
     const JSZipLib=await ensureJsZipV576c27();const zip=await JSZipLib.loadAsync(await file.arrayBuffer()),entries=await collectNotionZipEntriesV576c28(zip);
     const csvs=[],mds=[];
     for(const x of entries){if(/\.csv$/i.test(x.name))csvs.push({name:x.name,text:await x.entry.async('string')});else if(/\.(md|markdown)$/i.test(x.name))mds.push({name:x.name,text:await x.entry.async('string')})}
-    const candidates=csvs.map(c=>({c,rows:parseCsvV572(c.text)})).filter(x=>x.rows.length&&Object.keys(x.rows[0]).some(h=>['titre','title','nom','name'].includes(normV576(h))));
+    const csvParsed=csvs.map(c=>({name:c.name,text:c.text,rows:parseCsvV572(c.text),id:worksCsvIdV45(c.name)}));
+    const candidates=csvParsed.map(x=>({c:{name:x.name,text:x.text},rows:x.rows})).filter(x=>x.rows.length&&Object.keys(x.rows[0]).some(h=>['titre','title','nom','name'].includes(normV576(h))));
     const allCandidates=candidates.filter(x=>/_all\.csv$/i.test(x.c.name));
     const scoreAll=x=>{const hs=Object.keys(x.rows[0]||{}).map(normV576);return (hs.includes('titre')?30:0)+(hs.includes('collection')?20:0)+(hs.includes('niveau editorial')?10:0)+(hs.includes('resume')?10:0)+Math.min(x.rows.length,100)/100};
     const all=allCandidates.sort((a,b)=>scoreAll(b)-scoreAll(a))[0];
@@ -1736,7 +1778,7 @@
       cible_editoriale_normalisee:worksEditorialTargetV44(worksHeaderV43(r,['Niveau éditorial','Niveau editorial'])),
       statut_editorial_normalise:worksEditorialStatusV44(worksHeaderV43(r,['Avancement'])),
       import_mode:md?'full':'metadata_only',
-      plans_importables:[]
+      plans_importables:md?worksPlanCsvForMarkdownV45(md.text,csvParsed).flatMap(pc=>worksPlanRowsV45(pc.rows,pc.name,titre)):[]
     }});
     return {format:'passerelle-notion-works-import',version:43,oeuvres:works,collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:works.length,filteredName:filtered?.c.name||null,allName:all.c.name}};
   }
@@ -1765,14 +1807,15 @@
         x.src.destination_normalisee?`Destination ${x.src.destination_normalisee} ✓`:'Destination non mappable',
         x.src.cible_editoriale_normalisee?`Cible ${x.src.cible_editoriale_normalisee} ✓`:'Cible absente',
         x.src.statut_editorial_normalise?`Éditorial ${x.src.statut_editorial_normalise} ✓`:'Éditorial non mappable',
-        x.src.estimation_publication?`Publication ${x.src.estimation_publication} ✓`:''
+        x.src.estimation_publication?`Publication ${x.src.estimation_publication} ✓`:'',
+        x.src.plans_importables?.length?`Plan ${x.src.plans_importables.length} chapitres ✓`:'Aucun plan détecté'
       ].filter(Boolean).map(safeText).join(' · ')}</small></span></label><span class="works-import-badge ${x.action}">${x.action==='create'?'Créer':'Enrichir'}</span></div>`).join('')}</div>
       <div class="notion-import-actions"><button class="btn-primary" ${!sel.length?'disabled':''} onclick="importWorksNotionZipV43()">Importer ${sel.length} œuvre(s)</button></div>`;
     st.textContent=`Prévisualisation prête. ${rows.length} œuvre(s) détectée(s) depuis la base Œuvres. Personnages et autres sous-pages : ignorés.`;
   }
   async function importWorksNotionZipV43(){
     const rows=(worksPreviewV576||[]).filter(x=>x.selected);if(!rows.length)return;
-    const st=document.getElementById('works-import-status-v576');let done=0;
+    const st=document.getElementById('works-import-status-v576');let done=0,planDone=0;
     const schemaKeys=new Set(Object.keys((worksPreviewV576||[]).find(x=>x.target)?.target||{}));
     if(!schemaKeys.size){
       const {data:sample,error:se}=await db().from('oeuvres').select('*').limit(1);
@@ -1781,38 +1824,32 @@
     }
     for(const x of rows){
       const s=x.src;
-      const editorialNotes=[
-        s.decision_editoriale?`Décision éditoriale Notion :\n${s.decision_editoriale}`:'',
-        s.destination_editoriale&&!s.destination_normalisee?`Destination Notion : ${s.destination_editoriale}`:'',
-        s.resume_csv?`Repères éditoriaux Notion :\n${s.resume_csv}`:''
-      ].filter(Boolean).join('\n\n');
-      const rawPayload={
-        titre:s.titre,
-        univers_id:x.collection?.id||null,
-        notion_page_id:s.notion_page_id||undefined,
-        statut:s.statut_source||undefined,
-        objectif_mots:(s.objectif_mots!==''&&s.objectif_mots!=null)?(Number(String(s.objectif_mots).replace(/[^\d.-]/g,''))||null):undefined,
-        resume:s.resume_extrait||s.quatrieme_extrait||undefined,
-        destination_editoriale:s.destination_normalisee||undefined,
-        niveau_editorial_cible:s.cible_editoriale_normalisee||undefined,
-        statut_editorial_actuel:s.statut_editorial_normalise||undefined,
-        publication_envisagee:s.estimation_publication||undefined,
-        notes_editoriales:editorialNotes||undefined,
-        updated_at:new Date().toISOString()
-      };
-      const payload=Object.fromEntries(Object.entries(rawPayload).filter(([k,v])=>v!==undefined && (!schemaKeys.size||schemaKeys.has(k))));
-      let r;
-      if(x.target?.id) r=await db().from('oeuvres').update(payload).eq('id',x.target.id);
+      const editorialNotes=[s.decision_editoriale?`Décision éditoriale Notion :\n${s.decision_editoriale}`:'',s.destination_editoriale&&!s.destination_normalisee?`Destination Notion : ${s.destination_editoriale}`:'',s.resume_csv?`Repères éditoriaux Notion :\n${s.resume_csv}`:''].filter(Boolean).join('\n\n');
+      const rawPayload={titre:s.titre,univers_id:x.collection?.id||null,notion_page_id:s.notion_page_id||undefined,statut:s.statut_source||undefined,objectif_mots:(s.objectif_mots!==''&&s.objectif_mots!=null)?(Number(String(s.objectif_mots).replace(/[^\d.-]/g,''))||null):undefined,resume:s.resume_extrait||s.quatrieme_extrait||undefined,destination_editoriale:s.destination_normalisee||undefined,niveau_editorial_cible:s.cible_editoriale_normalisee||undefined,statut_editorial_actuel:s.statut_editorial_normalise||undefined,publication_envisagee:s.estimation_publication||undefined,notes_editoriales:editorialNotes||undefined,updated_at:new Date().toISOString()};
+      const payload=Object.fromEntries(Object.entries(rawPayload).filter(([k,v])=>v!==undefined&&(!schemaKeys.size||schemaKeys.has(k))));
+      let workId=x.target?.id||null,r;
+      if(workId)r=await db().from('oeuvres').update(payload).eq('id',workId);
       else{
-        const insertPayload={...payload,user_id:currentUser.id};
-        if(schemaKeys.size && !schemaKeys.has('user_id'))delete insertPayload.user_id;
-        r=await db().from('oeuvres').insert(insertPayload);
+        const insertPayload={...payload,user_id:currentUser.id};if(schemaKeys.size&&!schemaKeys.has('user_id'))delete insertPayload.user_id;
+        r=await db().from('oeuvres').insert(insertPayload).select('id').single();if(!r.error)workId=r.data?.id;
       }
       if(r.error){st.textContent=`Erreur sur « ${s.titre} » : ${r.error.message}`;return}
-      done++;st.textContent=`Import… ${done}/${rows.length}`;
+      if(!workId){const rr=await db().from('oeuvres').select('id').eq('titre',s.titre).limit(1);workId=rr.data?.[0]?.id}
+      if(!workId){st.textContent=`Œuvre « ${s.titre} » enregistrée, mais impossible de retrouver son identifiant pour importer le Plan.`;return}
+      for(const p of (s.plans_importables||[])){
+        const pp={user_id:currentUser.id,oeuvre_id:workId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À relire',transformation:p.resume_source||null,ordre:Number(p.ordre)||0,notion_source_key:p.source_key};
+        const {data:existing,error:ee}=await db().from('plans').select('id').eq('oeuvre_id',workId).eq('notion_source_key',p.source_key).limit(1);
+        if(ee){st.textContent=`Œuvre « ${s.titre} » importée, mais lecture du Plan impossible : ${ee.message}`;return}
+        let pr;
+        if(existing?.[0]?.id){const upd={...pp};delete upd.user_id;pr=await db().from('plans').update(upd).eq('id',existing[0].id)}
+        else pr=await db().from('plans').insert(pp);
+        if(pr.error){st.textContent=`Œuvre « ${s.titre} » importée, mais erreur Plan : ${pr.error.message}`;return}
+        planDone++;
+      }
+      done++;st.textContent=`Import… ${done}/${rows.length} · ${planDone} chapitres de Plan`;
     }
-    st.textContent=`✓ ${done} œuvre(s) enrichie(s). Résumés/4e, destination, cible éditoriale, statut éditorial, publication et notes éditoriales ont été repris quand Notion les fournissait.`;
-    setTimeout(()=>renderAdminOeuvresPage(),900);
+    st.textContent=`✓ ${done} œuvre(s) enrichie(s) et ${planDone} chapitres synchronisés dans leurs Plans. Les personnages et autres bases du ZIP restent ignorés.`;
+    setTimeout(()=>renderAdminOeuvresPage(),1100);
   }
 
   async function readWorksPackageV576(file){const z=document.getElementById('works-import-preview-v576'),st=document.getElementById('works-import-status-v576');worksPackageV576=null;worksPreviewV576=null;if(!file)return;try{const pkg=JSON.parse(await file.text());if(pkg.format!=='passerelle-notion-works-import'||!Array.isArray(pkg.oeuvres))throw new Error('Ce fichier n’est pas un paquet multi-œuvres Passerelle.');worksPackageV576=pkg;st.textContent=`${pkg.oeuvres.length} œuvre(s) détectée(s). Analyse du catalogue…`;await previewWorksPackageV576()}catch(e){st.textContent='Paquet refusé : '+e.message;if(z)z.innerHTML=''}}
