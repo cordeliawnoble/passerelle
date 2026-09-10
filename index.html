@@ -2847,7 +2847,7 @@
     try{
       if(status)status.textContent='Synchronisation Atelier via Supabase…'; const data=await atelierRelayV576c(projectId);
       if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');
-      const written=(data.chapters||[]).filter(c=>/r[ée]dig/i.test(c.state||''));
+      const written=(data.chapters||[]).filter(c=>/r[ée]dig|[ée]crit|termin[ée]/i.test(c.state||c.etat||c.status||''));
       const {data:existing,error:readErr}=await db().from('chapitres').select('id,numero,titre,nb_mots,etat').eq('oeuvre_id',adminEditingOeuvreId); if(readErr)throw readErr;
       const byNum=new Map((existing||[]).filter(c=>c.numero!=null).map(c=>[Number(c.numero),c])); let created=0,updated=0,unchanged=0;
       for(const c of written){const numero=Number(c.number);if(!Number.isFinite(numero)||numero<1)continue;const old=byNum.get(numero);const words=Number(String(c.words??0).replace(/[^0-9-]/g,''))||0;const title=(c.manuscriptTitle||'').trim()||old?.titre||`Chapitre ${numero}`;const payload={numero,titre:title,nb_mots:words,etat:'Rédigé'};
@@ -2855,7 +2855,7 @@
         else{const r=await db().from('chapitres').insert({...payload,user_id:currentUser.id,oeuvre_id:adminEditingOeuvreId,ordre:numero});if(r.error)throw r.error;created++;}
       }
       const now=new Date().toISOString();const wr=await db().from('oeuvres').update({atelier_project_id:projectId,atelier_last_sync_at:now,updated_at:now}).eq('id',adminEditingOeuvreId);if(wr.error)throw wr.error;
-      if(status)status.textContent=`✓ ${written.length} rédigé(s) · ${created} créé(s) · ${updated} mis à jour · ${unchanged} inchangé(s)`;
+      if(status)status.textContent=`✓ ${written.length} chapitre(s) écrit(s) · ${created} créé(s) · ${updated} mis à jour · ${unchanged} inchangé(s) · Manuscrit synchronisé`;
     }catch(e){if(status)status.textContent='⚠ Synchronisation impossible : '+e.message}
   }
 
@@ -5486,9 +5486,12 @@
     zone.innerHTML=`<div class="status-line">Chargement…</div>`;
     const {data,error}=await db().from('chapitres').select('*').eq('oeuvre_id',currentOeuvreId).order('ordre');
     if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return;}
-    const rows=(data||[]).filter(c=>(c.nb_mots||0)>0 || String(c.statut||'').toLowerCase().includes('écrit') || String(c.statut||'').toLowerCase().includes('redig'));
+    const rows=(data||[]).filter(c=>{
+      const state=String(c.etat||c.statut||'').toLowerCase();
+      return (Number(c.nb_mots)||0)>0 || /écrit|ecrit|rédig|redig|relu|termin/.test(state);
+    });
     const words=rows.reduce((a,c)=>a+(c.nb_mots||0),0);
-    zone.innerHTML=`<div class="stat-cards-row" style="grid-template-columns:repeat(2,minmax(180px,1fr));max-width:600px"><div class="stat-card"><h3>Chapitres écrits</h3><div class="stat-big">${rows.length}</div></div><div class="stat-card"><h3>Total de mots</h3><div class="stat-big">${words.toLocaleString('fr-FR')}</div></div></div><div class="panel"><table class="ch-table manuscript-table"><thead><tr><th>N°</th><th>Titre du chapitre</th><th>Statut</th><th>Mots</th><th>Date d’écriture</th><th>Notes</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${c.numero??c.ordre??'—'}</td><td><strong>${safeText(c.titre||'Sans titre')}</strong></td><td><span class="etat-pill">Écrit</span></td><td>${(c.nb_mots||0).toLocaleString('fr-FR')}</td><td>${safeText(c.date_ecriture||c.updated_at?.slice?.(0,10)||'—')}</td><td><button class="note-icon" onclick="openManuscriptDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\'"))}')">📝</button></td></tr>`).join('')||'<tr><td colspan="6"><div class="empty">Aucun chapitre écrit synchronisé pour le moment.</div></td></tr>'}</tbody></table></div>`;
+    zone.innerHTML=`<div class="stat-cards-row" style="grid-template-columns:repeat(2,minmax(180px,1fr));max-width:600px"><div class="stat-card"><h3>Chapitres écrits</h3><div class="stat-big">${rows.length}</div></div><div class="stat-card"><h3>Total de mots</h3><div class="stat-big">${words.toLocaleString('fr-FR')}</div></div></div><div class="panel"><table class="ch-table manuscript-table"><thead><tr><th>N°</th><th>Titre du chapitre</th><th>Statut</th><th>Mots</th><th>Date d’écriture</th><th>Notes</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${c.numero??c.ordre??'—'}</td><td><strong>${safeText(c.titre||'Sans titre')}</strong></td><td><span class="etat-pill">Écrit</span></td><td>${(c.nb_mots||0).toLocaleString('fr-FR')}</td><td>${safeText(c.date_ecriture||c.updated_at?.slice?.(0,10)||'—')}</td><td><button class="note-icon" onclick="openManuscriptDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\'"))}')">📝</button></td></tr>`).join('')||'<tr><td colspan="6"><div class="empty">Aucun chapitre écrit synchronisé pour le moment. La synchronisation Atelier alimente automatiquement cet onglet.</div></td></tr>'}</tbody></table></div>`;
   }
   async function openManuscriptDrawer(id,title){
     const {data:c}=await db().from('chapitres').select('memo').eq('id',id).single();
