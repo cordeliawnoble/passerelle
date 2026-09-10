@@ -2522,6 +2522,16 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
           if(mr.error) console.warn('Métadonnées : insertion',mr.error);
         }
 
+        // C54 : persister la sélection du référentiel de mots-clés de l’œuvre.
+        // Le sélecteur visuel existait déjà, mais la sauvegarde générale ne
+        // synchronisait jamais keyword_links, d’où la sélection perdue.
+        try{
+          await saveKeywordLinksV571('oeuvre',adminEditingOeuvreId,'.aow-kw-select');
+        }catch(keywordError){
+          console.warn('Mots-clés œuvre : synchronisation',keywordError);
+          throw keywordError;
+        }
+
         const resetCover=await db().from('medias')
           .update({est_couverture_actuelle:false})
           .eq('oeuvre_id',adminEditingOeuvreId).eq('type','Couverture');
