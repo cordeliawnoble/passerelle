@@ -6038,6 +6038,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let plansData = [];
   let plansGroupBy = 'acte';
   let plansView = 'table';
+  let selectedPlanIdsC61 = new Set();
 
   async function renderOeuvrePlans(zone){
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
@@ -6047,6 +6048,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     ]);
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     plansData = plans;
+    selectedPlanIdsC61 = new Set([...selectedPlanIdsC61].filter(id => plansData.some(p => p.id === id)));
 
     zone.innerHTML = `
       <div class="row2" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start;">
@@ -6061,7 +6063,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
                 <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
               </select>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-secondary" id="plans-select-all-c61" onclick="toggleSelectAllPlansC61()">✓ Tout sélectionner</button><button class="btn-secondary danger-btn" id="plans-delete-selected-c61" onclick="deleteSelectedPlansC61()" disabled>Supprimer la sélection</button><button class="btn-secondary danger-btn" onclick="clearCurrentPlanC61()">Vider le plan</button><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
           </div>
           <div id="plans-view-zone"></div>
         </div>
@@ -6096,7 +6098,8 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         if(!rows.length) throw new Error('Aucune ligne de Plan trouvée dans ce JSON.');
         groups=[{name:file.name,rows,alreadyMapped:true}];
       }else throw new Error('Format non pris en charge. Utilise ZIP, CSV ou JSON.');
-      const mapped=groups.flatMap(g=>g.alreadyMapped?mapPlanJsonRowsC60(g.rows,g.name):worksPlanRowsV45(g.rows,g.name,''));
+      const mappedRaw=groups.flatMap(g=>g.alreadyMapped?mapPlanJsonRowsC60(g.rows,g.name):worksPlanRowsV45(g.rows,g.name,''));
+      const mapped=sortPlanImportRowsC61(mappedRaw);
       if(!mapped.length) throw new Error('Aucune entrée de Plan détectée.');
       openPlanImportPreviewC60(mapped,groups.map(g=>g.name));
     }catch(e){ alert('Import du Plan impossible : '+e.message); }
@@ -6129,6 +6132,20 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       source_key:r.notion_source_key||r.source_key||`json:${normV576(name)}:${r.id||r.numero||i+1}`
     }));
   }
+  // C61 · Trie un import de plan sur son numéro narratif plutôt que sur l'ordre physique du CSV Notion.
+  function planNarrativeNumberC61(p,index){
+    const raw=String(p?.numero_source??'').trim();
+    const fromSource=raw.match(/-?\d+(?:[.,]\d+)?/);
+    if(fromSource){const n=Number(fromSource[0].replace(',','.'));if(Number.isFinite(n))return n;}
+    const fromTitle=String(p?.titre||'').match(/(?:chapitre|chapter|sc[eè]ne)?\s*#?\s*(-?\d+(?:[.,]\d+)?)/i);
+    if(fromTitle){const n=Number(fromTitle[1].replace(',','.'));if(Number.isFinite(n))return n;}
+    return 1000000+index;
+  }
+  function sortPlanImportRowsC61(rows){
+    return (rows||[]).map((p,i)=>({...p,__i:i,__n:planNarrativeNumberC61(p,i)}))
+      .sort((a,b)=>a.__n-b.__n||a.__i-b.__i)
+      .map((p,i)=>{const q={...p,ordre:i+1};delete q.__i;delete q.__n;return q;});
+  }
   let pendingPlanImportC60=[];
   function openPlanImportPreviewC60(rows,sources){
     pendingPlanImportC60=rows;
@@ -6155,10 +6172,34 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const zone = document.getElementById('plans-view-zone');
     if (!zone) return;
     zone.innerHTML = mode === 'table' ? renderPlansTable(plansData) : renderPlansKanban(plansData, plansGroupBy);
+    refreshPlanBulkActionsC61();
   }
   function renderPlansTable(plans){
     if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
-    return `<table class="ch-table"><thead><tr><th>Type</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td>${safeText(p.type)}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
+    return `<table class="ch-table"><thead><tr><th style="width:42px"><input type="checkbox" aria-label="Tout sélectionner" ${plans.length&&plans.every(p=>selectedPlanIdsC61.has(p.id))?'checked':''} onclick="event.stopPropagation();toggleSelectAllPlansC61(this.checked)"></th><th>Type</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${selectedPlanIdsC61.has(p.id)?'checked':''} onchange="togglePlanSelectionC61('${p.id}',this.checked)"></td><td>${safeText(p.type)}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
+  }
+  function refreshPlanBulkActionsC61(){
+    const b=document.getElementById('plans-delete-selected-c61');if(b)b.disabled=!selectedPlanIdsC61.size;
+    const a=document.getElementById('plans-select-all-c61');if(a)a.textContent=(plansData.length&&plansData.every(p=>selectedPlanIdsC61.has(p.id)))?'Tout désélectionner':'✓ Tout sélectionner';
+  }
+  function togglePlanSelectionC61(id,checked){if(checked)selectedPlanIdsC61.add(id);else selectedPlanIdsC61.delete(id);refreshPlanBulkActionsC61();}
+  function toggleSelectAllPlansC61(force){
+    const shouldSelect=typeof force==='boolean'?force:!(plansData.length&&plansData.every(p=>selectedPlanIdsC61.has(p.id)));
+    selectedPlanIdsC61=shouldSelect?new Set(plansData.map(p=>p.id)):new Set();setPlansView(plansView);refreshPlanBulkActionsC61();
+  }
+  async function deleteSelectedPlansC61(){
+    const ids=[...selectedPlanIdsC61];if(!ids.length)return;
+    if(!confirm(`Supprimer ${ids.length} élément${ids.length>1?'s':''} du plan ?\n\nCette action ne supprime pas les chapitres du Manuscrit.`))return;
+    const {error}=await db().from('plans').delete().in('id',ids).eq('oeuvre_id',currentOeuvreId);
+    if(error){alert('Suppression impossible : '+error.message);return;}
+    selectedPlanIdsC61=new Set();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
+  async function clearCurrentPlanC61(){
+    if(!plansData.length)return;
+    if(!confirm(`Vider entièrement ce plan (${plansData.length} élément${plansData.length>1?'s':''}) ?\n\nLes chapitres du Manuscrit ne seront pas supprimés.`))return;
+    const {error}=await db().from('plans').delete().eq('oeuvre_id',currentOeuvreId);
+    if(error){alert('Impossible de vider le plan : '+error.message);return;}
+    selectedPlanIdsC61=new Set();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
   }
   function renderPlansKanban(plans, groupBy){const groupes=[...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];if(!groupes.length)return `<div class="empty">Aucun plan pour l'instant.</div>`;return `<div class="kanban-row">${groupes.map(g=>`<div class="kanban-col"><h4>${safeText(g)} (${plans.filter(p=>p[groupBy]===g).length})</h4>${plans.filter(p=>p[groupBy]===g).map(p=>`<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px;color:var(--text-dim)">${safeText(p.type)}${p.pov?' · POV '+safeText(p.pov):''}</div>${safeText(p.titre)}</div>`).join('')}</div>`).join('')}</div>`;}
   let editingPlanId=null;
