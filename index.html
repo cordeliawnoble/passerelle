@@ -1033,6 +1033,31 @@
 .works-import-fields-v44{display:inline-block;margin-top:4px;line-height:1.45;color:var(--text-dim)}
 </style>
 
+
+<style id="c48-ui">
+.sidebar-v48{display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-v48 .nav-group{margin-top:11px;margin-bottom:5px}
+.sidebar-v48 .sidebar-brand{cursor:pointer}
+.sidebar-fold-v48{margin:0 8px 4px}.sidebar-fold-v48>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700}
+.sidebar-fold-v48>summary::-webkit-details-marker{display:none}
+.sidebar-icon-grid-v48{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px 0}
+.sidebar-icon-grid-v48.two{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 8px}
+.sidebar-icon-grid-v48 button{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 3px;min-width:0;cursor:pointer;color:var(--text);font:inherit}
+.sidebar-icon-grid-v48 button b{display:block;font-size:16px;line-height:1.1}.sidebar-icon-grid-v48 button span{display:block;font-size:9px;margin-top:4px;white-space:normal}
+.sidebar-icon-grid-v48 button.active,.sidebar-icon-grid-v48 button:hover{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 28%,transparent)}
+.sidebar-direct-v48{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 8px}.sidebar-direct-v48 .nav-link{width:100%;font-size:10px;padding:7px 5px}
+.sidebar-admin-v48{margin:0 8px;width:calc(100% - 16px)!important}
+.sidebar-foot-v48{margin-top:auto;padding-top:10px}
+.sidebar-profile-v48{display:grid;grid-template-columns:34px 1fr 28px;gap:7px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.sidebar-avatar-v48{width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--soft,#f5f1fa);cursor:pointer}.sidebar-avatar-v48 img{width:100%;height:100%;object-fit:cover}.sidebar-avatar-v48 input{display:none}
+.sidebar-profile-copy-v48{min-width:0}.sidebar-profile-copy-v48 strong,.sidebar-profile-copy-v48 span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sidebar-profile-copy-v48 strong{font-size:11px}.sidebar-profile-copy-v48 span{font-size:9px;color:var(--text-dim)}
+.sidebar-profile-logout-v48{border:0;background:transparent;cursor:pointer;color:var(--text-dim);font-size:16px}
+.banner-palette-v48{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.banner-palette-v48>strong,.banner-palette-v48>small{display:block}.banner-palette-v48>small{color:var(--text-dim);margin:3px 0 8px}
+.palette-swatches-v48{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.palette-swatches-v48 button{padding:5px;border:1px solid var(--line);border-radius:8px;background:transparent;cursor:pointer}.palette-swatches-v48 button.selected{outline:2px solid var(--accent)}.palette-swatches-v48 i{display:block;height:30px;border-radius:5px;background:var(--sw)}.palette-swatches-v48 span{display:block;font-size:9px;margin-top:3px}
+.palette-actions-v48{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.palette-actions-v48 button,.codex-select-tools-v48 button{font-size:10px;padding:6px}
+.codex-select-tools-v48{display:flex;gap:7px;margin:8px 0}
+</style>
+
 </head>
 <body>
 
@@ -1124,52 +1149,72 @@
   async function doLogout(){ await Promise.allSettled([sb.auth.signOut(),mediaSb.auth.signOut()]); currentUser = null; mediaUser=null; renderAuth(); }
 
   const NAV = [
-    { group: 'Passerelle', items: [
-      { key:'accueil', label:'Accueil', real:true },
+    {group:'Bibliothèque',items:[
+      {key:'oeuvres',label:'Œuvres'},{key:'oeuvres-saga',label:'Œuvres saga'},{key:'poesie',label:'Recueils de poésie'},
+      {key:'sagas',label:'Sagas'},{key:'personnages',label:'Personnages'}
     ]},
-    { group: 'Bibliothèque', items: [
-      { key:'oeuvres', label:'Œuvres', real:true },
-      { key:'sagas', label:'Sagas', real:true },
-      { key:'oeuvres-saga', label:'Œuvres saga', real:true },
-      { key:'poesie', label:'Recueils de poésie', real:true },
-      { key:'personnages', label:'Personnages', real:true },
-    ]},
-    { group: 'Atelier', items: [
-      { key:'planning', label:'Planning', real:true },
-      { key:'idees', label:'Pépinière', real:true },
-    ]},
-    { group: 'Pilotage', items: [
-      { key:'bureau-editorial', label:'Bureau éditorial', real:true },
-      { key:'archives', label:'Archives', real:true },
-      { key:'administration', label:'⚙ Administration', real:true },
-    ]}
+    {group:'Pilotage',items:[{key:'bureau-editorial',label:'Bureau éditorial'},{key:'archives',label:'Archives'}]},
+    {group:'Atelier',items:[{key:'planning',label:'Planning'},{key:'idees',label:'Pépinière'}]},
+    {group:'Administration',items:[{key:'administration',label:'Administration'}]}
   ];
+
+  function sidebarFoldOpenV48(key){try{return localStorage.getItem('passerelle_sidebar_fold_'+key)!=='0'}catch(e){return true}}
+  function sidebarFoldV48(key,open){try{localStorage.setItem('passerelle_sidebar_fold_'+key,open?'1':'0')}catch(e){}}
+  function sidebarProfileAvatarV48(){return currentUser?.user_metadata?.avatar_url||''}
+  function renderSidebarProfileV48(){
+    const avatar=sidebarProfileAvatarV48(),name=currentUser?.user_metadata?.display_name||currentUser?.email?.split('@')[0]||'Cordélia';
+    return `<div class="sidebar-profile-v48">
+      <label class="sidebar-avatar-v48" title="Changer l’avatar">${avatar?`<img src="${safeText(avatar)}" alt="">`:'✒️'}<input type="file" accept="image/*" onchange="uploadSidebarAvatarV48(this)"></label>
+      <div class="sidebar-profile-copy-v48"><strong>${safeText(name)}</strong><span>Autrice</span></div>
+      <button class="sidebar-profile-logout-v48" onclick="doLogout()" title="Déconnexion">↪</button>
+    </div>`;
+  }
+  async function uploadSidebarAvatarV48(input){
+    const file=input?.files?.[0];if(!file)return;
+    try{
+      const url=await uploadAssetFile(file,'profiles/avatar',{throwOnError:true,profile:{maxW:600,maxH:600,quality:.84,label:'Avatar'}});
+      const {data,error}=await sb.auth.updateUser({data:{avatar_url:url}});
+      if(error)throw error;currentUser=data.user;renderShell();showTransientStatusV572('Avatar mis à jour ✓');
+    }catch(e){alert('Avatar : '+(e?.message||e))}
+  }
 
   function renderShell(){
     app.innerHTML = `
       <div class="shell">
-        <div class="sidebar">
+        <div class="sidebar sidebar-v48">
           <div class="sidebar-brand-wrap">
-            <button class="sidebar-brand" type="button" onclick="toggleSpaceMenu(event)" aria-expanded="false">
-              <span>✒️ Passerelle</span><span class="sidebar-brand-chevron" id="space-chevron">⌄</span>
+            <button class="sidebar-brand" type="button" onclick="navigate('accueil')" title="Accueil Passerelle">
+              <span>✒️ Passerelle</span>
             </button>
-            <div class="space-menu" id="space-menu">
-              <div class="space-menu-item active" onclick="closeSpaceMenu();navigate('accueil')"><span>✒️ Passerelle</span><span>Actif</span></div>
-              <div class="space-menu-item" onclick="closeSpaceMenu();openPasseAiles()"><span>🪽 Passe-Ailes</span><span>↗</span></div>
+          </div>
+
+          <div class="nav-group">Bibliothèque</div>
+          <details class="sidebar-fold-v48" ${sidebarFoldOpenV48('catalogue')?'open':''} ontoggle="sidebarFoldV48('catalogue',this.open)">
+            <summary>📚 Catalogue <span>⌄</span></summary>
+            <div class="sidebar-icon-grid-v48">
+              <button id="nav-oeuvres" onclick="navigate('oeuvres')" title="Œuvres indépendantes"><b>♡</b><span>Indépendant</span></button>
+              <button id="nav-oeuvres-saga" onclick="navigate('oeuvres-saga')" title="Œuvres en saga"><b>★</b><span>Saga</span></button>
+              <button id="nav-poesie" onclick="navigate('poesie')" title="Recueils de poésie"><b>✒</b><span>Poésie</span></button>
             </div>
+          </details>
+          <div class="sidebar-direct-v48"><button class="nav-link" id="nav-sagas" onclick="navigate('sagas')">✦ Sagas</button><button class="nav-link" id="nav-personnages" onclick="navigate('personnages')">♟ Personnages</button></div>
+
+          <div class="nav-group">Pilotage</div>
+          <div class="sidebar-icon-grid-v48 two">
+            <button id="nav-bureau-editorial" onclick="navigate('bureau-editorial')"><b>📚</b><span>Bureau éditorial</span></button>
+            <button id="nav-archives" onclick="navigate('archives')"><b>📁</b><span>Archives</span></button>
           </div>
-          ${NAV.map(g => `
-            <div class="nav-group">${g.group}</div>
-            ${g.items.map(it => `<div class="nav-link" id="nav-${it.key}" onclick="navigate('${it.key}')">${it.label}</div>`).join('')}
-          `).join('')}
-          <div class="sidebar-quick">
-            <div class="sidebar-quick-title">Liens rapides</div>
-            <div id="sidebar-quick-links"><div class="quick-link-empty">Chargement…</div></div>
+
+          <div class="nav-group">Atelier</div>
+          <div class="sidebar-icon-grid-v48 two">
+            <button id="nav-planning" onclick="navigate('planning')"><b>📅</b><span>Planning</span></button>
+            <button id="nav-idees" onclick="navigate('idees')"><b>🌱</b><span>Pépinière</span></button>
           </div>
-          <div class="sidebar-foot">
-            ${currentUser.email}
-            <button onclick="doLogout()">Déconnexion</button>
-          </div>
+
+          <div class="nav-group">Administration</div>
+          <button class="nav-link sidebar-admin-v48" id="nav-administration" onclick="navigate('administration')">⚙ Administration</button>
+
+          <div class="sidebar-foot sidebar-foot-v48">${renderSidebarProfileV48()}</div>
         </div>
         <button class="sidebar-toggle-v26" id="sidebar-toggle-v26" type="button"
                 onclick="toggleSidebarV26()" aria-label="Replier le menu" title="Replier le menu">‹</button>
@@ -1182,7 +1227,6 @@
       ${ideeModalHtml()}
       ${chapitreModalHtml()}
       ${personnageOeuvreModalHtml()}
-
       ${correctionModalHtml()}
       ${luModalHtml()}
       ${chronoModalHtml()}
@@ -1198,7 +1242,6 @@
         <textarea id="memo-new" placeholder="Ajouter une note..." style="margin-top:14px;"></textarea>
         <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="addMemo()">Ajouter</button>
       </div>`;
-    loadSidebarQuickLinks();
     applySidebarStateV26();
   }
 
@@ -1372,7 +1415,44 @@
     const url=await uploadAssetFile(file,`banners/${table}/${id}`);if(!url)return;
     const {error}=await db().from(table).update({banniere:url}).eq('id',id);if(error){alert('Erreur bannière : '+error.message);return;}
     const target=document.getElementById(targetInputId);if(target)target.value=url;
+    if(table==='oeuvres'){
+      try{const palette=await extractBannerPaletteV48(file);renderBannerPaletteV48(targetInputId,palette)}catch(e){console.warn('Palette bannière',e)}
+    }
     alert('Bannière téléversée ✓');
+  }
+
+  async function extractBannerPaletteV48(file){
+    const bmp=await createImageBitmap(file),canvas=document.createElement('canvas'),W=120,H=Math.max(40,Math.round(120*bmp.height/bmp.width));
+    canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0,W,H);bmp.close?.();
+    const d=ctx.getImageData(0,0,W,H).data,bins=new Map();
+    for(let i=0;i<d.length;i+=16){
+      const a=d[i+3];if(a<180)continue;let r=d[i],g=d[i+1],b=d[i+2];
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);if(max>248&&min>245)continue;if(max<12)continue;
+      r=Math.round(r/24)*24;g=Math.round(g/24)*24;b=Math.round(b/24)*24;
+      const key=`${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)}`;bins.set(key,(bins.get(key)||0)+1);
+    }
+    const cand=[...bins.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>({rgb:k.split(',').map(Number),n}));
+    const picked=[];const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+    for(const c of cand){if(picked.every(p=>dist(p.rgb,c.rgb)>72)){picked.push(c);if(picked.length===10)break}}
+    const lum=x=>.2126*x.rgb[0]+.7152*x.rgb[1]+.0722*x.rgb[2];
+    const pool=picked.length?picked:cand.slice(0,4);pool.sort((a,b)=>lum(a)-lum(b));
+    const chosen=[];
+    if(pool.length){chosen.push(pool[0]);if(pool.length>2)chosen.push(pool[Math.floor(pool.length*.42)]);if(pool.length>3)chosen.push(pool[Math.floor(pool.length*.72)]);if(pool.length>1)chosen.push(pool[pool.length-1])}
+    const uniq=[];for(const c of chosen){if(c&&!uniq.some(x=>x.rgb.join()==c.rgb.join()))uniq.push(c)}
+    while(uniq.length<4&&cand[uniq.length])uniq.push(cand[uniq.length]);
+    return uniq.slice(0,4).map(c=>'#'+c.rgb.map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('').toUpperCase());
+  }
+  function renderBannerPaletteV48(targetInputId,palette){
+    const target=document.getElementById(targetInputId);if(!target||!palette?.length)return;
+    let host=document.getElementById('banner-palette-v48');if(!host){host=document.createElement('div');host.id='banner-palette-v48';target.parentElement.appendChild(host)}
+    host.className='banner-palette-v48';
+    host.innerHTML=`<strong>🎨 Palette détectée</strong><small>Choisis une couleur puis son rôle. Rien n’est appliqué automatiquement.</small><div class="palette-swatches-v48">${palette.map((c,i)=>`<button type="button" style="--sw:${c}" onclick="selectPaletteV48('${c}',this)" title="${c}"><i></i><span>${c}</span></button>`).join('')}</div><div class="palette-actions-v48"><button type="button" onclick="applyPaletteV48('accent')">Accent</button><button type="button" onclick="applyPaletteV48('secondary')">Secondaire</button><button type="button" onclick="applyPaletteV48('soft')">Fond</button><button type="button" onclick="applyPaletteV48('dark')">Sombre</button></div>`;
+    window._paletteSelectedV48=palette[0];host.querySelector('button')?.classList.add('selected');
+  }
+  function selectPaletteV48(c,btn){window._paletteSelectedV48=c;document.querySelectorAll('#banner-palette-v48 .palette-swatches-v48 button').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected')}
+  function applyPaletteV48(role){
+    const c=window._paletteSelectedV48;if(!c)return;const el=document.getElementById('aow-'+role);if(!el)return alert('Ouvre la configuration graphique de l’œuvre pour appliquer cette couleur.');
+    el.value=c;el.dispatchEvent(new Event('input',{bubbles:true}));showTransientStatusV572(`${c} proposé comme ${role} ✓`);
   }
 
   function renderCatalogEntityBanner(url,title=''){
@@ -3861,8 +3941,10 @@
   function renderCodexNotionPreviewV39(){
     const zone=document.getElementById('codex-import-zone-v39'); if(!zone)return;
     const items=codexNotionImportV39.items;
-    zone.innerHTML=`<div class="codex-import-drop open"><strong>${items.length} page${items.length>1?'s':''} détectée${items.length>1?'s':''}</strong><p>${safeText(codexNotionImportV39.fileName)} · décoche ce que tu ne veux pas importer. Les balises restent propres à ${codexNotionImportV39.level==='saga'?'cette saga':'cette sous-saga'}.</p><div class="codex-import-preview">${items.map((it,i)=>`<div class="codex-import-row"><label style="margin:0;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" style="width:auto;margin-top:3px" ${it.selected?'checked':''} onchange="codexNotionImportV39.items[${i}].selected=this.checked"><span><strong>${safeText(it.title)}</strong><small>${safeText(it.source)}</small></span></label><div>${it.categories.length?it.categories.map(c=>`<span class="codex-category-chip">${safeText(c)}</span>`).join(''):'<small>Sans catégorie</small>'}</div><select onchange="codexNotionImportV39.items[${i}].mode=this.value"><option value="create">Créer une page</option><option value="ignore">Ignorer</option></select></div>`).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="document.getElementById('codex-import-zone-v39').innerHTML=''">Annuler</button><button class="btn-primary" onclick="commitCodexNotionImportV39(this)">Importer ${items.length} page${items.length>1?'s':''}</button></div></div>`;
+    zone.innerHTML=`<div class="codex-import-drop open"><strong>${items.length} page${items.length>1?'s':''} détectée${items.length>1?'s':''}</strong><p>${safeText(codexNotionImportV39.fileName)} · décoche ce que tu ne veux pas importer.</p><div class="codex-select-tools-v48"><button class="btn-secondary" type="button" onclick="selectAllCodexImportV48(true)">✓ Tout sélectionner</button><button class="btn-secondary" type="button" onclick="selectAllCodexImportV48(false)">Tout désélectionner</button></div><p> Les balises restent propres à ${codexNotionImportV39.level==='saga'?'cette saga':'cette sous-saga'}.</p><div class="codex-import-preview">${items.map((it,i)=>`<div class="codex-import-row"><label style="margin:0;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" style="width:auto;margin-top:3px" ${it.selected?'checked':''} onchange="codexNotionImportV39.items[${i}].selected=this.checked"><span><strong>${safeText(it.title)}</strong><small>${safeText(it.source)}</small></span></label><div>${it.categories.length?it.categories.map(c=>`<span class="codex-category-chip">${safeText(c)}</span>`).join(''):'<small>Sans catégorie</small>'}</div><select onchange="codexNotionImportV39.items[${i}].mode=this.value"><option value="create">Créer une page</option><option value="ignore">Ignorer</option></select></div>`).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-secondary" onclick="document.getElementById('codex-import-zone-v39').innerHTML=''">Annuler</button><button class="btn-primary" onclick="commitCodexNotionImportV39(this)">Importer ${items.length} page${items.length>1?'s':''}</button></div></div>`;
   }
+
+  function selectAllCodexImportV48(selected){codexNotionImportV39.items.forEach(x=>x.selected=selected);renderCodexNotionPreviewV39()}
 
   function resolveNotionAssetEntryV41(sourceName,ref){
     let raw=String(ref||'');try{raw=decodeURIComponent(raw)}catch{}
