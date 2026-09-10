@@ -1102,6 +1102,18 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 @media(max-width:900px){.coolors-map-v51{grid-template-columns:1fr 1fr}.coolors-url-row-v51{grid-template-columns:1fr}}
 </style>
 
+
+<style id="c51b-coolors-role-first">
+.coolors-map-v51.role-first-v51 button{position:relative;padding-left:13px}
+.coolors-map-v51.role-first-v51 button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:9px 0 0 9px;background:var(--assigned-color,transparent)}
+.coolors-map-v51 button.selected-role-v51{border-color:var(--accent)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent);background:color-mix(in srgb,var(--accent) 7%,#fff)}
+.coolors-instruction-v51{margin-top:9px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--accent) 6%,#fff);border:1px solid var(--line);font-size:10px;color:var(--text-dim)}
+.coolors-instruction-v51.attention{border-color:#d7aeb5;color:#8a4a55;background:#fff6f7}
+.coolors-swatches-v51.role-first-v51 button{transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+.coolors-swatches-v51.role-first-v51 button:hover{transform:translateY(-1px);border-color:var(--accent)}
+.coolors-swatches-v51.role-first-v51 button.last-applied-v51{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+</style>
+
 </head>
 <body>
 
@@ -1496,26 +1508,30 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const palette=parseCoolorsPaletteV51(input.value);
       if(!palette.length)throw new Error('Je ne trouve aucun code couleur dans ce lien.');
       window._coolorsPaletteV51=palette;
-      window._coolorsSelectedV51=palette[0];
+      window._coolorsRoleV51=null;
       zone.innerHTML=renderCoolorsPaletteV51(palette);
+      refreshCoolorsMiniPreviewV51();
     }catch(e){
       window._coolorsPaletteV51=[];
-      window._coolorsSelectedV51=null;
+      window._coolorsRoleV51=null;
       zone.innerHTML=`<div class="coolors-error-v51">${safeText(e?.message||e)}</div>`;
     }
   }
 
   function renderCoolorsPaletteV51(palette){
+    window._coolorsRoleV51=null;
+    window._coolorsSelectedV51=null;
     return `<div class="coolors-panel-v51">
-      <div class="coolors-head-v51"><div><strong>🎨 Palette Coolors</strong><small>Clique une couleur, puis choisis son rôle dans la fiche.</small></div><span>${palette.length} couleur${palette.length>1?'s':''}</span></div>
-      <div class="coolors-swatches-v51">
-        ${palette.map((c,i)=>`<button type="button" class="${i===0?'selected':''}" style="--coolors:${c}" onclick="selectCoolorsColorV51('${c}',this)" title="${c}"><i></i><span>${c}</span></button>`).join('')}
+      <div class="coolors-head-v51"><div><strong>🎨 Palette Coolors</strong><small>1. Choisis le rôle graphique. 2. Clique sur la couleur à lui attribuer.</small></div><span>${palette.length} couleur${palette.length>1?'s':''}</span></div>
+      <div class="coolors-map-v51 role-first-v51">
+        <button type="button" data-role="accent" onclick="selectCoolorsRoleV51('accent',this)"><b>Accent principal</b><small id="coolors-role-accent-v51">${safeText(document.getElementById('aow-accent')?.value||'')}</small></button>
+        <button type="button" data-role="secondary" onclick="selectCoolorsRoleV51('secondary',this)"><b>Secondaire</b><small id="coolors-role-secondary-v51">${safeText(document.getElementById('aow-secondary')?.value||'')}</small></button>
+        <button type="button" data-role="soft" onclick="selectCoolorsRoleV51('soft',this)"><b>Fond de page</b><small id="coolors-role-soft-v51">${safeText(document.getElementById('aow-soft')?.value||'')}</small></button>
+        <button type="button" data-role="dark" onclick="selectCoolorsRoleV51('dark',this)"><b>Sombre / texte</b><small id="coolors-role-dark-v51">${safeText(document.getElementById('aow-dark')?.value||'')}</small></button>
       </div>
-      <div class="coolors-map-v51">
-        <button type="button" onclick="applyCoolorsRoleV51('accent')"><b>Accent principal</b><small id="coolors-role-accent-v51">→ ${safeText(document.getElementById('aow-accent')?.value||'')}</small></button>
-        <button type="button" onclick="applyCoolorsRoleV51('secondary')"><b>Secondaire</b><small id="coolors-role-secondary-v51">→ ${safeText(document.getElementById('aow-secondary')?.value||'')}</small></button>
-        <button type="button" onclick="applyCoolorsRoleV51('soft')"><b>Fond de page</b><small id="coolors-role-soft-v51">→ ${safeText(document.getElementById('aow-soft')?.value||'')}</small></button>
-        <button type="button" onclick="applyCoolorsRoleV51('dark')"><b>Sombre / texte</b><small id="coolors-role-dark-v51">→ ${safeText(document.getElementById('aow-dark')?.value||'')}</small></button>
+      <div class="coolors-instruction-v51" id="coolors-instruction-v51">Sélectionne d’abord <b>Accent principal</b>, <b>Secondaire</b>, <b>Fond de page</b> ou <b>Sombre / texte</b>.</div>
+      <div class="coolors-swatches-v51 role-first-v51">
+        ${palette.map(c=>`<button type="button" style="--coolors:${c}" onclick="applyCoolorsColorToSelectedRoleV51('${c}',this)" title="${c}"><i></i><span>${c}</span></button>`).join('')}
       </div>
       <div class="coolors-mini-preview-v51">
         <div class="coolors-preview-surface-v51" id="coolors-preview-surface-v51">
@@ -1525,21 +1541,34 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     </div>`;
   }
 
-  function selectCoolorsColorV51(color,btn){
-    window._coolorsSelectedV51=color;
-    document.querySelectorAll('.coolors-swatches-v51 button').forEach(x=>x.classList.remove('selected'));
-    btn?.classList.add('selected');
+  function selectCoolorsRoleV51(role,btn){
+    window._coolorsRoleV51=role;
+    document.querySelectorAll('.coolors-map-v51 button').forEach(x=>x.classList.remove('selected-role-v51'));
+    btn?.classList.add('selected-role-v51');
+    const names={accent:'Accent principal',secondary:'Secondaire',soft:'Fond de page',dark:'Sombre / texte'};
+    const info=document.getElementById('coolors-instruction-v51');
+    if(info)info.innerHTML=`Rôle sélectionné : <b>${names[role]}</b>. Clique maintenant sur la couleur que tu veux lui attribuer.`;
   }
 
-  function applyCoolorsRoleV51(role){
-    const color=window._coolorsSelectedV51;
-    if(!color)return;
+  function applyCoolorsColorToSelectedRoleV51(color,btn){
+    const role=window._coolorsRoleV51;
+    if(!role){
+      const info=document.getElementById('coolors-instruction-v51');
+      if(info){info.textContent='Choisis d’abord un rôle graphique au-dessus.';info.classList.add('attention')}
+      return;
+    }
     const el=document.getElementById('aow-'+role);
     if(!el)return;
     el.value=color;
     el.dispatchEvent(new Event('input',{bubbles:true}));
     const label=document.getElementById('coolors-role-'+role+'-v51');
-    if(label)label.textContent='→ '+color;
+    if(label)label.textContent=color;
+    const roleButton=document.querySelector(`.coolors-map-v51 button[data-role="${role}"]`);
+    if(roleButton)roleButton.style.setProperty('--assigned-color',color);
+    document.querySelectorAll('.coolors-swatches-v51 button').forEach(x=>x.classList.remove('last-applied-v51'));
+    btn?.classList.add('last-applied-v51');
+    const info=document.getElementById('coolors-instruction-v51');
+    if(info){info.innerHTML=`${color} appliqué à <b>${roleButton?.querySelector('b')?.textContent||role}</b>. Tu peux choisir un autre rôle ou une autre couleur.`;info.classList.remove('attention')}
     refreshCoolorsMiniPreviewV51();
   }
 
@@ -2159,7 +2188,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
               <div class="coolors-import-v51">
                 <label>Palette Coolors</label>
                 <div class="coolors-url-row-v51"><input id="aow-coolors-url-v51" placeholder="https://coolors.co/422a55-8f6aa7-d6c7e4-f6f1fa" onkeydown="if(event.key==='Enter'){event.preventDefault();loadCoolorsPaletteV51()}"><button type="button" class="btn-secondary" onclick="loadCoolorsPaletteV51()">Afficher la palette</button></div>
-                <small>Colle simplement le lien de ta palette Coolors. Passerelle lit les codes HEX et te laisse décider quelle couleur devient accent, secondaire, fond ou texte.</small>
+                <small>Colle simplement le lien de ta palette Coolors. Passerelle lit les codes HEX. Choisis d’abord le rôle graphique, puis clique sur la couleur que tu veux lui attribuer.</small>
                 <div id="aow-coolors-preview-v51"></div>
               </div>
               <label style="margin-top:12px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">La bannière n’est jamais héritée. L’analyse automatique des couleurs de bannière a été retirée : utilise la palette Coolors ci-dessus.</small></details>
