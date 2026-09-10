@@ -1114,6 +1114,31 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 .coolors-swatches-v51.role-first-v51 button.last-applied-v51{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
 </style>
 
+
+<style id="c52-design-pass">
+/* C52 · les bannières 1600×600 restent entières */
+.page-image-banner{height:auto!important;aspect-ratio:8/3;background:color-mix(in srgb,var(--accent) 5%,#fff)}
+.page-image-banner img{object-fit:contain!important}
+.work-hero-banner{height:auto!important;aspect-ratio:8/3;max-height:380px;background:color-mix(in srgb,var(--accent) 5%,var(--bg-2))}
+.work-hero-banner img{object-fit:contain!important}
+/* Onglets d'entités : de vrais boutons, teintés par la charte de la fiche */
+.entity-tabs-c52{border-bottom:0!important;align-items:center}
+.entity-tabs-c52>button:not(.btn-secondary){background:color-mix(in srgb,var(--accent) 7%,#fff)!important;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line))!important;border-radius:10px!important;color:var(--text-dim)!important;padding:9px 14px!important;transition:background .14s ease,border-color .14s ease,color .14s ease,transform .14s ease}
+.entity-tabs-c52>button:not(.btn-secondary):hover{background:color-mix(in srgb,var(--accent) 13%,#fff)!important;border-color:color-mix(in srgb,var(--accent) 45%,var(--line))!important;color:var(--accent)!important;transform:translateY(-1px)}
+.entity-tabs-c52>button.active:not(.btn-secondary){background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;font-weight:700!important;box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 20%,transparent)}
+/* BO Œuvre · configuration compacte */
+.admin-editor-panel[data-key="configuration"]{grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr);gap:16px;align-items:start}
+.admin-editor-panel[data-key="configuration"]>.admin-section:nth-child(1){grid-column:2;grid-row:1}
+.admin-editor-panel[data-key="configuration"]>.admin-section:nth-child(2){grid-column:1;grid-row:1}
+.admin-editor-panel[data-key="configuration"]>.admin-section:nth-child(3){grid-column:1/-1;grid-row:2}
+.admin-editor-panel[data-key="configuration"] .admin-cover-preview{width:min(150px,100%);margin:8px auto 10px;aspect-ratio:2/3}
+/* BO Saga · cartes et fiche reprennent la bannière canonique */
+.admin-saga-card-v49 .admin-catalog-visual{aspect-ratio:8/3;min-height:0!important;overflow:hidden}
+.admin-saga-card-v49 .admin-catalog-visual>img{width:100%;height:100%;object-fit:cover;display:block}
+.admin-saga-hero-c52{margin-top:14px}
+.admin-saga-hero-c52 img{object-fit:cover}
+@media(max-width:820px){.admin-editor-panel[data-key="configuration"]{grid-template-columns:1fr}.admin-editor-panel[data-key="configuration"]>.admin-section:nth-child(n){grid-column:1;grid-row:auto}}
+</style>
 </head>
 <body>
 
@@ -1398,7 +1423,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   const PAGE_BANNER_LABELS = {
     accueil:'Accueil', oeuvres:'Œuvres', sagas:'Sagas', 'oeuvres-saga':'Œuvres saga', poesie:'Recueils de poésie', personnages:'Personnages',
-    relecture:'Relecture', planning:'Planning', pepiniere:'Pépinière', 'bureau-editorial':'Bureau éditorial'
+    archives:'Archives', planning:'Planning', pepiniere:'Pépinière', 'bureau-editorial':'Bureau éditorial'
   };
   async function getPageBanner(pageKey){
     const {data,error}=await db().from('page_banners').select('image_url').eq('page_key',pageKey).maybeSingle();
@@ -1709,9 +1734,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   async function renderAdminSagasPage(){
     const content=document.getElementById('content');
-    const {data,error}=await db().from('sagas').select('id,nom,genre,statut,archive,ordre').order('ordre',{ascending:true});
+    const {data,error}=await db().from('sagas').select('id,nom,genre,statut,archive,ordre,banniere,image_couverture').order('ordre',{ascending:true});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas. Attrape une carte par la poignée pour changer son ordre dans Œuvres saga.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"><span id="saga-order-status-v43" class="status-line"></span></div><div class="admin-catalog-grid saga-sort-grid-v43 admin-saga-grid-v49" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card saga-sort-card-v43 admin-saga-card-v49" draggable="true" data-saga-id="${x.id}" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" ondragstart="sagaDragStartV43(event)" ondragover="sagaDragOverV43(event)" ondrop="sagaDropV43(event)" ondragend="sagaDragEndV43(event)" onclick="openAdminSagaEditorV56('${x.id}')"><button class="saga-drag-handle-v43" type="button" title="Glisser pour réordonner" onclick="event.stopPropagation()">⠿</button><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas. Attrape une carte par la poignée pour changer son ordre dans Œuvres saga.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"><span id="saga-order-status-v43" class="status-line"></span></div><div class="admin-catalog-grid saga-sort-grid-v43 admin-saga-grid-v49" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card saga-sort-card-v43 admin-saga-card-v49" draggable="true" data-saga-id="${x.id}" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" ondragstart="sagaDragStartV43(event)" ondragover="sagaDragOverV43(event)" ondrop="sagaDropV43(event)" ondragend="sagaDragEndV43(event)" onclick="openAdminSagaEditorV56('${x.id}')"><button class="saga-drag-handle-v43" type="button" title="Glisser pour réordonner" onclick="event.stopPropagation()">⠿</button><div class="admin-catalog-visual">${x.banniere||x.image_couverture?`<img src="${safeText(x.banniere||x.image_couverture)}" alt="Bannière ${safeText(x.nom)}">`:`<div class="admin-catalog-placeholder">${initials(x.nom)}</div>`}</div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
   }
 
 
@@ -1774,7 +1799,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement…</div>';
     const [sr,mr]=await Promise.all([db().from('sagas').select('*').eq('id',adminSagaIdV56).single(),db().from('saga_metadonnees').select('*').eq('saga_id',adminSagaIdV56).order('ordre')]);const s=sr.data||{};window._adminSagaMetaV56=mr.data||[];
     const inheritedGraphicV576c13=await inheritedThemeForEditorV576c13('saga',s);
-    content.innerHTML=`${adminPageHead(s.nom||'Saga','Administration de la saga.',`<button class="btn-secondary" onclick="openSagaDetail('${s.id}')">Voir la fiche ↗</button>`)}<div class="admin-tabs">${[['information','Informations'],['metadata','Métadonnées'],['configuration','Configuration']].map(([k,l])=>`<button class="${adminSagaTabV56===k?'active':''}" onclick="adminSagaTabV56='${k}';renderAdminSagaEditorV56()">${l}</button>`).join('')}</div><div id="admin-saga-tab-v56"></div>`;
+    content.innerHTML=`${adminPageHead(s.nom||'Saga','Administration de la saga.',`<button class="btn-secondary" onclick="renderAdminSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSagaDetail('${s.id}')">Voir la fiche ↗</button>`)}<section class="saga-hero-c38 admin-saga-hero-c52">${s.banniere||s.image_couverture?`<img src="${safeText(s.banniere||s.image_couverture)}" alt="Bannière ${safeText(s.nom)}">`:''}<div class="saga-hero-content-c38"><h1>${safeText(s.nom||'Saga')}</h1><div class="saga-hero-meta-c38">${renderPasserelleIdBadgeV572(s.passerelle_id)}<span>${safeText(s.genre||'Genre non renseigné')}</span><span>${safeText(s.statut||'Sans statut')}</span></div></div></section><div class="admin-tabs entity-tabs-c52">${[['information','Informations'],['metadata','Métadonnées'],['configuration','Configuration']].map(([k,l])=>`<button class="${adminSagaTabV56===k?'active':''}" onclick="adminSagaTabV56='${k}';renderAdminSagaEditorV56()">${l}</button>`).join('')}</div><div id="admin-saga-tab-v56"></div>`;
     const z=document.getElementById('admin-saga-tab-v56');if(adminSagaTabV56==='information')z.innerHTML=`<div class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div><label>Nom</label><input id="as56-nom" value="${safeText(s.nom||'')}"></div><div><label>Genre</label><input id="as56-genre" value="${safeText(s.genre||'')}"></div><div><label>Ordre d’affichage</label><input id="as56-ordre" type="number" min="0" step="1" value="${Number(s.ordre)||0}"><small>Les plus petits nombres apparaissent en premier dans Œuvres saga.</small></div></div><label>À propos de la saga</label>${adminRichFieldV567('as56-description',s.description||'',170)}<label>Mots-clés (séparés par des virgules)</label><input id="as56-tags" value="${safeText((s.mots_cles||[]).join(', '))}"><label>Période couverte (facultatif, sinon calcul chronologie)</label><input id="as56-periode" value="${safeText(s.periode_couverte||'')}"><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaInfoV56()">Enregistrer</button></div>`;
     if(adminSagaTabV56==='metadata')z.innerHTML=`<div class="admin-section"><div class="admin-section-head"><div><h2>Métadonnées de la saga</h2><p class="admin-section-sub">Vocabulaire héritable par les sous-sagas et les œuvres : Meute, Coven, Hockey, Basket…</p></div><button class="btn-primary" onclick="toggleSagaMetadataCreatorV567(true)">+ Ajouter</button></div>
       <div id="saga-meta-create-v567" class="inline-create-panel">
@@ -4360,7 +4385,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     content.innerHTML = `
       <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
       <section class="saga-hero-c38">${s.banniere?`<img src="${safeText(s.banniere)}" alt="Bannière ${safeText(s.nom)}">`:''}<div class="saga-hero-content-c38"><h1>${safeText(s.nom)}</h1><div class="saga-hero-meta-c38">${renderPasserelleIdBadgeV572(s.passerelle_id)}<span>${safeText(s.genre||'Genre non renseigné')}</span><span>${safeText(s.statut||'Sans statut')}</span></div></div></section>
-      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+      <div class="tabbar entity-tabs-c52" style="display:flex; gap:7px; margin-bottom:24px; flex-wrap:wrap;">
         ${SAGA_TABS.map(t => `<button id="sagatab-${t.key}" onclick="showSagaTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
         <button class="btn-secondary" style="margin-left:auto;align-self:center" onclick="jumpToAdminSagaV570('${id}')">✏️ Modifier la saga</button>
       </div>
@@ -4371,9 +4396,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   async function showSagaTab(key){
     currentSagaTab = key;
-    document.querySelectorAll('[id^="sagatab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    document.querySelectorAll('[id^="sagatab-"]').forEach(b => { b.classList.remove('active'); b.style.color=''; b.style.borderBottomColor=''; b.style.fontWeight=''; });
     const activeBtn = document.getElementById('sagatab-'+key);
-    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+    if (activeBtn) { activeBtn.classList.add('active'); activeBtn.style.color=''; activeBtn.style.borderBottomColor=''; activeBtn.style.fontWeight=''; }
 
     const tab = SAGA_TABS.find(t=>t.key===key);
     const zone = document.getElementById('saga-tab-content');
@@ -4634,7 +4659,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
           <span class="status-badge">${ss.statut || 'Sans statut'}</span>
         </div>
       </div>
-      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+      <div class="tabbar entity-tabs-c52" style="display:flex; gap:7px; margin-bottom:24px; flex-wrap:wrap;">
         ${SOUS_SAGA_TABS.map(t => `<button id="ssagatab-${t.key}" onclick="showSousSagaTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
         <button class="btn-secondary" style="margin-left:auto;align-self:center" onclick="jumpToAdminSousSagaV570('${id}')">✏️ Modifier la sous-saga</button>
       </div>
@@ -4644,9 +4669,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   async function showSousSagaTab(key){
-    document.querySelectorAll('[id^="ssagatab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    document.querySelectorAll('[id^="ssagatab-"]').forEach(b => { b.classList.remove('active'); b.style.color=''; b.style.borderBottomColor=''; b.style.fontWeight=''; });
     const activeBtn = document.getElementById('ssagatab-'+key);
-    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+    if (activeBtn) { activeBtn.classList.add('active'); activeBtn.style.color=''; activeBtn.style.borderBottomColor=''; activeBtn.style.fontWeight=''; }
 
     const tab = SOUS_SAGA_TABS.find(t=>t.key===key);
     const zone = document.getElementById('soussaga-tab-content');
@@ -5422,7 +5447,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const content=document.getElementById('content');
     const title=archived?'Archives':'Œuvres';
     const subtitle=archived?'Catalogue des œuvres archivées. Elles restent canoniques et peuvent être rouvertes normalement.':scope==='independent'?'Mes œuvres.':'Explorateur du catalogue.';
-    const banner=archived?'':renderPageImageBanner(await getPageBanner('oeuvres'),'Œuvres');
+    const banner=archived?renderPageImageBanner(await getPageBanner('archives'),'Archives'):renderPageImageBanner(await getPageBanner('oeuvres'),'Œuvres');
     const action=archived?'':`<button class="btn-primary" onclick="openOeuvreModal()">+ Créer une œuvre</button>`;
     content.innerHTML=`${banner}<div class="head-row"><div><h2>${title}</h2><p style="font-size:12px;color:var(--text-dim)">${subtitle}</p></div>${action}</div><div id="oeuvres-zone"><div class="status-line">Chargement…</div></div>`;
     const {data,error}=await db().from('oeuvres').select('id,titre,genre,statut,statut_editorial_actuel,archive,couverture,banniere,accent_color,secondary_color,soft_color,dark_color,charte_override,saga_id,sous_saga_id,univers_id,sagas(nom),sous_sagas(nom),univers(nom)').eq('archive',archived).order('titre');
@@ -5488,7 +5513,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
           </div>
         </div>
       </div>
-      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+      <div class="tabbar entity-tabs-c52" style="display:flex; gap:7px; margin-bottom:24px; flex-wrap:wrap;">
         ${[...OEUVRE_TABS, ...(o.module_lore?[{key:'lore',label:'Codex',real:true}]:[]), ...(o.module_chronologie?[{key:'chronologie',label:'Chronologie',real:true}]:[])].map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
         <button class="btn-secondary" style="margin-left:auto;align-self:center" onclick="jumpToAdminOeuvreV570('${id}')">✏️ Modifier l’œuvre</button>
       </div>
@@ -5498,9 +5523,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   async function showOeuvreTab(key){
-    document.querySelectorAll('[id^="oeuvretab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    document.querySelectorAll('[id^="oeuvretab-"]').forEach(b => { b.classList.remove('active'); b.style.color=''; b.style.borderBottomColor=''; b.style.fontWeight=''; });
     const activeBtn = document.getElementById('oeuvretab-'+key);
-    if (activeBtn) { activeBtn.style.color='var(--accent)'; activeBtn.style.borderBottomColor='var(--accent)'; activeBtn.style.fontWeight='500'; }
+    if (activeBtn) { activeBtn.classList.add('active'); activeBtn.style.color=''; activeBtn.style.borderBottomColor=''; activeBtn.style.fontWeight=''; }
     const zone = document.getElementById('oeuvre-tab-content');
     if (key === 'informations') await renderOeuvreInformations(zone);
     else if (key === 'personnages') await renderOeuvrePersonnages(zone);
@@ -6940,7 +6965,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
           <span class="status-badge">${r.statut||'Sans statut'}</span>
         </div>
       </div>
-      <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+      <div class="tabbar entity-tabs-c52" style="display:flex; gap:7px; margin-bottom:24px; flex-wrap:wrap;">
         ${RECUEIL_TABS.map(t => `<button id="rtab-${t.key}" onclick="showRecueilTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
       </div>
       <div id="recueil-tab-content"></div>
@@ -6951,9 +6976,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let activeRecueilTab = 'apercu';
   async function showRecueilTab(key){
     activeRecueilTab = key;
-    document.querySelectorAll('[id^="rtab-"]').forEach(b => { b.style.color='var(--text-dim)'; b.style.borderBottomColor='transparent'; b.style.fontWeight='400'; });
+    document.querySelectorAll('[id^="rtab-"]').forEach(b => { b.classList.remove('active'); b.style.color=''; b.style.borderBottomColor=''; b.style.fontWeight=''; });
     const btn = document.getElementById('rtab-'+key);
-    if (btn) { btn.style.color='var(--accent)'; btn.style.borderBottomColor='var(--accent)'; btn.style.fontWeight='500'; }
+    if (btn) { btn.classList.add('active'); btn.style.color=''; btn.style.borderBottomColor=''; btn.style.fontWeight=''; }
     const zone = document.getElementById('recueil-tab-content');
     if (key === 'apercu') await renderRecueilApercu(zone);
     else if (key === 'poemes') await renderRecueilPoemes(zone);
@@ -7367,7 +7392,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
     const activate=(key)=>{
       tabs.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn.dataset.key===key));
-      panels.querySelectorAll('.admin-editor-panel').forEach(panel=>panel.style.display=panel.dataset.key===key?'block':'none');
+      panels.querySelectorAll('.admin-editor-panel').forEach(panel=>panel.style.display=panel.dataset.key===key?(key==='configuration'?'grid':'block'):'none');
     };
 
     groups.forEach((group,index)=>{
