@@ -6041,6 +6041,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let selectedPlanIdsC61 = new Set();
 
   async function renderOeuvrePlans(zone){
+    if(plansGroupBy==='type')plansGroupBy='acte';
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
     const [{ data: plans, error }, { data: notes }] = await Promise.all([
       db().from('plans').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre'),
@@ -6059,7 +6060,6 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
               <button class="btn-secondary" id="pv-kanban" onclick="setPlansView('kanban')">Kanban</button>
               <select class="search-input" id="plans-groupby" onchange="onPlansGroupByChange()">
                 <option value="acte" ${plansGroupBy==='acte'?'selected':''}>Grouper par acte</option>
-                <option value="type" ${plansGroupBy==='type'?'selected':''}>Grouper par type</option>
                 <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
               </select>
             </div>
@@ -6249,7 +6249,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
   function renderPlansTable(plans){
     if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
-    return `<table class="ch-table"><thead><tr><th style="width:42px"><input type="checkbox" aria-label="Tout sélectionner" ${plans.length&&plans.every(p=>selectedPlanIdsC61.has(p.id))?'checked':''} onclick="event.stopPropagation();toggleSelectAllPlansC61(this.checked)"></th><th>Type</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${selectedPlanIdsC61.has(p.id)?'checked':''} onchange="togglePlanSelectionC61('${p.id}',this.checked)"></td><td>${safeText(p.type)}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
+    return `<table class="ch-table"><thead><tr><th style="width:42px"><input type="checkbox" aria-label="Tout sélectionner" ${plans.length&&plans.every(p=>selectedPlanIdsC61.has(p.id))?'checked':''} onclick="event.stopPropagation();toggleSelectAllPlansC61(this.checked)"></th><th>Ordre</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${selectedPlanIdsC61.has(p.id)?'checked':''} onchange="togglePlanSelectionC61('${p.id}',this.checked)"></td><td>${safeText(p.ordre??'—')}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
   }
   function refreshPlanBulkActionsC61(){
     const b=document.getElementById('plans-delete-selected-c61');if(b)b.disabled=!selectedPlanIdsC61.size;
@@ -6274,12 +6274,46 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(error){alert('Impossible de vider le plan : '+error.message);return;}
     selectedPlanIdsC61=new Set();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
   }
-  function renderPlansKanban(plans, groupBy){const groupes=[...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];if(!groupes.length)return `<div class="empty">Aucun plan pour l'instant.</div>`;return `<div class="kanban-row">${groupes.map(g=>`<div class="kanban-col"><h4>${safeText(g)} (${plans.filter(p=>p[groupBy]===g).length})</h4>${plans.filter(p=>p[groupBy]===g).map(p=>`<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px;color:var(--text-dim)">${safeText(p.type)}${p.pov?' · POV '+safeText(p.pov):''}</div>${safeText(p.titre)}</div>`).join('')}</div>`).join('')}</div>`;}
+  function renderPlansKanban(plans, groupBy){const groupes=[...new Set(plans.map(p=>p[groupBy]).filter(Boolean))];if(!groupes.length)return `<div class="empty">Aucun plan pour l'instant.</div>`;return `<div class="kanban-row">${groupes.map(g=>`<div class="kanban-col"><h4>${safeText(g)} (${plans.filter(p=>p[groupBy]===g).length})</h4>${plans.filter(p=>p[groupBy]===g).map(p=>`<div class="kanban-card" onclick="openPlanModal('${p.id}')"><div style="font-size:11px;color:var(--text-dim)">Ordre ${safeText(p.ordre??'—')}${p.pov?' · POV '+safeText(p.pov):''}</div>${safeText(p.titre)}</div>`).join('')}</div>`).join('')}</div>`;}
   let editingPlanId=null;
   function planModalHtml(){return ''}
-  function openPlanModal(id){editingPlanId=id||null;const p=id?plansData.find(x=>x.id===id):null;openDrawer(id?'Modifier le plan':'Nouveau plan',`<div class="plan-drawer-form-v576b"><div><label>Type</label><select id="pf-type">${['Intrigue principale','Arc personnage','Sous-intrigue','Romance'].map(x=>`<option ${p?.type===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Titre</label><input id="pf-titre" value="${safeText(p?.titre||'')}"></div><div class="row2"><div><label>Acte</label><input id="pf-acte" value="${safeText(p?.acte||'')}"></div><div><label>Statut</label><input id="pf-statut" value="${safeText(p?.statut||'')}" placeholder="À écrire, En cours…"></div></div><div><label>POV</label><input id="pf-pov" value="${safeText(p?.pov||'')}" placeholder="Capucine, Roy, Maddie…"></div><div><label>Transformation / résumé</label><textarea id="pf-transformation" style="min-height:180px">${safeText(p?.transformation||'')}</textarea></div><div class="plan-drawer-actions-v576b">${id?`<button class="btn-secondary danger-btn" style="margin-right:auto" onclick="deletePlan()">Supprimer</button>`:''}<button class="btn-secondary" onclick="closeDrawer()">Annuler</button><button class="btn-primary" onclick="savePlan()">Enregistrer</button></div></div>`);}
+  // C63 · Plan : ordre visible à la place du Type + sauvegarde individuelle vérifiée par retour Supabase.
+  function openPlanModal(id){
+    editingPlanId=id||null;
+    const p=id?plansData.find(x=>x.id===id):null;
+    const nextOrder=plansData.length?Math.max(...plansData.map(x=>Number(x.ordre)||0))+1:1;
+    openDrawer(id?'Modifier le plan':'Nouveau plan',`<div class="plan-drawer-form-v576b"><div><label>Titre</label><input id="pf-titre" value="${safeText(p?.titre||'')}"></div><div class="row2"><div><label>Ordre du chapitre</label><input id="pf-ordre" type="number" min="1" step="1" value="${safeText(p?.ordre??nextOrder)}"></div><div><label>Statut</label><input id="pf-statut" value="${safeText(p?.statut||'')}" placeholder="À écrire, En cours…"></div></div><div class="row2"><div><label>Acte</label><input id="pf-acte" value="${safeText(p?.acte||'')}"></div><div><label>POV</label><input id="pf-pov" value="${safeText(p?.pov||'')}" placeholder="Capucine, Roy, Maddie…"></div></div><div><label>Transformation / résumé</label><textarea id="pf-transformation" style="min-height:180px">${safeText(p?.transformation||'')}</textarea></div><div class="plan-drawer-actions-v576b">${id?`<button class="btn-secondary danger-btn" style="margin-right:auto" onclick="deletePlan()">Supprimer</button>`:''}<button class="btn-secondary" onclick="closeDrawer()">Annuler</button><button class="btn-primary" id="pf-save" onclick="savePlan()">Enregistrer</button></div></div>`);
+  }
   function closePlanModal(){closeDrawer()}
-  async function savePlan(){const payload={type:document.getElementById('pf-type').value,titre:document.getElementById('pf-titre').value.trim()||'Sans titre',acte:document.getElementById('pf-acte').value.trim()||null,statut:document.getElementById('pf-statut').value.trim()||null,pov:document.getElementById('pf-pov').value.trim()||null,transformation:document.getElementById('pf-transformation').value.trim()||null};let error;if(editingPlanId)({error}=await db().from('plans').update(payload).eq('id',editingPlanId));else{payload.user_id=currentUser.id;payload.oeuvre_id=currentOeuvreId;({error}=await db().from('plans').insert(payload))}if(error){alert('Erreur : '+error.message);return}closeDrawer();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));}
+  async function savePlan(){
+    const saveBtn=document.getElementById('pf-save');
+    const ordreRaw=Number(document.getElementById('pf-ordre')?.value);
+    const payload={
+      titre:document.getElementById('pf-titre').value.trim()||'Sans titre',
+      ordre:Number.isFinite(ordreRaw)&&ordreRaw>0?Math.trunc(ordreRaw):1,
+      acte:document.getElementById('pf-acte').value.trim()||null,
+      statut:document.getElementById('pf-statut').value.trim()||null,
+      pov:document.getElementById('pf-pov').value.trim()||null,
+      transformation:document.getElementById('pf-transformation').value.trim()||null
+    };
+    if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Enregistrement…';}
+    let result;
+    if(editingPlanId){
+      result=await db().from('plans').update(payload).eq('id',editingPlanId).eq('oeuvre_id',currentOeuvreId).eq('user_id',currentUser.id).select('id').maybeSingle();
+    }else{
+      result=await db().from('plans').insert({...payload,type:'Intrigue principale',user_id:currentUser.id,oeuvre_id:currentOeuvreId}).select('id').single();
+    }
+    if(result.error){
+      if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Enregistrer';}
+      alert('Erreur : '+result.error.message);return;
+    }
+    if(editingPlanId&&!result.data){
+      if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Enregistrer';}
+      alert('La modification n’a pas été enregistrée. Recharge la fiche et réessaie.');return;
+    }
+    closeDrawer();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+  }
   async function deletePlan(){if(!confirm('Supprimer ce plan ?'))return;const {error}=await db().from('plans').delete().eq('id',editingPlanId);if(error){alert('Erreur : '+error.message);return}closeDrawer();await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));}
 
   async function addOeuvreNote(){
