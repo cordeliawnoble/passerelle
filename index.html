@@ -1150,12 +1150,12 @@
 
   const NAV = [
     {group:'Bibliothèque',items:[
-      {key:'oeuvres',label:'Œuvres'},{key:'oeuvres-saga',label:'Œuvres saga'},{key:'poesie',label:'Recueils de poésie'},
-      {key:'sagas',label:'Sagas'},{key:'personnages',label:'Personnages'}
+      {key:'oeuvres',label:'Œuvres',real:true},{key:'oeuvres-saga',label:'Œuvres saga',real:true},{key:'poesie',label:'Recueils de poésie',real:true},
+      {key:'sagas',label:'Sagas',real:true},{key:'personnages',label:'Personnages',real:true}
     ]},
-    {group:'Pilotage',items:[{key:'bureau-editorial',label:'Bureau éditorial'},{key:'archives',label:'Archives'}]},
-    {group:'Atelier',items:[{key:'planning',label:'Planning'},{key:'idees',label:'Pépinière'}]},
-    {group:'Administration',items:[{key:'administration',label:'Administration'}]}
+    {group:'Pilotage',items:[{key:'bureau-editorial',label:'Bureau éditorial',real:true},{key:'archives',label:'Archives',real:true}]},
+    {group:'Atelier',items:[{key:'planning',label:'Planning',real:true},{key:'idees',label:'Pépinière',real:true}]},
+    {group:'Administration',items:[{key:'administration',label:'Administration',real:true}]}
   ];
 
   function sidebarFoldOpenV48(key){try{return localStorage.getItem('passerelle_sidebar_fold_'+key)!=='0'}catch(e){return true}}
@@ -5352,7 +5352,7 @@
         </div>
       </div>
       <div class="tabbar" style="display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
-        ${[...OEUVRE_TABS, ...(o.module_lore?[{key:'lore',label:'Codex'}]:[]), ...(o.module_chronologie?[{key:'chronologie',label:'Chronologie'}]:[])].map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
+        ${[...OEUVRE_TABS, ...(o.module_lore?[{key:'lore',label:'Codex',real:true}]:[]), ...(o.module_chronologie?[{key:'chronologie',label:'Chronologie',real:true}]:[])].map(t => `<button id="oeuvretab-${t.key}" onclick="showOeuvreTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
         <button class="btn-secondary" style="margin-left:auto;align-self:center" onclick="jumpToAdminOeuvreV570('${id}')">✏️ Modifier l’œuvre</button>
       </div>
       <div id="oeuvre-tab-content"></div>
