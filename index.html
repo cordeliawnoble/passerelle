@@ -1042,10 +1042,11 @@
 .sidebar-fold-v48>summary::-webkit-details-marker{display:none}
 .sidebar-icon-grid-v48{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px 0}
 .sidebar-icon-grid-v48.two{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 8px}
-.sidebar-icon-grid-v48 button{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 3px;min-width:0;cursor:pointer;color:var(--text);font:inherit}
+.sidebar-icon-grid-v48 button,.sidebar-direct-v48 .nav-link,.sidebar-admin-v48{
+border:1px solid var(--line)!important;background:#fff!important;border-radius:9px!important;padding:7px 5px!important;min-width:0;cursor:pointer;color:var(--text)!important;font:inherit;box-shadow:0 1px 2px rgba(40,28,58,.04)!important}
 .sidebar-icon-grid-v48 button b{display:block;font-size:16px;line-height:1.1}.sidebar-icon-grid-v48 button span{display:block;font-size:9px;margin-top:4px;white-space:normal}
-.sidebar-icon-grid-v48 button.active,.sidebar-icon-grid-v48 button:hover{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 28%,transparent)}
-.sidebar-direct-v48{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 8px}.sidebar-direct-v48 .nav-link{width:100%;font-size:10px;padding:7px 5px}
+.sidebar-icon-grid-v48 button.active,.sidebar-icon-grid-v48 button:hover,.sidebar-direct-v48 .nav-link.active,.sidebar-direct-v48 .nav-link:hover,.sidebar-admin-v48:hover,.sidebar-admin-v48.active{border-color:var(--accent)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 24%,transparent)!important;background:#fff!important}
+.sidebar-direct-v48{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 8px}.sidebar-direct-v48 .nav-link{width:100%;font-size:10px}
 .sidebar-admin-v48{margin:0 8px;width:calc(100% - 16px)!important}
 .sidebar-foot-v48{margin-top:auto;padding-top:10px}
 .sidebar-profile-v48{display:grid;grid-template-columns:34px 1fr 28px;gap:7px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
@@ -1056,6 +1057,21 @@
 .palette-swatches-v48{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.palette-swatches-v48 button{padding:5px;border:1px solid var(--line);border-radius:8px;background:transparent;cursor:pointer}.palette-swatches-v48 button.selected{outline:2px solid var(--accent)}.palette-swatches-v48 i{display:block;height:30px;border-radius:5px;background:var(--sw)}.palette-swatches-v48 span{display:block;font-size:9px;margin-top:3px}
 .palette-actions-v48{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.palette-actions-v48 button,.codex-select-tools-v48 button{font-size:10px;padding:6px}
 .codex-select-tools-v48{display:flex;gap:7px;margin:8px 0}
+</style>
+
+
+<style id="c49-ui">
+/* C49: boutons uniformes, blancs et compacts */
+.sidebar-v48 button{font-family:inherit}
+.sidebar-icon-grid-v48 button,.sidebar-direct-v48 .nav-link,.sidebar-admin-v48{background:#fff!important}
+
+/* C49: BO Saga harmonisé visuellement avec les autres catalogues du BO */
+.admin-saga-grid-v49{gap:12px}
+.admin-saga-card-v49{background:#fff!important;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:0 3px 10px rgba(38,25,54,.05)!important;overflow:hidden}
+.admin-saga-card-v49 .admin-catalog-visual{background:color-mix(in srgb,var(--accent) 8%,#fff)!important;min-height:84px}
+.admin-saga-card-v49 .admin-catalog-body{padding:11px 12px!important}
+.admin-saga-card-v49 .admin-catalog-card-actions .btn-secondary{background:#fff!important;border:1px solid var(--line)!important}
+.admin-saga-card-v49 .saga-drag-handle-v43{background:#fff!important;border:1px solid var(--line)!important;box-shadow:0 1px 3px rgba(38,25,54,.08)}
 </style>
 
 </head>
@@ -1194,7 +1210,7 @@
             <div class="sidebar-icon-grid-v48">
               <button id="nav-oeuvres" onclick="navigate('oeuvres')" title="Œuvres indépendantes"><b>♡</b><span>Indépendant</span></button>
               <button id="nav-oeuvres-saga" onclick="navigate('oeuvres-saga')" title="Œuvres en saga"><b>★</b><span>Saga</span></button>
-              <button id="nav-poesie" onclick="navigate('poesie')" title="Recueils de poésie"><b>✒</b><span>Poésie</span></button>
+              <button id="nav-poesie" onclick="navigate('poesie')" title="Recueils de poésie"><b>🪶</b><span>Poésie</span></button>
             </div>
           </details>
           <div class="sidebar-direct-v48"><button class="nav-link" id="nav-sagas" onclick="navigate('sagas')">✦ Sagas</button><button class="nav-link" id="nav-personnages" onclick="navigate('personnages')">♟ Personnages</button></div>
@@ -1583,7 +1599,7 @@
     const content=document.getElementById('content');
     const {data,error}=await db().from('sagas').select('id,nom,genre,statut,archive,ordre').order('ordre',{ascending:true});
     if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
-    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas. Attrape une carte par la poignée pour changer son ordre dans Œuvres saga.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"><span id="saga-order-status-v43" class="status-line"></span></div><div class="admin-catalog-grid saga-sort-grid-v43" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card saga-sort-card-v43" draggable="true" data-saga-id="${x.id}" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" ondragstart="sagaDragStartV43(event)" ondragover="sagaDragOverV43(event)" ondrop="sagaDropV43(event)" ondragend="sagaDragEndV43(event)" onclick="openAdminSagaEditorV56('${x.id}')"><button class="saga-drag-handle-v43" type="button" title="Glisser pour réordonner" onclick="event.stopPropagation()">⠿</button><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
+    content.innerHTML=adminPageHead('Sagas','Créez, recherchez et modifiez les sagas. Attrape une carte par la poignée pour changer son ordre dans Œuvres saga.',`<button class="btn-primary" onclick="openSagaModal()">+ Nouvelle saga</button>`)+`<div class="admin-filterbar"><input class="search-input" placeholder="🔍 Rechercher une saga…" oninput="filterAdminCards('admin-sagas-grid',this.value)"><span id="saga-order-status-v43" class="status-line"></span></div><div class="admin-catalog-grid saga-sort-grid-v43 admin-saga-grid-v49" id="admin-sagas-grid">${(data||[]).map(x=>`<article class="admin-catalog-card saga-sort-card-v43 admin-saga-card-v49" draggable="true" data-saga-id="${x.id}" data-search="${safeText((x.nom+' '+(x.genre||'')).toLowerCase())}" ondragstart="sagaDragStartV43(event)" ondragover="sagaDragOverV43(event)" ondrop="sagaDropV43(event)" ondragend="sagaDragEndV43(event)" onclick="openAdminSagaEditorV56('${x.id}')"><button class="saga-drag-handle-v43" type="button" title="Glisser pour réordonner" onclick="event.stopPropagation()">⠿</button><div class="admin-catalog-visual"><div class="admin-catalog-placeholder">${initials(x.nom)}</div></div><div class="admin-catalog-body"><h3>${safeText(x.nom)}</h3><div class="admin-catalog-meta">${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}</div><div class="admin-catalog-card-actions"><button class="btn-secondary" onclick="event.stopPropagation();openAdminSagaEditorV56('${x.id}')">Modifier</button></div></div></article>`).join('')||adminEmpty('Aucune saga pour le moment.')}</div>`;
   }
 
 
