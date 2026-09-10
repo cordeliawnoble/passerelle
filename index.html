@@ -1087,6 +1087,21 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 @media(max-width:900px){.pep-grid-v50{grid-template-columns:repeat(2,1fr)}.pep-hero-copy-v50{margin-left:15px}.pep-note-v50{display:none}.pep-kpis-v50{grid-template-columns:repeat(2,1fr)}}
 </style>
 
+
+<style id="c51-coolors">
+.coolors-import-v51{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--card) 92%,var(--accent) 8%)}
+.coolors-import-v51>label{font-weight:700}.coolors-import-v51>small{display:block;margin-top:6px;color:var(--text-dim);line-height:1.45}
+.coolors-url-row-v51{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-top:7px}.coolors-url-row-v51 input{min-width:0}
+.coolors-panel-v51{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.coolors-head-v51{display:flex;justify-content:space-between;gap:12px;align-items:start}.coolors-head-v51 strong,.coolors-head-v51 small{display:block}.coolors-head-v51 small{margin-top:3px;color:var(--text-dim)}.coolors-head-v51>span{font-size:10px;color:var(--text-dim)}
+.coolors-swatches-v51{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:7px;margin-top:10px}
+.coolors-swatches-v51 button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:5px;cursor:pointer}.coolors-swatches-v51 button.selected{outline:2px solid var(--accent);outline-offset:1px}.coolors-swatches-v51 i{display:block;height:42px;border-radius:6px;background:var(--coolors)}.coolors-swatches-v51 span{display:block;font-size:9px;margin-top:4px;color:#54485f}
+.coolors-map-v51{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}.coolors-map-v51 button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px;text-align:left;cursor:pointer;color:var(--text)}.coolors-map-v51 button:hover{border-color:var(--accent)}.coolors-map-v51 b,.coolors-map-v51 small{display:block}.coolors-map-v51 b{font-size:10px}.coolors-map-v51 small{margin-top:3px;color:var(--text-dim);font-size:9px}
+.coolors-mini-preview-v51{margin-top:10px}.coolors-preview-surface-v51{--cp-accent:#7C5CBF;--cp-secondary:#D7C9ED;--cp-soft:#F6F3FB;--cp-dark:#3A3148;padding:14px;border:1px solid var(--cp-secondary);border-radius:11px;background:var(--cp-soft);color:var(--cp-dark)}.coolors-preview-surface-v51 span{color:var(--cp-accent);font-size:9px;text-transform:uppercase;letter-spacing:.08em}.coolors-preview-surface-v51 strong{display:block;margin-top:4px;font-family:Georgia,serif;font-size:17px}.coolors-preview-surface-v51 p{font-size:10px;margin:6px 0 10px}.coolors-preview-surface-v51 button{border:0;border-radius:8px;padding:7px 10px;background:var(--cp-accent);color:#fff}
+.coolors-error-v51{margin-top:8px;padding:8px 10px;border:1px solid #d9aeb5;border-radius:8px;background:#fff4f5;color:#8a4a55;font-size:10px}
+@media(max-width:900px){.coolors-map-v51{grid-template-columns:1fr 1fr}.coolors-url-row-v51{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 
@@ -1452,45 +1467,95 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const url=await uploadAssetFile(file,`banners/${table}/${id}`);if(!url)return;
     const {error}=await db().from(table).update({banniere:url}).eq('id',id);if(error){alert('Erreur bannière : '+error.message);return;}
     const target=document.getElementById(targetInputId);if(target)target.value=url;
-    if(table==='oeuvres'){
-      try{const palette=await extractBannerPaletteV48(file);renderBannerPaletteV48(targetInputId,palette)}catch(e){console.warn('Palette bannière',e)}
-    }
     alert('Bannière téléversée ✓');
   }
 
-  async function extractBannerPaletteV48(file){
-    const bmp=await createImageBitmap(file),canvas=document.createElement('canvas'),W=120,H=Math.max(40,Math.round(120*bmp.height/bmp.width));
-    canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0,W,H);bmp.close?.();
-    const d=ctx.getImageData(0,0,W,H).data,bins=new Map();
-    for(let i=0;i<d.length;i+=16){
-      const a=d[i+3];if(a<180)continue;let r=d[i],g=d[i+1],b=d[i+2];
-      const max=Math.max(r,g,b),min=Math.min(r,g,b);if(max>248&&min>245)continue;if(max<12)continue;
-      r=Math.round(r/24)*24;g=Math.round(g/24)*24;b=Math.round(b/24)*24;
-      const key=`${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)}`;bins.set(key,(bins.get(key)||0)+1);
+  function parseCoolorsPaletteV51(raw){
+    const value=String(raw||'').trim();
+    if(!value)return [];
+    let path=value;
+    try{
+      const u=new URL(value);
+      if(!/(^|\.)coolors\.co$/i.test(u.hostname))throw new Error('Ce lien ne vient pas de Coolors.');
+      path=u.pathname.replace(/^\/+|\/+$/g,'');
+      path=path.replace(/^palette\//i,'');
+    }catch(e){
+      if(!/^https?:\/\//i.test(value))path=value.replace(/^\/+|\/+$/g,'').replace(/^palette\//i,'');
+      else throw e;
     }
-    const cand=[...bins.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>({rgb:k.split(',').map(Number),n}));
-    const picked=[];const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
-    for(const c of cand){if(picked.every(p=>dist(p.rgb,c.rgb)>72)){picked.push(c);if(picked.length===10)break}}
-    const lum=x=>.2126*x.rgb[0]+.7152*x.rgb[1]+.0722*x.rgb[2];
-    const pool=picked.length?picked:cand.slice(0,4);pool.sort((a,b)=>lum(a)-lum(b));
-    const chosen=[];
-    if(pool.length){chosen.push(pool[0]);if(pool.length>2)chosen.push(pool[Math.floor(pool.length*.42)]);if(pool.length>3)chosen.push(pool[Math.floor(pool.length*.72)]);if(pool.length>1)chosen.push(pool[pool.length-1])}
-    const uniq=[];for(const c of chosen){if(c&&!uniq.some(x=>x.rgb.join()==c.rgb.join()))uniq.push(c)}
-    while(uniq.length<4&&cand[uniq.length])uniq.push(cand[uniq.length]);
-    return uniq.slice(0,4).map(c=>'#'+c.rgb.map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('').toUpperCase());
+    const chunks=path.split(/[\/_-]+/).filter(Boolean);
+    const colors=chunks.filter(x=>/^[0-9a-f]{6}$/i.test(x)).map(x=>'#'+x.toUpperCase());
+    return [...new Set(colors)].slice(0,12);
   }
-  function renderBannerPaletteV48(targetInputId,palette){
-    const target=document.getElementById(targetInputId);if(!target||!palette?.length)return;
-    let host=document.getElementById('banner-palette-v48');if(!host){host=document.createElement('div');host.id='banner-palette-v48';target.parentElement.appendChild(host)}
-    host.className='banner-palette-v48';
-    host.innerHTML=`<strong>🎨 Palette détectée</strong><small>Choisis une couleur puis son rôle. Rien n’est appliqué automatiquement.</small><div class="palette-swatches-v48">${palette.map((c,i)=>`<button type="button" style="--sw:${c}" onclick="selectPaletteV48('${c}',this)" title="${c}"><i></i><span>${c}</span></button>`).join('')}</div><div class="palette-actions-v48"><button type="button" onclick="applyPaletteV48('accent')">Accent</button><button type="button" onclick="applyPaletteV48('secondary')">Secondaire</button><button type="button" onclick="applyPaletteV48('soft')">Fond</button><button type="button" onclick="applyPaletteV48('dark')">Sombre</button></div>`;
-    window._paletteSelectedV48=palette[0];host.querySelector('button')?.classList.add('selected');
+
+  function loadCoolorsPaletteV51(){
+    const input=document.getElementById('aow-coolors-url-v51');
+    const zone=document.getElementById('aow-coolors-preview-v51');
+    if(!input||!zone)return;
+    try{
+      const palette=parseCoolorsPaletteV51(input.value);
+      if(!palette.length)throw new Error('Je ne trouve aucun code couleur dans ce lien.');
+      window._coolorsPaletteV51=palette;
+      window._coolorsSelectedV51=palette[0];
+      zone.innerHTML=renderCoolorsPaletteV51(palette);
+    }catch(e){
+      window._coolorsPaletteV51=[];
+      window._coolorsSelectedV51=null;
+      zone.innerHTML=`<div class="coolors-error-v51">${safeText(e?.message||e)}</div>`;
+    }
   }
-  function selectPaletteV48(c,btn){window._paletteSelectedV48=c;document.querySelectorAll('#banner-palette-v48 .palette-swatches-v48 button').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected')}
-  function applyPaletteV48(role){
-    const c=window._paletteSelectedV48;if(!c)return;const el=document.getElementById('aow-'+role);if(!el)return alert('Ouvre la configuration graphique de l’œuvre pour appliquer cette couleur.');
-    el.value=c;el.dispatchEvent(new Event('input',{bubbles:true}));showTransientStatusV572(`${c} proposé comme ${role} ✓`);
+
+  function renderCoolorsPaletteV51(palette){
+    return `<div class="coolors-panel-v51">
+      <div class="coolors-head-v51"><div><strong>🎨 Palette Coolors</strong><small>Clique une couleur, puis choisis son rôle dans la fiche.</small></div><span>${palette.length} couleur${palette.length>1?'s':''}</span></div>
+      <div class="coolors-swatches-v51">
+        ${palette.map((c,i)=>`<button type="button" class="${i===0?'selected':''}" style="--coolors:${c}" onclick="selectCoolorsColorV51('${c}',this)" title="${c}"><i></i><span>${c}</span></button>`).join('')}
+      </div>
+      <div class="coolors-map-v51">
+        <button type="button" onclick="applyCoolorsRoleV51('accent')"><b>Accent principal</b><small id="coolors-role-accent-v51">→ ${safeText(document.getElementById('aow-accent')?.value||'')}</small></button>
+        <button type="button" onclick="applyCoolorsRoleV51('secondary')"><b>Secondaire</b><small id="coolors-role-secondary-v51">→ ${safeText(document.getElementById('aow-secondary')?.value||'')}</small></button>
+        <button type="button" onclick="applyCoolorsRoleV51('soft')"><b>Fond de page</b><small id="coolors-role-soft-v51">→ ${safeText(document.getElementById('aow-soft')?.value||'')}</small></button>
+        <button type="button" onclick="applyCoolorsRoleV51('dark')"><b>Sombre / texte</b><small id="coolors-role-dark-v51">→ ${safeText(document.getElementById('aow-dark')?.value||'')}</small></button>
+      </div>
+      <div class="coolors-mini-preview-v51">
+        <div class="coolors-preview-surface-v51" id="coolors-preview-surface-v51">
+          <span>Exemple de fiche</span><strong>Une œuvre dans Passerelle</strong><p>Fond, textes, liens et bouton suivent tes choix avant enregistrement.</p><button type="button">Bouton principal</button>
+        </div>
+      </div>
+    </div>`;
   }
+
+  function selectCoolorsColorV51(color,btn){
+    window._coolorsSelectedV51=color;
+    document.querySelectorAll('.coolors-swatches-v51 button').forEach(x=>x.classList.remove('selected'));
+    btn?.classList.add('selected');
+  }
+
+  function applyCoolorsRoleV51(role){
+    const color=window._coolorsSelectedV51;
+    if(!color)return;
+    const el=document.getElementById('aow-'+role);
+    if(!el)return;
+    el.value=color;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    const label=document.getElementById('coolors-role-'+role+'-v51');
+    if(label)label.textContent='→ '+color;
+    refreshCoolorsMiniPreviewV51();
+  }
+
+  function refreshCoolorsMiniPreviewV51(){
+    const box=document.getElementById('coolors-preview-surface-v51');
+    if(!box)return;
+    const accent=document.getElementById('aow-accent')?.value||'#7C5CBF';
+    const secondary=document.getElementById('aow-secondary')?.value||'#D7C9ED';
+    const soft=document.getElementById('aow-soft')?.value||'#F6F3FB';
+    const dark=document.getElementById('aow-dark')?.value||'#3A3148';
+    box.style.setProperty('--cp-accent',accent);
+    box.style.setProperty('--cp-secondary',secondary);
+    box.style.setProperty('--cp-soft',soft);
+    box.style.setProperty('--cp-dark',dark);
+  }
+
 
   function renderCatalogEntityBanner(url,title=''){
     if(!url) return `<div class="catalog-entity-banner empty"><span>${safeText(title)}</span></div>`;
@@ -2091,7 +2156,13 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
                 <button type="button" class="btn-primary" onclick="saveAdminOeuvreAppearanceV23()">Enregistrer l’apparence</button>
                 <span id="aow-appearance-status-v23" class="admin-inline-status"></span>
               </div>
-              <label style="margin-top:12px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">La bannière n’est jamais héritée.</small></details>
+              <div class="coolors-import-v51">
+                <label>Palette Coolors</label>
+                <div class="coolors-url-row-v51"><input id="aow-coolors-url-v51" placeholder="https://coolors.co/422a55-8f6aa7-d6c7e4-f6f1fa" onkeydown="if(event.key==='Enter'){event.preventDefault();loadCoolorsPaletteV51()}"><button type="button" class="btn-secondary" onclick="loadCoolorsPaletteV51()">Afficher la palette</button></div>
+                <small>Colle simplement le lien de ta palette Coolors. Passerelle lit les codes HEX et te laisse décider quelle couleur devient accent, secondaire, fond ou texte.</small>
+                <div id="aow-coolors-preview-v51"></div>
+              </div>
+              <label style="margin-top:12px;">Bannière de la fiche</label><input id="aow-banniere" value="${safeText(o.banniere||'')}" placeholder="https://…"><div style="margin-top:7px"><label class="btn-secondary upload-file-btn">⇧ Téléverser une bannière<input type="file" accept="image/*" onchange="uploadEntityBanner('oeuvres','${o.id}',this,'aow-banniere')"></label></div><small style="color:var(--text-dim);display:block;margin-top:6px">La bannière n’est jamais héritée. L’analyse automatique des couleurs de bannière a été retirée : utilise la palette Coolors ci-dessus.</small></details>
             <details class="admin-section admin-danger" open><summary>Archivage</summary><p class="admin-section-sub">Archiver masque l’œuvre des vues principales sans supprimer ses données.</p><div class="admin-check-row"><input type="checkbox" id="aow-archive" ${o.archive?'checked':''}><div><strong>Œuvre archivée</strong><small>Aucune suppression irréversible ici.</small></div></div></details>
             <button class="btn-primary" onclick="saveAdminOeuvreEditor()">Enregistrer toutes les modifications</button><div class="admin-inline-status" id="aow-save-status"></div>
           </aside>
@@ -7230,7 +7301,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   async function inheritedThemeForEditorV576c13(type,obj){return resolveGraphicThemeV576b(type,obj)}
   function graphicOverrideEditorV576c13(prefix,obj,inherited){
     const defs=[['accent','Accent principal','accent_color',obj?.accent_color||globalAppearance.accent||'#7C5CBF'],['secondary','Secondaire','secondary_color',obj?.secondary_color||'#D7C9ED'],['soft','Fond de page','soft_color',obj?.soft_color||obj?.page_color||globalAppearance.themeColor||'#F6F3FB'],['dark','Sombre / texte','dark_color',obj?.dark_color||'#3A3148']];
-    return `<div class="graphic-inheritance-v576c13 graphic-independent-v19"><div class="graphic-inheritance-head-v576c13"><div><strong>🎨 Charte graphique indépendante</strong><p>Cette fiche possède sa propre identité. Aucune couleur n’est héritée d’une collection, saga ou sous-saga.</p></div></div><div class="graphic-fields-v576c13">${defs.map(([key,label,field,val])=>`<div class="graphic-field-v576c13"><input type="checkbox" id="${prefix}-${key}-custom" checked style="display:none"><div class="graphic-field-actions-v576c14"><strong>${label}</strong></div><input type="color" id="${prefix}-${key}" value="${safeText(val)}"><span class="inherit-note">Propre à cette fiche</span></div>`).join('')}</div></div>`;
+    return `<div class="graphic-inheritance-v576c13 graphic-independent-v19"><div class="graphic-inheritance-head-v576c13"><div><strong>🎨 Charte graphique indépendante</strong><p>Cette fiche possède sa propre identité. Aucune couleur n’est héritée d’une collection, saga ou sous-saga.</p></div></div><div class="graphic-fields-v576c13">${defs.map(([key,label,field,val])=>`<div class="graphic-field-v576c13"><input type="checkbox" id="${prefix}-${key}-custom" checked style="display:none"><div class="graphic-field-actions-v576c14"><strong>${label}</strong></div><input type="color" id="${prefix}-${key}" value="${safeText(val)}" oninput="if('${prefix}'==='aow')refreshCoolorsMiniPreviewV51()"><span class="inherit-note">Propre à cette fiche</span></div>`).join('')}</div></div>`;
   }
   function toggleGraphicFieldV576c13(){}
   function resetGraphicOverrideV576c13(){}
