@@ -552,6 +552,14 @@
   @media(max-width:820px){.catalog-filterbar-v576c3{padding:9px}.catalog-filter-search-v576c3{flex-basis:100%}.catalog-filter-select-v576c3,.catalog-filter-select-v576c3.group{flex:1 1 150px;max-width:none}.catalog-filter-divider-v576c3{display:none}}
   .catalog-group-v576b{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:var(--card);overflow:hidden}.catalog-group-head-v576b{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-2);cursor:pointer}.catalog-group-body-v576b{padding:10px}.catalog-group-v576b.collapsed .catalog-group-body-v576b{display:none}.compact-list-v576b{display:grid;gap:6px}.compact-card-v576b{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:7px 9px;cursor:pointer;background:var(--card)}.compact-card-v576b img,.compact-thumb-v576b{width:44px;height:44px;object-fit:cover;border-radius:7px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:10px}.compact-card-v576b h3{font-size:13px;margin:0}.compact-card-v576b small{color:var(--text-dim)}
   .plan-drawer-form-v576b{display:grid;gap:12px}.plan-drawer-form-v576b .row2{gap:10px}.plan-drawer-actions-v576b{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  /* C64 · Plan : grand bloc homogène + résumé visible directement dans la table */
+  .oeuvre-plan-shell-c64{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;overflow:hidden}
+  .oeuvre-plan-table-wrap-c64{overflow-x:auto}
+  .oeuvre-plan-table-c64{width:100%;min-width:1040px}
+  .oeuvre-plan-table-c64 th,.oeuvre-plan-table-c64 td{vertical-align:top}
+  .oeuvre-plan-table-c64 .plan-summary-c64{min-width:320px;max-width:520px;white-space:normal;line-height:1.5;color:var(--text);font-size:12px}
+  .oeuvre-plan-table-c64 .plan-title-c64{min-width:220px;font-weight:600}
+  .oeuvre-plan-table-c64 .plan-nowrap-c64{white-space:nowrap}
   .collection-visual-v576b{width:100%;height:150px;object-fit:cover;border-radius:10px;background:var(--bg-2)}.palette-v576b{display:flex;gap:5px;margin-top:7px}.palette-v576b i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line)}
   .admin-section>summary{cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;list-style:none}.admin-section>summary::-webkit-details-marker{display:none}.admin-section>summary:after{content:'⌄';float:right;color:var(--text-dim)}.admin-section[open]>summary:after{content:'⌃'}
 
@@ -6043,38 +6051,25 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   async function renderOeuvrePlans(zone){
     if(plansGroupBy==='type')plansGroupBy='acte';
     zone.innerHTML = `<div class="status-line">Chargement…</div>`;
-    const [{ data: plans, error }, { data: notes }] = await Promise.all([
-      db().from('plans').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre'),
-      db().from('oeuvre_notes').select('*').eq('oeuvre_id', currentOeuvreId).order('created_at', { ascending:false }),
-    ]);
+    const { data: plans, error } = await db().from('plans').select('*').eq('oeuvre_id', currentOeuvreId).order('ordre');
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     plansData = plans;
     selectedPlanIdsC61 = new Set([...selectedPlanIdsC61].filter(id => plansData.some(p => p.id === id)));
 
     zone.innerHTML = `
-      <div class="row2" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start;">
-        <div>
-          <div class="head-row">
-            <div class="row2" style="grid-template-columns:auto auto auto; gap:8px;">
-              <button class="btn-secondary" id="pv-table" onclick="setPlansView('table')">Table</button>
-              <button class="btn-secondary" id="pv-kanban" onclick="setPlansView('kanban')">Kanban</button>
-              <select class="search-input" id="plans-groupby" onchange="onPlansGroupByChange()">
-                <option value="acte" ${plansGroupBy==='acte'?'selected':''}>Grouper par acte</option>
-                <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
-              </select>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-secondary" id="plans-select-all-c61" onclick="toggleSelectAllPlansC61()">✓ Tout sélectionner</button><button class="btn-secondary danger-btn" id="plans-delete-selected-c61" onclick="deleteSelectedPlansC61()" disabled>Supprimer la sélection</button><button class="btn-secondary danger-btn" onclick="clearCurrentPlanC61()">Vider le plan</button><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><label class="btn-secondary upload-file-btn" style="margin:0">🧪 Convertir en JSON<input type="file" accept=".zip,.csv,application/zip,text/csv" onchange="convertPlanSourceToJsonC62(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
+      <div class="oeuvre-plan-shell-c64">
+        <div class="head-row">
+          <div class="row2" style="grid-template-columns:auto auto auto; gap:8px;">
+            <button class="btn-secondary" id="pv-table" onclick="setPlansView('table')">Table</button>
+            <button class="btn-secondary" id="pv-kanban" onclick="setPlansView('kanban')">Kanban</button>
+            <select class="search-input" id="plans-groupby" onchange="onPlansGroupByChange()">
+              <option value="acte" ${plansGroupBy==='acte'?'selected':''}>Grouper par acte</option>
+              <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
+            </select>
           </div>
-          <div id="plans-view-zone"></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-secondary" id="plans-select-all-c61" onclick="toggleSelectAllPlansC61()">✓ Tout sélectionner</button><button class="btn-secondary danger-btn" id="plans-delete-selected-c61" onclick="deleteSelectedPlansC61()" disabled>Supprimer la sélection</button><button class="btn-secondary danger-btn" onclick="clearCurrentPlanC61()">Vider le plan</button><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><label class="btn-secondary upload-file-btn" style="margin:0">🧪 Convertir en JSON<input type="file" accept=".zip,.csv,application/zip,text/csv" onchange="convertPlanSourceToJsonC62(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
         </div>
-        <div>
-          <div class="panel">
-            <h2>Notes de l'autrice</h2>
-            <textarea id="on-new" placeholder="Notes globales sur la structure, les thèmes, les enjeux..."></textarea>
-            <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="addOeuvreNote()">Ajouter</button>
-            <div style="margin-top:14px;">${(notes||[]).map(n => `<div class="memo-item"><div class="memo-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>${n.contenu}</div>`).join('') || '<div style="font-size:12px; color:var(--text-dim);">Aucune note pour le moment.</div>'}</div>
-          </div>
-        </div>
+        <div id="plans-view-zone"></div>
       </div>
     `;
     setPlansView(plansView);
@@ -6249,7 +6244,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
   function renderPlansTable(plans){
     if (!plans.length) return `<div class="empty">Aucun plan pour l'instant.</div>`;
-    return `<table class="ch-table"><thead><tr><th style="width:42px"><input type="checkbox" aria-label="Tout sélectionner" ${plans.length&&plans.every(p=>selectedPlanIdsC61.has(p.id))?'checked':''} onclick="event.stopPropagation();toggleSelectAllPlansC61(this.checked)"></th><th>Ordre</th><th>Titre</th><th>Acte</th><th>POV</th><th>Statut</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${selectedPlanIdsC61.has(p.id)?'checked':''} onchange="togglePlanSelectionC61('${p.id}',this.checked)"></td><td>${safeText(p.ordre??'—')}</td><td>${safeText(p.titre)}</td><td>${safeText(p.acte||'—')}</td><td>${safeText(p.pov||'—')}</td><td><span class="etat-pill">${safeText(p.statut||'—')}</span></td></tr>`).join('')}</tbody></table>`;
+    return `<div class="oeuvre-plan-table-wrap-c64"><table class="ch-table oeuvre-plan-table-c64"><thead><tr><th style="width:42px"><input type="checkbox" aria-label="Tout sélectionner" ${plans.length&&plans.every(p=>selectedPlanIdsC61.has(p.id))?'checked':''} onclick="event.stopPropagation();toggleSelectAllPlansC61(this.checked)"></th><th>Ordre</th><th>Titre du chapitre</th><th>Acte</th><th>POV</th><th>Statut</th><th>Résumé</th></tr></thead><tbody>${plans.map(p=>`<tr onclick="openPlanModal('${p.id}')"><td onclick="event.stopPropagation()"><input type="checkbox" ${selectedPlanIdsC61.has(p.id)?'checked':''} onchange="togglePlanSelectionC61('${p.id}',this.checked)"></td><td class="plan-nowrap-c64">${safeText(p.ordre??'—')}</td><td class="plan-title-c64">${safeText(p.titre)}</td><td class="plan-nowrap-c64">${safeText(p.acte||'—')}</td><td class="plan-nowrap-c64">${safeText(p.pov||'—')}</td><td class="plan-nowrap-c64"><span class="etat-pill">${safeText(p.statut||'—')}</span></td><td class="plan-summary-c64">${safeText(p.transformation||'—')}</td></tr>`).join('')}</tbody></table></div>`;
   }
   function refreshPlanBulkActionsC61(){
     const b=document.getElementById('plans-delete-selected-c61');if(b)b.disabled=!selectedPlanIdsC61.size;
