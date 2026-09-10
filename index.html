@@ -6063,7 +6063,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
                 <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
               </select>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-secondary" id="plans-select-all-c61" onclick="toggleSelectAllPlansC61()">✓ Tout sélectionner</button><button class="btn-secondary danger-btn" id="plans-delete-selected-c61" onclick="deleteSelectedPlansC61()" disabled>Supprimer la sélection</button><button class="btn-secondary danger-btn" onclick="clearCurrentPlanC61()">Vider le plan</button><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-secondary" id="plans-select-all-c61" onclick="toggleSelectAllPlansC61()">✓ Tout sélectionner</button><button class="btn-secondary danger-btn" id="plans-delete-selected-c61" onclick="deleteSelectedPlansC61()" disabled>Supprimer la sélection</button><button class="btn-secondary danger-btn" onclick="clearCurrentPlanC61()">Vider le plan</button><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><label class="btn-secondary upload-file-btn" style="margin:0">🧪 Convertir en JSON<input type="file" accept=".zip,.csv,application/zip,text/csv" onchange="convertPlanSourceToJsonC62(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
           </div>
           <div id="plans-view-zone"></div>
         </div>
@@ -6104,6 +6104,79 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       openPlanImportPreviewC60(mapped,groups.map(g=>g.name));
     }catch(e){ alert('Import du Plan impossible : '+e.message); }
   }
+
+  // C62 · Convertisseur de Plan sans écriture en base.
+  // Accepte un CSV ou un ZIP Notion, convertit chaque ligne en objet JSON Passerelle complet,
+  // puis propose le téléchargement. Aucun plan n'est créé ou modifié pendant cette étape.
+  async function convertPlanSourceToJsonC62(file){
+    if(!file)return;
+    const name=String(file.name||'').toLowerCase();
+    try{
+      let groups=[];
+      if(name.endsWith('.zip')) groups=await parsePlanZipC60(file);
+      else if(name.endsWith('.csv')){
+        const rows=parseCsvV572(await file.text());
+        if(!worksCsvIsPlanV45(rows)) throw new Error('Ce CSV ne ressemble pas à un Plan (numéro/chapitre + contenu attendus).');
+        groups=[{name:file.name,rows}];
+      }else throw new Error('Le convertisseur accepte uniquement ZIP ou CSV.');
+
+      if(!groups.length) throw new Error('Aucune source de Plan reconnue.');
+      const mapped=groups.map(g=>({
+        source:g.name,
+        rows:sortPlanImportRowsC61(worksPlanRowsV45(g.rows,g.name,''))
+      })).filter(g=>g.rows.length);
+      if(!mapped.length) throw new Error('Aucune entrée de Plan détectée.');
+      openPlanJsonConverterPreviewC62(mapped,file.name||'plan');
+    }catch(e){ alert('Conversion JSON impossible : '+e.message); }
+  }
+
+  let pendingPlanJsonGroupsC62=[];
+  let pendingPlanJsonBaseNameC62='plan';
+  function openPlanJsonConverterPreviewC62(groups,baseName){
+    pendingPlanJsonGroupsC62=groups;
+    pendingPlanJsonBaseNameC62=String(baseName||'plan').replace(/\.(zip|csv)$/i,'');
+    const total=groups.reduce((n,g)=>n+g.rows.length,0);
+    openDrawer('Convertir le Plan en JSON',`<div class="plan-drawer-form-v576b">
+      <div class="admin-work-note"><strong>${total} entrée${total>1?'s':''} prête${total>1?'s':''} à convertir</strong><br>${groups.length} source${groups.length>1?'s':''} de Plan reconnue${groups.length>1?'s':''}. Cette opération ne touche pas à Supabase.</div>
+      ${groups.length>1?`<div class="admin-work-note" style="margin-top:10px">Plusieurs bases de Plan ont été détectées dans le ZIP. Décoche celles que tu ne veux pas intégrer au JSON.</div>`:''}
+      <div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:14px;margin-top:10px">
+        ${groups.map((g,gi)=>`<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="plan-json-group-c62" value="${gi}" checked style="width:auto"><strong>${safeText(g.source)}</strong> <small>(${g.rows.length} ligne${g.rows.length>1?'s':''})</small></label><div style="margin:7px 0 0 25px;color:var(--text-dim);font-size:11px">${g.rows.slice(0,4).map(p=>safeText(`${p.numero_source||''} · ${p.titre||''}${p.acte?' · '+p.acte:''}${p.pov_source?' · '+p.pov_source:''}`)).join('<br>')}${g.rows.length>4?'<br>…':''}</div></div>`).join('')}
+      </div>
+      <div class="plan-drawer-actions-v576b"><button class="btn-secondary" onclick="pendingPlanJsonGroupsC62=[];closeDrawer()">Annuler</button><button class="btn-primary" onclick="downloadConvertedPlanJsonC62()">Télécharger le JSON</button></div>
+    </div>`);
+  }
+
+  function planJsonExportRowC62(p,index){
+    return {
+      numero:String(p.numero_source||index+1),
+      titre:p.titre||`Chapitre ${index+1}`,
+      type:p.type||'Intrigue principale',
+      acte:p.acte||'',
+      pov:p.pov_source||'',
+      statut:p.statut||'À écrire',
+      resume:p.resume_source||'',
+      source_key:p.source_key||''
+    };
+  }
+
+  function downloadConvertedPlanJsonC62(){
+    const checks=[...document.querySelectorAll('.plan-json-group-c62:checked')];
+    const selected=checks.map(c=>pendingPlanJsonGroupsC62[Number(c.value)]).filter(Boolean);
+    if(!selected.length){alert('Sélectionne au moins une source de Plan.');return;}
+    const rows=selected.flatMap(g=>g.rows).map((p,i)=>planJsonExportRowC62(p,i));
+    const payload={
+      format:'passerelle-plan-v1',
+      generated_at:new Date().toISOString(),
+      sources:selected.map(g=>g.source),
+      plan:rows
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+    const a=document.createElement('a');
+    const url=URL.createObjectURL(blob);
+    a.href=url;a.download=`${pendingPlanJsonBaseNameC62||'plan'}-passerelle.json`;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  }
+
   async function parsePlanZipC60(file){
     const JSZipLib=await ensureJsZipV576c27();
     const zip=await JSZipLib.loadAsync(await file.arrayBuffer());
