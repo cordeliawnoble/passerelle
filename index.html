@@ -6061,7 +6061,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
                 <option value="statut" ${plansGroupBy==='statut'?'selected':''}>Grouper par statut</option>
               </select>
             </div>
-            <button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="btn-secondary upload-file-btn" style="margin:0">📦 Importer un plan<input type="file" accept=".zip,.csv,.json,application/zip,text/csv,application/json" onchange="readPlanImportC60(this.files[0]);this.value=''" /></label><button class="btn-primary" onclick="openPlanModal()">+ Nouveau plan</button></div>
           </div>
           <div id="plans-view-zone"></div>
         </div>
@@ -6076,6 +6076,76 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       </div>
     `;
     setPlansView(plansView);
+  }
+
+
+  // C60 · Import de Plan natif : ZIP Notion / CSV / JSON, toujours rattaché à l'œuvre ouverte.
+  async function readPlanImportC60(file){
+    if(!file||!currentOeuvreId)return;
+    const name=String(file.name||'').toLowerCase();
+    try{
+      let groups=[];
+      if(name.endsWith('.zip')) groups=await parsePlanZipC60(file);
+      else if(name.endsWith('.csv')){
+        const text=await file.text(), rows=parseCsvV572(text);
+        if(!worksCsvIsPlanV45(rows)) throw new Error('Ce CSV ne ressemble pas à un Plan (numéro/chapitre + contenu attendus).');
+        groups=[{name:file.name,rows}];
+      }else if(name.endsWith('.json')){
+        const raw=JSON.parse(await file.text());
+        const rows=Array.isArray(raw)?raw:(Array.isArray(raw.plans)?raw.plans:Array.isArray(raw.plan)?raw.plan:[]);
+        if(!rows.length) throw new Error('Aucune ligne de Plan trouvée dans ce JSON.');
+        groups=[{name:file.name,rows,alreadyMapped:true}];
+      }else throw new Error('Format non pris en charge. Utilise ZIP, CSV ou JSON.');
+      const mapped=groups.flatMap(g=>g.alreadyMapped?mapPlanJsonRowsC60(g.rows,g.name):worksPlanRowsV45(g.rows,g.name,''));
+      if(!mapped.length) throw new Error('Aucune entrée de Plan détectée.');
+      openPlanImportPreviewC60(mapped,groups.map(g=>g.name));
+    }catch(e){ alert('Import du Plan impossible : '+e.message); }
+  }
+  async function parsePlanZipC60(file){
+    const JSZipLib=await ensureJsZipV576c27();
+    const zip=await JSZipLib.loadAsync(await file.arrayBuffer());
+    const entries=await collectNotionZipEntriesV576c28(zip);
+    const found=[];
+    for(const x of entries.filter(e=>/\.csv$/i.test(e.name))){
+      const rows=parseCsvV572(await x.entry.async('string'));
+      if(worksCsvIsPlanV45(rows))found.push({name:x.name,rows,id:worksCsvIdV45(x.name)});
+    }
+    if(!found.length)throw new Error('Aucun CSV de Plan reconnu dans ce ZIP Notion.');
+    // Notion fournit souvent fichier.csv + fichier_all.csv : on ne garde qu'une version par base.
+    const byKey=new Map();
+    for(const g of found){
+      const key=g.id||normV576(g.name.replace(/_all\.csv$/i,'.csv'));
+      const prev=byKey.get(key);
+      if(!prev || (/_all\.csv$/i.test(prev.name)&&!/_all\.csv$/i.test(g.name)))byKey.set(key,g);
+    }
+    return [...byKey.values()];
+  }
+  function mapPlanJsonRowsC60(rows,name){
+    return (rows||[]).map((r,i)=>({
+      type:r.type||'Intrigue principale', titre:r.titre||r.nom||r.chapitre||`Chapitre ${i+1}`,
+      acte:r.acte||null, pov_source:r.pov||r.point_de_vue||null, statut:r.statut||r.etat||'À écrire',
+      resume_source:r.transformation||r.resume||r.description||null, ordre:i+1,
+      numero_source:String(r.numero_source||r.numero||r.ordre||i+1),
+      source_key:r.notion_source_key||r.source_key||`json:${normV576(name)}:${r.id||r.numero||i+1}`
+    }));
+  }
+  let pendingPlanImportC60=[];
+  function openPlanImportPreviewC60(rows,sources){
+    pendingPlanImportC60=rows;
+    openDrawer('Importer le Plan',`<div class="plan-drawer-form-v576b"><div class="admin-work-note"><strong>${rows.length} entrée${rows.length>1?'s':''} détectée${rows.length>1?'s':''}</strong><br>${sources.length} source${sources.length>1?'s':''} reconnue${sources.length>1?'s':''} · import dans l’œuvre actuellement ouverte uniquement.</div><div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:14px">${rows.slice(0,300).map((p,i)=>`<div style="padding:9px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:42px 1fr;gap:8px"><small>${safeText(p.numero_source||i+1)}</small><div><strong>${safeText(p.titre)}</strong><br><small>${safeText(p.acte||'')}${p.statut?' · '+safeText(p.statut):''}</small></div></div>`).join('')}</div><div class="plan-drawer-actions-v576b"><button class="btn-secondary" onclick="pendingPlanImportC60=[];closeDrawer()">Annuler</button><button class="btn-primary" onclick="commitPlanImportC60()">Importer ${rows.length} entrée${rows.length>1?'s':''}</button></div></div>`);
+  }
+  async function commitPlanImportC60(){
+    if(!pendingPlanImportC60.length||!currentOeuvreId)return;
+    let done=0;
+    for(const p of pendingPlanImportC60){
+      const payload={user_id:currentUser.id,oeuvre_id:currentOeuvreId,type:p.type||'Intrigue principale',titre:p.titre||'Sans titre',acte:p.acte||null,pov:p.pov_source||null,statut:p.statut||'À écrire',transformation:p.resume_source||p.transformation||null,ordre:Math.trunc(Number(p.ordre)||done+1),notion_source_key:p.source_key||`plan-import:${currentOeuvreId}:${done+1}`};
+      const {error}=await db().from('plans').upsert(payload,{onConflict:'user_id,notion_source_key'});
+      if(error){alert(`Import interrompu après ${done} entrée(s) : ${error.message}`);return}
+      done++;
+    }
+    pendingPlanImportC60=[];closeDrawer();
+    await renderOeuvrePlans(document.getElementById('oeuvre-tab-content'));
+    alert(`✓ ${done} entrée${done>1?'s':''} de Plan importée${done>1?'s':''}.`);
   }
 
   function onPlansGroupByChange(){ plansGroupBy = document.getElementById('plans-groupby').value; setPlansView(plansView); }
