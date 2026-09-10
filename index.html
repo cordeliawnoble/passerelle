@@ -7827,9 +7827,24 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         <section class="csv-card-c53"><h2>🧑‍🤝‍🧑 Fiches Personnages</h2><p>Une ligne = un personnage. Plusieurs œuvres peuvent être indiquées avec <code>|</code>. Les informations détaillées alimentent directement la fiche universelle du personnage.</p><div class="csv-actions-c53"><button class="btn-secondary" onclick="downloadCsvTemplateC53('personnages')">↓ Télécharger le modèle vierge</button><label class="btn-primary upload-file-btn">⇧ Importer un CSV Personnages<input type="file" accept=".csv,text/csv" onchange="readCsvImportC53('personnages',this.files[0])"></label></div></section>
       </div><div id="csv-import-preview-c53"></div>`;
   }
+  function detectCsvImportTypeC59(rows,requestedType){
+    if(!rows?.length)return requestedType;
+    const headers=Object.keys(rows[0]||{}).map(normHeaderV572);
+    const has=h=>headers.includes(normHeaderV572(h));
+    const characterSignals=['nom','role','pronoms','age','espece','metier','personnalite','traits','arc','portrait_url'].filter(has).length;
+    const workSignals=['titre','collection','saga','sous_saga','numero_tome','pitch','objectif_mots','destination_editoriale','couverture'].filter(has).length;
+    if(has('nom')&&!has('titre')&&characterSignals>=2)return 'personnages';
+    if(has('titre')&&!has('nom')&&workSignals>=2)return 'oeuvres';
+    if(characterSignals>=4&&characterSignals>workSignals+1)return 'personnages';
+    if(workSignals>=4&&workSignals>characterSignals+1)return 'oeuvres';
+    return requestedType;
+  }
   async function readCsvImportC53(type,file){
     if(!file)return;let rows=[];try{rows=parseCsvV572(await file.text())}catch(e){return showTransientStatusV572('CSV illisible : '+e.message)}
-    csvImportC53={type,rows,selected:new Set(rows.map((_,i)=>i)),fileName:file.name};renderCsvImportPreviewC53();
+    const detectedType=detectCsvImportTypeC59(rows,type);
+    csvImportC53={type:detectedType,rows,selected:new Set(rows.map((_,i)=>i)),fileName:file.name,requestedType:type,autoDetected:detectedType!==type};
+    renderCsvImportPreviewC53();
+    if(detectedType!==type)showTransientStatusV572(`CSV ${detectedType==='personnages'?'Personnages':'Œuvres'} détecté automatiquement : l’importeur a corrigé le type choisi.`);
   }
   function csvValC53(row,key){const wanted=normHeaderV572(key);const hit=Object.keys(row).find(k=>normHeaderV572(k)===wanted);return hit?String(row[hit]??'').trim():''}
   function csvListC53(v){return String(v||'').split('|').map(x=>x.trim()).filter(Boolean)}
@@ -7839,7 +7854,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   function renderCsvImportPreviewC53(){
     const z=document.getElementById('csv-import-preview-c53');if(!z)return;const st=csvImportC53,isW=st.type==='oeuvres';
     const missing=st.rows.filter(r=>!csvValC53(r,isW?'titre':'nom')).length;
-    z.innerHTML=`<section class="admin-section"><div class="admin-section-head"><div><h2>Aperçu · ${isW?'Œuvres':'Personnages'}</h2><p class="admin-section-sub">${safeText(st.fileName)} · aucune donnée n’a encore été écrite.</p></div><div><button class="tiny-btn" onclick="selectAllCsvC53(true)">Tout cocher</button> <button class="tiny-btn" onclick="selectAllCsvC53(false)">Tout décocher</button></div></div><div class="csv-kpis-c53"><div class="csv-kpi-c53"><strong>${st.rows.length}</strong>lignes détectées</div><div class="csv-kpi-c53"><strong>${st.selected.size}</strong>sélectionnées</div><div class="csv-kpi-c53"><strong>${missing}</strong>sans ${isW?'titre':'nom'}</div></div><div class="csv-preview-c53"><table class="admin-table"><thead><tr><th></th><th>Ligne</th><th>${isW?'Titre':'Nom'}</th><th>${isW?'Collection / Saga':'Œuvre(s)'}</th><th>ID Passerelle</th></tr></thead><tbody>${st.rows.slice(0,500).map((r,i)=>`<tr><td><input type="checkbox" ${st.selected.has(i)?'checked':''} onchange="toggleCsvRowC53(${i},this.checked)"></td><td>${i+2}</td><td>${safeText(csvValC53(r,isW?'titre':'nom')||'⚠ manquant')}</td><td>${safeText(isW?(csvValC53(r,'sous_saga')||csvValC53(r,'saga')||csvValC53(r,'collection')||'—'):(csvValC53(r,'oeuvres')||'—'))}</td><td>${safeText(csvValC53(r,'passerelle_id')||'—')}</td></tr>`).join('')}</tbody></table></div><div class="csv-actions-c53"><button class="btn-primary" onclick="executeCsvImportC53()">Importer ${st.selected.size} ligne${st.selected.size>1?'s':''}</button><span id="csv-import-status-c53" class="status-line"></span></div></section>`;
+    z.innerHTML=`<section class="admin-section"><div class="admin-section-head"><div><h2>Aperçu · ${isW?'Œuvres':'Personnages'}</h2><p class="admin-section-sub">${safeText(st.fileName)} · aucune donnée n’a encore été écrite.${st.autoDetected?' · <strong>Type corrigé automatiquement</strong>':''}</p></div><div><button class="tiny-btn" onclick="selectAllCsvC53(true)">Tout cocher</button> <button class="tiny-btn" onclick="selectAllCsvC53(false)">Tout décocher</button></div></div><div class="csv-kpis-c53"><div class="csv-kpi-c53"><strong>${st.rows.length}</strong>lignes détectées</div><div class="csv-kpi-c53"><strong>${st.selected.size}</strong>sélectionnées</div><div class="csv-kpi-c53"><strong>${missing}</strong>sans ${isW?'titre':'nom'}</div></div><div class="csv-preview-c53"><table class="admin-table"><thead><tr><th></th><th>Ligne</th><th>${isW?'Titre':'Nom'}</th><th>${isW?'Collection / Saga':'Œuvre(s)'}</th><th>ID Passerelle</th></tr></thead><tbody>${st.rows.slice(0,500).map((r,i)=>`<tr><td><input type="checkbox" ${st.selected.has(i)?'checked':''} onchange="toggleCsvRowC53(${i},this.checked)"></td><td>${i+2}</td><td>${safeText(csvValC53(r,isW?'titre':'nom')||'⚠ manquant')}</td><td>${safeText(isW?(csvValC53(r,'sous_saga')||csvValC53(r,'saga')||csvValC53(r,'collection')||'—'):(csvValC53(r,'oeuvres')||'—'))}</td><td>${safeText(csvValC53(r,'passerelle_id')||'—')}</td></tr>`).join('')}</tbody></table></div><div class="csv-actions-c53"><button class="btn-primary" onclick="executeCsvImportC53()">Importer ${st.selected.size} ligne${st.selected.size>1?'s':''}</button><span id="csv-import-status-c53" class="status-line"></span></div></section>`;
   }
   async function resolveWorkRelationsC53(row,refs){
     const by=(arr,name,key='nom')=>{const n=normalizeImportTextV575(name);return name?(arr||[]).find(x=>normalizeImportTextV575(x[key])===n):null};
