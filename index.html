@@ -1305,9 +1305,12 @@
   function navigate(key){
     resetTheme();
     setActiveNav(key);
-    const item = NAV.flatMap(g=>g.items).find(i=>i.key===key);
+    const item = key==='accueil'
+      ? {key:'accueil',label:'Accueil',real:true}
+      : NAV.flatMap(g=>g.items).find(i=>i.key===key);
     const content = document.getElementById('content');
-    if (item && item.special === 'todum'){ openQuickLinkBySlug('todum'); return; }
+    if (!item){ console.warn('Navigation inconnue :',key); return navigate('accueil'); }
+    if (item.special === 'todum'){ openQuickLinkBySlug('todum'); return; }
     if (!item.real){
       content.innerHTML = `<h2 style="margin-bottom:20px;">${item.label}</h2><div class="empty">Cette page n'est pas encore branchée à Supabase.<br><span style="font-size:11px;">Le schéma existe déjà pour elle — on la construit dès qu'on y arrive dans l'ordre.</span></div>`;
       return;
