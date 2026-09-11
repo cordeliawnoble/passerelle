@@ -1175,6 +1175,19 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   .character-linker-actions-c58{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   @media(max-width:760px){.character-linker-grid-c58{grid-template-columns:1fr}.character-linker-works-c58{grid-template-columns:1fr}}
 </style>
+
+<style id="c65-character-media">
+.character-media-steps-v65{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+.character-media-steps-v65 span{background:#faf7fc;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:10px}.character-media-steps-v65 b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;margin-right:6px}
+.character-media-drop-v65{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:150px;border:1.5px dashed var(--accent);border-radius:12px;background:#fff;cursor:pointer;font-size:28px}.character-media-drop-v65 strong{font-size:16px;margin-top:6px}.character-media-drop-v65 small{font-size:10px;color:var(--text-dim);margin-top:5px}.character-media-drop-v65 input{display:none}
+.character-media-bulk-v65{display:grid;grid-template-columns:1fr minmax(180px,1fr) minmax(170px,1fr) auto auto;gap:7px;align-items:center;margin:14px 0}.character-media-bulk-v65>div strong,.character-media-bulk-v65>div small{display:block}.character-media-bulk-v65>div small{color:var(--text-dim);font-size:9px}
+.character-media-grid-v65{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.character-media-card-v65{position:relative;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px;display:grid;gap:7px}.character-media-card-v65.selected{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent)}
+.character-media-card-v65 img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:7px;background:#f4f1f6}.cm-check-v65{position:absolute;top:12px;left:12px;background:#fff;border-radius:5px;padding:2px}.cm-copy-v65 strong,.cm-copy-v65 small{display:block}.cm-copy-v65 strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cm-copy-v65 small{font-size:8px;color:var(--text-dim)}.character-media-card-v65 select{font-size:9px;padding:6px}.cm-match-v65{color:#4f7a61;font-size:8px}.cm-unmatched-v65{color:#95616a;font-size:8px}
+.character-media-import-footer-v65{position:sticky;bottom:0;margin-top:14px;padding:10px 0;background:linear-gradient(transparent,#fff 22%);display:flex;justify-content:space-between;align-items:center}
+@media(max-width:1250px){.character-media-grid-v65{grid-template-columns:repeat(4,1fr)}.character-media-bulk-v65{grid-template-columns:1fr 1fr 1fr}.character-media-bulk-v65 button{width:100%}}
+@media(max-width:900px){.character-media-grid-v65{grid-template-columns:repeat(2,1fr)}.character-media-steps-v65{grid-template-columns:1fr 1fr}}
+</style>
+
 </head>
 <body>
 
@@ -2823,12 +2836,13 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const content=document.getElementById('content');
     content.innerHTML=adminPageHead('Personnages','Structure universelle des fiches, modèles de Capacités et migrations. Le nettoyage quotidien reste dans la page Personnages.')+`
       <div class="char-admin-tabs">
-        ${[['modeles','🧩 Modèles'],['import-modele','📦 Import de modèle'],['import-donnees','📥 Import de données'],['identifiants','🪪 Identifiants']].map(([k,l])=>`<button class="${adminCharacterTabV572===k?'active':''}" onclick="renderAdminPersonnagesPage('${k}')">${l}</button>`).join('')}
+        ${[['modeles','🧩 Modèles'],['import-modele','📦 Import de modèle'],['import-donnees','📥 Import de données'],['import-medias','🖼 Médias en masse'],['identifiants','🪪 Identifiants']].map(([k,l])=>`<button class="${adminCharacterTabV572===k?'active':''}" onclick="renderAdminPersonnagesPage('${k}')">${l}</button>`).join('')}
       </div><div id="admin-character-zone"><div class="status-line">Chargement…</div></div>`;
     const zone=document.getElementById('admin-character-zone');
     if(adminCharacterTabV572==='modeles') return renderCharacterTemplatesAdminV572(zone);
     if(adminCharacterTabV572==='import-modele') return renderCharacterTemplateImportV572(zone);
     if(adminCharacterTabV572==='import-donnees') return renderCharacterDataImportV572(zone);
+    if(adminCharacterTabV572==='import-medias') return renderCharacterMediaImportV65(zone);
     if(adminCharacterTabV572==='identifiants') return renderCharacterIdentifiersV572(zone);
   }
 
@@ -3092,6 +3106,139 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const wid=String(m.oeuvre_id?row[m.oeuvre_id]||'':'').trim(),wn=String(m.oeuvre?row[m.oeuvre]||'':'').trim();const overrideId=st.workOverrides?.[i]||'';const work=(overrideId&&works.find(w=>w.id===overrideId))||(wid&&works.find(w=>String(w.passerelle_id||'').toUpperCase()===wid.toUpperCase()))||(!wid&&wn?works.find(w=>notionLooseKeyV576c27(w.titre)===notionLooseKeyV576c27(wn)):null);if(work){const {error}=await db().from('personnages_oeuvres').upsert({personnage_id:p.id,oeuvre_id:work.id},{onConflict:'personnage_id,oeuvre_id'});if(!error)linked++;else errors.push(`${name} / œuvre: ${error.message}`)}else if(wid||wn)errors.push(`${name}: œuvre introuvable (${wid||wn})`)
     }
     await db().from('imports_personnages').update({details:{rows:st.selected.size,created,updated,linked,errors}}).eq('id',batch.id);showTransientStatusV572(`${created} créé(s), ${updated} mis à jour, ${linked} lien(s) ✓`);characterImportStateV572={rows:[],headers:[],selected:new Set(),mapping:{},source:'csv',fileName:''};renderAdminPersonnagesPage('import-donnees');
+  }
+
+
+  let characterMediaImportV65={items:[],characters:[],selected:new Set(),fileName:''};
+
+  function normalizeCharacterNameV65(v){
+    return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+      .replace(/\.[a-z0-9]+$/i,'').replace(/[_-]+/g,' ').replace(/\b(portrait|profil|profile|fullbody|full body|verticale|vertical|apparence|appearance|reference|ref|visual|visuel|image|img|\d+)\b/g,' ')
+      .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function inferCharacterMediaDestinationV65(name){
+    const s=String(name||'').toLowerCase();
+    if(/portrait|avatar|headshot/.test(s))return 'portrait';
+    if(/fullbody|full[_ -]?body|verticale|vertical|profil/.test(s))return 'vertical';
+    if(/apparence|appearance|detail/.test(s))return 'appearance';
+    if(/reference|référence|ref|visual|visuel|mood/.test(s))return 'reference';
+    return 'reference';
+  }
+  function bestCharacterMatchV65(name,characters){
+    const key=normalizeCharacterNameV65(name);if(!key)return null;
+    let best=null,score=0;
+    for(const p of characters||[]){
+      const pk=normalizeCharacterNameV65(p.nom);
+      if(!pk)continue;
+      let s=0;
+      if(key===pk)s=100;
+      else if(key.includes(pk)||pk.includes(key))s=82;
+      else{
+        const a=new Set(key.split(' ')),b=new Set(pk.split(' ')),common=[...a].filter(x=>b.has(x)).length;
+        s=common*24;
+      }
+      if(s>score){score=s;best=p}
+    }
+    return score>=24?{...best,_score:score}:null;
+  }
+
+  async function renderCharacterMediaImportV65(zone){
+    const {data,error}=await db().from('personnages').select('id,nom,portrait_url,contenu,archive').eq('archive',false).order('nom');
+    if(error){zone.innerHTML=adminEmpty(error.message);return}
+    characterMediaImportV65.characters=data||[];
+    zone.innerHTML=`<div class="admin-section character-media-import-v65">
+      <div class="character-topbar"><div><h2>🖼 Importer des médias de personnages</h2><p class="admin-section-sub">Dépose un ZIP d’images. Passerelle suggère le personnage d’après le nom du fichier, tu choisis la destination, puis les images sont optimisées en WebP avant l’envoi.</p></div></div>
+      <div class="character-media-steps-v65"><span><b>1</b> ZIP</span><span><b>2</b> Vérifier</span><span><b>3</b> Affecter</span><span><b>4</b> Importer</span></div>
+      <label class="character-media-drop-v65">📦 <strong>Choisir un ZIP d’images</strong><small>JPG, PNG ou WebP · les images non attribuées ne seront pas importées.</small><input type="file" accept=".zip,application/zip" onchange="readCharacterMediaZipV65(this.files[0])"></label>
+      <div id="character-media-import-status-v65" class="status-line"></div>
+      <div id="character-media-import-zone-v65"></div>
+    </div>`;
+    if(characterMediaImportV65.items.length)renderCharacterMediaPreviewV65();
+  }
+
+  async function readCharacterMediaZipV65(file){
+    if(!file)return;
+    const st=document.getElementById('character-media-import-status-v65');
+    try{
+      st.textContent='Lecture du ZIP…';
+      const JSZipLib=await ensureJsZipV576c27(),zip=await JSZipLib.loadAsync(await file.arrayBuffer());
+      const entries=Object.values(zip.files).filter(x=>!x.dir&&/\.(png|jpe?g|webp)$/i.test(x.name)&&!/(^|\/)(__MACOSX|\.DS_Store)/i.test(x.name));
+      const items=[];
+      for(let i=0;i<entries.length;i++){
+        const e=entries[i],blob=await e.async('blob');
+        const ext=(e.name.split('.').pop()||'png').toLowerCase(),type=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='webp'?'image/webp':'image/png';
+        const fileObj=new File([blob],e.name.split('/').pop(),{type});
+        const match=bestCharacterMatchV65(fileObj.name,characterMediaImportV65.characters);
+        items.push({id:`cm-${Date.now()}-${i}`,file:fileObj,name:fileObj.name,url:URL.createObjectURL(fileObj),character_id:match?.id||'',suggested_name:match?.nom||'',score:match?._score||0,destination:inferCharacterMediaDestinationV65(fileObj.name),selected:true});
+      }
+      characterMediaImportV65.items.forEach(x=>{try{URL.revokeObjectURL(x.url)}catch(e){}});
+      characterMediaImportV65={...characterMediaImportV65,items,selected:new Set(items.map(x=>x.id)),fileName:file.name};
+      st.textContent=`${items.length} image(s) détectée(s). Vérifie les suggestions avant l’import.`;
+      renderCharacterMediaPreviewV65();
+    }catch(e){st.textContent='ZIP impossible à lire : '+(e?.message||e)}
+  }
+
+  function characterDestinationLabelV65(v){return ({portrait:'Portrait',vertical:'Image verticale',appearance:'Apparence',reference:'Référence visuelle'})[v]||v}
+  function renderCharacterMediaPreviewV65(){
+    const z=document.getElementById('character-media-import-zone-v65');if(!z)return;
+    const items=characterMediaImportV65.items,chars=characterMediaImportV65.characters;
+    const selected=items.filter(x=>x.selected);
+    z.innerHTML=`<div class="character-media-bulk-v65">
+      <div><strong>${items.length} image(s)</strong><small>${selected.length} sélectionnée(s)</small></div>
+      <select id="cm-bulk-character-v65"><option value="">Attribuer le personnage…</option>${chars.map(p=>`<option value="${p.id}">${safeText(p.nom)}</option>`).join('')}</select>
+      <select id="cm-bulk-dest-v65"><option value="">Définir la destination…</option><option value="portrait">Portrait</option><option value="vertical">Image verticale</option><option value="appearance">Apparence</option><option value="reference">Référence visuelle</option></select>
+      <button class="btn-secondary" onclick="applyCharacterMediaBulkV65()">Appliquer aux sélectionnées</button>
+      <button class="btn-secondary" onclick="selectAllCharacterMediaV65(false)">Tout désélectionner</button>
+    </div>
+    <div class="character-media-grid-v65">${items.map((x,i)=>`<article class="character-media-card-v65 ${x.selected?'selected':''}">
+      <label class="cm-check-v65"><input type="checkbox" ${x.selected?'checked':''} onchange="toggleCharacterMediaV65('${x.id}',this.checked)"></label>
+      <img src="${x.url}" alt="">
+      <div class="cm-copy-v65"><strong title="${safeText(x.name)}">${safeText(x.name)}</strong><small>${(x.file.size/1024/1024).toFixed(1)} Mo</small></div>
+      <select onchange="setCharacterMediaFieldV65('${x.id}','character_id',this.value)"><option value="">— Personnage —</option>${chars.map(p=>`<option value="${p.id}" ${p.id===x.character_id?'selected':''}>${safeText(p.nom)}</option>`).join('')}</select>
+      <select onchange="setCharacterMediaFieldV65('${x.id}','destination',this.value)"><option value="portrait" ${x.destination==='portrait'?'selected':''}>Portrait</option><option value="vertical" ${x.destination==='vertical'?'selected':''}>Image verticale</option><option value="appearance" ${x.destination==='appearance'?'selected':''}>Apparence</option><option value="reference" ${x.destination==='reference'?'selected':''}>Référence visuelle</option></select>
+      ${x.suggested_name?`<small class="cm-match-v65">✓ Suggestion : ${safeText(x.suggested_name)}${x.score>=80?' · forte':''}</small>`:'<small class="cm-unmatched-v65">À attribuer</small>'}
+    </article>`).join('')}</div>
+    <div class="character-media-import-footer-v65"><span><strong>${selected.filter(x=>x.character_id).length}</strong> image(s) attribuée(s)</span><button class="btn-primary" ${selected.some(x=>x.character_id)?'':'disabled'} onclick="executeCharacterMediaImportV65()">⇧ Importer les images attribuées</button></div>`;
+  }
+  function toggleCharacterMediaV65(id,on){const x=characterMediaImportV65.items.find(y=>y.id===id);if(x)x.selected=on;renderCharacterMediaPreviewV65()}
+  function selectAllCharacterMediaV65(on){characterMediaImportV65.items.forEach(x=>x.selected=on);renderCharacterMediaPreviewV65()}
+  function setCharacterMediaFieldV65(id,k,v){const x=characterMediaImportV65.items.find(y=>y.id===id);if(x)x[k]=v}
+  function applyCharacterMediaBulkV65(){
+    const cid=document.getElementById('cm-bulk-character-v65')?.value||'',dest=document.getElementById('cm-bulk-dest-v65')?.value||'';
+    characterMediaImportV65.items.filter(x=>x.selected).forEach(x=>{if(cid)x.character_id=cid;if(dest)x.destination=dest});
+    renderCharacterMediaPreviewV65();
+  }
+
+  async function executeCharacterMediaImportV65(){
+    const rows=characterMediaImportV65.items.filter(x=>x.selected&&x.character_id);
+    if(!rows.length)return;
+    if(!confirm(`Importer ${rows.length} image(s) dans les fiches personnages ?`))return;
+    const st=document.getElementById('character-media-import-status-v65');let done=0,errors=[];
+    for(const x of rows){
+      const p=characterMediaImportV65.characters.find(c=>c.id===x.character_id);if(!p)continue;
+      try{
+        st.textContent=`Conversion WebP & import… ${done+1}/${rows.length} · ${p.nom}`;
+        const url=await uploadAssetFile(x.file,`personnages/${p.id}/bulk`,{kind:x.destination==='portrait'?'portrait':'generic',throwOnError:true,requireOptimize:true});
+        const typeMap={portrait:'Portrait',vertical:'Profil vertical',appearance:'Apparence',reference:'Référence visuelle'};
+        const {error:me}=await db().from('medias').insert({user_id:currentUser.id,personnage_id:p.id,url,titre:x.name.replace(/\.[^.]+$/,''),type:typeMap[x.destination]||'Illustration'});
+        if(me)throw me;
+        const {data:full,error:pe}=await db().from('personnages').select('contenu,portrait_url').eq('id',p.id).single();if(pe)throw pe;
+        const contenu=full?.contenu&&typeof full.contenu==='object'?JSON.parse(JSON.stringify(full.contenu)):{};
+        const u=contenu.universel&&typeof contenu.universel==='object'?contenu.universel:{};
+        const patch={updated_at:new Date().toISOString()};
+        if(x.destination==='portrait')patch.portrait_url=url;
+        else if(x.destination==='vertical')u.profil_media_url=url;
+        else if(x.destination==='appearance'){const a=Array.isArray(u.apparence_media_urls)?u.apparence_media_urls:[];u.apparence_media_urls=[...new Set([...a,url])].slice(0,12)}
+        else if(x.destination==='reference'){const a=Array.isArray(u.reference_media_urls)?u.reference_media_urls:[];u.reference_media_urls=[...new Set([...a,url])].slice(0,30)}
+        contenu.universel=u;patch.contenu=contenu;
+        const {error:ue}=await db().from('personnages').update(patch).eq('id',p.id);if(ue)throw ue;
+        done++;
+      }catch(e){errors.push(`${x.name}: ${e?.message||e}`)}
+    }
+    st.textContent=`✓ ${done} image(s) importée(s)${errors.length?` · ${errors.length} erreur(s)`:''}`;
+    if(errors.length)console.error('Import médias personnages C65',errors);
+    characterMediaImportV65.items=characterMediaImportV65.items.filter(x=>!rows.includes(x));
+    renderCharacterMediaPreviewV65();
   }
 
   async function renderCharacterIdentifiersV572(zone){const {data,error}=await db().from('personnages').select('passerelle_id,nom,archive').order('nom');if(error){zone.innerHTML=adminEmpty(error.message);return}zone.innerHTML=`<div class="character-topbar"><div><h2>Identifiants Personnages</summary><p class="admin-section-sub">Ils servent au dédoublonnage, aux mises à jour et aux relations d’import. Ils restent volontairement discrets dans le front.</p></div></div><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Personnage</th><th>ID Passerelle</th><th>État</th><th></th></tr></thead><tbody>${(data||[]).map(p=>`<tr><td>${safeText(p.nom)}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td><td>${p.archive?'Archivé':'Actif'}</td><td><button class="tiny-btn" onclick="copyPasserelleIdV572('${safeText(p.passerelle_id||'')}')">Copier</button></td></tr>`).join('')}</tbody></table></div>`}
