@@ -1188,6 +1188,12 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 @media(max-width:900px){.character-media-grid-v65{grid-template-columns:repeat(2,1fr)}.character-media-steps-v65{grid-template-columns:1fr 1fr}}
 </style>
 
+
+<style id="c66-tomtom-export">
+.be-title-actions-v66{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.be-actions-v21{white-space:nowrap}
+</style>
+
 </head>
 <body>
 
@@ -3819,7 +3825,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const future=beData.filter(o=>Number(o.horizon_annee)>new Date().getFullYear()).length;
     content.innerHTML=`
       ${renderPageImageBanner(bureauBanner,'Bureau éditorial')}
-      <div class="be-title-row be-title-row-v21"><div><h2>Bureau éditorial</h2><p>Pilotez votre catalogue en un coup d’œil.</p></div><button class="btn-primary" onclick="openOeuvreModal()">＋ Ajouter une œuvre</button></div>
+      <div class="be-title-row be-title-row-v21"><div><h2>Bureau éditorial</h2><p>Pilotez votre catalogue en un coup d’œil.</p></div><div class="be-title-actions-v66"><button class="btn-secondary" onclick="exportTomTomPortfolioV66()">📦 Export portefeuille TomTom</button><button class="btn-primary" onclick="openOeuvreModal()">＋ Ajouter une œuvre</button></div></div>
       <div class="be-kpis-v21">
         <div><strong>${beData.length}</strong><span>œuvres au catalogue</span></div>
         <div><strong>${writing}</strong><span>en cours</span></div>
@@ -3878,10 +3884,126 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         <td><select class="be-inline" onchange="saveBeField('${o.id}','statut_editorial_actuel',this.value)"><option value="">Non défini</option>${STATUTS_EDITORIAUX.map(v=>`<option ${o.statut_editorial_actuel===v?'selected':''}>${v}</option>`).join('')}</select></td>
         <td><select class="be-inline be-horizon-v21" onchange="saveBeHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="${y}" ${Number(o.horizon_annee)===y?'selected':''}>Y</option><option value="${y+1}" ${Number(o.horizon_annee)===y+1?'selected':''}>Y+1</option></select></td>
         <td><input class="be-inline be-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="—" onchange="saveBeField('${o.id}','publication_envisagee',this.value)"></td>
-        <td class="be-actions-v21"><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
+        <td class="be-actions-v21"><button class="be-icon-btn" title="Exporter le brief TomTom" onclick="event.stopPropagation();exportTomTomWorkV66('${o.id}')">📦</button><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
       </tr>`;
     }).join('')||`<tr><td colspan="7" class="empty">Aucune œuvre pour ces filtres.</td></tr>`;
     const c=document.getElementById('be-count'); if(c)c.textContent=`${rows.length} œuvre${rows.length>1?'s':''} affichée${rows.length>1?'s':''}`;
+  }
+
+
+  function downloadJsonV66(data,filename){
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1200);
+  }
+  function cleanFileNameV66(v){return String(v||'oeuvre').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,90)||'oeuvre'}
+  async function tomTomKeywordsForWorkV66(oeuvreId){
+    try{
+      const [{data:links,error:le},{data:keys,error:ke},{data:cats,error:ce}]=await Promise.all([
+        db().from('keyword_links').select('keyword_id').eq('entity_type','oeuvre').eq('entity_id',oeuvreId),
+        db().from('keywords').select('id,nom,emoji,category_id'),
+        db().from('keyword_categories').select('id,nom,emoji')
+      ]);
+      if(le||ke||ce)return [];
+      const ids=new Set((links||[]).map(x=>x.keyword_id));
+      const cm=new Map((cats||[]).map(c=>[c.id,c]));
+      return (keys||[]).filter(k=>ids.has(k.id)).map(k=>({nom:k.nom,emoji:k.emoji||null,categorie:cm.get(k.category_id)?.nom||null}));
+    }catch(e){return []}
+  }
+  async function buildTomTomWorkBriefV66(oeuvreId){
+    const [wr,plans,chapters,inspirations]=await Promise.all([
+      db().from('oeuvres').select('*,sagas(id,nom,passerelle_id),sous_sagas(id,nom,passerelle_id),univers(id,nom)').eq('id',oeuvreId).single(),
+      db().from('plans').select('id,ordre,titre,acte,pov,statut,transformation').eq('oeuvre_id',oeuvreId).order('ordre',{ascending:true}),
+      db().from('chapitres').select('id,ordre,titre,nb_mots,date_ecriture,statut').eq('oeuvre_id',oeuvreId).order('ordre',{ascending:true}),
+      db().from('oeuvre_inspirations').select('categorie,titre').eq('oeuvre_id',oeuvreId).order('categorie,ordre')
+    ]);
+    if(wr.error)throw wr.error;
+    const o=wr.data||{}, ps=plans.data||[], cs=chapters.data||[], kws=await tomTomKeywordsForWorkV66(oeuvreId);
+    const written=cs.filter(c=>(Number(c.nb_mots)||0)>0 || /écrit|ecrit|termin/i.test(String(c.statut||''))).length;
+    const totalWords=cs.reduce((s,c)=>s+(Number(c.nb_mots)||0),0);
+    const byAct={};ps.forEach(p=>{const a=p.acte||'Sans acte';byAct[a]=(byAct[a]||0)+1});
+    const ambiance=o.ambiance&&typeof o.ambiance==='object'?o.ambiance:{};
+    return {
+      format:'passerelle-editorial-brief',
+      version:1,
+      generated_at:new Date().toISOString(),
+      passerelle_id:o.passerelle_id||null,
+      oeuvre:{
+        titre:o.titre||null,
+        sous_titre:o.sous_titre||null,
+        collection:o.univers?.nom||null,
+        saga:o.sagas?.nom||null,
+        sous_saga:o.sous_sagas?.nom||null,
+        numero_tome:o.numero_sous_saga??o.numero_tome??null,
+        langue:o.langue||null,
+        format:o.format_cible||o.format||null,
+        statut:o.statut||null
+      },
+      informations:{
+        resume:o.resume||null,
+        genre:o.genre||null,
+        sous_genre:o.sous_genre||null,
+        mots_cles:kws
+      },
+      presentation:{
+        pitch:o.pitch||null,
+        a_propos:o.a_propos||null,
+        intentions:o.intentions||null,
+        tient_a_coeur:!!o.tient_a_coeur,
+        public_cible:o.public_cible||null,
+        tonalite:o.tonalite||null,
+        temporalite:o.temporalite||null,
+        lieu_principal:o.lieu_principal||null,
+        tropes:Array.isArray(o.tropes)?o.tropes:(o.tropes?String(o.tropes).split(',').map(x=>x.trim()).filter(Boolean):[]),
+        enjeu_principal:o.enjeu_principal||null,
+        enjeux_secondaires:Array.isArray(o.enjeux_secondaires)?o.enjeux_secondaires:[],
+        ambiance
+      },
+      plan:{
+        chapitres_prevus:ps.length || cs.length,
+        chapitres_ecrits:written,
+        mots_ecrits:totalWords,
+        objectif_mots:o.objectif_mots||null,
+        repartition_par_acte:byAct
+      },
+      bureau_editorial:{
+        destination_editoriale:o.destination_editoriale||null,
+        niveau_editorial_cible:o.niveau_editorial_cible||null,
+        statut_editorial_actuel:o.statut_editorial_actuel||null,
+        horizon_annee:o.horizon_annee||null,
+        publication_envisagee:o.publication_envisagee||o.date_publication_prevue||null,
+        notes_editoriales:o.notes_editoriales||null,
+        date_dernier_changement_editorial:o.date_dernier_changement_editorial||null
+      },
+      inspirations:(inspirations.data||[]).map(x=>({categorie:x.categorie||null,titre:x.titre||null}))
+    };
+  }
+  async function exportTomTomWorkV66(oeuvreId){
+    try{
+      showSaveToastV20('Préparation du brief TomTom…');
+      const brief=await buildTomTomWorkBriefV66(oeuvreId);
+      downloadJsonV66(brief,`TomTom_Brief_${cleanFileNameV66(brief.oeuvre?.titre)}_${brief.passerelle_id||'sans_id'}.json`);
+      showSaveToastV20('✓ Brief TomTom exporté');
+    }catch(e){showSaveToastV20('⚠ Export TomTom : '+(e?.message||e),'error')}
+  }
+  async function exportTomTomPortfolioV66(){
+    try{
+      showSaveToastV20('Préparation du portefeuille TomTom…');
+      const ids=(beData||[]).map(o=>o.id);
+      const works=[];
+      for(let i=0;i<ids.length;i++){
+        showSaveToastV20(`Portefeuille TomTom… ${i+1}/${ids.length}`);
+        works.push(await buildTomTomWorkBriefV66(ids[i]));
+      }
+      downloadJsonV66({
+        format:'passerelle-editorial-portfolio',
+        version:1,
+        generated_at:new Date().toISOString(),
+        total_oeuvres:works.length,
+        oeuvres:works
+      },`TomTom_Portefeuille_Editorial_${new Date().toISOString().slice(0,10)}.json`);
+      showSaveToastV20(`✓ Portefeuille TomTom exporté · ${works.length} œuvre(s)`);
+    }catch(e){showSaveToastV20('⚠ Export portefeuille : '+(e?.message||e),'error')}
   }
 
   function applyBeFilters(){
