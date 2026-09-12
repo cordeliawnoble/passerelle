@@ -1335,6 +1335,31 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 }
 </style>
 
+
+<style id="c77-theme-tabs">
+/* C77 — les onglets d’Œuvre / Saga utilisent la même logique chromatique
+   que le bouton « Modifier » : couleurs issues du thème courant, sans blanc forcé. */
+.entity-tabs-c52>button:not(.btn-secondary){
+  background:color-mix(in srgb,var(--bg-2) 78%,var(--card))!important;
+  border:1px solid color-mix(in srgb,var(--line) 72%,var(--bg-2))!important;
+  color:var(--text-dim)!important;
+  box-shadow:none!important;
+}
+.entity-tabs-c52>button:not(.btn-secondary):hover{
+  background:var(--bg-2)!important;
+  border-color:color-mix(in srgb,var(--text) 18%,var(--line))!important;
+  color:var(--text)!important;
+  transform:translateY(-1px);
+}
+.entity-tabs-c52>button.active:not(.btn-secondary){
+  background:var(--bg-2)!important;
+  border-color:color-mix(in srgb,var(--text) 24%,var(--line))!important;
+  color:var(--text)!important;
+  font-weight:700!important;
+  box-shadow:0 5px 14px color-mix(in srgb,var(--text) 12%,transparent)!important;
+}
+</style>
+
 </head>
 <body>
 
