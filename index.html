@@ -1238,11 +1238,31 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let mediaUser = null;
   let mediaAuthWarningV573b = '';
 
+  // C71 : garde l’état local synchronisé avec Supabase sans toucher à la session principale.
+  mediaSb.auth.onAuthStateChange((event,session)=>{
+    mediaUser=session?.user||null;
+    if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED')mediaAuthWarningV573b='';
+    const badge=document.getElementById('media-auth-badge-v576c2');
+    if(badge)setTimeout(()=>refreshMediaConnectionPanelV576c2().catch(console.warn),0);
+  });
+
   async function init(){
     try{
       const { data: { session }, error } = await sb.auth.getSession();
       if(error) throw error;
-      const {data:{session:mediaSession}} = await mediaSb.auth.getSession();
+      let {data:{session:mediaSession}} = await mediaSb.auth.getSession();
+      // C71 : la session Médias vit indépendamment de la session principale.
+      // Si elle existe dans le navigateur, on la conserve et on tente un refresh
+      // avant de considérer l'utilisatrice comme déconnectée.
+      if(mediaSession){
+        try{
+          const expiresSoon=(Number(mediaSession.expires_at||0)*1000-Date.now())<120000;
+          if(expiresSoon){
+            const refreshed=await mediaSb.auth.refreshSession();
+            if(refreshed?.data?.session)mediaSession=refreshed.data.session;
+          }
+        }catch(mediaRefreshError){console.warn('Session Médias : refresh différé',mediaRefreshError)}
+      }
       mediaUser = mediaSession?.user || null;
       if (session) { currentUser = session.user; await loadGlobalAppearance();
     const deepWork=new URLSearchParams(location.search).get('openOeuvre'); if(deepWork){setTimeout(()=>openOeuvreDetail(deepWork),120);} ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); }
@@ -1281,9 +1301,17 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
     currentUser = data.user;
-    const mediaLogin = await mediaSb.auth.signInWithPassword({ email, password });
-    mediaUser = mediaLogin.data?.user || null;
-    mediaAuthWarningV573b = mediaLogin.error ? 'Le stockage médias n’est pas encore connecté. Crée le même utilisateur dans le projet Supabase Médias puis reconnecte-toi à Passerelle.' : '';
+    // C71 : ne jamais écraser une session Médias valide avec le mot de passe
+    // de la base principale. Les deux projets Supabase peuvent avoir des mots
+    // de passe différents.
+    const mediaExisting=await mediaSb.auth.getSession();
+    if(mediaExisting.data?.session){
+      mediaUser=mediaExisting.data.session.user;
+      mediaAuthWarningV573b='';
+    }else{
+      mediaUser=null;
+      mediaAuthWarningV573b='Le stockage Médias n’est pas connecté sur ce navigateur. Ouvre Configuration → Connexion Médias pour le reconnecter une fois.';
+    }
     ensureMonthlyBackupV561().catch(console.warn);
     renderShell(); navigate('accueil');
     if(mediaAuthWarningV573b) setTimeout(()=>showTransientStatusV572('🖼 '+mediaAuthWarningV573b),250);
@@ -1297,14 +1325,22 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     msg.textContent = 'Création du compte…'; msg.className = 'auth-msg';
     const { data, error } = await sb.auth.signUp({ email, password });
     if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; return; }
-    const mediaSignup = await mediaSb.auth.signUp({ email, password });
-    if(mediaSignup.data?.session){ mediaUser = mediaSignup.data.user; mediaAuthWarningV573b=''; }
-    else if(mediaSignup.error){ mediaAuthWarningV573b='Le compte principal a été créé, mais pas le compte du stockage médias : '+mediaSignup.error.message; }
+    // C71 : le projet Médias est indépendant. On ne crée plus / ne remplace plus
+    // son identité automatiquement depuis le formulaire principal.
+    const mediaExisting=await mediaSb.auth.getSession();
+    mediaUser=mediaExisting.data?.session?.user||null;
+    mediaAuthWarningV573b=mediaUser?'':'Le compte principal est créé. La connexion Médias se fait séparément dans Configuration → Connexion Médias.';
     if (data.session) { currentUser = data.user; ensureMonthlyBackupV561().catch(console.warn); renderShell(); navigate('accueil'); if(mediaAuthWarningV573b)setTimeout(()=>showTransientStatusV572('🖼 '+mediaAuthWarningV573b),250); }
     else { msg.textContent = 'Compte créé — vérifie ta boîte mail, puis connecte-toi.'; msg.className = 'auth-msg ok'; }
   }
 
-  async function doLogout(){ await Promise.allSettled([sb.auth.signOut(),mediaSb.auth.signOut()]); currentUser = null; mediaUser=null; renderAuth(); }
+  async function doLogout(){
+    // C71 : se déconnecter de Passerelle ne déconnecte plus le stockage Médias.
+    // La session Médias reste persistée pour le prochain login sur ce navigateur.
+    await sb.auth.signOut();
+    currentUser=null;
+    renderAuth();
+  }
 
   const NAV = [
     {group:'Bibliothèque',items:[
@@ -3416,7 +3452,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         panel.innerHTML=`<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong>Base Médias connectée</strong><div class="admin-section-sub" style="margin-top:4px">${safeText(mediaUser.email||currentUser?.email||'Compte connecté')} · bucket ${MEDIA_BUCKET}</div></div><button class="btn-secondary" onclick="disconnectMediaV576c2()">Déconnecter Médias</button></div>`;
       }else{
         badge.textContent='🔴 Non connectée';
-        panel.innerHTML=`<p style="margin-top:0">La base principale est connectée, mais pas le stockage Médias. Entre le mot de passe du même compte pour ouvrir la session du second projet Supabase.</p><div class="admin-section-grid"><div><label>Email</label><input id="media-email-v576c2" type="email" value="${safeText(currentUser?.email||'')}" autocomplete="username"></div><div><label>Mot de passe</label><input id="media-password-v576c2" type="password" autocomplete="current-password" placeholder="Mot de passe Passerelle"></div></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn-primary" onclick="connectMediaV576c2()">Connecter la base Médias</button><span id="media-connect-status-v576c2" class="admin-inline-status"></span></div>`;
+        panel.innerHTML=`<p style="margin-top:0">La base principale est connectée, mais la session du projet Médias n’est pas disponible sur ce navigateur. <strong>Le mot de passe Médias peut être différent de celui de Passerelle.</strong> Une fois reconnectée ici, la session restera mémorisée indépendamment.</p><div class="admin-section-grid"><div><label>Email du compte Médias</label><input id="media-email-v576c2" type="email" value="${safeText(currentUser?.email||'')}" autocomplete="username"></div><div><label>Mot de passe du projet Médias</label><input id="media-password-v576c2" type="password" autocomplete="current-password" placeholder="Mot de passe Médias"></div></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn-primary" onclick="connectMediaV576c2()">Connecter la base Médias</button><button class="btn-secondary" onclick="refreshMediaConnectionPanelV576c2()">↻ Vérifier la session</button><span id="media-connect-status-v576c2" class="admin-inline-status"></span></div>`;
       }
     }catch(err){badge.textContent='⚠️ Erreur';panel.innerHTML=`<div class="empty">Connexion Médias impossible : ${safeText(err?.message||err)}</div>`;}
   }
@@ -3427,7 +3463,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(!email||!password){if(status)status.textContent='Email et mot de passe requis.';return;}
     if(status)status.textContent='Connexion…';
     const {data,error}=await mediaSb.auth.signInWithPassword({email,password});
-    if(error){if(status)status.textContent='Échec : '+error.message;return;}
+    if(error){if(status)status.textContent=error.message==='Invalid login credentials'?'Échec : identifiants du projet Médias incorrects. Ils peuvent être différents de ceux de Passerelle.':'Échec : '+error.message;return;}
     mediaUser=data.user||data.session?.user||null; mediaAuthWarningV573b='';
     showTransientStatusV572('🖼 Base Médias connectée.');
     await refreshMediaConnectionPanelV576c2();
