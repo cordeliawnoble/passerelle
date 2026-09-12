@@ -1216,6 +1216,20 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 @media(max-width:700px){.idea-chat-row-c70{grid-template-columns:1fr}.idea-chat-row-c70 .btn-secondary{width:100%}}
 </style>
 
+
+<style id="c72-banner-transparent-background">
+/* C72 — une bannière existante flotte sans panneau coloré derrière elle.
+   Le fond/placeholder n'est conservé que lorsqu'aucune bannière n'est définie. */
+.page-image-banner:not(.empty),
+.work-hero-banner:not(.empty){
+  background:transparent!important;
+  border-color:transparent!important;
+}
+.work-hero-banner:not(.empty){
+  box-shadow:none!important;
+}
+</style>
+
 </head>
 <body>
 
