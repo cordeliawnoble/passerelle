@@ -3637,8 +3637,25 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   function addDaysIso(v,n){const d=new Date(v+'T12:00:00');d.setDate(d.getDate()+n);return isoLocal(d);}
   function mondayOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(12,0,0,0);return x;}
   function endOfWeek(d){const x=mondayOf(d);x.setDate(x.getDate()+6);return x;}
-  function startOfPlanningRange(){if(planningView==='month')return new Date(planningCursor.getFullYear(),planningCursor.getMonth(),1);if(planningView==='week')return mondayOf(planningCursor);const x=new Date();x.setMonth(x.getMonth()-2);return x;}
-  function endOfPlanningRange(){if(planningView==='month')return new Date(planningCursor.getFullYear(),planningCursor.getMonth()+1,0);if(planningView==='week')return endOfWeek(planningCursor);const x=new Date();x.setMonth(x.getMonth()+8);return x;}
+  function startOfPlanningRange(){
+    if(planningView==='month'){
+      // C67 : le calendrier mensuel affiche toujours une grille de 42 jours
+      // démarrant le lundi qui précède (ou contient) le 1er du mois.
+      // On charge donc toute la grille visible, pas seulement du 1er au dernier jour.
+      return mondayOf(new Date(planningCursor.getFullYear(),planningCursor.getMonth(),1));
+    }
+    if(planningView==='week')return mondayOf(planningCursor);
+    const x=new Date();x.setMonth(x.getMonth()-2);return x;
+  }
+  function endOfPlanningRange(){
+    if(planningView==='month'){
+      const start=startOfPlanningRange(),end=new Date(start);
+      end.setDate(start.getDate()+41);
+      return end;
+    }
+    if(planningView==='week')return endOfWeek(planningCursor);
+    const x=new Date();x.setMonth(x.getMonth()+8);return x;
+  }
   function workById(id){return planningWorks.find(o=>o.id===id)||null;}
   function chapterById(id){return planningChapters.find(c=>c.id===id)||null;}
   function sessionLabel(s){const o=workById(s.oeuvre_id);const c=chapterById(s.chapitre_id);return s.titre||[o?.titre,c?`Chapitre ${c.numero}${c.titre?' · '+c.titre:''}`:''].filter(Boolean).join(' · ')||'Session';}
@@ -3669,7 +3686,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   async function renderPlanning(){
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement du planning…</div>';
     const planningBanner=await getPageBanner('planning');
-    const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange());
+    const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange()); // C67 : toute la grille visible du mois
     const [worksRes,sessionsRes,chapRes]=await Promise.all([
       db().from('oeuvres').select('id,titre,couverture,statut').eq('archive',false).order('titre',{ascending:true}),
       db().from('planning_sessions').select('*').gte('date',start).lte('date',end).order('date',{ascending:true}).order('ordre',{ascending:true}),
