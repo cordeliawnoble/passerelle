@@ -2229,10 +2229,24 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       return {format:'passerelle-notion-works-import',version:57,oeuvres:works,collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:works.length,mode:'multi-database-schema',databases:sources}};
     }
 
-    // Secours : export d'une fiche Œuvre seule. Jamais de création massive depuis des Markdown isolés.
+    // Secours : export d'une fiche Œuvre seule.
+    // C69 : Notion peut aplatir l'export : fiche Œuvre, base Plan et chapitres
+    // se retrouvent tous au même niveau du ZIP.
     if(!mds.length)throw new Error('Aucune fiche Œuvre identifiable : aucune base au schéma Œuvres et aucun Markdown exploitable.');
-    const minDepth=Math.min(...mds.map(m=>worksMdDepthV56(m.name)));
-    const roots=mds.filter(m=>worksMdDepthV56(m.name)===minDepth && worksMarkdownTitleV43(m.text));
+
+    const csvIds=new Set(csvParsed.map(x=>String(x.id||'').toLowerCase()).filter(Boolean));
+    const linkedRoots=mds.filter(m=>{
+      const txt=String(m.text||'');
+      const ids=[...txt.matchAll(/([0-9a-f]{32})(?=(?:_all)?\.csv)/ig)].map(x=>x[1].toLowerCase());
+      return ids.some(id=>csvIds.has(id)) && !!worksMarkdownTitleV43(txt);
+    });
+
+    let roots=linkedRoots;
+    if(!roots.length){
+      const minDepth=Math.min(...mds.map(m=>worksMdDepthV56(m.name)));
+      roots=mds.filter(m=>worksMdDepthV56(m.name)===minDepth && worksMarkdownTitleV43(m.text));
+    }
+
     if(roots.length!==1){
       throw new Error(roots.length>1
         ? `Import ambigu : ${roots.length} pages Markdown candidates et aucune base Œuvres reconnue. Exporte la base Œuvres ou une fiche Œuvre seule.`
@@ -2240,7 +2254,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     }
     const work=worksBuildFromMdV56(roots[0],csvParsed);
     if(!work.titre)throw new Error('La fiche racine ne contient pas de titre exploitable. Import annulé.');
-    return {format:'passerelle-notion-works-import',version:57,oeuvres:[work],collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:1,mode:'single-root-md',rootName:roots[0].name}};
+    return {format:'passerelle-notion-works-import',version:69,oeuvres:[work],collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:1,mode:linkedRoots.length?'single-root-linked-db':'single-root-md',rootName:roots[0].name}};
   }
 
   async function readWorksNotionFileV43(file){
