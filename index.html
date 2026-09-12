@@ -1278,6 +1278,63 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 }
 </style>
 
+
+<style id="c76-saga-full-banners">
+/* C76 — Œuvres saga : bannière complète, sans titre répété sous la carte. */
+.saga-banner-card-c76{
+  position:relative;
+  overflow:visible;
+  background:transparent!important;
+  border:0!important;
+  border-radius:14px;
+  box-shadow:none!important;
+}
+.saga-banner-card-c76:hover{
+  transform:translateY(-2px);
+}
+.saga-banner-visual-c76{
+  position:relative;
+  aspect-ratio:8/3!important;
+  height:auto!important;
+  overflow:hidden;
+  border-radius:14px;
+  background:transparent!important;
+  border:1px solid var(--line);
+}
+.saga-banner-visual-c76 img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain!important;
+  object-position:center;
+  background:transparent!important;
+}
+.saga-tome-badge-c76{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:2;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  color:#fff;
+  background:rgba(20,14,32,.42);
+  border:1px solid rgba(255,255,255,.32);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  font:700 10px 'Lora',serif;
+  letter-spacing:.06em;
+  box-shadow:0 3px 12px rgba(20,14,32,.15);
+}
+@media(max-width:560px){
+  .saga-tome-badge-c76{top:8px;right:8px;min-width:30px;height:25px;padding:0 8px;font-size:9px}
+}
+</style>
+
 </head>
 <body>
 
@@ -6098,9 +6155,13 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   function oeuvreSagaTileV40(o){
     const visual=o.banniere||'';
-    return `<article class="oeuvre-saga-tile-v40" onclick="openOeuvreDetail('${o.id}')">
-      <div class="oeuvre-saga-visual-v40">${visual?`<img src="${safeText(visual)}" alt="${safeText(o.titre||'Œuvre')}">`:`<div class="oeuvre-saga-empty-v40">${initials(o.titre||'Œuvre')}</div>`}</div>
-      <div class="oeuvre-saga-caption-v40">${safeText(o.titre||'Sans titre')}</div>
+    const tome=(o.numero_sous_saga!==null&&o.numero_sous_saga!==undefined&&String(o.numero_sous_saga).trim()!=='')
+      ? `T${safeText(String(o.numero_sous_saga).replace(/^t(ome)?\s*/i,''))}` : '';
+    return `<article class="oeuvre-saga-tile-v40 saga-banner-card-c76" onclick="openOeuvreDetail('${o.id}')" title="${safeText(o.titre||'Œuvre')}">
+      <div class="oeuvre-saga-visual-v40 saga-banner-visual-c76">
+        ${visual?`<img src="${safeText(visual)}" alt="${safeText(o.titre||'Œuvre')}">`:`<div class="oeuvre-saga-empty-v40">${initials(o.titre||'Œuvre')}</div>`}
+        ${tome?`<span class="saga-tome-badge-c76">${tome}</span>`:''}
+      </div>
     </article>`;
   }
 
