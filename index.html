@@ -1194,6 +1194,16 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 .be-actions-v21{white-space:nowrap}
 </style>
 
+
+<style id="c68-bo-sous-sagas">
+.admin-ss-tools-c68{margin-bottom:14px}
+.admin-ss-grid-c68 .admin-catalog-visual{height:150px}
+.admin-ss-grid-c68 .admin-catalog-visual img{width:100%;height:100%;object-fit:cover}
+.admin-ss-card-c68{cursor:pointer}
+.admin-ss-hero-c68{margin-bottom:14px}
+@media(max-width:900px){.admin-ss-grid-c68 .admin-catalog-visual{height:120px}}
+</style>
+
 </head>
 <body>
 
@@ -1885,9 +1895,51 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let adminCatalogWorksV576b={data:[],collections:[],sagas:[],subs:[],search:'',group:'collection',sort:'az',collection:'',saga:'',sub:'',status:'',detail:false};
   async function renderAdminSousSagasPage(){
     const content=document.getElementById('content');
-    const [{data,error},{data:cols}]=await Promise.all([db().from('sous_sagas').select('id,nom,genre,statut,saga_id,sagas(id,nom,univers_id)').order('created_at',{ascending:false}),db().from('univers').select('id,nom')]);
-    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;} const rows=data||[];
-    content.innerHTML=adminPageHead('Sous-sagas','Catalogue compact : recherche, filtres et regroupements évitent les kilomètres de cartes.')+`<div class="catalog-tools-v576b"><input class="search-input" placeholder="🔍 Rechercher…" oninput="filterGenericCatalogV576b('admin-ss-grid',this.value)"><select onchange="filterGenericDataV576b('admin-ss-grid','collection',this.value)"><option value="">Toutes les collections</option>${(cols||[]).map(c=>`<option value="${c.id}">${safeText(c.nom)}</option>`).join('')}</select><select onchange="filterGenericDataV576b('admin-ss-grid','saga',this.value)"><option value="">Toutes les sagas</option>${[...new Map(rows.map(x=>[x.sagas?.id,x.sagas])).values()].filter(Boolean).map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}</select></div><div class="compact-list-v576b" id="admin-ss-grid">${rows.map(x=>`<article class="compact-card-v576b" data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')).toLowerCase())}" data-collection="${x.sagas?.univers_id||''}" data-saga="${x.saga_id||''}" onclick="openAdminSousSagaEditor('${x.id}')"><div class="compact-thumb-v576b">${initials(x.nom)}</div><div><h3>${safeText(x.nom)}</h3><small>${safeText(x.sagas?.nom||'Sans saga')} · ${safeText(x.genre||x.statut||'')}</small></div><span>›</span></article>`).join('')||adminEmpty('Aucune sous-saga.')}</div>`;
+    const [{data,error},{data:cols}]=await Promise.all([
+      db().from('sous_sagas').select('*,sagas(id,nom,univers_id)').order('ordre',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false}),
+      db().from('univers').select('id,nom').order('ordre',{ascending:true})
+    ]);
+    if(error){content.innerHTML=adminEmpty('Erreur : '+safeText(error.message));return;}
+    const rows=data||[];
+    const sagaList=[...new Map(rows.map(x=>[x.sagas?.id,x.sagas])).values()].filter(Boolean);
+    content.innerHTML=
+      adminPageHead('Sous-sagas','Créez, recherchez et modifiez les sous-sagas avec la même présentation que les Sagas.')+
+      `<div class="catalog-tools-v576b admin-ss-tools-c68">
+        <input class="search-input" placeholder="🔍 Rechercher une sous-saga…" oninput="filterGenericCatalogV576b('admin-ss-grid',this.value)">
+        <select onchange="filterGenericDataV576b('admin-ss-grid','collection',this.value)">
+          <option value="">Toutes les collections</option>
+          ${(cols||[]).map(c=>`<option value="${c.id}">${safeText(c.nom)}</option>`).join('')}
+        </select>
+        <select onchange="filterGenericDataV576b('admin-ss-grid','saga',this.value)">
+          <option value="">Toutes les sagas</option>
+          ${sagaList.map(x=>`<option value="${x.id}">${safeText(x.nom)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="admin-catalog-grid admin-saga-grid-v49 admin-ss-grid-c68" id="admin-ss-grid">
+        ${rows.map(x=>{
+          const visual=x.banniere||x.couverture||x.image_couverture||'';
+          const collection=(cols||[]).find(c=>c.id===x.sagas?.univers_id)?.nom||'';
+          return `<article class="admin-catalog-card admin-saga-card-v49 admin-ss-card-c68"
+            data-search="${safeText((x.nom+' '+(x.sagas?.nom||'')+' '+collection+' '+(x.genre||'')).toLowerCase())}"
+            data-collection="${x.sagas?.univers_id||''}"
+            data-saga="${x.saga_id||''}"
+            onclick="openAdminSousSagaEditor('${x.id}')">
+            <div class="admin-catalog-visual">
+              ${visual?`<img src="${safeText(visual)}" alt="Bannière ${safeText(x.nom)}">`:`<div class="admin-catalog-placeholder">${initials(x.nom)}</div>`}
+            </div>
+            <div class="admin-catalog-body">
+              <h3>${safeText(x.nom)}</h3>
+              <div class="admin-catalog-meta">
+                ${safeText(x.sagas?.nom||'Sans saga')}${collection?` · ${safeText(collection)}`:''}
+                <br>${safeText(x.genre||'Genre non renseigné')} · ${safeText(x.statut||'Sans statut')}${x.archive?' · Archivée':''}
+              </div>
+              <div class="admin-catalog-card-actions">
+                <button class="btn-secondary" onclick="event.stopPropagation();openAdminSousSagaEditor('${x.id}')">Modifier</button>
+              </div>
+            </div>
+          </article>`;
+        }).join('')||adminEmpty('Aucune sous-saga.')}
+      </div>`;
   }
   function filterGenericCatalogV576b(id,q){const z=document.getElementById(id);if(!z)return;z.dataset.search=(q||'').toLowerCase();applyGenericFiltersV576b(z)}
   function filterGenericDataV576b(id,key,v){const z=document.getElementById(id);if(!z)return;z.dataset[key]=v||'';applyGenericFiltersV576b(z)}
@@ -8161,7 +8213,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(!ss){content.innerHTML='<div class="empty">Sous-saga introuvable.</div>';return}
     const inheritedSsGraphicV576c13=await inheritedThemeForEditorV576c13('sub',ss);
     const [md,selmd]=await Promise.all([db().from('saga_metadonnees').select('*').eq('saga_id',ss.saga_id).order('ordre'),db().from('sous_saga_metadonnees').select('metadata_id').eq('sous_saga_id',id)]);window._assMetaDefs=md.data||[];window._assMetaSelected=new Set((selmd.data||[]).map(x=>x.metadata_id));
-    content.innerHTML=`<div class="admin-work-editor"><div class="admin-work-topbar"><div><div class="admin-work-kicker">Administration · Sous-sagas</div><h1>${safeText(ss.nom)}</h1></div><div class="admin-work-top-actions"><button class="btn-secondary" onclick="renderAdminSousSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSousSagaDetail('${id}')">Ouvrir dans Passerelle ↗</button><button class="btn-primary" onclick="saveAdminSousSagaEditor('${id}')">Enregistrer</button></div></div><div class="admin-editor-tabs"><button class="active" onclick="adminSsTab(this,'info')">Informations</button><button onclick="adminSsTab(this,'plan')">Plan global</button><button onclick="adminSsTab(this,'appearance')">Apparence</button><button onclick="adminSsTab(this,'archive')">Archivage</button></div>
+    content.innerHTML=`<div class="admin-work-editor">${adminPageHead(ss.nom||'Sous-saga','Administration de la sous-saga.',`<button class="btn-secondary" onclick="renderAdminSousSagasPage()">← Catalogue</button><button class="btn-secondary" onclick="openSousSagaDetail('${id}')">Voir la fiche ↗</button><button class="btn-primary" onclick="saveAdminSousSagaEditor('${id}')">Enregistrer</button>`)}<section class="saga-hero-c38 admin-saga-hero-c52 admin-ss-hero-c68">${ss.banniere||ss.couverture||ss.image_couverture?`<img src="${safeText(ss.banniere||ss.couverture||ss.image_couverture)}" alt="Bannière ${safeText(ss.nom)}">`:''}<div class="saga-hero-content-c38"><h1>${safeText(ss.nom||'Sous-saga')}</h1><div class="saga-hero-meta-c38">${renderPasserelleIdBadgeV572(ss.passerelle_id)}<span>${safeText(ss.sagas?.nom||'Sans saga')}</span><span>${safeText(ss.genre||'Genre non renseigné')}</span><span>${safeText(ss.statut||'Sans statut')}</span></div></div></section><div class="admin-tabs entity-tabs-c52 admin-editor-tabs"><button class="active" onclick="adminSsTab(this,'info')">Informations</button><button onclick="adminSsTab(this,'plan')">Plan global</button><button onclick="adminSsTab(this,'appearance')">Apparence</button><button onclick="adminSsTab(this,'archive')">Archivage</button></div>
     <div id="ass-info"><section class="admin-section"><h2>Informations</h2><div class="admin-section-grid"><div class="admin-field-full"><label>Nom</label><input id="ass-nom" value="${safeText(ss.nom||'')}"></div><div><label>Saga parente</label><input value="${safeText(ss.sagas?.nom||'')}" disabled></div><div><label>Genre dominant</label><input id="ass-genre" value="${safeText(ss.genre||'')}"></div><div><label>Temporalité</label><input id="ass-temporalite" value="${safeText(ss.temporalite||'')}"></div><div><label>Cadre</label><input id="ass-lieu" value="${safeText(ss.lieu_principal||'')}" placeholder="Sélection parent Codex à brancher"></div><div><label>Trame principale</label><div class="admin-check-row"><input type="checkbox" id="ass-trame" ${ss.trame_principale?'checked':''}><div><strong>Trame principale de la saga</strong><small>Affichée en premier avec une pastille 👑.</small></div></div></div><div class="admin-field-full"><label>Mots-clés</label><input id="ass-tags" value="${safeText((ss.mots_cles||[]).join(', '))}"></div><div class="admin-field-full"><label>Métadonnées héritées de la saga</label><div style="display:flex;gap:7px;flex-wrap:wrap">${window._assMetaDefs.map(m=>`<label class="tag" style="cursor:pointer"><input type="checkbox" class="ass-meta-check" value="${m.id}" style="width:auto" ${window._assMetaSelected.has(m.id)?'checked':''}> ${safeText((m.emoji?m.emoji+' ':'')+m.nom)}</label>`).join('')||'<small>Aucune métadonnée définie dans la saga.</small>'}</div></div></div><label>À propos / résumé canonique</label>${adminRichFieldV567('ass-description',ss.description||'',160)}<label>Citation</label>${adminRichFieldV567('ass-citation',ss.citation||'',90)}</section>
       <section class="admin-section"><div class="admin-section-head"><div><h2>Ordre des tomes</h2><p class="admin-section-sub">Le numéro sert à afficher T1, T2… ; l’ordre d’affichage décide de la position réelle dans la sous-saga.</p></div><button class="btn-primary" onclick="saveSousSagaWorkOrderV572d('${id}')">Enregistrer l’ordre</button></div>
         <div class="ss-work-order-list">${(wr.data||[]).length?(wr.data||[]).map((o,i)=>`<div class="ss-work-order-row"><div class="ss-work-order-title"><strong>${safeText(o.titre)}</strong><small>${safeText(o.numero_sous_saga!=null?'T'+o.numero_sous_saga:'Numéro non défini')}</small></div><label>Numéro du tome<input type="number" min="0" step="1" id="ass-work-num-${o.id}" value="${o.numero_sous_saga??''}" placeholder="${i+1}"></label><label>Ordre d’affichage<input type="number" min="0" step="1" id="ass-work-order-${o.id}" value="${o.ordre_sous_saga??(i+1)}"></label></div>`).join(''):'<div class="empty">Aucune œuvre liée à cette sous-saga.</div>'}</div>
