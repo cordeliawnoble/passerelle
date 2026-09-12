@@ -1230,6 +1230,31 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 }
 </style>
 
+
+<style id="c73-banner-edge-fade">
+/* C73 — fusion douce des bannières avec le fond de page.
+   Le masque agit sur l'image elle-même : aucun changement des fichiers médias. */
+.page-image-banner:not(.empty) img,
+.work-hero-banner:not(.empty) img{
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 5%, #000 91%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 5%, #000 91%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* Le conteneur reste transparent afin que le vrai fond de la page apparaisse
+   naturellement dans les zones fondues. */
+.page-image-banner:not(.empty),
+.work-hero-banner:not(.empty){
+  background:transparent!important;
+  overflow:visible;
+}
+</style>
+
 </head>
 <body>
 
