@@ -1255,6 +1255,29 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 }
 </style>
 
+
+<style id="c75-univers-saga-tiles">
+.univers-saga-grid-c75{margin-top:14px}
+.univers-saga-tile-c75 .oeuvre-saga-caption-v40{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  white-space:normal;
+}
+.univers-saga-tile-c75 .oeuvre-saga-caption-v40 strong{
+  font-size:12px;
+  line-height:1.3;
+}
+.univers-saga-tile-c75 .oeuvre-saga-caption-v40 small{
+  color:var(--text-dim);
+  font-size:9px;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+</style>
+
 </head>
 <body>
 
@@ -1384,7 +1407,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   const NAV = [
     {group:'Bibliothèque',items:[
       {key:'oeuvres',label:'Œuvres',real:true},{key:'oeuvres-saga',label:'Œuvres saga',real:true},{key:'poesie',label:'Recueils de poésie',real:true},
-      {key:'sagas',label:'Sagas',real:true},{key:'personnages',label:'Personnages',real:true}
+      {key:'sagas',label:'Univers',real:true},{key:'personnages',label:'Personnages',real:true}
     ]},
     {group:'Pilotage',items:[{key:'bureau-editorial',label:'Bureau éditorial',real:true},{key:'archives',label:'Archives',real:true}]},
     {group:'Atelier',items:[{key:'planning',label:'Planning',real:true},{key:'idees',label:'Pépinière',real:true}]},
@@ -1433,7 +1456,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
               <button id="nav-poesie" onclick="navigate('poesie')" title="Recueils de poésie"><b>🪶</b><span>Poésie</span></button>
             </div>
           </details>
-          <div class="sidebar-direct-v48"><button class="nav-link" id="nav-sagas" onclick="navigate('sagas')">✦ Sagas</button><button class="nav-link" id="nav-personnages" onclick="navigate('personnages')">♟ Personnages</button></div>
+          <div class="sidebar-direct-v48"><button class="nav-link" id="nav-sagas" onclick="navigate('sagas')">✦ Univers</button><button class="nav-link" id="nav-personnages" onclick="navigate('personnages')">♟ Personnages</button></div>
 
           <div class="nav-group">Pilotage</div>
           <div class="sidebar-icon-grid-v48 two">
@@ -3777,7 +3800,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   // ============================================================
   // PLANNING CRÉATIF
   // ============================================================
-  let planningView='week';
+  let planningView='month';
   let planningCursor=new Date();
   let planningSessions=[];
   let planningWorks=[];
@@ -3839,7 +3862,14 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   async function renderPlanning(){
     const content=document.getElementById('content');content.innerHTML='<div class="status-line">Chargement du planning…</div>';
     const planningBanner=await getPageBanner('planning');
-    const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange()); // C67 : toute la grille visible du mois
+
+    // C74 : normaliser la vue AVANT de calculer la plage chargée.
+    // Avant, Passerelle arrivait avec planningView='week', chargeait seulement 7 jours,
+    // puis basculait visuellement en mois après la requête. Résultat : un mois presque vide
+    // jusqu'à un second rendu/navigation.
+    if(planningView==='week') planningView='month';
+
+    const start=isoLocal(startOfPlanningRange()),end=isoLocal(endOfPlanningRange());
     const [worksRes,sessionsRes,chapRes]=await Promise.all([
       db().from('oeuvres').select('id,titre,couverture,statut').eq('archive',false).order('titre',{ascending:true}),
       db().from('planning_sessions').select('*').gte('date',start).lte('date',end).order('date',{ascending:true}).order('ordre',{ascending:true}),
@@ -3847,7 +3877,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     ]);
     if(sessionsRes.error){content.innerHTML=`<div class="empty">Le Planning a besoin de sa migration SQL.<br><small>${safeText(sessionsRes.error.message)}</small></div>`;return;}
     planningWorks=worksRes.data||[];planningSessions=sessionsRes.data||[];planningChapters=chapRes.data||[];
-    if(planningView==='week')planningView='month'; const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):'Toutes les sessions';
+    const title=planningView==='month'?planningCursor.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):'Toutes les sessions';
     content.innerHTML=`${renderPageImageBanner(planningBanner,'Planning')}<div class="planning-head"><div><h1>📅 Planning</h1><p>Sessions d’écriture et de relecture. Tu planifies, puis tu fais tatrat-glisser quand la vraie vie décide de jouer au bowling.</p></div><div class="planning-actions"><button class="btn-secondary" onclick="openPlanningCsv()">⇩ Import CSV</button><button class="btn-secondary" onclick="exportPlanningCsv()">⇧ Export CSV</button><button class="btn-primary" onclick="openPlanningSessionModal()">+ Nouvelle session</button><button class="btn-secondary" onclick="openPlanningSeriesModal()">✨ Créer une série</button></div></div>
       <div class="planning-toolbar"><div class="planning-nav"><button class="tiny-btn" onclick="movePlanning(-1)">←</button><div class="planning-period">${safeText(title)}</div><button class="tiny-btn" onclick="movePlanning(1)">→</button><button class="tiny-btn" onclick="planningCursor=new Date();renderPlanning()">Aujourd’hui</button></div><div class="planning-views"><button class="tiny-btn ${planningView==='month'?'active':''}" onclick="setPlanningView('month')">Mois</button><button class="tiny-btn ${planningView==='list'?'active':''}" onclick="setPlanningView('list')">Liste</button></div></div>
       <div class="planning-legend"><span><i style="background:#7C5CBF"></i>Écriture</span><span><i style="background:#59A77A"></i>Relecture</span><span>La couleur peut être personnalisée par session.</span></div>
@@ -4923,24 +4953,83 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   // ============================================================
   async function renderSagas(){
     const sagasBanner=await getPageBanner('sagas');
-    const content = document.getElementById('content');
-    content.innerHTML = `${renderPageImageBanner(sagasBanner,'Sagas')}
-      <div class="head-row"><h2>Sagas</h2><button class="btn-primary" onclick="openSagaModal()">+ Créer une saga</button></div>
-      <div id="sagas-zone"><div class="status-line">Chargement…</div></div>
-    `;
-    const { data, error } = await db().from('sagas').select('id, nom, genre, statut, archive, banniere, image_couverture, page_color, accent_color, secondary_color, soft_color, dark_color, charte_override, univers_id').order('ordre', { ascending:true });
-    const zone = document.getElementById('sagas-zone');
-    if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
-    if (!data.length) { zone.innerHTML = `<div class="empty">Aucune saga pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`; return; }
+    const content=document.getElementById('content');
+    content.innerHTML=`${renderPageImageBanner(sagasBanner,'Univers')}
+      <div class="head-row"><div><h2>Univers</h2><p style="font-size:12px;color:var(--text-dim)">Entrer dans une saga et retrouver son univers, ses sous-sagas et ses œuvres.</p></div><button class="btn-primary" onclick="openSagaModal()">+ Créer une saga</button></div>
+      <div id="sagas-zone"><div class="status-line">Chargement…</div></div>`;
+
+    const {data,error}=await db().from('sagas')
+      .select('id,nom,genre,statut,archive,banniere,image_couverture,page_color,accent_color,secondary_color,soft_color,dark_color,charte_override,univers_id')
+      .order('ordre',{ascending:true});
+
+    const zone=document.getElementById('sagas-zone');
+    if(error){zone.innerHTML=`<div class="empty">Erreur : ${safeText(error.message)}</div>`;return}
+    if(!data?.length){zone.innerHTML=`<div class="empty">Aucun univers pour l'instant.<br><br><button class="btn-primary" onclick="openSagaModal()">Créer ta première saga</button></div>`;return}
+
     await hydrateCardThemesV576c13('saga',data);
     window._sagaCatalogueV576c14=data||[];
-    const colIds=[...new Set((data||[]).map(x=>x.univers_id).filter(Boolean))];let colMap=new Map();if(colIds.length){const cr=await db().from('univers').select('id,nom').in('id',colIds);colMap=new Map((cr.data||[]).map(x=>[x.id,x.nom]));}
+
+    const colIds=[...new Set((data||[]).map(x=>x.univers_id).filter(Boolean))];
+    let colMap=new Map();
+    if(colIds.length){
+      const cr=await db().from('univers').select('id,nom').in('id',colIds);
+      colMap=new Map((cr.data||[]).map(x=>[x.id,x.nom]));
+    }
     window._sagaCollectionMapV576c14=colMap;
-    zone.innerHTML=`<div class="compact-filterbar-v576c14"><input class="filter-search" id="sagcat-q-v576c14" placeholder="🔍 Rechercher une saga…" oninput="renderSagaCatalogueV576c14()"><span class="filter-sep"></span><select id="sagcat-col-v576c14" onchange="renderSagaCatalogueV576c14()"><option value="">Collection · Toutes</option>${[...colMap].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('')}</select><select id="sagcat-status-v576c14" onchange="renderSagaCatalogueV576c14()"><option value="">Statut · Tous</option>${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}</select><button class="tiny-btn" onclick="resetSagaFiltersV576c14()">↺ Réinitialiser</button></div><div id="sagcat-grid-v576c14"></div>`;renderSagaCatalogueV576c14();
+
+    zone.innerHTML=`<div class="compact-filterbar-v576c14">
+      <input class="filter-search" id="sagcat-q-v576c14" placeholder="🔍 Rechercher un univers…" oninput="renderSagaCatalogueV576c14()">
+      <span class="filter-sep"></span>
+      <select id="sagcat-col-v576c14" onchange="renderSagaCatalogueV576c14()">
+        <option value="">Collection · Toutes</option>
+        ${[...colMap].map(([id,n])=>`<option value="${id}">${safeText(n)}</option>`).join('')}
+      </select>
+      <select id="sagcat-status-v576c14" onchange="renderSagaCatalogueV576c14()">
+        <option value="">Statut · Tous</option>
+        ${[...new Set((data||[]).map(x=>x.statut).filter(Boolean))].map(x=>`<option>${safeText(x)}</option>`).join('')}
+      </select>
+      <button class="tiny-btn" onclick="resetSagaFiltersV576c14()">↺ Réinitialiser</button>
+    </div>
+    <div id="sagcat-grid-v576c14"></div>`;
+
+    renderSagaCatalogueV576c14();
   }
 
-  function renderSagaCatalogueV576c14(){const z=document.getElementById('sagcat-grid-v576c14');if(!z)return;const q=(document.getElementById('sagcat-q-v576c14')?.value||'').toLowerCase(),col=document.getElementById('sagcat-col-v576c14')?.value||'',st=document.getElementById('sagcat-status-v576c14')?.value||'';const rows=(window._sagaCatalogueV576c14||[]).filter(x=>(!q||[x.nom,x.genre,x.statut,window._sagaCollectionMapV576c14?.get(x.univers_id)].filter(Boolean).join(' ').toLowerCase().includes(q))&&(!col||x.univers_id===col)&&(!st||x.statut===st));z.innerHTML=rows.length?`<div class="entity-gallery">${rows.map(s=>entityGalleryCard({title:s.nom,image:s.banniere||s.image_couverture,pageColor:s._resolved_page_color,tags:[window._sagaCollectionMapV576c14?.get(s.univers_id),s.genre,s.statut,s.archive?'Archivée':null],top:'Saga',onclick:`openSagaDetail('${s.id}')`})).join('')}</div>`:'<div class="empty">Aucune saga avec ces filtres.</div>';}
-  function resetSagaFiltersV576c14(){['sagcat-q-v576c14','sagcat-col-v576c14','sagcat-status-v576c14'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});renderSagaCatalogueV576c14();}
+  function renderSagaCatalogueV576c14(){
+    const z=document.getElementById('sagcat-grid-v576c14');if(!z)return;
+    const q=(document.getElementById('sagcat-q-v576c14')?.value||'').toLowerCase();
+    const col=document.getElementById('sagcat-col-v576c14')?.value||'';
+    const st=document.getElementById('sagcat-status-v576c14')?.value||'';
+
+    const rows=(window._sagaCatalogueV576c14||[]).filter(x=>
+      (!q||[x.nom,x.genre,x.statut,window._sagaCollectionMapV576c14?.get(x.univers_id)].filter(Boolean).join(' ').toLowerCase().includes(q))
+      &&(!col||x.univers_id===col)
+      &&(!st||x.statut===st)
+    );
+
+    z.innerHTML=rows.length
+      ? `<div class="oeuvres-saga-grid-v40 univers-saga-grid-c75">
+          ${rows.map(s=>{
+            const visual=s.banniere||s.image_couverture||'';
+            const collection=window._sagaCollectionMapV576c14?.get(s.univers_id)||'';
+            return `<article class="oeuvre-saga-tile-v40 univers-saga-tile-c75" onclick="openSagaDetail('${s.id}')">
+              <div class="oeuvre-saga-visual-v40">
+                ${visual?`<img src="${safeText(visual)}" alt="${safeText(s.nom||'Univers')}">`:`<div class="oeuvre-saga-empty-v40">${initials(s.nom||'Univers')}</div>`}
+              </div>
+              <div class="oeuvre-saga-caption-v40">
+                <strong>${safeText(s.nom||'Sans titre')}</strong>
+                ${collection||s.genre||s.statut?`<small>${[collection,s.genre,s.statut].filter(Boolean).map(safeText).join(' · ')}</small>`:''}
+              </div>
+            </article>`;
+          }).join('')}
+        </div>`
+      : '<div class="empty">Aucun univers avec ces filtres.</div>';
+  }
+
+  function resetSagaFiltersV576c14(){
+    ['sagcat-q-v576c14','sagcat-col-v576c14','sagcat-status-v576c14'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+    renderSagaCatalogueV576c14();
+  }
 
   // ============================================================
   // SAGAS — page détail, avec onglets
@@ -4994,7 +5083,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const inheritedThemeV576b=await resolveGraphicThemeV576b('saga',s); applyObjectTheme(inheritedThemeV576b.pageColor,inheritedThemeV576b.accent);
 
     content.innerHTML = `
-      <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux sagas</div>
+      <div class="back-link" onclick="navigate('sagas')" style="cursor:pointer; color:var(--text-dim); font-size:13px; margin-bottom:14px;">← Retour aux univers</div>
       <section class="saga-hero-c38">${s.banniere?`<img src="${safeText(s.banniere)}" alt="Bannière ${safeText(s.nom)}">`:''}<div class="saga-hero-content-c38"><h1>${safeText(s.nom)}</h1><div class="saga-hero-meta-c38">${renderPasserelleIdBadgeV572(s.passerelle_id)}<span>${safeText(s.genre||'Genre non renseigné')}</span><span>${safeText(s.statut||'Sans statut')}</span></div></div></section>
       <div class="tabbar entity-tabs-c52" style="display:flex; gap:7px; margin-bottom:24px; flex-wrap:wrap;">
         ${SAGA_TABS.map(t => `<button id="sagatab-${t.key}" onclick="showSagaTab('${t.key}')" style="background:none; border:none; font-family:'Lora',serif; font-size:14px; color:var(--text-dim); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent;">${t.label}</button>`).join('')}
