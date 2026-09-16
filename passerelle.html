@@ -2592,8 +2592,14 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   function applyGenericFiltersV576b(z){[...z.children].forEach(c=>{const okSearch=!z.dataset.search||(c.dataset.search||'').includes(z.dataset.search);const okC=!z.dataset.collection||c.dataset.collection===z.dataset.collection;const okS=!z.dataset.saga||c.dataset.saga===z.dataset.saga;c.style.display=okSearch&&okC&&okS?'':'none'})}
   async function renderAdminOeuvresPage(){
     const content=document.getElementById('content');
-    const [wr,cr,sr,ssr]=await Promise.all([db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,saga_id,sous_saga_id,univers_id,numero_sous_saga,ordre_sous_saga,sagas(id,nom,univers_id),sous_sagas(id,nom)').eq('archive',false).order('created_at',{ascending:false}),db().from('univers').select('*').order('ordre'),db().from('sagas').select('id,nom,univers_id').eq('archive',false).order('nom'),db().from('sous_sagas').select('id,nom,saga_id').order('nom')]);
-    if(wr.error){content.innerHTML=adminEmpty('Erreur : '+safeText(wr.error.message));return;} Object.assign(adminCatalogWorksV576b,{data:wr.data||[],collections:cr.data||[],sagas:sr.data||[],subs:ssr.data||[]});
+    const [wr,cr,sr,ssr]=await Promise.all([db().from('oeuvres').select('id,titre,genre,statut,archive,couverture,saga_id,sous_saga_id,univers_id,numero_sous_saga,ordre_sous_saga,sagas(id,nom,univers_id),sous_sagas(id,nom)').order('created_at',{ascending:false}),db().from('univers').select('*').order('ordre'),db().from('sagas').select('id,nom,univers_id,archive').order('nom'),db().from('sous_sagas').select('id,nom,saga_id,archive').order('nom')]);
+    if(wr.error){content.innerHTML=adminEmpty('Erreur : '+safeText(wr.error.message));return;}
+    // C93 : NULL signifie « non archivé » pour les anciennes données.
+    // Un filtre SQL .eq(false) excluait silencieusement ces lignes.
+    const activeWorks=(wr.data||[]).filter(x=>x.archive!==true);
+    const activeSagas=(sr.data||[]).filter(x=>x.archive!==true);
+    const activeSubs=(ssr.data||[]).filter(x=>x.archive!==true);
+    Object.assign(adminCatalogWorksV576b,{data:activeWorks,collections:cr.data||[],sagas:activeSagas,subs:activeSubs});
     content.innerHTML=adminPageHead('Œuvres','Catalogue actif. Les œuvres archivées vivent désormais uniquement dans Archives.',`<button class="btn-secondary" onclick="openWorksImportV576()">📦 Importer</button><button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div id="works-import-host-v576"></div>
       <div class="catalog-filterbar-v576c3">
         <div class="catalog-filter-row-v576c3">
