@@ -2919,6 +2919,38 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     return {format:'passerelle-notion-works-import',version:69,oeuvres:[work],collection:null,__stats:{entries:entries.length,csv:csvs.length,md:mds.length,selected:1,mode:linkedRoots.length?'single-root-linked-db':'single-root-md',rootName:roots[0].name}};
   }
 
+  // C95 hotfix — le bouton BO appelait cette fonction, perdue lors d'une consolidation.
+  function openWorksImportV576(){
+    const host=document.getElementById('works-import-host-v576');
+    if(!host)return;
+    worksPackageV576=null;
+    worksPreviewV576=null;
+    host.innerHTML=`<div class="admin-section" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <div>
+          <h2 style="margin:0 0 6px">📦 Importer des données d’œuvres</h2>
+          <p class="admin-section-sub">Choisis le format qui correspond à ta source. Le ZIP est recommandé pour un export Notion complet ; le JSON reste compatible avec les anciens paquets Passerelle.</p>
+        </div>
+        <button type="button" class="btn-secondary" onclick="document.getElementById('works-import-host-v576').innerHTML=''">Fermer</button>
+      </div>
+      <div class="notion-import-kpis" style="margin-top:16px">
+        <label class="card" style="cursor:pointer;display:block">
+          <strong>📦 ZIP Notion</strong><br><small>Markdown + CSV + sous-bases d’un export Notion complet.</small>
+          <div style="margin-top:12px"><span class="btn-primary">Choisir un ZIP</span></div>
+          <input type="file" accept=".zip,application/zip" style="display:none" onchange="readWorksNotionFileV43(this.files[0])">
+        </label>
+        <label class="card" style="cursor:pointer;display:block">
+          <strong>{} JSON Passerelle</strong><br><small>Compatibilité avec les anciens paquets multi-œuvres Passerelle.</small>
+          <div style="margin-top:12px"><span class="btn-secondary">Choisir un JSON</span></div>
+          <input type="file" accept=".json,application/json" style="display:none" onchange="readWorksPackageV576(this.files[0])">
+        </label>
+      </div>
+      <div id="works-import-status-v576" class="status-line" style="margin-top:14px"></div>
+      <div id="works-import-preview-v576"></div>
+    </div>`;
+    host.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
   async function readWorksNotionFileV43(file){
     if(!file)return;const st=document.getElementById('works-import-status-v576'),z=document.getElementById('works-import-preview-v576');worksPackageV576=null;worksPreviewV576=null;
     try{
