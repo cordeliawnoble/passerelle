@@ -1594,6 +1594,18 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 }
 </style>
 
+<style id="c90-chantier">
+.chantier-c90{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.chantier-head-c90{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:16px}
+.chantier-head-c90 h2{margin:0 0 5px;font-family:'Lora',serif}.chantier-head-c90 p{margin:0;color:var(--text-dim);font-size:12px}
+.chantier-table-c90{width:100%;border-collapse:collapse}.chantier-table-c90 th{text-align:left;font-size:11px;color:var(--text-dim);font-weight:600;padding:9px;border-bottom:1px solid var(--line)}
+.chantier-table-c90 td{padding:9px;border-bottom:1px solid var(--line);vertical-align:middle}.chantier-table-c90 tr.done{opacity:.52}.chantier-table-c90 tr.done .chantier-title-c90{text-decoration:line-through}
+.chantier-check-c90{width:18px;height:18px}.chantier-input-c90,.chantier-select-c90{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;padding:8px 9px;font:inherit}
+.chantier-title-c90{font-weight:600}.chantier-note-c90{color:var(--text-dim);font-size:12px}.chantier-actions-c90{display:flex;gap:5px;justify-content:flex-end}
+.chantier-icon-c90{border:0;background:transparent;cursor:pointer;padding:5px;color:var(--text-dim)}.chantier-add-c90{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;margin-top:14px}
+.chantier-done-c90{margin-top:16px}.chantier-done-c90 summary{cursor:pointer;color:var(--text-dim);font-size:12px;font-weight:700}
+@media(max-width:760px){.chantier-table-c90 th:nth-child(3),.chantier-table-c90 td:nth-child(3){display:none}.chantier-add-c90{grid-template-columns:1fr}.chantier-head-c90{display:block}}
+</style>
 </head>
 <body>
 
@@ -5066,6 +5078,38 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(!raw)return '<div class="character-empty">Pas encore de présentation.</div>';
     return /<\/?[a-z][\s\S]*>/i.test(raw)?`<div class="rich-readable-v576c37">${raw}</div>`:renderSimpleRichText(raw);
   }
+
+  // C90 — CHANTIER : post-it structurel Saga / Sous-saga.
+  // Stockage local par entité : aucune migration Supabase, aucune deadline/priorité.
+  const CHANTIER_CATS_C90=['Œuvre','Personnage','Lore','Chronologie','Médias','Structure','Autre'];
+  function chantierKeyC90(level,id){return `passerelle:chantier:c90:${currentUser?.id||'local'}:${level}:${id}`}
+  function loadChantierC90(level,id){try{return JSON.parse(localStorage.getItem(chantierKeyC90(level,id))||'[]')}catch(_){return []}}
+  function saveChantierC90(level,id,rows){localStorage.setItem(chantierKeyC90(level,id),JSON.stringify(rows))}
+  function chantierEscC90(v){return safeText(String(v||''))}
+  async function renderChantierC90(zone,level,id){
+    const rows=loadChantierC90(level,id),open=rows.filter(x=>!x.done),done=rows.filter(x=>x.done);
+    const row=x=>`<tr class="${x.done?'done':''}">
+      <td style="width:42px"><input class="chantier-check-c90" type="checkbox" ${x.done?'checked':''} onchange="toggleChantierC90('${level}','${id}','${x.id}',this.checked)"></td>
+      <td><div class="chantier-title-c90">${chantierEscC90(x.title)}</div></td>
+      <td style="width:150px"><span class="tag">${chantierEscC90(x.category||'Autre')}</span></td>
+      <td><div class="chantier-note-c90">${chantierEscC90(x.note)}</div></td>
+      <td style="width:76px"><div class="chantier-actions-c90"><button class="chantier-icon-c90" title="Modifier" onclick="editChantierC90('${level}','${id}','${x.id}')">✎</button><button class="chantier-icon-c90" title="Supprimer" onclick="deleteChantierC90('${level}','${id}','${x.id}')">×</button></div></td>
+    </tr>`;
+    zone.innerHTML=`<section class="chantier-c90"><div class="chantier-head-c90"><div><h2>🛠️ Chantier</h2><p>Le post-it de cette ${level==='saga'?'saga':'sous-saga'} : ce qu’il reste à construire ici. Sans échéance, sans priorité, sans transformer ça en Todum.</p></div><span class="tag">${open.length} à construire</span></div>
+      <table class="chantier-table-c90"><thead><tr><th></th><th>Chantier</th><th>Catégorie</th><th>Note</th><th></th></tr></thead><tbody>${open.map(row).join('')||`<tr><td colspan="5"><div class="empty">Rien sur le post-it pour le moment. ✨</div></td></tr>`}</tbody></table>
+      <div class="chantier-add-c90"><input class="chantier-input-c90" id="chantier-title-c90" placeholder="Ex. Pitcher le roman principal 1"><select class="chantier-select-c90" id="chantier-cat-c90">${CHANTIER_CATS_C90.map(c=>`<option>${c}</option>`).join('')}</select><input class="chantier-input-c90" id="chantier-note-c90" placeholder="Note facultative"><button class="btn-primary" onclick="addChantierC90('${level}','${id}')">+ Ajouter</button></div>
+      ${done.length?`<details class="chantier-done-c90"><summary>Terminés (${done.length})</summary><table class="chantier-table-c90"><tbody>${done.map(row).join('')}</tbody></table></details>`:''}
+    </section>`;
+  }
+  function addChantierC90(level,id){
+    const title=document.getElementById('chantier-title-c90')?.value.trim();if(!title)return;
+    const rows=loadChantierC90(level,id);rows.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)),title,category:document.getElementById('chantier-cat-c90')?.value||'Autre',note:document.getElementById('chantier-note-c90')?.value.trim()||'',done:false,created_at:new Date().toISOString()});saveChantierC90(level,id,rows);
+    renderChantierC90(document.getElementById(level==='saga'?'saga-tab-content':'soussaga-tab-content'),level,id);
+  }
+  function toggleChantierC90(level,id,rowId,on){const rows=loadChantierC90(level,id),x=rows.find(r=>r.id===rowId);if(x){x.done=!!on;x.done_at=on?new Date().toISOString():null;saveChantierC90(level,id,rows)}renderChantierC90(document.getElementById(level==='saga'?'saga-tab-content':'soussaga-tab-content'),level,id)}
+  function deleteChantierC90(level,id,rowId){if(!confirm('Retirer cette ligne du Chantier ?'))return;saveChantierC90(level,id,loadChantierC90(level,id).filter(r=>r.id!==rowId));renderChantierC90(document.getElementById(level==='saga'?'saga-tab-content':'soussaga-tab-content'),level,id)}
+  function editChantierC90(level,id,rowId){const rows=loadChantierC90(level,id),x=rows.find(r=>r.id===rowId);if(!x)return;const title=prompt('Élément du Chantier',x.title);if(title===null||!title.trim())return;const note=prompt('Note facultative',x.note||'');if(note===null)return;x.title=title.trim();x.note=note.trim();saveChantierC90(level,id,rows);renderChantierC90(document.getElementById(level==='saga'?'saga-tab-content':'soussaga-tab-content'),level,id)}
+
   async function renderSagaInformations(zone){
     zone.innerHTML='<div class="status-line">Chargement…</div>';
     try{
@@ -5799,6 +5843,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     { key:'codex', label:'Codex', real:true },
     { key:'chronologie', label:'Chronologie', real:true },
     { key:'medias', label:'Médias', real:true },
+    { key:'chantier', label:'🛠️ Chantier', real:true },
   ];
   let currentSagaId = null;
   let currentSagaTab = 'informations';
@@ -5844,6 +5889,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if (key === 'codex') await renderSagaCodexV56(zone);
     if (key === 'chronologie') await renderSagaChronologieV56(zone);
     if (key === 'medias') await renderSagaMediasV565(zone);
+    if (key === 'chantier') await renderChantierC90(zone,'saga',currentSagaId);
   }
 
   async function renderSagaApercu(zone){
@@ -6066,6 +6112,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     { key:'codex', label:'Codex', real:true },
     { key:'chronologie', label:'Chronologie', real:true },
     { key:'medias', label:'Médias', real:true },
+    { key:'chantier', label:'🛠️ Chantier', real:true },
   ];
   let currentSousSagaId = null;
   let currentSousSagaParentSagaId = null;
@@ -6117,6 +6164,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if (key === 'codex') await renderSousSagaCodex(zone);
     if (key === 'chronologie') await renderSousSagaChronologie(zone);
     if (key === 'medias') await renderSousSagaMediasV565(zone);
+    if (key === 'chantier') await renderChantierC90(zone,'sous_saga',currentSousSagaId);
   }
 
   async function renderSousSagaInformations(zone){
