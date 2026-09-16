@@ -3766,7 +3766,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(error){zone.innerHTML=adminEmpty(error.message);return}
     characterMediaImportV65.characters=data||[];
     zone.innerHTML=`<div class="admin-section character-media-import-v65">
-      <div class="character-topbar"><div><h2>🖼 Importer des médias de personnages</h2><p class="admin-section-sub">Dépose un ZIP d’images. Passerelle suggère le personnage d’après le nom du fichier, tu choisis la destination, puis les images sont optimisées en WebP avant l’envoi.</p></div></div>
+      <div class="character-topbar"><div><h2>🖼 Importer des médias de personnages</h2><p class="admin-section-sub">Dépose un ZIP d’images. Passerelle suggère le personnage d’après le nom du fichier, tu choisis la destination, puis les images sont optimisées en WebP avant l’envoi.</p></div><button type="button" class="btn-secondary" onclick="repairCharacterMediaLinksC86()">🩹 Réconcilier les médias</button></div>
       <div class="character-media-steps-v65"><span><b>1</b> ZIP</span><span><b>2</b> Vérifier</span><span><b>3</b> Affecter</span><span><b>4</b> Importer</span></div>
       <label class="character-media-drop-v65">📦 <strong>Choisir un ZIP d’images</strong><small>JPG, PNG ou WebP · les images non attribuées ne seront pas importées.</small><input type="file" accept=".zip,application/zip" onchange="readCharacterMediaZipV65(this.files[0])"></label>
       <div id="character-media-import-status-v65" class="status-line"></div>
@@ -3837,6 +3837,36 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     renderCharacterMediaPreviewV65();
   }
 
+  async function patchCharacterMediaC86(personnageId,destination,url){
+    const {data:full,error:pe}=await db().from('personnages').select('id,contenu,portrait_url').eq('id',personnageId).single();
+    if(pe)throw pe;
+    const contenu=full?.contenu&&typeof full.contenu==='object'?JSON.parse(JSON.stringify(full.contenu)):{};
+    const u=contenu.universel&&typeof contenu.universel==='object'?contenu.universel:{};
+    const patch={updated_at:new Date().toISOString()};
+    if(destination==='portrait')patch.portrait_url=url;
+    else if(destination==='vertical')u.profil_media_url=url;
+    else if(destination==='appearance'){
+      const a=Array.isArray(u.apparence_media_urls)?u.apparence_media_urls:[];
+      u.apparence_media_urls=[...new Set([...a,url])].slice(0,12);
+    }else if(destination==='reference'){
+      const a=Array.isArray(u.reference_media_urls)?u.reference_media_urls:[];
+      u.reference_media_urls=[...new Set([...a,url])].slice(0,30);
+    }
+    contenu.universel=u;patch.contenu=contenu;
+    // C86 : on exige le retour de la ligne modifiée. Un UPDATE Supabase peut
+    // ne lever aucune erreur tout en ne modifiant aucune ligne (RLS/filtre).
+    const {data:updated,error:ue}=await db().from('personnages').update(patch).eq('id',personnageId).select('id,portrait_url,contenu').single();
+    if(ue)throw ue;
+    if(!updated?.id)throw new Error('La fiche personnage n’a pas été mise à jour.');
+    const ud=updated.contenu?.universel||{};
+    const linked=destination==='portrait'?updated.portrait_url===url:
+      destination==='vertical'?ud.profil_media_url===url:
+      destination==='appearance'?Array.isArray(ud.apparence_media_urls)&&ud.apparence_media_urls.includes(url):
+      Array.isArray(ud.reference_media_urls)&&ud.reference_media_urls.includes(url);
+    if(!linked)throw new Error('Le média a été envoyé mais son lien n’a pas été enregistré dans la fiche.');
+    return updated;
+  }
+
   async function executeCharacterMediaImportV65(){
     const rows=characterMediaImportV65.items.filter(x=>x.selected&&x.character_id&&x.destination);
     if(!rows.length)return;
@@ -3845,28 +3875,62 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     for(const x of rows){
       const p=characterMediaImportV65.characters.find(c=>c.id===x.character_id);if(!p)continue;
       try{
-        st.textContent=`Conversion WebP & import… ${done+1}/${rows.length} · ${p.nom}`;
+        st.textContent=`Conversion WebP & liaison à la fiche… ${done+1}/${rows.length} · ${p.nom}`;
         const url=await uploadAssetFile(x.file,`personnages/${p.id}/bulk`,{kind:x.destination==='portrait'?'portrait':'generic',throwOnError:true,requireOptimize:true});
+
+        // La fiche est désormais la source de vérité : on la lie ET on vérifie
+        // réellement la persistance avant de déclarer l'import réussi.
+        const updated=await patchCharacterMediaC86(p.id,x.destination,url);
+
         const typeMap={portrait:'Portrait',vertical:'Profil vertical',appearance:'Apparence',reference:'Référence visuelle'};
-        const {error:me}=await db().from('medias').insert({user_id:currentUser.id,personnage_id:p.id,url,titre:x.name.replace(/\.[^.]+$/,''),type:typeMap[x.destination]||'Illustration'});
+        const {error:me}=await db().from('medias').insert({
+          user_id:currentUser.id,personnage_id:p.id,url,
+          titre:x.name.replace(/\.[^.]+$/,''),type:typeMap[x.destination]||'Illustration'
+        });
         if(me)throw me;
-        const {data:full,error:pe}=await db().from('personnages').select('contenu,portrait_url').eq('id',p.id).single();if(pe)throw pe;
-        const contenu=full?.contenu&&typeof full.contenu==='object'?JSON.parse(JSON.stringify(full.contenu)):{};
-        const u=contenu.universel&&typeof contenu.universel==='object'?contenu.universel:{};
-        const patch={updated_at:new Date().toISOString()};
-        if(x.destination==='portrait')patch.portrait_url=url;
-        else if(x.destination==='vertical')u.profil_media_url=url;
-        else if(x.destination==='appearance'){const a=Array.isArray(u.apparence_media_urls)?u.apparence_media_urls:[];u.apparence_media_urls=[...new Set([...a,url])].slice(0,12)}
-        else if(x.destination==='reference'){const a=Array.isArray(u.reference_media_urls)?u.reference_media_urls:[];u.reference_media_urls=[...new Set([...a,url])].slice(0,30)}
-        contenu.universel=u;patch.contenu=contenu;
-        const {error:ue}=await db().from('personnages').update(patch).eq('id',p.id);if(ue)throw ue;
+
+        // Actualise aussi le cache de la page d'import.
+        p.portrait_url=updated.portrait_url||p.portrait_url;
+        p.contenu=updated.contenu||p.contenu;
         done++;
       }catch(e){errors.push(`${x.name}: ${e?.message||e}`)}
     }
-    st.textContent=`✓ ${done} image(s) importée(s)${errors.length?` · ${errors.length} erreur(s)`:''}`;
-    if(errors.length)console.error('Import médias personnages C65',errors);
-    characterMediaImportV65.items=characterMediaImportV65.items.filter(x=>!rows.includes(x));
+    st.textContent=`${errors.length?'⚠':'✓'} ${done} image(s) réellement liée(s) aux fiches${errors.length?` · ${errors.length} erreur(s)`:''}`;
+    if(errors.length){
+      console.error('Import médias personnages C86',errors);
+      alert(`Import terminé avec ${errors.length} erreur(s).\n\n${errors.slice(0,8).join('\n')}`);
+    }
+    const okRows=rows.filter(x=>!errors.some(e=>e.startsWith(x.name+':')));
+    characterMediaImportV65.items=characterMediaImportV65.items.filter(x=>!okRows.includes(x));
     renderCharacterMediaPreviewV65();
+  }
+
+  async function repairCharacterMediaLinksC86(){
+    const st=document.getElementById('character-media-import-status-v65');
+    if(!confirm('Réconcilier les médias personnages déjà présents avec leurs fiches ? Passerelle complètera les liens manquants sans supprimer les références existantes.'))return;
+    try{
+      st.textContent='Recherche des médias déjà importés…';
+      const {data:medias,error}=await db().from('medias').select('id,personnage_id,url,fichier_url,storage_url,type,created_at').not('personnage_id','is',null).order('created_at',{ascending:true});
+      if(error)throw error;
+      let repaired=0,skipped=0,failed=[];
+      for(const m of medias||[]){
+        const url=characterMediaUrlV575(m);if(!url){skipped++;continue}
+        const type=String(m.type||'').toLowerCase();
+        let dest=/^portrait$/.test(type)?'portrait':/profil/.test(type)?'vertical':/apparence/.test(type)?'appearance':/référence|reference/.test(type)?'reference':'';
+        if(!dest){skipped++;continue}
+        try{
+          // Portrait/profil : ne remplace pas une valeur déjà présente par un ancien média.
+          const {data:p,error:pe}=await db().from('personnages').select('portrait_url,contenu').eq('id',m.personnage_id).single();
+          if(pe)throw pe;
+          const u=p?.contenu?.universel||{};
+          if(dest==='portrait'&&p.portrait_url){skipped++;continue}
+          if(dest==='vertical'&&u.profil_media_url){skipped++;continue}
+          await patchCharacterMediaC86(m.personnage_id,dest,url);repaired++;
+        }catch(e){failed.push(e?.message||String(e))}
+      }
+      st.textContent=`✓ Réconciliation terminée · ${repaired} lien(s) réparé(s) · ${skipped} déjà OK / ignoré(s)${failed.length?` · ${failed.length} erreur(s)`:''}`;
+      if(failed.length)console.error('Réconciliation C86',failed);
+    }catch(e){st.textContent='⚠ Réconciliation impossible : '+(e?.message||e)}
   }
 
   async function renderCharacterIdentifiersV572(zone){const {data,error}=await db().from('personnages').select('passerelle_id,nom,archive').order('nom');if(error){zone.innerHTML=adminEmpty(error.message);return}zone.innerHTML=`<div class="character-topbar"><div><h2>Identifiants Personnages</summary><p class="admin-section-sub">Ils servent au dédoublonnage, aux mises à jour et aux relations d’import. Ils restent volontairement discrets dans le front.</p></div></div><div style="overflow:auto"><table class="admin-table id-table"><thead><tr><th>Personnage</th><th>ID Passerelle</th><th>État</th><th></th></tr></thead><tbody>${(data||[]).map(p=>`<tr><td>${safeText(p.nom)}</td><td><code>${safeText(p.passerelle_id||'—')}</code></td><td>${p.archive?'Archivé':'Actif'}</td><td><button class="tiny-btn" onclick="copyPasserelleIdV572('${safeText(p.passerelle_id||'')}')">Copier</button></td></tr>`).join('')}</tbody></table></div>`}
