@@ -3910,11 +3910,13 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(!confirm('Réconcilier les médias personnages déjà présents avec leurs fiches ? Passerelle complètera les liens manquants sans supprimer les références existantes.'))return;
     try{
       st.textContent='Recherche des médias déjà importés…';
-      const {data:medias,error}=await db().from('medias').select('id,personnage_id,url,fichier_url,storage_url,type,created_at').not('personnage_id','is',null).order('created_at',{ascending:true});
+      // C87 : ne demander que les colonnes réellement présentes dans la table medias.
+      // La C86 supposait à tort l'existence de fichier_url / storage_url.
+      const {data:medias,error}=await db().from('medias').select('id,personnage_id,url,type,created_at').not('personnage_id','is',null).order('created_at',{ascending:true});
       if(error)throw error;
       let repaired=0,skipped=0,failed=[];
       for(const m of medias||[]){
-        const url=characterMediaUrlV575(m);if(!url){skipped++;continue}
+        const url=m.url||'';if(!url){skipped++;continue}
         const type=String(m.type||'').toLowerCase();
         let dest=/^portrait$/.test(type)?'portrait':/profil/.test(type)?'vertical':/apparence/.test(type)?'appearance':/référence|reference/.test(type)?'reference':'';
         if(!dest){skipped++;continue}
