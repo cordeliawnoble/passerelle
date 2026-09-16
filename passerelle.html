@@ -2621,6 +2621,14 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         </div>
       </div><div id="admin-works-results-v576b"></div>`;renderAdminWorksResultsV576b();
   }
+  // C94 hotfix — helper de normalisation perdu lors d'une consolidation.
+  function normV576(value){
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .trim();
+  }
   function resetWorksFiltersV576c3(){
     Object.assign(adminCatalogWorksV576b,{search:'',collection:'',saga:'',sub:'',status:''});
     renderAdminOeuvresPage();
