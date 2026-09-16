@@ -1606,6 +1606,14 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 .chantier-done-c90{margin-top:16px}.chantier-done-c90 summary{cursor:pointer;color:var(--text-dim);font-size:12px;font-weight:700}
 @media(max-width:760px){.chantier-table-c90 th:nth-child(3),.chantier-table-c90 td:nth-child(3){display:none}.chantier-add-c90{grid-template-columns:1fr}.chantier-head-c90{display:block}}
 </style>
+<style id="c91-character-linker">
+.character-linker-filters-c91{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:10px;margin:16px 0 8px}
+.character-linker-filters-c91 label{display:block;font-size:11px;color:var(--text-dim);margin:0 0 5px}
+.character-linker-filters-c91 input,.character-linker-filters-c91 select{width:100%;min-height:42px}
+.character-linker-count-c91{font-size:11px;color:var(--text-dim);margin:4px 0 8px}
+@media(max-width:900px){.character-linker-filters-c91{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.character-linker-filters-c91{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -8277,12 +8285,48 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   let characterBulkLinkerOpenC58=false;
   function toggleCharacterBulkLinkerC58(){characterBulkLinkerOpenC58=!characterBulkLinkerOpenC58;renderCharacterBulkBarV572()}
+  let characterLinkerSearchC91='';
+  let characterLinkerWorkC91='';
   function renderCharacterBulkLinkerC58(){
     const z=document.getElementById('character-linker-host-c58');if(!z)return;
-    const st=characterCatalogV572,saga=document.getElementById('c58-link-saga')?.value||'',sub=document.getElementById('c58-link-sub')?.value||'';
-    const subs=st.subs.filter(x=>!saga||x.saga_id===saga),works=st.works.filter(w=>!w.archive&&(!saga||w.saga_id===saga)&&(!sub||w.sous_saga_id===sub));
-    z.innerHTML=`<div class="character-linker-c58"><strong>🔗 Relier ${st.selected.size} personnage(s)</strong><div style="font-size:12px;color:var(--text-dim);margin-top:3px">Choisis une saga ou une sous-saga pour filtrer, puis coche une ou plusieurs œuvres. Les liens existants sont conservés.</div><div class="character-linker-grid-c58"><div><label>Saga</label><select id="c58-link-saga" onchange="renderCharacterBulkLinkerC58()"><option value="">Toutes les sagas</option>${st.sagas.filter(x=>!x.archive).map(x=>`<option value="${x.id}" ${saga===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div><div><label>Sous-saga</label><select id="c58-link-sub" onchange="renderCharacterBulkLinkerC58()"><option value="">Toutes les sous-sagas</option>${subs.filter(x=>!x.archive).map(x=>`<option value="${x.id}" ${sub===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div><div class="character-linker-works-c58">${works.map(w=>`<label class="character-linker-work-c58"><input type="checkbox" data-c58-work="${w.id}"><span><strong>${safeText(w.titre)}</strong>${w.sous_saga_id?`<br><small>${safeText(st.subs.find(x=>x.id===w.sous_saga_id)?.nom||'')}</small>`:''}</span></label>`).join('')||'<span style="color:var(--text-dim)">Aucune œuvre dans ce filtre.</span>'}</div><div class="character-linker-actions-c58"><button class="btn-primary" onclick="bulkLinkCharactersToWorksC58(false)">Ajouter les liens</button><button class="btn-secondary" onclick="bulkLinkCharactersToWorksC58(true)">Retirer les liens</button><button class="tiny-btn" onclick="characterBulkLinkerOpenC58=false;renderCharacterBulkBarV572()">Fermer</button><span id="c58-link-status" style="font-size:12px;color:var(--text-dim)"></span></div></div></div>`;
+    const st=characterCatalogV572;
+    const saga=document.getElementById('c58-link-saga')?.value||'';
+    const sub=document.getElementById('c58-link-sub')?.value||'';
+    const currentWork=document.getElementById('c91-link-work')?.value??characterLinkerWorkC91;
+    const currentSearch=document.getElementById('c91-link-search')?.value??characterLinkerSearchC91;
+    characterLinkerWorkC91=currentWork;characterLinkerSearchC91=currentSearch;
+
+    const subs=st.subs.filter(x=>!x.archive&&(!saga||x.saga_id===saga));
+    const baseWorks=st.works.filter(w=>!w.archive&&(!saga||w.saga_id===saga)&&(!sub||w.sous_saga_id===sub));
+    const workOptions=baseWorks.slice().sort((a,b)=>(a.titre||'').localeCompare(b.titre||'','fr'));
+    const q=(currentSearch||'').trim().toLowerCase();
+    const works=baseWorks.filter(w=>{
+      if(currentWork&&w.id!==currentWork)return false;
+      if(!q)return true;
+      const ss=st.subs.find(x=>x.id===w.sous_saga_id)?.nom||'';
+      const sg=st.sagas.find(x=>x.id===w.saga_id)?.nom||'';
+      return `${w.titre||''} ${ss} ${sg}`.toLowerCase().includes(q);
+    });
+
+    z.innerHTML=`<div class="character-linker-c58">
+      <strong>🔗 Relier ${st.selected.size} personnage(s)</strong>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:3px">Filtre la liste puis coche une ou plusieurs œuvres. Les liens existants sont conservés.</div>
+      <div class="character-linker-filters-c91">
+        <div><label>🔍 Recherche</label><input id="c91-link-search" class="search-input" value="${safeText(currentSearch)}" placeholder="Titre, saga, sous-saga…" oninput="characterLinkerSearchC91=this.value;renderCharacterBulkLinkerC58()"></div>
+        <div><label>Œuvre</label><select id="c91-link-work" onchange="characterLinkerWorkC91=this.value;renderCharacterBulkLinkerC58()"><option value="">Toutes les œuvres</option>${workOptions.map(w=>`<option value="${w.id}" ${currentWork===w.id?'selected':''}>${safeText(w.titre)}</option>`).join('')}</select></div>
+        <div><label>Saga</label><select id="c58-link-saga" onchange="characterLinkerWorkC91='';renderCharacterBulkLinkerC58()"><option value="">Toutes les sagas</option>${st.sagas.filter(x=>!x.archive).map(x=>`<option value="${x.id}" ${saga===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div>
+        <div><label>Sous-saga</label><select id="c58-link-sub" onchange="characterLinkerWorkC91='';renderCharacterBulkLinkerC58()"><option value="">Toutes les sous-sagas</option>${subs.map(x=>`<option value="${x.id}" ${sub===x.id?'selected':''}>${safeText(x.nom)}</option>`).join('')}</select></div>
+      </div>
+      <div class="character-linker-count-c91">${works.length} œuvre${works.length>1?'s':''} affichée${works.length>1?'s':''}</div>
+      <div class="character-linker-works-c58">${works.map(w=>`<label class="character-linker-work-c58"><input type="checkbox" data-c58-work="${w.id}"><span><strong>${safeText(w.titre)}</strong><br><small>${safeText(st.subs.find(x=>x.id===w.sous_saga_id)?.nom||st.sagas.find(x=>x.id===w.saga_id)?.nom||'Sans rattachement')}</small></span></label>`).join('')||'<span style="color:var(--text-dim)">Aucune œuvre ne correspond aux filtres.</span>'}</div>
+      <div class="character-linker-actions-c58"><button class="btn-primary" onclick="bulkLinkCharactersToWorksC58(false)">Ajouter les liens</button><button class="btn-secondary" onclick="bulkLinkCharactersToWorksC58(true)">Retirer les liens</button><button class="tiny-btn" onclick="characterBulkLinkerOpenC58=false;characterLinkerSearchC91='';characterLinkerWorkC91='';renderCharacterBulkBarV572()">Fermer</button><span id="c58-link-status" style="font-size:12px;color:var(--text-dim)"></span></div>
+    </div>`;
+    // Garde le focus et le curseur dans la recherche pendant le filtrage instantané.
+    if(document.activeElement?.id==='c91-link-search'||q){
+      const el=document.getElementById('c91-link-search');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}
+    }
   }
+
   async function bulkLinkCharactersToWorksC58(remove=false){
     const pids=[...characterCatalogV572.selected],wids=[...document.querySelectorAll('[data-c58-work]:checked')].map(x=>x.dataset.c58Work),status=document.getElementById('c58-link-status');
     if(!pids.length||!wids.length){if(status)status.textContent='Choisis au moins une œuvre.';return}
