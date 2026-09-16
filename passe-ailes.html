@@ -1,1 +1,64 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Passe-ailes · Prélude</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f3f9;color:#302638;font-family:Arial}aside{position:fixed;inset:0 auto 0 0;width:230px;background:white;border-right:1px solid #e7deeb;padding:22px 14px}.brand{font:22px Georgia;padding:6px 10px 24px}nav{display:grid;gap:6px}nav a{display:flex;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:#786c80;font-size:12px}nav a.active,nav a:hover{background:#eee5f5;color:#755394}main{margin-left:230px;min-height:100vh;display:grid;place-items:center;padding:28px}.empty{width:min(720px,100%);text-align:center;background:white;border:1px solid #e7deeb;border-radius:22px;padding:54px 30px;box-shadow:0 16px 50px #3626400f}.icon{font-size:58px}h1{font:400 48px Georgia;margin:15px 0 8px}p{color:#837789;line-height:1.6}.badge{display:inline-block;margin-top:18px;padding:7px 11px;border-radius:999px;background:#f0e8f5;color:#765494;font-size:10px;font-weight:800;letter-spacing:.1em}@media(max-width:700px){aside{position:static;width:auto}aside nav{grid-template-columns:repeat(4,1fr)}nav a{justify-content:center}nav a span{display:none}main{margin-left:0}}</style></head><body><aside><div class="brand">🎼 Prélude</div><nav><a href="index.html" class="">🎼<span>Prélude</span></a><a href="passerelle.html" class="">🌉<span>Passerelle</span></a><a href="passe-ailes.html" class="active">🪽<span>Passe-ailes</span></a><a href="nova.html" class="">✦<span>Nova</span></a></nav></aside><main><section class="empty"><div class="icon">🪽</div><h1>Passe-ailes</h1><p>Le versant éditorial, administratif et publication de Prélude. Sa porte est posée, prête pour notre premier module.</p><span class="badge">ESPACE PRÊT À CONSTRUIRE</span></section></main></body></html>
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Passe-Ailes · Prélude</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}:root{--ink:#302638;--muted:#837789;--line:#e7deeb;--paper:#fff;--bg:#f7f3f9;--violet:#765494;--soft:#f0e8f5}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif}button,input,select{font:inherit}
+.shell{display:grid;grid-template-columns:244px 1fr;min-height:100vh}aside{background:white;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh}
+.brand{font-size:25px;padding:6px 10px 8px}.switch{margin:0 8px 22px;color:var(--muted);font-size:12px}.switch a{color:var(--violet);text-decoration:none}
+.nav-title{font:700 10px Arial;letter-spacing:.12em;color:#a092a8;padding:17px 12px 6px}nav{display:grid;gap:4px}nav button{border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;color:#786c80;cursor:pointer}nav button.active,nav button:hover{background:var(--soft);color:var(--violet)}
+main{padding:34px 42px;min-width:0}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}h1{font-size:38px;font-weight:400;margin:0 0 7px}.sub{color:var(--muted);font-size:14px}.badge{padding:7px 11px;background:var(--soft);color:var(--violet);border-radius:999px;font:700 10px Arial}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:18px}.card h3{margin:0 0 7px}.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.toolbar input,.toolbar select{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 12px;color:var(--ink)}.toolbar input{min-width:280px;flex:1}
+.tablewrap{background:white;border:1px solid var(--line);border-radius:17px;overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:13px 15px;border-bottom:1px solid var(--line);text-align:left}th{font:700 10px Arial;color:var(--muted);letter-spacing:.08em}td small{color:var(--muted)}.btn{border:1px solid var(--line);background:white;border-radius:9px;padding:8px 11px;cursor:pointer;color:var(--ink)}.btn.primary{background:var(--violet);color:white;border-color:var(--violet)}.empty{padding:40px;text-align:center;color:var(--muted)}
+.notice{background:#fffaf0;border:1px solid #eee1c4;border-radius:14px;padding:13px 15px;color:#796845;font-size:12px;margin-bottom:18px}
+@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:static;height:auto}nav{grid-template-columns:repeat(4,1fr)}.nav-title{display:none}main{padding:24px 18px}.grid{grid-template-columns:1fr}}
+</style></head>
+<body><div id="app"><div class="empty">Chargement de Passe-Ailes…</div></div>
+<script>
+const supabaseUrl='https://ilhfzulwuuxyidhityoo.supabase.co',supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaGZ6dWx3dXV4eWlkaGl0eW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDA5NTgsImV4cCI6MjEwMjQxNjk1OH0.nux1ehaes_1rPSQhaYJ3hdCcipYn3B5PQMokUzSuBl0';
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey),db=()=>sb.schema('passerelle');
+let user=null,works=[],view='catalogue';
+
+async function init(){
+ const r=await sb.auth.getSession();user=r.data?.session?.user||null;
+ if(!user){document.getElementById('app').innerHTML=`<div class="empty"><h1>🪽 Passe-Ailes</h1><p>La session Prélude n'est pas ouverte.</p><a href="passerelle.html">Ouvrir Passerelle pour se connecter</a></div>`;return}
+ renderShell();await loadWorks();
+}
+function renderShell(){
+ document.getElementById('app').innerHTML=`<div class="shell"><aside><div class="brand">🪽 Passe-Ailes</div><div class="switch">Prélude · <a href="passerelle.html">Passerelle</a> · <a href="nova.html">Nova</a></div>
+ <div class="nav-title">PILOTAGE</div><nav>
+ <button data-v="bureau" onclick="go('bureau')">🏠 Bureau</button>
+ <div class="nav-title">ŒUVRES</div>
+ <button data-v="catalogue" class="active" onclick="go('catalogue')">📚 Catalogue professionnel</button>
+ <button data-v="projets" onclick="go('projets')">🗂 Projets</button>
+ <button data-v="soumissions" onclick="go('soumissions')">🏛 Soumissions ME</button>
+ <button data-v="autoedition" onclick="go('autoedition')">📕 Autoédition</button>
+ <button data-v="lecture" onclick="go('lecture')">🌐 Publication en ligne</button>
+ <div class="nav-title">AUTRICE</div><button data-v="autrice" onclick="go('autrice')">👤 Mon activité</button>
+ <div class="nav-title">DÉVELOPPEMENT</div><button data-v="developpement" onclick="go('developpement')">📣 Marketing & commercial</button>
+ <button data-v="calendrier" onclick="go('calendrier')">🗓 Calendrier</button><button data-v="exports" onclick="go('exports')">📤 Exports</button><button data-v="archives" onclick="go('archives')">🗄 Archives</button>
+ </nav></aside><main id="content"></main></div>`;}
+async function loadWorks(){
+ const r=await db().from('oeuvres').select('id,titre,couverture,genre,statut,destination_editoriale,niveau_editorial_cible,statut_editorial_actuel,horizon_annee,publication_envisagee,archive,sagas(nom),sous_sagas(nom)').order('titre');
+ if(r.error){document.getElementById('content').innerHTML=`<div class="empty">Erreur : ${esc(r.error.message)}</div>`;return}
+ works=(r.data||[]).filter(w=>w.archive!==true);go('catalogue');
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function go(v){view=v;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));if(v==='catalogue')renderCatalogue();else renderPlaceholder(v)}
+function professionalCandidate(w){return !!(w.destination_editoriale||w.niveau_editorial_cible||w.statut_editorial_actuel)}
+function renderCatalogue(){
+ const c=document.getElementById('content');c.innerHTML=`<div class="top"><div><h1>Catalogue professionnel</h1><div class="sub">Les œuvres de Passerelle qui portent déjà une intention éditoriale. Même ID, aucune duplication.</div></div><span class="badge">SOCLE C92</span></div>
+ <div class="notice">🪽 Cette première version est volontairement en lecture seule : Passe-Ailes lit la source canonique <strong>oeuvres</strong> de Passerelle. Aucun projet professionnel n'est créé tant que son schéma n'est pas validé.</div>
+ <div class="toolbar"><input id="q" placeholder="🔍 Rechercher une œuvre…" oninput="filterWorks()"><select id="dest" onchange="filterWorks()"><option value="">Toutes les destinations</option>${[...new Set(works.map(w=>w.destination_editoriale).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select><select id="level" onchange="filterWorks()"><option value="">Toutes les cibles</option>${[...new Set(works.map(w=>w.niveau_editorial_cible).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div id="workzone"></div>`;filterWorks();
+}
+function filterWorks(){
+ const q=(document.getElementById('q')?.value||'').toLowerCase(),d=document.getElementById('dest')?.value||'',l=document.getElementById('level')?.value||'';
+ const arr=works.filter(professionalCandidate).filter(w=>(!q||`${w.titre} ${w.sagas?.nom||''} ${w.sous_sagas?.nom||''}`.toLowerCase().includes(q))&&(!d||w.destination_editoriale===d)&&(!l||w.niveau_editorial_cible===l));
+ document.getElementById('workzone').innerHTML=arr.length?`<div class="tablewrap"><table><thead><tr><th>Œuvre</th><th>Destination</th><th>Cible</th><th>Statut éditorial</th><th>Horizon</th><th></th></tr></thead><tbody>${arr.map(w=>`<tr><td><strong>${esc(w.titre)}</strong><br><small>${esc(w.sous_sagas?.nom||w.sagas?.nom||w.genre||'')}</small></td><td>${esc(w.destination_editoriale||'—')}</td><td>${esc(w.niveau_editorial_cible||'—')}</td><td>${esc(w.statut_editorial_actuel||w.statut||'—')}</td><td>${esc(w.horizon_annee||w.publication_envisagee||'—')}</td><td><a class="btn" href="passerelle.html?openOeuvre=${encodeURIComponent(w.id)}">Ouvrir dans Passerelle</a></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">Aucune œuvre ne correspond à ces filtres.</div>`;
+}
+const labels={bureau:['Bureau','Le cockpit sera construit lorsque ses modules sources existeront.'],projets:['Projets professionnels','Soumission ME, autoédition et publication en ligne seront les trois premiers workflows.'],soumissions:['Soumissions ME','Suivi des maisons, dépôts, relances et historique.'],autoedition:['Autoédition','Protection, métadonnées, éditions, formats, ISBN, distribution et publication.'],lecture:['Publication en ligne','Plateformes, rythme, avance et génération du calendrier de diffusion.'],autrice:['Mon activité d’autrice','Profil professionnel, administratif, légal et obligations.'],developpement:['Marketing & commercial','Identité, communication, promotions et distribution.'],calendrier:['Calendrier','Vue transversale des échéances métier.'],exports:['Exports','Documents, checklists et actions normalisées.'],archives:['Archives','Trajectoires et projets clôturés restent historisés.']};
+function renderPlaceholder(v){const x=labels[v]||[v,''];document.getElementById('content').innerHTML=`<div class="top"><div><h1>${x[0]}</h1><div class="sub">${x[1]}</div></div><span class="badge">À CONSTRUIRE</span></div><div class="card"><h3>Module réservé</h3><p class="muted">La navigation est posée, mais aucune table ni logique métier n'est créée par anticipation.</p></div>`}
+init();
+</script></body></html>
