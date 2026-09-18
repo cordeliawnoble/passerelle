@@ -1044,6 +1044,19 @@
   .kw-seed-c53{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2)}
   @media(max-width:850px){.csv-hub-c53{grid-template-columns:1fr}}
 
+
+/* C93 — surfaces FO : le thème de la fiche suit vraiment drawers et modales */
+.side-drawer{background:var(--bg)!important;color:var(--text)!important;border-left-color:var(--line)!important}
+.side-drawer .drawer-head,.side-drawer .drawer-body{background:var(--bg)!important;color:var(--text)!important}
+.side-drawer h1,.side-drawer h2,.side-drawer h3,.side-drawer label,.side-drawer p,.side-drawer strong,.side-drawer small,.side-drawer span{color:inherit}
+.side-drawer input,.side-drawer select,.side-drawer textarea,.side-drawer .rich-editor,.side-drawer [contenteditable="true"]{background:var(--card)!important;color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;border-color:var(--line)!important}
+.side-drawer input::placeholder,.side-drawer textarea::placeholder{color:var(--text-dim)!important;-webkit-text-fill-color:var(--text-dim)!important;opacity:1}
+.side-drawer select option{background:var(--card)!important;color:var(--text)!important}
+.modal-box{background:var(--bg)!important;color:var(--text)!important}
+.modal-box .modal-head,.modal-box .modal-body,.modal-box .modal-foot{background:var(--bg)!important;color:var(--text)!important}
+.modal-box input,.modal-box select,.modal-box textarea{background:var(--card)!important;color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;border-color:var(--line)!important}
+/* C93 — cartes Poésie = même langage que le catalogue Œuvres indépendantes */
+.poetry-work-grid-c93{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px;align-items:start}
 </style>
 
 <style id="c43-ui">
@@ -2500,7 +2513,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         </div>
       </div>
       <div>${window._adminSagaMetaV56.map(m=>`<div class="metadata-row"><input value="${safeText(m.emoji||'')}" maxlength="4" onchange="saveSagaMetadataFieldV56('${m.id}','emoji',this.value)"><input value="${safeText(m.nom)}" onchange="saveSagaMetadataFieldV56('${m.id}','nom',this.value)"><input type="color" value="${safeText(m.couleur||'#8C7FB0')}" onchange="saveSagaMetadataFieldV56('${m.id}','couleur',this.value)"><button class="btn-secondary" onclick="deleteSagaMetadataV56('${m.id}')">Supprimer</button></div>`).join('')||'<div class="empty">Aucune métadonnée.</div>'}</div></div>`;
-    if(adminSagaTabV56==='configuration')z.innerHTML=`<div class="admin-section"><h2>Configuration graphique</h2>${graphicOverrideEditorV576c13('as56',s,inheritedGraphicV576c13)}<div class="admin-section-grid" style="margin-top:14px"><div><label>Bannière de page</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'banniere').then(()=>renderAdminSagaEditorV56())"></label>${renderCatalogEntityBanner(s.banniere,s.nom)}</div><div><label>Bannière catalogue</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'image_couverture').then(()=>renderAdminSagaEditorV56())"></label>${renderCatalogEntityBanner(s.image_couverture,s.nom)}</div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaConfigV56()">Enregistrer l’apparence</button></div>`;
+    if(adminSagaTabV56==='configuration')z.innerHTML=`<div class="admin-section"><h2>Configuration graphique</h2>${graphicOverrideEditorV576c13('as56',s,inheritedGraphicV576c13)}<div class="admin-section-grid" style="margin-top:14px"><div><label>Bannière de page</label><label class="btn-secondary upload-file-btn">⇧ Téléverser<input type="file" accept="image/*" onchange="uploadEntityBanner('sagas','${s.id}',this,'banniere').then(()=>renderAdminSagaEditorV56())"></label>${renderCatalogEntityBanner(s.banniere,s.nom)}</div></div><button class="btn-primary" style="margin-top:12px" onclick="saveAdminSagaConfigV56()">Enregistrer l’apparence</button></div>`;
     if(adminSagaTabV56==='archive')z.innerHTML=`<div class="admin-section admin-danger"><h2>Archivage</h2><p class="admin-section-sub">La saga disparaît des catalogues actifs sans être supprimée. Ses sous-sagas et ses œuvres restent intactes et ne sont pas archivées automatiquement.</p><div class="admin-check-row"><input type="checkbox" id="as56-archive-check" ${s.archive?'checked':''} onchange="toggleSagaArchiveC89('${s.id}',this.checked)"><div><strong>${s.archive?'Saga archivée':'Archiver cette saga'}</strong><small>${s.archive?'Décoche pour la restaurer.':'Tu pourras la restaurer depuis Archives.'}</small></div></div></div>`;
   }
   async function setEntityArchiveC89(table,id,value,label,after){
@@ -6069,9 +6082,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const original=files[i];
       try{
         const optimized=await optimizeImageForUploadV573b(original,`medias/${mediaUploadContextV566?.level||'generic'}/${mediaUploadContextV566?.id||'new'}`);
-        batch.push({key:`m${Date.now()}-${i}`,file:optimized.file,originalFile:original,preview:URL.createObjectURL(optimized.file),titre:cleanMediaFilenameV566(original.name),type:'Illustration',current:false,originalSize:optimized.originalSize,optimizedSize:optimized.optimizedSize,width:optimized.width,height:optimized.height,converted:optimized.converted});
+        batch.push({key:`m${Date.now()}-${i}`,file:optimized.file,originalFile:original,preview:URL.createObjectURL(optimized.file),titre:cleanMediaFilenameV566(original.name),type:(mediaUploadContextV566?.level==='character'?'Référence visuelle':'Illustration'),current:false,originalSize:optimized.originalSize,optimizedSize:optimized.optimizedSize,width:optimized.width,height:optimized.height,converted:optimized.converted});
       }catch(err){
-        batch.push({key:`m${Date.now()}-${i}`,file:original,originalFile:original,preview:URL.createObjectURL(original),titre:cleanMediaFilenameV566(original.name),type:'Illustration',current:false,originalSize:original.size,optimizedSize:original.size,converted:false});
+        batch.push({key:`m${Date.now()}-${i}`,file:original,originalFile:original,preview:URL.createObjectURL(original),titre:cleanMediaFilenameV566(original.name),type:(mediaUploadContextV566?.level==='character'?'Référence visuelle':'Illustration'),current:false,originalSize:original.size,optimizedSize:original.size,converted:false});
       }
     }
     mediaUploadBatchV566=batch;renderMediaBatchV566();
@@ -6085,7 +6098,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     tools.innerHTML=`<div class="media-batch-tools-v566">
       <strong>${mediaUploadBatchV566.length} image${mediaUploadBatchV566.length>1?'s':''}</strong>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <select id="media-bulk-cat-v566"><option>Illustration</option><option>Promotion & Bonus</option><option>Couverture</option></select>
+        <select id="media-bulk-cat-v566">${mediaUploadContextV566?.level==='character'?'<option>Portrait principal</option><option>Bannière personnage</option><option>Avatar site</option><option selected>Référence visuelle</option>':'<option>Illustration</option><option>Promotion & Bonus</option><option>Couverture</option>'+(mediaUploadContextV566?.level==='oeuvre'?'<option>Bannière catalogue</option>':'')}</select>
         <button class="btn-secondary" onclick="applyMediaBulkCategoryV566()">Appliquer à toutes</button>
       </div>
     </div>`;
@@ -6094,9 +6107,15 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       <div class="media-batch-fields-v566">
         <input value="${safeText(m.titre)}" oninput="mediaUploadBatchV566[${i}].titre=this.value">
         <select onchange="mediaUploadBatchV566[${i}].type=this.value;renderMediaBatchV566()">
+          ${mediaUploadContextV566?.level==='character'?`
+          <option ${m.type==='Portrait principal'?'selected':''}>Portrait principal</option>
+          <option ${m.type==='Bannière personnage'?'selected':''}>Bannière personnage</option>
+          <option ${m.type==='Avatar site'?'selected':''}>Avatar site</option>
+          <option ${m.type==='Référence visuelle'?'selected':''}>Référence visuelle</option>`:`
           <option ${m.type==='Illustration'?'selected':''}>Illustration</option>
           <option ${m.type==='Promotion & Bonus'?'selected':''}>Promotion & Bonus</option>
           <option ${m.type==='Couverture'?'selected':''}>Couverture</option>
+          ${mediaUploadContextV566?.level==='oeuvre'?`<option ${m.type==='Bannière catalogue'?'selected':''}>Bannière catalogue</option>`:''}`}
         </select>
         ${m.type==='Couverture'?`<label class="media-current-v566"><input type="checkbox" ${m.current?'checked':''} onchange="mediaUploadBatchV566[${i}].current=this.checked"> ★ Couverture actuelle</label>`:''}
         <div class="media-opt-v573b"><span>Original : ${formatBytesV573b(m.originalSize||m.file.size)}</span><span>→</span><strong>${formatBytesV573b(m.optimizedSize||m.file.size)} WebP</strong>${m.originalSize&&m.optimizedSize&&m.optimizedSize<m.originalSize?`<span>· −${Math.round((1-m.optimizedSize/m.originalSize)*100)}%</span>`:''}</div>
@@ -6139,6 +6158,14 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
         const {data,error}=await db().from('medias').insert(payload).select('id').single();
         if(error)throw error;
+        // C93 : les destinations personnage pilotent directement les visuels canoniques de la fiche.
+        if(mediaUploadContextV566.level==='character'){
+          const charPatch={};
+          if(m.type==='Portrait principal') charPatch.portrait_url=url;
+          else if(m.type==='Bannière personnage') charPatch.banniere_url=url;
+          else if(m.type==='Avatar site') charPatch.avatar_site_url=url;
+          if(Object.keys(charPatch).length){const cr=await db().from('personnages').update(charPatch).eq('id',mediaUploadContextV566.id);if(cr.error)throw cr.error;}
+        }
         if(m.type==='Couverture'&&m.current){
           if(mediaUploadContextV566.level==='saga') await db().from('sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
           else if(mediaUploadContextV566.level==='sous-saga') await db().from('sous_sagas').update({couverture:url}).eq('id',mediaUploadContextV566.id);
@@ -6149,6 +6176,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       if(mediaUploadContextV566.level==='saga') renderSagaMediasV565(document.getElementById('saga-tab-content'));
       else if(mediaUploadContextV566.level==='sous-saga') renderSousSagaMediasV565(document.getElementById('soussaga-tab-content'));
       else if(mediaUploadContextV566.level==='oeuvre') renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));
+      else if(mediaUploadContextV566.level==='character') openCharacterDetailV573(mediaUploadContextV566.id,'references');
     }catch(err){
       showTransientStatusV572('Erreur pendant l’import : '+(err?.message||err));
       if(btn){btn.disabled=false;btn.textContent='Reprendre l’import'}
@@ -6909,19 +6937,20 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const banner=renderPageImageBanner(await getPageBanner('oeuvres-saga'),'Œuvres saga');
     content.innerHTML=`${banner}<div class="head-row"><div><h2>Œuvres saga</h2><p style="font-size:12px;color:var(--text-dim)">Mes œuvres regroupées par saga puis par sous-saga.</p></div></div><div id="oeuvres-saga-zone-v40"><div class="status-line">Chargement…</div></div>`;
 
-    const [sagasR,ssR,oeuvresR]=await Promise.all([
-      db().from('sagas').select('id,nom,ordre,page_color,accent_color').order('ordre',{ascending:true}),
-      db().from('sous_sagas').select('id,nom,saga_id,ordre,page_color,accent_color').order('ordre',{ascending:true}),
-      db().from('oeuvres').select('id,titre,couverture,banniere,saga_id,sous_saga_id,numero_sous_saga,statut,statut_editorial_actuel,archive').eq('archive',false).order('titre',{ascending:true})
+    const [sagasR,ssR,oeuvresR,catMediaR]=await Promise.all([
+      db().from('sagas').select('id,nom,ordre,page_color,accent_color,archive').eq('archive',false).order('ordre',{ascending:true}),
+      db().from('sous_sagas').select('id,nom,saga_id,ordre,page_color,accent_color,archive').eq('archive',false).order('ordre',{ascending:true}),
+      db().from('oeuvres').select('id,titre,couverture,banniere,saga_id,sous_saga_id,numero_sous_saga,statut,statut_editorial_actuel,archive').eq('archive',false).order('titre',{ascending:true}),
+      db().from('medias').select('oeuvre_id,url,created_at').eq('type','Bannière catalogue').order('created_at',{ascending:false})
     ]);
     const zone=document.getElementById('oeuvres-saga-zone-v40');
-    const err=sagasR.error||ssR.error||oeuvresR.error;
+    const err=sagasR.error||ssR.error||oeuvresR.error||catMediaR.error;
     if(err){zone.innerHTML=`<div class="empty">Erreur : ${safeText(err.message)}</div>`;return}
 
     oeuvresSagaStateV40={
       sagas:(sagasR.data||[]).slice().sort((a,b)=>(Number.isFinite(Number(a.ordre))?Number(a.ordre):999999)-(Number.isFinite(Number(b.ordre))?Number(b.ordre):999999)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
       sousSagas:(ssR.data||[]).slice().sort((a,b)=>(Number.isFinite(Number(a.ordre))?Number(a.ordre):999999)-(Number.isFinite(Number(b.ordre))?Number(b.ordre):999999)||String(a.nom||'').localeCompare(String(b.nom||''),'fr')),
-      oeuvres:(oeuvresR.data||[]).filter(o=>o.saga_id||o.sous_saga_id),
+      oeuvres:(oeuvresR.data||[]).filter(o=>o.saga_id||o.sous_saga_id).map(o=>{const cm=(catMediaR.data||[]).find(m=>m.oeuvre_id===o.id);return {...o,_catalogue_banner:cm?.url||''}}),
       activeSagaId:oeuvresSagaStateV40.activeSagaId
     };
     if(!oeuvresSagaStateV40.sagas.some(s=>s.id===oeuvresSagaStateV40.activeSagaId)){
@@ -6936,7 +6965,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   function oeuvreSagaTileV40(o){
-    const visual=o.banniere||'';
+    const visual=o._catalogue_banner||o.banniere||'';
     const tome=(o.numero_sous_saga!==null&&o.numero_sous_saga!==undefined&&String(o.numero_sous_saga).trim()!=='')
       ? `T${safeText(String(o.numero_sous_saga).replace(/^t(ome)?\s*/i,''))}` : '';
     return `<article class="oeuvre-saga-tile-v40 saga-banner-card-c76" onclick="openOeuvreDetail('${o.id}')" title="${safeText(o.titre||'Œuvre')}">
@@ -7893,7 +7922,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   let mediaFilter='Tout';
-  async function renderOeuvreMedias(zone){const {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">Médias indisponibles : ${safeText(error.message)}</div>`;return;}const all=data||[];const rows=mediaFilter==='Tout'?all:all.filter(m=>m.type===mediaFilter);zone.innerHTML=`<div class="work-toolbar"><div class="segmented">${['Tout','Illustration','Promotion & Bonus','Couverture'].map(x=>`<button class="btn-secondary ${mediaFilter===x?'active':''}" onclick="mediaFilter='${x}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${x}</button>`).join('')}</div><button class="btn-primary" onclick="openMediaUploadDrawerV566('oeuvre',currentOeuvreId)">+ Ajouter des médias 🌸</button></div>${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaDrawer('${m.id}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="walter-empty">🖼</div>'}<div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}${m.est_couverture_actuelle?' · ★ Actuelle':''}</small></div></article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter examine le cadre vide.</strong><div>Aucun média ici pour le moment.</div></div>`}`;}
+  async function renderOeuvreMedias(zone){const {data,error}=await db().from('medias').select('*').eq('oeuvre_id',currentOeuvreId).order('created_at',{ascending:false});if(error){zone.innerHTML=`<div class="empty">Médias indisponibles : ${safeText(error.message)}</div>`;return;}const all=data||[];const rows=mediaFilter==='Tout'?all:all.filter(m=>m.type===mediaFilter);zone.innerHTML=`<div class="work-toolbar"><div class="segmented">${['Tout','Illustration','Promotion & Bonus','Couverture','Bannière catalogue'].map(x=>`<button class="btn-secondary ${mediaFilter===x?'active':''}" onclick="mediaFilter='${x}';renderOeuvreMedias(document.getElementById('oeuvre-tab-content'))">${x}</button>`).join('')}</div><button class="btn-primary" onclick="openMediaUploadDrawerV566('oeuvre',currentOeuvreId)">+ Ajouter des médias 🌸</button></div>${rows.length?`<div class="media-grid">${rows.map(m=>`<article class="media-card" onclick="openMediaDrawer('${m.id}')">${m.url?`<img src="${safeText(m.url)}" alt="">`:'<div class="walter-empty">🖼</div>'}<div class="media-meta"><strong>${safeText(m.titre||'Sans titre')}</strong><small>${safeText(m.type||'Média')}${m.est_couverture_actuelle?' · ★ Actuelle':''}</small></div></article>`).join('')}</div>`:`<div class="walter-empty"><div class="walter-placeholder">🐈‍⬛</div><strong>Walter examine le cadre vide.</strong><div>Aucun média ici pour le moment.</div></div>`}`;}
   async function addMediaPrompt(){openMediaUploadDrawerV566('oeuvre',currentOeuvreId);}
   async function openMediaDrawer(id){const {data:m}=await db().from('medias').select('*').eq('id',id).single();openDrawer(m?.titre||'Média',`${m?.url?`<img src="${safeText(m.url)}" style="max-width:100%;border-radius:10px;margin-bottom:16px">`:''}<label>Titre</label><input id="media-title" value="${safeText(m?.titre||'')}"><label>Type</label><select id="media-type">${['Illustration','Promotion & Bonus','Couverture'].map(x=>`<option ${x===m?.type?'selected':''}>${x}</option>`).join('')}</select><label>Chapitre lié</label><input id="media-chapter" value="${safeText(m?.chapitre_id||'')}" placeholder="ID chapitre (sélecteur visuel ensuite)"><label>Description / notes</label><div id="media-desc" class="rich-editor" contenteditable="true" style="min-height:220px">${m?.description||''}</div><label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="media-current" style="width:auto" ${m?.est_couverture_actuelle?'checked':''}> Couverture actuelle</label><button class="btn-primary" style="margin-top:14px" onclick="saveMedia('${id}')">Enregistrer</button>`);}
   async function saveMedia(id){const payload={titre:document.getElementById('media-title').value,type:document.getElementById('media-type').value,chapitre_id:document.getElementById('media-chapter').value||null,description:document.getElementById('media-desc').innerHTML,est_couverture_actuelle:document.getElementById('media-current').checked};if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('medias').update({est_couverture_actuelle:false}).eq('oeuvre_id',currentOeuvreId).eq('type','Couverture');const {data:updated}=await db().from('medias').update(payload).eq('id',id).select('url').single();if(payload.est_couverture_actuelle&&payload.type==='Couverture') await db().from('oeuvres').update({couverture:updated?.url||null}).eq('id',currentOeuvreId);closeDrawer();renderOeuvreMedias(document.getElementById('oeuvre-tab-content'));}
@@ -8413,7 +8442,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       <div class="character-hero">${banner?`<img class="character-hero-bg" src="${safeText(banner)}" alt="">`:''}<div class="character-hero-shade"></div><div class="character-hero-content">
         <div>${p.portrait_url?`<img class="character-hero-portrait" src="${safeText(p.portrait_url)}" alt="">`:`<div class="character-hero-portrait" style="display:grid;place-items:center;font-size:48px">${initials(p.nom)}</div>`}</div>
         <div><div style="font-size:12px;opacity:.8;margin-bottom:8px">Personnages › ${safeText(p.nom)}</div><h1 class="character-hero-name">${safeText(p.nom)}</h1><div class="character-hero-quote">${d.citation?`« ${safeText(d.citation)} »`:''}</div><div class="character-hero-tags">${[d.espece,d.age,d.nature,d.affiliation].filter(Boolean).map(x=>`<span>${safeText(x)}</span>`).join('')}</div></div>
-        <div class="character-hero-side"><div class="character-hero-id">${safeText(p.passerelle_id||'')}</div><div class="character-hero-actions"><button class="btn-secondary" onclick="renderPersonnages()">← Personnages</button><button class="btn-primary" onclick="editCharacterUniversalV573('${id}')">Modifier</button></div></div>
+        <div class="character-hero-side"><div class="character-hero-id">${safeText(p.passerelle_id||'')}</div><div class="character-hero-actions"><button class="btn-secondary" onclick="renderPersonnages()">← Personnages</button><button class="btn-secondary" onclick="openMediaUploadDrawerV566('character','${id}')">🖼 Médias</button><button class="btn-primary" onclick="editCharacterUniversalV573('${id}')">Modifier</button></div></div>
       </div></div>
       <div class="character-tabs">${[['apercu','▣ Aperçu'],['profil','♙ Profil'],['psychologie','♡ Psychologie'],['relations','♧ Relations'],['parcours','⌛ Parcours'],['capacites','✧ Capacités'],['references','▥ Références'],['parametres','⚙ Paramètres']].map(([k,l])=>`<button class="${tab===k?'active':''}" onclick="openCharacterDetailV573('${id}','${k}')">${l}</button>`).join('')}</div>
       <div id="character-detail-body" class="character-page"></div></div>`;
@@ -8490,7 +8519,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     content.innerHTML=`<div class="character-detail ${contextWork?'contextual':''}" style="--char-accent:${safeText(theme.accent)};--char-soft:${safeText(theme.soft)};--char-secondary:${safeText(theme.secondary)};--char-dark:${safeText(theme.dark)}">
       <div class="character-hero">${banner?`<img class="character-hero-bg" src="${safeText(banner)}" alt="">`:''}<div class="character-hero-shade"></div><div class="character-hero-content">
         <div class="character-hero-copy"><div style="font-size:12px;opacity:.82;margin-bottom:8px">Personnages › ${safeText(p.nom)}${contextWork?` · ${safeText(contextWork.titre)}`:''}</div><h1 class="character-hero-name">${safeText(p.nom)}</h1><div class="character-hero-quote">${d.citation?`« ${safeText(d.citation)} »`:''}</div><div class="character-hero-tags">${[d.age,d.espece,d.nature,d.affiliation].filter(Boolean).map(x=>`<span>${safeText(x)}</span>`).join('')}</div></div>
-        <div class="character-hero-side"><div class="character-hero-id">${safeText(p.passerelle_id||'')}</div><div class="character-hero-actions"><button class="btn-secondary" onclick="renderPersonnages()">← Personnages</button></div></div>
+        <div class="character-hero-side"><div class="character-hero-id">${safeText(p.passerelle_id||'')}</div><div class="character-hero-actions"><button class="btn-secondary" onclick="renderPersonnages()">← Personnages</button><button class="btn-primary" onclick="openMediaUploadDrawerV566('character','${id}')">🖼 Ajouter un visuel</button></div></div>
       </div></div>
       <div class="character-tabs">${[['apercu','▣ Aperçu'],['profil','♙ Profil'],['psychologie','♡ Psychologie'],['relations','♧ Relations'],['parcours','⌛ Parcours'],['capacites','✧ Capacités'],['references','▥ Références']].map(([k,l])=>`<button class="${tab===k?'active':''}" onclick="openCharacterDetailV573('${id}','${k}',currentCharacterContextWorkV575)">${l}</button>`).join('')}</div>
       <div id="character-detail-body" class="character-page"></div></div>`;
@@ -8714,7 +8743,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const zone = document.getElementById('recueils-zone');
     if (error) { zone.innerHTML = `<div class="empty">Erreur : ${error.message}</div>`; return; }
     if (!data.length) { zone.innerHTML = `<div class="empty">Aucun recueil pour l'instant.<br><br><button class="btn-primary" onclick="openRecueilModal()">Créer ton premier recueil</button></div>`; return; }
-    zone.innerHTML = `<div class="entity-gallery">${data.map(r => entityGalleryCard({id:r.id,title:r.titre,image:r.couverture||r.banniere,pageColor:r.page_color,tags:[r.type_recueil,r.theme_principal,r.statut],top:'Recueil',onclick:`openRecueilDetail('${r.id}')`})) .join('')}</div>`;
+    zone.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:12px">${workViewSwitchC38('renderPoesie')}</div><div class="poetry-work-grid-c93">${data.map(r=>{const img=r.couverture||'';const tags=[r.type_recueil,r.theme_principal,r.statut].filter(Boolean).slice(0,2);const detail=workCardViewC38==='detailed';return `<article class="work-card-c38 ${detail?'detailed':'compact'}" onclick="openRecueilDetail('${r.id}')"><div class="cover">${img?`<img src="${safeText(img)}" alt="">`:`<div style="padding:10px;text-align:center;color:var(--text-dim);font-size:10px">${safeText(r.titre)}</div>`}</div><div class="body"><h3 title="${safeText(r.titre)}">${safeText(r.titre)}</h3><div class="chips">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div></div></article>`}).join('')}</div>`;
   }
 
   function recueilModalHtml(){
