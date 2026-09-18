@@ -4959,7 +4959,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         <td><select class="be-inline" onchange="saveBeField('${o.id}','statut_editorial_actuel',this.value)"><option value="">Non défini</option>${STATUTS_EDITORIAUX.map(v=>`<option ${o.statut_editorial_actuel===v?'selected':''}>${v}</option>`).join('')}</select></td>
         <td><select class="be-inline be-horizon-v21" onchange="saveBeHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="${y}" ${Number(o.horizon_annee)===y?'selected':''}>Y</option><option value="${y+1}" ${Number(o.horizon_annee)===y+1?'selected':''}>Y+1</option></select></td>
         <td><input class="be-inline be-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="—" onchange="saveBeField('${o.id}','publication_envisagee',this.value)"></td>
-        <td class="be-actions-v21"><button class="be-icon-btn" title="Exporter le brief TomTom" onclick="event.stopPropagation();exportTomTomWorkV66('${o.id}')">📦</button><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
+        <td class="be-actions-v21"><button class="be-icon-btn" title="Envoyer vers Passe-Ailes" onclick="event.stopPropagation();sendWorkToPasseAilesC99('${o.id}')">🪽</button><button class="be-icon-btn" title="Exporter le brief TomTom" onclick="event.stopPropagation();exportTomTomWorkV66('${o.id}')">📦</button><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
       </tr>`;
     }).join('')||`<tr><td colspan="7" class="empty">Aucune œuvre pour ces filtres.</td></tr>`;
     const c=document.getElementById('be-count'); if(c)c.textContent=`${rows.length} œuvre${rows.length>1?'s':''} affichée${rows.length>1?'s':''}`;
@@ -5107,6 +5107,27 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     if(old)Object.assign(old,payload);showSaveToastV20('✓ Bureau éditorial enregistré');
   }
   async function saveBeHorizon(id,value){const year=value?Number(value):null;const {error}=await db().from('oeuvres').update({horizon_annee:year}).eq('id',id);if(error){showSaveToastV20('⚠ '+error.message,'error');return;}const old=beData.find(o=>o.id===id);if(old)old.horizon_annee=year;showSaveToastV20('✓ Horizon enregistré');}
+
+  // C99 · Passage volontaire Passerelle → Passe-Ailes.
+  // Une œuvre n'entre jamais automatiquement dans le cockpit professionnel.
+  function sendWorkToPasseAilesC99(id){
+    const o=beData.find(x=>String(x.id)===String(id)); if(!o)return;
+    if(!o.destination_editoriale){
+      showSaveToastV20('⚠ Définis d’abord la destination éditoriale','error'); return;
+    }
+    const key='passe-ailes:professional-works:v2';
+    let list=[]; try{list=JSON.parse(localStorage.getItem(key)||'[]')||[]}catch(e){list=[]}
+    const payload={
+      oeuvre_id:o.id,titre:o.titre,destination:o.destination_editoriale,
+      cible:o.niveau_editorial_cible||null,statut_editorial:o.statut_editorial_actuel||null,
+      horizon:o.horizon_annee||null,publication:o.publication_envisagee||null,
+      couverture:o.couverture||null,active:true,entered_at:new Date().toISOString()
+    };
+    const i=list.findIndex(x=>String(x.oeuvre_id)===String(o.id));
+    if(i>=0)list[i]={...list[i],...payload};else list.push(payload);
+    localStorage.setItem(key,JSON.stringify(list));
+    showSaveToastV20('🪽 Œuvre envoyée vers Passe-Ailes');
+  }
 
   function renderBeGroupe(zone,champ,valeurs,isDestination){
     const groups={}; valeurs.forEach(v=>groups[v]=[]); const none=[];
