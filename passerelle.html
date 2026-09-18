@@ -2756,34 +2756,56 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   function worksCsvIdV45(name){return (String(name||'').match(/([0-9a-f]{32})(?=(?:_all)?\.csv$)/i)||[])[1]||null}
+  // C98 · Détection et mapping sécurisés des CSV de Plan.
+  // Notion peut exporter "Ordre" (100, 200...) comme clé de tri tandis que le vrai numéro
+  // narratif se trouve dans "Scène" : "Chapitre 12 — Titre". On ne confond plus les deux.
   function worksCsvIsPlanV45(rows){
     if(!rows?.length)return false;
     const hs=Object.keys(rows[0]).map(normV576);
-    const hasNum=hs.some(h=>['numero','nu','chapitre'].includes(h));
-    const hasContent=hs.some(h=>['resume','description','scene','nom','chapitre'].includes(h));
+    const hasExplicitNum=hs.some(h=>['numero','nu','chapitre','n chapitre','no chapitre'].includes(h));
+    const hasOrder=hs.includes('ordre');
+    const hasScene=hs.some(h=>['scene','nom','chapitre','titre'].includes(h));
+    const hasContent=hs.some(h=>['resume','description','scene','nom','chapitre','titre','action','actions'].includes(h));
     const characterSignals=hs.some(h=>['avatar pour site','protagoniste','resume du personnage'].includes(h));
     const promoSignals=hs.includes('type')&&hs.includes('contenu')&&hs.includes('date');
-    return hasNum&&hasContent&&!characterSignals&&!promoSignals;
+    return (hasExplicitNum||(hasOrder&&hasScene))&&hasContent&&!characterSignals&&!promoSignals;
+  }
+  function extractNarrativeChapterC98(raw,fallback){
+    const s=String(raw||'').trim();
+    const m=s.match(/(?:chapitre|chapter|ch\.?)\s*#?\s*(\d+(?:[.,]\d+)?)/i);
+    if(m)return String(Number(m[1].replace(',','.')));
+    const lead=s.match(/^\s*#?\s*(\d+(?:[.,]\d+)?)\b/);
+    if(lead)return String(Number(lead[1].replace(',','.')));
+    return String(fallback);
+  }
+  function cleanPlanTitleC98(raw,numero){
+    const s=String(raw||'').trim();
+    if(!s)return `Chapitre ${numero}`;
+    const cleaned=s.replace(/^\s*(?:chapitre|chapter|ch\.?)\s*#?\s*\d+(?:[.,]\d+)?\s*(?:[—–\-:|]\s*)?/i,'').trim();
+    return cleaned||s;
   }
   function worksPlanRowsV45(rows,csvName,workTitle){
     return (rows||[]).map((r,i)=>{
-      const numero=worksHeaderV43(r,['Numéro','Numero','nu','Chapitre']);
-      const rawTitle=worksHeaderV43(r,['Nom','Chapitre','Scène','Scene']);
-      const n=Number(String(numero||'').replace(/[^\d.-]/g,''));
-      const titre=String(rawTitle||((Number.isFinite(n)&&n>0)?`Chapitre ${n}`:`Chapitre ${i+1}`)).trim();
-      const resume=worksHeaderV43(r,['Résumé','Resume','Description','Action']);
-      const acte=worksHeaderV43(r,['Acte']);
-      const etat=worksHeaderV43(r,['État','Etat']);
-      const pov=worksHeaderV43(r,['POV','Point de vue']);
-      const words=worksHeaderV43(r,['NB mots 1er jet','Nb mots 1er jet','NB de mots -1er jet','Nb de mots']);
+      const explicitNumero=worksHeaderV43(r,['Numéro','Numero','nu','Chapitre','N° chapitre','No chapitre']);
+      const rawTitle=worksHeaderV43(r,['Titre','Nom','Scène','Scene','Chapitre']);
+      const rawOrder=worksHeaderV43(r,['Ordre','Order']);
+      // Priorité : vrai numéro explicite > numéro écrit dans Scène/Titre > position de ligne.
+      // "Ordre" reste uniquement une information de tri source, jamais un numéro de chapitre.
+      const numero=String(explicitNumero||'').trim() || extractNarrativeChapterC98(rawTitle,i+1);
+      const titre=cleanPlanTitleC98(rawTitle,numero);
+      const resume=worksHeaderV43(r,['Résumé','Resume','Description','Action','Actions']);
+      const acte=worksHeaderV43(r,['Acte','Axe','Axes']);
+      const pov=worksHeaderV43(r,['POV','Point de vue','Point de Vue']);
+      const words=worksHeaderV43(r,['NB mots 1er jet','Nb mots 1er jet','NB de mots -1er jet','Nb de mots','Nb de mots écrits']);
       const sourceId=worksCsvIdV45(csvName)||normV576(csvName);
       return {
         type:'Intrigue principale',titre,acte:acte||null,pov_source:pov||null,
-        statut:etat||'À relire',resume_source:resume||null,
+        statut:'À écrire',resume_source:resume||null,
         ordre:i+1,
-        numero_source:String(numero||'').trim()||String(i+1),
+        numero_source:numero,
+        ordre_source:String(rawOrder||'').trim()||null,
         mots_source:words||null,
-        source_key:`notion:${sourceId}:${String(numero||'').trim()||String(i+1)}`,
+        source_key:`notion:${sourceId}:chapitre:${numero}`,
         source_csv:csvName,source_oeuvre:workTitle
       };
     }).filter(x=>x.titre);
@@ -7723,7 +7745,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   let pendingPlanImportC60=[];
   function openPlanImportPreviewC60(rows,sources){
     pendingPlanImportC60=rows;
-    openDrawer('Importer le Plan',`<div class="plan-drawer-form-v576b"><div class="admin-work-note"><strong>${rows.length} entrée${rows.length>1?'s':''} détectée${rows.length>1?'s':''}</strong><br>${sources.length} source${sources.length>1?'s':''} reconnue${sources.length>1?'s':''} · import dans l’œuvre actuellement ouverte uniquement.</div><div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:14px">${rows.slice(0,300).map((p,i)=>`<div style="padding:9px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:42px 1fr;gap:8px"><small>${safeText(p.numero_source||i+1)}</small><div><strong>${safeText(p.titre)}</strong><br><small>${safeText(p.acte||'')}${p.statut?' · '+safeText(p.statut):''}</small></div></div>`).join('')}</div><div class="plan-drawer-actions-v576b"><button class="btn-secondary" onclick="pendingPlanImportC60=[];closeDrawer()">Annuler</button><button class="btn-primary" onclick="commitPlanImportC60()">Importer ${rows.length} entrée${rows.length>1?'s':''}</button></div></div>`);
+    openDrawer('Importer le Plan',`<div class="plan-drawer-form-v576b"><div class="admin-work-note"><strong>${rows.length} entrée${rows.length>1?'s':''} détectée${rows.length>1?'s':''}</strong><br>${sources.length} source${sources.length>1?'s':''} reconnue${sources.length>1?'s':''} · import dans l’œuvre actuellement ouverte uniquement.</div><div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:14px">${rows.slice(0,300).map((p,i)=>`<div style="padding:9px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:54px 1fr;gap:8px"><small>Ch. ${safeText(p.numero_source||i+1)}</small><div><strong>${safeText(p.titre)}</strong><br><small>${safeText(p.acte||'Sans acte')}${p.pov_source?' · POV '+safeText(p.pov_source):' · POV —'} · ${safeText(p.statut||'À écrire')}</small></div></div>`).join('')}</div><div class="plan-drawer-actions-v576b"><button class="btn-secondary" onclick="pendingPlanImportC60=[];closeDrawer()">Annuler</button><button class="btn-primary" onclick="commitPlanImportC60()">Importer ${rows.length} entrée${rows.length>1?'s':''}</button></div></div>`);
   }
   async function commitPlanImportC60(){
     if(!pendingPlanImportC60.length||!currentOeuvreId)return;
