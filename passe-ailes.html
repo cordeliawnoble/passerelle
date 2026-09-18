@@ -1,64 +1,235 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Passe-Ailes · Prélude</title>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Passe-Ailes · Bureau professionnel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box}:root{--ink:#302638;--muted:#837789;--line:#e7deeb;--paper:#fff;--bg:#f7f3f9;--violet:#765494;--soft:#f0e8f5}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif}button,input,select{font:inherit}
-.shell{display:grid;grid-template-columns:244px 1fr;min-height:100vh}aside{background:white;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh}
-.brand{font-size:25px;padding:6px 10px 8px}.switch{margin:0 8px 22px;color:var(--muted);font-size:12px}.switch a{color:var(--violet);text-decoration:none}
-.nav-title{font:700 10px Arial;letter-spacing:.12em;color:#a092a8;padding:17px 12px 6px}nav{display:grid;gap:4px}nav button{border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;color:#786c80;cursor:pointer}nav button.active,nav button:hover{background:var(--soft);color:var(--violet)}
-main{padding:34px 42px;min-width:0}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}h1{font-size:38px;font-weight:400;margin:0 0 7px}.sub{color:var(--muted);font-size:14px}.badge{padding:7px 11px;background:var(--soft);color:var(--violet);border-radius:999px;font:700 10px Arial}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:18px}.card h3{margin:0 0 7px}.muted{color:var(--muted);font-size:12px;line-height:1.5}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.toolbar input,.toolbar select{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 12px;color:var(--ink)}.toolbar input{min-width:280px;flex:1}
-.tablewrap{background:white;border:1px solid var(--line);border-radius:17px;overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:13px 15px;border-bottom:1px solid var(--line);text-align:left}th{font:700 10px Arial;color:var(--muted);letter-spacing:.08em}td small{color:var(--muted)}.btn{border:1px solid var(--line);background:white;border-radius:9px;padding:8px 11px;cursor:pointer;color:var(--ink)}.btn.primary{background:var(--violet);color:white;border-color:var(--violet)}.empty{padding:40px;text-align:center;color:var(--muted)}
-.notice{background:#fffaf0;border:1px solid #eee1c4;border-radius:14px;padding:13px 15px;color:#796845;font-size:12px;margin-bottom:18px}
-@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:static;height:auto}nav{grid-template-columns:repeat(4,1fr)}.nav-title{display:none}main{padding:24px 18px}.grid{grid-template-columns:1fr}}
-</style></head>
-<body><div id="app"><div class="empty">Chargement de Passe-Ailes…</div></div>
-<script>
-const supabaseUrl='https://ilhfzulwuuxyidhityoo.supabase.co',supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaGZ6dWx3dXV4eWlkaGl0eW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDA5NTgsImV4cCI6MjEwMjQxNjk1OH0.nux1ehaes_1rPSQhaYJ3hdCcipYn3B5PQMokUzSuBl0';
-const sb=window.supabase.createClient(supabaseUrl,supabaseKey),db=()=>sb.schema('passerelle');
-let user=null,works=[],view='catalogue';
+:root{
+ --bg:#f7f3fb;--paper:#fffdfd;--paper2:#f1ebf7;--ink:#2d2633;--muted:#746b7b;
+ --line:#ddd3e7;--violet:#76558e;--violet2:#a88bc0;--green:#657b68;--gold:#a88752;
+ --pink:#a66f89;--blue:#627e9b;--shadow:0 10px 30px rgba(65,45,78,.08);
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select,textarea{font:inherit}.shell{display:grid;grid-template-columns:235px 1fr;min-height:100vh}
+aside{background:#29222f;color:#f8f2fb;padding:22px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-family:Georgia,serif;font-size:24px;font-weight:700;margin:4px 8px 2px}.brand small{display:block;font:11px/1.4 Inter,sans-serif;color:#cbbbd7;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.nav{margin-top:24px}.nav button{width:100%;border:0;background:transparent;color:#d8cde0;text-align:left;padding:10px 11px;border-radius:10px;cursor:pointer;margin:2px 0}
+.nav button:hover,.nav button.active{background:#44364f;color:white}.nav .sep{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#9889a3;margin:18px 10px 6px}
+.back{margin-top:24px;border-top:1px solid #44364f;padding-top:14px}.back a{color:#d8cde0;text-decoration:none;font-size:13px}
+main{padding:28px 34px 60px;min-width:0}.page{display:none}.page.active{display:block}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}.head h1{font:700 31px/1.1 Georgia,serif;margin:0}.head p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--paper);padding:9px 13px;border-radius:9px;cursor:pointer;color:var(--ink)}.btn.primary{background:var(--violet);border-color:var(--violet);color:white}.btn.sm{padding:6px 9px;font-size:12px}
+.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.card{background:var(--paper);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:var(--shadow)}
+.card h3{font:700 17px Georgia,serif;margin:0 0 12px}.stack{display:grid;gap:10px}.row{display:flex;gap:10px;align-items:center}.spread{justify-content:space-between}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.kpi .card b{font-size:24px;display:block}.kpi .card span{font-size:12px;color:var(--muted)}
+.item{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:white}.item b{font-size:13px}.item small{display:block;color:var(--muted);margin-top:3px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}.violet{background:var(--violet)}.green{background:var(--green)}.gold{background:var(--gold)}.pink{background:var(--pink)}.blue{background:var(--blue)}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}.tabs button{border:1px solid var(--line);background:var(--paper);padding:8px 12px;border-radius:999px;cursor:pointer}.tabs button.active{background:var(--violet);color:white;border-color:var(--violet)}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select{border:1px solid var(--line);background:white;border-radius:9px;padding:9px 11px}
+.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}.work{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden}.cover{height:118px;background:linear-gradient(135deg,#e7dbee,#cfd9e5);display:flex;align-items:center;justify-content:center;font:700 28px Georgia,serif;color:#5f4d69}.work .body{padding:13px}.pill{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:10px;background:var(--paper2);color:var(--violet);margin-right:4px}
+.calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:7px}.calhead div{text-align:center;font-size:11px;color:var(--muted)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.day{min-height:125px;border:1px solid var(--line);border-radius:12px;background:white;padding:8px}.day.muted{opacity:.42}.daynum{font-size:11px;color:var(--muted);margin-bottom:6px}.event{padding:6px 7px;border-radius:7px;margin:4px 0;font-size:10px;cursor:grab;border-left:4px solid var(--violet);background:#f1eaf6}.event.publication{border-color:var(--blue);background:#eaf1f7}.event.campagne{border-color:var(--pink);background:#f8edf2}.event.obligation{border-color:var(--gold);background:#f7f0e4}.event.promotion{border-color:var(--green);background:#edf3ed}
+.list-table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}.list-table th,.list-table td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:12px;text-align:left}.list-table th{color:var(--muted);font-weight:600;background:#faf7fc}
+.status{padding:3px 7px;border-radius:999px;background:var(--paper2);font-size:10px}.empty{color:var(--muted);font-style:italic;padding:18px;text-align:center}
+.modalbg{position:fixed;inset:0;background:rgba(25,18,30,.42);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modalbg.open{display:flex}.modal{width:min(620px,100%);max-height:90vh;overflow:auto;background:var(--paper);border-radius:16px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.22)}.modal h2{font:700 22px Georgia,serif;margin:0 0 16px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form label{font-size:11px;color:var(--muted);display:grid;gap:5px}.form input,.form select,.form textarea{width:100%;border:1px solid var(--line);background:white;border-radius:8px;padding:9px;color:var(--ink)}.form .full{grid-column:1/-1}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;overflow:auto}.col{background:var(--paper2);border-radius:13px;padding:10px;min-height:260px}.col h4{margin:3px 4px 10px;font-size:12px}.campaign{background:white;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.note{font-size:12px;color:var(--muted)}.placeholder{border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted);background:rgba(255,255,255,.45)}
+@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto}.grid2,.kpi{grid-template-columns:1fr}.calendar{min-width:760px}.calendar-wrap{overflow:auto}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+ <div class="brand">🪽 Passe-Ailes<small>Maison d’autrice</small></div>
+ <div class="nav">
+  <button data-page="bureau" class="active">🏠 Bureau</button>
+  <button data-page="autrice">👤 Mon activité d’autrice</button>
+  <button data-page="catalogue">📚 Catalogue professionnel</button>
+  <div class="sep">Développement</div>
+  <button data-page="marketing">📣 Marketing & communication</button>
+  <button data-page="planning">🗓 Planning éditorial</button>
+  <button data-page="calendrier">📆 Calendrier</button>
+  <div class="sep">Pilotage</div>
+  <button data-page="finances">💰 Finances</button>
+  <button data-page="backoffice">⚙️ Back-office</button>
+ </div>
+ <div class="back"><a href="passerelle.html">🌉 Revenir à Passerelle</a></div>
+</aside>
+<main>
+<section id="bureau" class="page active">
+ <div class="head"><div><h1>Le Bureau</h1><p>La vue d’ensemble de la maison d’autrice.</p></div><button class="btn primary" onclick="go('planning')">+ Programmer</button></div>
+ <div class="grid2">
+  <div class="stack">
+   <div class="card"><h3>Calendrier à venir</h3><div id="home-events" class="stack"></div></div>
+   <div class="card"><h3>Projets en cours</h3><div id="home-projects" class="stack"></div></div>
+  </div>
+  <div class="stack">
+   <div class="card"><h3>Aperçu financier</h3><div class="placeholder">Le cockpit financier sera branché dans son chantier dédié.</div></div>
+   <div class="card"><h3>Marketing & communication</h3><div id="home-marketing" class="stack"></div></div>
+  </div>
+ </div>
+</section>
 
-async function init(){
- const r=await sb.auth.getSession();user=r.data?.session?.user||null;
- if(!user){document.getElementById('app').innerHTML=`<div class="empty"><h1>🪽 Passe-Ailes</h1><p>La session Prélude n'est pas ouverte.</p><a href="passerelle.html">Ouvrir Passerelle pour se connecter</a></div>`;return}
- renderShell();await loadWorks();
-}
-function renderShell(){
- document.getElementById('app').innerHTML=`<div class="shell"><aside><div class="brand">🪽 Passe-Ailes</div><div class="switch">Prélude · <a href="passerelle.html">Passerelle</a> · <a href="nova.html">Nova</a></div>
- <div class="nav-title">PILOTAGE</div><nav>
- <button data-v="bureau" onclick="go('bureau')">🏠 Bureau</button>
- <div class="nav-title">ŒUVRES</div>
- <button data-v="catalogue" class="active" onclick="go('catalogue')">📚 Catalogue professionnel</button>
- <button data-v="projets" onclick="go('projets')">🗂 Projets</button>
- <button data-v="soumissions" onclick="go('soumissions')">🏛 Soumissions ME</button>
- <button data-v="autoedition" onclick="go('autoedition')">📕 Autoédition</button>
- <button data-v="lecture" onclick="go('lecture')">🌐 Publication en ligne</button>
- <div class="nav-title">AUTRICE</div><button data-v="autrice" onclick="go('autrice')">👤 Mon activité</button>
- <div class="nav-title">DÉVELOPPEMENT</div><button data-v="developpement" onclick="go('developpement')">📣 Marketing & commercial</button>
- <button data-v="calendrier" onclick="go('calendrier')">🗓 Calendrier</button><button data-v="exports" onclick="go('exports')">📤 Exports</button><button data-v="archives" onclick="go('archives')">🗄 Archives</button>
- </nav></aside><main id="content"></main></div>`;}
+<section id="autrice" class="page">
+ <div class="head"><div><h1>Mon activité d’autrice</h1><p>Identité professionnelle, légal, obligations et documents.</p></div></div>
+ <div class="tabs" data-tabs="author"><button class="active" data-tab="overview">Vue d’ensemble</button><button data-tab="profile">Profil & identité</button><button data-tab="admin">Administratif & légal</button><button data-tab="obligations">Obligations</button><button data-tab="documents">Documents</button></div>
+ <div id="author-content"></div>
+</section>
+
+<section id="catalogue" class="page">
+ <div class="head"><div><h1>Catalogue professionnel</h1><p>La trajectoire professionnelle des œuvres, sans dupliquer Passerelle.</p></div><button class="btn" onclick="loadWorks()">↻ Actualiser</button></div>
+ <div class="toolbar"><input id="work-search" placeholder="Rechercher une œuvre…" oninput="renderWorks()"><select id="work-dest" onchange="renderWorks()"><option value="">Toutes destinations</option><option>Lecture en ligne</option><option>Autoédition</option><option>Maison d’édition</option><option>Concours</option></select></div>
+ <div id="works" class="catalog"></div>
+</section>
+
+<section id="marketing" class="page">
+ <div class="head"><div><h1>Marketing & communication</h1><p>Planning, campagnes, promotions et identité. Canva garde les contenus.</p></div><button class="btn primary" onclick="openEvent('campagne')">+ Nouvelle campagne</button></div>
+ <div class="tabs" data-tabs="marketing"><button class="active" data-tab="overview">Vue d’ensemble</button><button data-tab="planning">Planning</button><button data-tab="campaigns">Campagnes</button><button data-tab="promos">Promotions</button><button data-tab="identity">Identité & ressources</button><button data-tab="stats">Statistiques</button></div>
+ <div id="marketing-content"></div>
+</section>
+
+<section id="planning" class="page">
+ <div class="head"><div><h1>Planning éditorial</h1><p>Quand et où publier. Les tâches restent dans Todum.</p></div><button class="btn primary" onclick="openEvent('publication')">+ Publication</button></div>
+ <div class="toolbar"><button class="btn sm" onclick="moveMonth(-1)">←</button><b id="planning-title"></b><button class="btn sm" onclick="moveMonth(1)">→</button>
+ <select id="filter-channel" onchange="renderPlanning()"><option value="">Tous canaux</option><option>Instagram</option><option>TikTok</option><option>Discord</option><option>Newsletter</option><option>Site</option><option>Goodreads</option><option>Podcast</option><option>Autre</option></select>
+ <select id="filter-status" onchange="renderPlanning()"><option value="">Tous statuts</option><option>À venir</option><option>Brouillon</option><option>Publié</option><option>En retard</option><option>Annulé</option></select></div>
+ <div class="calendar-wrap"><div class="calhead"><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div></div><div id="planning-cal" class="calendar"></div></div>
+</section>
+
+<section id="calendrier" class="page">
+ <div class="head"><div><h1>Calendrier transversal</h1><p>Publications, campagnes, promotions et obligations au même endroit.</p></div><button class="btn primary" onclick="openEvent()">+ Événement</button></div>
+ <div class="toolbar"><button class="btn sm" onclick="moveGlobal(-1)">←</button><b id="global-title"></b><button class="btn sm" onclick="moveGlobal(1)">→</button><span class="note">Glisser-déposer un événement pour changer sa date.</span></div>
+ <div class="calendar-wrap"><div class="calhead"><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div></div><div id="global-cal" class="calendar"></div></div>
+</section>
+
+<section id="finances" class="page">
+ <div class="head"><div><h1>Finances</h1><p>Module réservé pour le chantier financier dédié.</p></div></div>
+ <div class="placeholder"><b>Pas de fausses données.</b><br><br>Cette zone attendra la vraie source financière et son modèle de synchronisation.</div>
+</section>
+
+<section id="backoffice" class="page">
+ <div class="head"><div><h1>Back-office Passe-Ailes</h1><p>Administration système distincte de Passerelle.</p></div></div>
+ <div class="grid2"><div class="card"><h3>Archives</h3><p class="note">Les éléments archivés seront administrés ici, hors navigation quotidienne.</p><button class="btn">Ouvrir les archives</button></div><div class="card"><h3>Exports & synchronisations</h3><p class="note">Centralise les futurs exports, connexions et diagnostics.</p><button class="btn">Configurer</button></div></div>
+</section>
+</main>
+</div>
+
+<div id="modalbg" class="modalbg" onclick="if(event.target===this)closeModal()"><div class="modal">
+ <h2 id="modal-title">Nouvel événement</h2>
+ <div class="form">
+  <label>Type<select id="e-type"><option value="publication">Publication</option><option value="campagne">Campagne</option><option value="promotion">Promotion</option><option value="obligation">Obligation</option><option value="autre">Autre</option></select></label>
+  <label>Date<input id="e-date" type="date"></label>
+  <label class="full">Titre<input id="e-title" placeholder="Ex. Extrait Campus North"></label>
+  <label>Canal<select id="e-channel"><option value="">—</option><option>Instagram</option><option>TikTok</option><option>Discord</option><option>Newsletter</option><option>Site</option><option>Goodreads</option><option>Podcast</option><option>Autre</option></select></label>
+  <label>Statut<select id="e-status"><option>À venir</option><option>Brouillon</option><option>Publié</option><option>En retard</option><option>Annulé</option></select></label>
+  <label class="full">Œuvre<select id="e-work"><option value="">Aucune</option></select></label>
+  <label class="full">Notes<textarea id="e-notes" rows="4"></textarea></label>
+ </div>
+ <div class="modalactions"><button class="btn" onclick="deleteEvent()" id="delete-btn" style="margin-right:auto;display:none">Supprimer</button><button class="btn" onclick="closeModal()">Annuler</button><button class="btn primary" onclick="saveEvent()">Enregistrer</button></div>
+</div></div>
+
+<script>
+const supabaseUrl='https://ilhfzulwuuxyidhityoo.supabase.co', supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaGZ6dWx3dXV4eWlkaGl0eW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NDA5NTgsImV4cCI6MjEwMjQxNjk1OH0.nux1ehaes_1rPSQhaYJ3hdCcipYn3B5PQMokUzSuBl0';
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey), db=()=>sb.schema('passerelle');
+const KEY='passe-ailes-v1';
+let state=JSON.parse(localStorage.getItem(KEY)||'null')||{events:[],workMeta:{},author:{},documents:[]};
+let works=[], editing=null, planMonth=new Date(), globalMonth=new Date();
+function persist(){localStorage.setItem(KEY,JSON.stringify(state));renderHome()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function go(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));if(id==='planning')renderPlanning();if(id==='calendrier')renderGlobal()}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page));
+
 async function loadWorks(){
- const r=await db().from('oeuvres').select('id,titre,couverture,genre,statut,destination_editoriale,niveau_editorial_cible,statut_editorial_actuel,horizon_annee,publication_envisagee,archive,sagas(nom),sous_sagas(nom)').order('titre');
- if(r.error){document.getElementById('content').innerHTML=`<div class="empty">Erreur : ${esc(r.error.message)}</div>`;return}
- works=(r.data||[]).filter(w=>w.archive!==true);go('catalogue');
+ const zone=document.getElementById('works'); zone.innerHTML='<div class="empty">Chargement depuis Passerelle…</div>';
+ try{
+  let {data,error}=await db().from('oeuvres').select('*').order('titre',{ascending:true}); if(error)throw error;
+  works=(data||[]).filter(w=>!w.archive&&!w.archivee&&!w.archived);
+ }catch(e){works=[];zone.innerHTML='<div class="empty">Impossible de lire le catalogue Passerelle : '+esc(e.message)+'</div>';return}
+ fillWorkSelect();renderWorks();renderHome()
 }
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function go(v){view=v;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));if(v==='catalogue')renderCatalogue();else renderPlaceholder(v)}
-function professionalCandidate(w){return !!(w.destination_editoriale||w.niveau_editorial_cible||w.statut_editorial_actuel)}
-function renderCatalogue(){
- const c=document.getElementById('content');c.innerHTML=`<div class="top"><div><h1>Catalogue professionnel</h1><div class="sub">Les œuvres de Passerelle qui portent déjà une intention éditoriale. Même ID, aucune duplication.</div></div><span class="badge">SOCLE C92</span></div>
- <div class="notice">🪽 Cette première version est volontairement en lecture seule : Passe-Ailes lit la source canonique <strong>oeuvres</strong> de Passerelle. Aucun projet professionnel n'est créé tant que son schéma n'est pas validé.</div>
- <div class="toolbar"><input id="q" placeholder="🔍 Rechercher une œuvre…" oninput="filterWorks()"><select id="dest" onchange="filterWorks()"><option value="">Toutes les destinations</option>${[...new Set(works.map(w=>w.destination_editoriale).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select><select id="level" onchange="filterWorks()"><option value="">Toutes les cibles</option>${[...new Set(works.map(w=>w.niveau_editorial_cible).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div id="workzone"></div>`;filterWorks();
+function meta(w){return state.workMeta[w.id]||{}}
+function initials(t){return (t||'?').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
+function renderWorks(){
+ const q=(document.getElementById('work-search')?.value||'').toLowerCase(), d=document.getElementById('work-dest')?.value||'';
+ const list=works.filter(w=>(!q||(w.titre||'').toLowerCase().includes(q))&&(!d||meta(w).destination===d));
+ document.getElementById('works').innerHTML=list.length?list.map(w=>`<article class="work"><div class="cover">${esc(initials(w.titre))}</div><div class="body"><b>${esc(w.titre||'Sans titre')}</b><p class="note">${esc(w.sous_titre||w.genre||'')}</p><span class="pill">${esc(meta(w).destination||'Trajectoire à définir')}</span><div style="margin-top:11px"><button class="btn sm" onclick="editWorkMeta('${w.id}')">Dossier professionnel</button></div></div></article>`).join(''):'<div class="empty">Aucune œuvre.</div>'
 }
-function filterWorks(){
- const q=(document.getElementById('q')?.value||'').toLowerCase(),d=document.getElementById('dest')?.value||'',l=document.getElementById('level')?.value||'';
- const arr=works.filter(professionalCandidate).filter(w=>(!q||`${w.titre} ${w.sagas?.nom||''} ${w.sous_sagas?.nom||''}`.toLowerCase().includes(q))&&(!d||w.destination_editoriale===d)&&(!l||w.niveau_editorial_cible===l));
- document.getElementById('workzone').innerHTML=arr.length?`<div class="tablewrap"><table><thead><tr><th>Œuvre</th><th>Destination</th><th>Cible</th><th>Statut éditorial</th><th>Horizon</th><th></th></tr></thead><tbody>${arr.map(w=>`<tr><td><strong>${esc(w.titre)}</strong><br><small>${esc(w.sous_sagas?.nom||w.sagas?.nom||w.genre||'')}</small></td><td>${esc(w.destination_editoriale||'—')}</td><td>${esc(w.niveau_editorial_cible||'—')}</td><td>${esc(w.statut_editorial_actuel||w.statut||'—')}</td><td>${esc(w.horizon_annee||w.publication_envisagee||'—')}</td><td><a class="btn" href="passerelle.html?openOeuvre=${encodeURIComponent(w.id)}">Ouvrir dans Passerelle</a></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">Aucune œuvre ne correspond à ces filtres.</div>`;
+function editWorkMeta(id){
+ const w=works.find(x=>String(x.id)===String(id)); if(!w)return;
+ const cur=meta(w); const d=prompt('Destination actuelle : Lecture en ligne / Autoédition / Maison d’édition / Concours',cur.destination||'');
+ if(d===null)return; const j=prompt('Prochain jalon',cur.jalon||''); if(j===null)return;
+ state.workMeta[w.id]={...cur,destination:d,jalon:j,status:'En cours'};persist();renderWorks()
 }
-const labels={bureau:['Bureau','Le cockpit sera construit lorsque ses modules sources existeront.'],projets:['Projets professionnels','Soumission ME, autoédition et publication en ligne seront les trois premiers workflows.'],soumissions:['Soumissions ME','Suivi des maisons, dépôts, relances et historique.'],autoedition:['Autoédition','Protection, métadonnées, éditions, formats, ISBN, distribution et publication.'],lecture:['Publication en ligne','Plateformes, rythme, avance et génération du calendrier de diffusion.'],autrice:['Mon activité d’autrice','Profil professionnel, administratif, légal et obligations.'],developpement:['Marketing & commercial','Identité, communication, promotions et distribution.'],calendrier:['Calendrier','Vue transversale des échéances métier.'],exports:['Exports','Documents, checklists et actions normalisées.'],archives:['Archives','Trajectoires et projets clôturés restent historisés.']};
-function renderPlaceholder(v){const x=labels[v]||[v,''];document.getElementById('content').innerHTML=`<div class="top"><div><h1>${x[0]}</h1><div class="sub">${x[1]}</div></div><span class="badge">À CONSTRUIRE</span></div><div class="card"><h3>Module réservé</h3><p class="muted">La navigation est posée, mais aucune table ni logique métier n'est créée par anticipation.</p></div>`}
-init();
-</script></body></html>
+function fillWorkSelect(){document.getElementById('e-work').innerHTML='<option value="">Aucune</option>'+works.map(w=>`<option value="${esc(w.id)}">${esc(w.titre)}</option>`).join('')}
+
+function openEvent(type='publication',date=''){
+ editing=null;document.getElementById('modal-title').textContent='Nouvel événement';document.getElementById('delete-btn').style.display='none';
+ document.getElementById('e-type').value=type||'publication';document.getElementById('e-date').value=date||new Date().toISOString().slice(0,10);
+ ['e-title','e-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('e-channel').value='';document.getElementById('e-status').value='À venir';document.getElementById('e-work').value='';
+ document.getElementById('modalbg').classList.add('open')
+}
+function editEvent(id){
+ const e=state.events.find(x=>x.id===id);if(!e)return;editing=id;document.getElementById('modal-title').textContent='Modifier l’événement';document.getElementById('delete-btn').style.display='';
+ for(const [id2,key] of [['e-type','type'],['e-date','date'],['e-title','title'],['e-channel','channel'],['e-status','status'],['e-work','workId'],['e-notes','notes']])document.getElementById(id2).value=e[key]||'';
+ document.getElementById('modalbg').classList.add('open')
+}
+function closeModal(){document.getElementById('modalbg').classList.remove('open')}
+function saveEvent(){
+ const e={id:editing||('EVT-'+Date.now()),type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,title:document.getElementById('e-title').value.trim(),channel:document.getElementById('e-channel').value,status:document.getElementById('e-status').value,workId:document.getElementById('e-work').value,notes:document.getElementById('e-notes').value.trim()};
+ if(!e.title||!e.date)return alert('Titre et date sont nécessaires.');
+ if(editing)state.events=state.events.map(x=>x.id===editing?e:x);else state.events.push(e);persist();closeModal();renderPlanning();renderGlobal();renderMarketing()
+}
+function deleteEvent(){if(!editing||!confirm('Supprimer cet événement ?'))return;state.events=state.events.filter(x=>x.id!==editing);persist();closeModal();renderPlanning();renderGlobal();renderMarketing()}
+function workName(id){return works.find(w=>String(w.id)===String(id))?.titre||''}
+function eventHTML(e){return `<div class="event ${esc(e.type)}" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${e.id}')" onclick="editEvent('${e.id}')"><b>${esc(e.title)}</b>${e.channel?'<br>'+esc(e.channel):''}</div>`}
+function monthGrid(base,events,zone,titleId){
+ const y=base.getFullYear(),m=base.getMonth();document.getElementById(titleId).textContent=new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'}).format(base);
+ let first=new Date(y,m,1), start=(first.getDay()+6)%7, days=new Date(y,m+1,0).getDate(), prev=new Date(y,m,0).getDate(), cells=[];
+ for(let i=0;i<42;i++){let n,date,muted=false;if(i<start){n=prev-start+i+1;date=new Date(y,m-1,n);muted=true}else if(i>=start+days){n=i-start-days+1;date=new Date(y,m+1,n);muted=true}else{n=i-start+1;date=new Date(y,m,n)}
+  const iso=[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+  const es=events.filter(e=>e.date===iso);
+  cells.push(`<div class="day ${muted?'muted':''}" data-date="${iso}" ondragover="event.preventDefault()" ondrop="dropEvent(event,'${iso}')"><div class="daynum">${n}</div>${es.map(eventHTML).join('')}</div>`)
+ }document.getElementById(zone).innerHTML=cells.join('')
+}
+function dropEvent(ev,date){ev.preventDefault();const id=ev.dataTransfer.getData('text/plain'),e=state.events.find(x=>x.id===id);if(e){e.date=date;persist();renderPlanning();renderGlobal()}}
+function renderPlanning(){const ch=document.getElementById('filter-channel').value,st=document.getElementById('filter-status').value;monthGrid(planMonth,state.events.filter(e=>e.type==='publication'&&(!ch||e.channel===ch)&&(!st||e.status===st)),'planning-cal','planning-title')}
+function renderGlobal(){monthGrid(globalMonth,state.events,'global-cal','global-title')}
+function moveMonth(n){planMonth=new Date(planMonth.getFullYear(),planMonth.getMonth()+n,1);renderPlanning()}
+function moveGlobal(n){globalMonth=new Date(globalMonth.getFullYear(),globalMonth.getMonth()+n,1);renderGlobal()}
+
+function renderHome(){
+ const future=state.events.filter(e=>e.date>=new Date().toISOString().slice(0,10)&&e.status!=='Annulé').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
+ document.getElementById('home-events').innerHTML=future.length?future.map(e=>`<div class="item"><b><span class="dot ${e.type==='publication'?'blue':e.type==='campagne'?'pink':e.type==='promotion'?'green':'gold'}"></span>${esc(e.title)}</b><small>${esc(e.date)} · ${esc(e.channel||e.type)}</small></div>`).join(''):'<div class="empty">Rien de programmé.</div>';
+ const pro=works.filter(w=>meta(w).destination).slice(0,5);document.getElementById('home-projects').innerHTML=pro.length?pro.map(w=>`<div class="item"><b>${esc(w.titre)}</b><small>${esc(meta(w).destination)}${meta(w).jalon?' · '+esc(meta(w).jalon):''}</small></div>`).join(''):'<div class="empty">Aucun projet professionnel configuré.</div>';
+ const mk=future.filter(e=>['publication','campagne','promotion'].includes(e.type)).slice(0,4);document.getElementById('home-marketing').innerHTML=mk.length?mk.map(e=>`<div class="item"><b>${esc(e.title)}</b><small>${esc(e.date)} · ${esc(e.channel||e.type)}</small></div>`).join(''):'<div class="empty">Aucune actualité marketing.</div>'
+}
+
+function bindTabs(group,render){
+ document.querySelectorAll(`[data-tabs="${group}"] button`).forEach(b=>b.onclick=()=>{document.querySelectorAll(`[data-tabs="${group}"] button`).forEach(x=>x.classList.remove('active'));b.classList.add('active');render(b.dataset.tab)})
+}
+function renderAuthor(tab='overview'){
+ const z=document.getElementById('author-content'),a=state.author;
+ if(tab==='overview')z.innerHTML=`<div class="grid2"><div class="card"><h3>Profil professionnel</h3><p><b>${esc(a.penName||'Cordélia')}</b></p><p class="note">${esc(a.bioShort||'Bio courte à renseigner.')}</p><button class="btn sm" onclick="renderAuthor('profile')">Modifier</button></div><div class="card"><h3>Situation administrative</h3><p class="note">Identifiants, organismes et statut professionnel.</p><button class="btn sm" onclick="renderAuthor('admin')">Ouvrir</button></div><div class="card"><h3>Prochaines obligations</h3><div class="empty">Aucune obligation enregistrée.</div></div><div class="card"><h3>Derniers documents</h3><div class="empty">Aucun document enregistré.</div></div></div>`;
+ else if(tab==='profile')z.innerHTML=`<div class="card"><h3>Profil & identité</h3><div class="form"><label>Nom de plume<input id="a-pen" value="${esc(a.penName||'Cordélia')}"></label><label>Site<input id="a-site" value="${esc(a.site||'')}"></label><label class="full">Bio courte<textarea id="a-bio" rows="4">${esc(a.bioShort||'')}</textarea></label><label class="full">Manifeste d’autrice<textarea id="a-manifesto" rows="5">${esc(a.manifesto||'')}</textarea></label></div><p><button class="btn primary" onclick="saveAuthor()">Enregistrer</button></p></div>`;
+ else if(tab==='admin')z.innerHTML=`<div class="grid2"><div class="card"><h3>Administratif & légal</h3><div class="form"><label>SIRET<input id="a-siret" value="${esc(a.siret||'')}"></label><label>Statut<input id="a-status" value="${esc(a.proStatus||'')}"></label></div><p><button class="btn primary" onclick="saveAdmin()">Enregistrer</button></p></div><div class="card"><h3>e-Soleau</h3><p class="note">Suivi par œuvre, version, dépôt, expiration et récépissé.</p></div></div>`;
+ else if(tab==='obligations')z.innerHTML=`<div class="card"><h3>Obligations</h3><p class="note">Vue liste / calendrier / historique. Les échéances alimenteront le calendrier transversal.</p><div class="empty">Aucune obligation enregistrée.</div></div>`;
+ else z.innerHTML=`<div class="card"><h3>Documents</h3><p class="note">Les fichiers restent dans Google Drive. Passe-Ailes conserve les liens et métadonnées utiles.</p><div class="empty">Aucun document référencé.</div></div>`
+}
+function saveAuthor(){state.author.penName=document.getElementById('a-pen').value;state.author.site=document.getElementById('a-site').value;state.author.bioShort=document.getElementById('a-bio').value;state.author.manifesto=document.getElementById('a-manifesto').value;persist();renderAuthor('profile')}
+function saveAdmin(){state.author.siret=document.getElementById('a-siret').value;state.author.proStatus=document.getElementById('a-status').value;persist();renderAuthor('admin')}
+
+function renderMarketing(tab='overview'){
+ const z=document.getElementById('marketing-content'),ev=state.events;
+ if(tab==='overview'){const pub=ev.filter(e=>e.type==='publication'&&e.status!=='Publié').length,cam=ev.filter(e=>e.type==='campagne'&&e.status!=='Publié').length;z.innerHTML=`<div class="kpi"><div class="card"><b>${pub}</b><span>Publications prévues</span></div><div class="card"><b>${cam}</b><span>Campagnes en cours</span></div><div class="card"><b>${ev.filter(e=>e.type==='promotion'&&e.status!=='Publié').length}</b><span>Promotions à venir</span></div></div><div class="grid2"><div class="card"><h3>Prochaines publications</h3>${ev.filter(e=>e.type==='publication').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(e=>`<div class="item"><b>${esc(e.title)}</b><small>${esc(e.date)} · ${esc(e.channel)}</small></div>`).join('')||'<div class="empty">Aucune.</div>'}</div><div class="card"><h3>Campagnes en cours</h3>${ev.filter(e=>e.type==='campagne').slice(0,5).map(e=>`<div class="item"><b>${esc(e.title)}</b><small>${esc(e.date)}</small></div>`).join('')||'<div class="empty">Aucune.</div>'}</div></div>`}
+ else if(tab==='planning'){z.innerHTML='<div class="card"><h3>Planning</h3><p class="note">Le calendrier éditorial est la vue de référence.</p><button class="btn primary" onclick="go(\'planning\')">Ouvrir le planning éditorial</button></div>'}
+ else if(tab==='campaigns'){const cols=['Brouillon','À venir','Publié','Annulé'];z.innerHTML='<div class="kanban">'+cols.map(c=>`<div class="col"><h4>${c}</h4>${ev.filter(e=>e.type==='campagne'&&e.status===c).map(e=>`<div class="campaign" onclick="editEvent('${e.id}')"><b>${esc(e.title)}</b><small>${esc(e.date)}</small></div>`).join('')}</div>`).join('')+'</div>'}
+ else if(tab==='promos'){z.innerHTML=`<div class="card"><h3>Promotions commerciales</h3><p class="note">Une promotion de prix reste distincte d’une campagne de communication.</p><button class="btn primary" onclick="openEvent('promotion')">+ Promotion</button><div class="stack" style="margin-top:12px">${ev.filter(e=>e.type==='promotion').map(e=>`<div class="item" onclick="editEvent('${e.id}')"><b>${esc(e.title)}</b><small>${esc(e.date)} · ${esc(workName(e.workId))}</small></div>`).join('')||'<div class="empty">Aucune promotion.</div>'}</div></div>`}
+ else if(tab==='identity')z.innerHTML='<div class="grid2"><div class="card"><h3>Identité d’autrice</h3><p class="note">Logos, couleurs, typographies, signatures et bios sociales. Les contenus restent dans Canva.</p></div><div class="card"><h3>Ressources</h3><p class="note">Liens vers les ressources de référence.</p></div></div>';
+ else z.innerHTML='<div class="placeholder"><b>Statistiques</b><br><br>Aucune métrique inventée. Cette vue ne s’activera qu’avec des sources fiables.</div>'
+}
+bindTabs('author',renderAuthor);bindTabs('marketing',renderMarketing);
+renderAuthor();renderMarketing();renderPlanning();renderGlobal();loadWorks();
+</script>
+</body></html>
