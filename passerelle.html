@@ -1618,6 +1618,18 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 .chantier-icon-c90{border:0;background:transparent;cursor:pointer;padding:5px;color:var(--text-dim)}.chantier-add-c90{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;margin-top:14px}
 .chantier-done-c90{margin-top:16px}.chantier-done-c90 summary{cursor:pointer;color:var(--text-dim);font-size:12px;font-weight:700}
 @media(max-width:760px){.chantier-table-c90 th:nth-child(3),.chantier-table-c90 td:nth-child(3){display:none}.chantier-add-c90{grid-template-columns:1fr}.chantier-head-c90{display:block}}
+
+/* C97 · Chantier œuvre + dictée */
+.work-chantier-c97{display:flex;flex-direction:column;gap:16px}
+.work-chantier-head-c97{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.work-chantier-head-c97 h2{margin:0 0 5px;font-family:'Lora',serif}.work-chantier-head-c97 p{margin:0;color:var(--text-dim);font-size:12px;max-width:720px}
+.work-postit-form-c97{background:color-mix(in srgb,var(--card) 88%,var(--accent) 12%);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px}
+.work-postit-form-row-c97{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(150px,.7fr) auto;gap:9px}.work-postit-form-c97 input,.work-postit-form-c97 select,.work-postit-form-c97 textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:10px;font:inherit}.work-postit-form-c97 textarea{min-height:110px;resize:vertical}
+.dictation-row-c97{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.dictation-status-c97{font-size:12px;color:var(--text-dim)}.dictation-btn-c97.listening{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 24%,transparent)}
+.work-postit-board-c97{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;align-items:start}
+.work-postit-c97{position:relative;min-height:150px;border:1px solid color-mix(in srgb,var(--line) 75%,transparent);border-radius:8px;padding:16px 14px 13px;box-shadow:0 8px 18px rgba(0,0,0,.08);transform:rotate(var(--tilt,0deg));background:var(--postit,#fff4ad);color:#302d2a;cursor:grab}.work-postit-c97:active{cursor:grabbing}.work-postit-c97[data-color="rose"]{--postit:#ffdce8}.work-postit-c97[data-color="bleu"]{--postit:#dceeff}.work-postit-c97[data-color="violet"]{--postit:#e9defd}.work-postit-c97[data-color="vert"]{--postit:#dff3df}.work-postit-c97[data-color="jaune"]{--postit:#fff4ad}.work-postit-c97.dragging{opacity:.45}.work-postit-c97.dragover{outline:2px dashed #5c5360;outline-offset:4px}
+.work-postit-top-c97{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.work-postit-c97 h3{font:700 15px 'Lora',serif;margin:0 0 8px}.work-postit-cat-c97{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.62}.work-postit-text-c97{font-size:13px;white-space:pre-wrap;line-height:1.45}.work-postit-actions-c97{display:flex;gap:3px}.work-postit-actions-c97 button{border:0;background:transparent;color:inherit;cursor:pointer;padding:2px 4px;opacity:.58}.work-postit-actions-c97 button:hover{opacity:1}.work-postit-empty-c97{grid-column:1/-1;padding:34px;text-align:center;color:var(--text-dim);border:1px dashed var(--line);border-radius:16px}
+@media(max-width:700px){.work-postit-form-row-c97{grid-template-columns:1fr}.work-postit-board-c97{grid-template-columns:1fr}}
 </style>
 <style id="c91-character-linker">
 .character-linker-filters-c91{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:10px;margin:16px 0 8px}
@@ -7083,6 +7095,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     { key:'manuscrit', label:'Manuscrit' },
     { key:'relecture', label:'Relecture' },
     { key:'medias', label:'Médias' },
+    { key:'chantier', label:'🛠️ Chantier' },
   ];
   let currentOeuvreId = null;
   let currentOeuvre = null;
@@ -7132,8 +7145,72 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     else if (key === 'manuscrit') await renderOeuvreManuscrit(zone);
     else if (key === 'relecture') await renderOeuvreRelectureV2(zone);
     else if (key === 'medias') await renderOeuvreMedias(zone);
+    else if (key === 'chantier') await renderOeuvreChantierC97(zone);
     else if (key === 'lore' || key === 'chronologie') zone.innerHTML = `<div class="empty">Le module <strong>${key==='lore'?'Univers & Lore':'Chronologie'}</strong> est activé pour cette œuvre. Sa page dédiée sera figée dans son propre chantier.</div>`;
   }
+
+  // ============================================================
+  // C97 · Chantier d'une œuvre + dictée navigateur
+  // ============================================================
+  const WORK_CHANTIER_CATS_C97=['Idée','Scène','Personnage','Lore','Raccord','À vérifier','Autre'];
+  const WORK_CHANTIER_COLORS_C97=['jaune','rose','bleu','violet','vert'];
+  let workChantierRecognitionC97=null;
+  let workChantierListeningC97=false;
+
+  function workChantierKeyC97(id){return `passerelle:work-chantier:c97:${currentUser?.id||'local'}:${id}`}
+  function loadWorkChantierC97(id){try{return JSON.parse(localStorage.getItem(workChantierKeyC97(id))||'[]')}catch(_){return []}}
+  function saveWorkChantierC97(id,rows){localStorage.setItem(workChantierKeyC97(id),JSON.stringify(rows))}
+  function workChantierEscC97(v){return safeText(String(v??''))}
+  function workChantierTiltC97(i){return ['-0.45deg','0.3deg','-0.2deg','0.5deg','-0.35deg'][i%5]}
+
+  async function renderOeuvreChantierC97(zone){
+    stopWorkChantierDictationC97(true);
+    const rows=loadWorkChantierC97(currentOeuvreId).sort((a,b)=>(a.order??0)-(b.order??0));
+    zone.innerHTML=`<section class="work-chantier-c97">
+      <div class="work-chantier-head-c97"><div><h2>🛠️ Chantier</h2><p>Le mur de post-it de cette œuvre. Ici, une idée peut rester petite, bancale et très contente de l’être : aucune échéance, aucune priorité Todum.</p></div><span class="tag">${rows.length} post-it${rows.length>1?'s':''}</span></div>
+      <div class="work-postit-form-c97">
+        <div class="work-postit-form-row-c97"><input id="work-postit-title-c97" placeholder="Titre facultatif"><select id="work-postit-cat-c97">${WORK_CHANTIER_CATS_C97.map(c=>`<option>${c}</option>`).join('')}</select><select id="work-postit-color-c97" title="Couleur">${WORK_CHANTIER_COLORS_C97.map(c=>`<option value="${c}">${c[0].toUpperCase()+c.slice(1)}</option>`).join('')}</select></div>
+        <textarea id="work-postit-text-c97" placeholder="Pose l’idée ici… ou dicte-la directement."></textarea>
+        <div class="dictation-row-c97"><button id="work-postit-mic-c97" class="btn-secondary dictation-btn-c97" onclick="toggleWorkChantierDictationC97()">🎙️ Dicter</button><span id="work-postit-dict-status-c97" class="dictation-status-c97">La transcription reste modifiable avant enregistrement.</span><button class="btn-primary" style="margin-left:auto" onclick="addWorkPostitC97()">+ Ajouter le post-it</button></div>
+      </div>
+      <div id="work-postit-board-c97" class="work-postit-board-c97">${renderWorkPostitsC97(rows)}</div>
+    </section>`;
+  }
+
+  function renderWorkPostitsC97(rows){
+    if(!rows.length)return `<div class="work-postit-empty-c97"><div style="font-size:28px;margin-bottom:7px">🐈‍⬛</div><strong>Le chantier est calme.</strong><div style="margin-top:4px">Walter n’a encore rien trouvé à coller au mur.</div></div>`;
+    return rows.map((x,i)=>`<article class="work-postit-c97" data-id="${x.id}" data-color="${workChantierEscC97(x.color||'jaune')}" draggable="true" style="--tilt:${workChantierTiltC97(i)}" ondragstart="workPostitDragStartC97(event,'${x.id}')" ondragend="workPostitDragEndC97(event)" ondragover="workPostitDragOverC97(event)" ondragleave="workPostitDragLeaveC97(event)" ondrop="workPostitDropC97(event,'${x.id}')">
+      <div class="work-postit-top-c97"><div><div class="work-postit-cat-c97">${workChantierEscC97(x.category||'Idée')}</div><h3>${workChantierEscC97(x.title||'Post-it')}</h3></div><div class="work-postit-actions-c97"><button title="Modifier" onclick="event.stopPropagation();editWorkPostitC97('${x.id}')">✎</button><button title="Supprimer" onclick="event.stopPropagation();deleteWorkPostitC97('${x.id}')">×</button></div></div><div class="work-postit-text-c97">${workChantierEscC97(x.text||'')}</div>
+    </article>`).join('');
+  }
+
+  function refreshWorkPostitBoardC97(){const b=document.getElementById('work-postit-board-c97');if(!b)return;const rows=loadWorkChantierC97(currentOeuvreId).sort((a,b)=>(a.order??0)-(b.order??0));b.innerHTML=renderWorkPostitsC97(rows);const tag=document.querySelector('.work-chantier-head-c97 .tag');if(tag)tag.textContent=`${rows.length} post-it${rows.length>1?'s':''}`}
+  function addWorkPostitC97(){const text=document.getElementById('work-postit-text-c97')?.value.trim()||'',title=document.getElementById('work-postit-title-c97')?.value.trim()||'';if(!text&&!title){alert('Dicte ou écris au moins une petite idée avant de coller le post-it.');return}const rows=loadWorkChantierC97(currentOeuvreId);rows.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)),title,category:document.getElementById('work-postit-cat-c97')?.value||'Idée',color:document.getElementById('work-postit-color-c97')?.value||'jaune',text,order:rows.length,created_at:new Date().toISOString()});saveWorkChantierC97(currentOeuvreId,rows);document.getElementById('work-postit-title-c97').value='';document.getElementById('work-postit-text-c97').value='';refreshWorkPostitBoardC97()}
+  function deleteWorkPostitC97(id){if(!confirm('Retirer ce post-it du Chantier ?'))return;saveWorkChantierC97(currentOeuvreId,loadWorkChantierC97(currentOeuvreId).filter(x=>x.id!==id));refreshWorkPostitBoardC97()}
+  function editWorkPostitC97(id){const rows=loadWorkChantierC97(currentOeuvreId),x=rows.find(r=>r.id===id);if(!x)return;const title=prompt('Titre du post-it (facultatif)',x.title||'');if(title===null)return;const text=prompt('Contenu du post-it',x.text||'');if(text===null)return;x.title=title.trim();x.text=text.trim();saveWorkChantierC97(currentOeuvreId,rows);refreshWorkPostitBoardC97()}
+
+  let draggedWorkPostitC97=null;
+  function workPostitDragStartC97(e,id){draggedWorkPostitC97=id;e.currentTarget.classList.add('dragging');if(e.dataTransfer)e.dataTransfer.effectAllowed='move'}
+  function workPostitDragEndC97(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.work-postit-c97.dragover').forEach(n=>n.classList.remove('dragover'));draggedWorkPostitC97=null}
+  function workPostitDragOverC97(e){e.preventDefault();e.currentTarget.classList.add('dragover')}
+  function workPostitDragLeaveC97(e){e.currentTarget.classList.remove('dragover')}
+  function workPostitDropC97(e,targetId){e.preventDefault();e.currentTarget.classList.remove('dragover');if(!draggedWorkPostitC97||draggedWorkPostitC97===targetId)return;let rows=loadWorkChantierC97(currentOeuvreId).sort((a,b)=>(a.order??0)-(b.order??0));const from=rows.findIndex(x=>x.id===draggedWorkPostitC97),to=rows.findIndex(x=>x.id===targetId);if(from<0||to<0)return;const [m]=rows.splice(from,1);rows.splice(to,0,m);rows.forEach((x,i)=>x.order=i);saveWorkChantierC97(currentOeuvreId,rows);refreshWorkPostitBoardC97()}
+
+  function toggleWorkChantierDictationC97(){
+    if(workChantierListeningC97){stopWorkChantierDictationC97();return}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const status=document.getElementById('work-postit-dict-status-c97');
+    if(!SR){if(status)status.textContent='Dictée non disponible dans ce navigateur. Tu peux toujours écrire ou coller la transcription Sonate.';return}
+    const area=document.getElementById('work-postit-text-c97');if(!area)return;
+    const recognition=new SR();workChantierRecognitionC97=recognition;recognition.lang='fr-FR';recognition.continuous=true;recognition.interimResults=true;
+    let committed=area.value.trim();if(committed)committed+=' ';
+    recognition.onstart=()=>{workChantierListeningC97=true;const b=document.getElementById('work-postit-mic-c97');if(b){b.classList.add('listening');b.textContent='⏹ Arrêter'}if(status)status.textContent='🎙️ J’écoute… parle normalement.'};
+    recognition.onresult=e=>{let finalText='',interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t+' ';else interim+=t}if(finalText)committed+=finalText;area.value=(committed+interim).trimStart()};
+    recognition.onerror=e=>{if(status)status.textContent=e.error==='not-allowed'?'Micro refusé par le navigateur. Autorise-le pour utiliser la dictée.':`Dictée interrompue (${e.error}). Le texte déjà reconnu est conservé.`};
+    recognition.onend=()=>{workChantierListeningC97=false;workChantierRecognitionC97=null;const b=document.getElementById('work-postit-mic-c97');if(b){b.classList.remove('listening');b.textContent='🎙️ Dicter'}if(status&&!status.textContent.includes('refusé')&&!status.textContent.includes('interrompue'))status.textContent='Dictée terminée. Corrige si besoin, puis ajoute le post-it.'};
+    try{recognition.start()}catch(e){if(status)status.textContent='Impossible de démarrer le micro : '+e.message}
+  }
+  function stopWorkChantierDictationC97(silent=false){if(workChantierRecognitionC97){try{workChantierRecognitionC97.stop()}catch(_){}}workChantierListeningC97=false;if(!silent){const b=document.getElementById('work-postit-mic-c97');if(b){b.classList.remove('listening');b.textContent='🎙️ Dicter'}}}
 
   // ============================================================
   // Onglet Écriture d'une œuvre
