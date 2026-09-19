@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Passe-Ailes V3 · Maison d’autrice</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Passe-Ailes V4 · Maison d’autrice</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f8f5fb;--surface:#fff;--soft:#f1ebf7;--ink:#2d2633;--muted:#786f7e;--line:#e2d9e9;--violet:#76558e;--violet2:#a68cba;--pink:#b57894;--blue:#6785a4;--green:#728b74;--gold:#aa8956;--red:#a96c70;--shadow:0 12px 35px rgba(66,43,78,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif}.app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
@@ -60,14 +60,40 @@ let state=JSON.parse(localStorage.getItem(DATA_KEY)||'null')||{campaigns:[],even
 let proWorks=[],editingEvent=null,editingCampaign=null,marketingTab='overview',planMonth=new Date(),globalMonth=new Date();
 const channels=['Instagram','TikTok','Discord','Newsletter','Site','Goodreads','Podcast','Autre'];
 const weekdays=[['Lundi',1],['Mardi',2],['Mercredi',3],['Jeudi',4],['Vendredi',5],['Samedi',6],['Dimanche',0]];
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(state));renderHome()}
-function loadProWorks(){try{proWorks=JSON.parse(localStorage.getItem(WORK_KEY)||'[]')||[]}catch(e){proWorks=[]}fillSelects();renderCatalogue();renderHome()}
+let currentUserV4=null,dbReadyV4=false;
+async function saveRemoteV4(){
+ if(!dbReadyV4||!currentUserV4)return;
+ await db().from('passe_ailes_state').upsert({user_id:currentUserV4.id,payload:state,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+}
+async function saveWorksRemoteV4(){
+ if(!dbReadyV4||!currentUserV4)return;
+ for(const w of proWorks) await db().from('passe_ailes_oeuvres').upsert({user_id:currentUserV4.id,oeuvre_id:String(w.oeuvre_id),payload:w,active:w.active!==false,updated_at:new Date().toISOString()},{onConflict:'user_id,oeuvre_id'});
+}
+async function initRemoteV4(){
+ const {data:{user}}=await sb.auth.getUser(); currentUserV4=user||null;
+ if(!currentUserV4){loadProWorks();return}
+ const probe=await db().from('passe_ailes_state').select('payload').eq('user_id',currentUserV4.id).maybeSingle();
+ if(probe.error){console.warn('Passe-Ailes V4: migration SQL requise',probe.error);loadProWorks();return}
+ dbReadyV4=true;
+ let legacy=null;try{legacy=JSON.parse(localStorage.getItem(DATA_KEY)||'null')}catch(e){}
+ let legacyWorks=[];try{legacyWorks=JSON.parse(localStorage.getItem(WORK_KEY)||'[]')||[]}catch(e){}
+ const wr=await db().from('passe_ailes_oeuvres').select('payload,active').eq('user_id',currentUserV4.id);
+ if(probe.data?.payload) state=probe.data.payload;
+ else if(legacy){state=legacy;await saveRemoteV4()}
+ if((wr.data||[]).length) proWorks=wr.data.map(r=>({...r.payload,active:r.active}));
+ else if(legacyWorks.length){proWorks=legacyWorks;await saveWorksRemoteV4()}
+ localStorage.setItem(DATA_KEY,JSON.stringify(state));localStorage.setItem(WORK_KEY,JSON.stringify(proWorks));
+ fillSelects();renderCatalogue();renderHome();renderAuthor();renderMarketing(marketingTab);renderGlobal();
+}
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function persist(){localStorage.setItem(DATA_KEY,JSON.stringify(state));renderHome();saveRemoteV4()}
+function loadProWorks(){if(!proWorks.length){try{proWorks=JSON.parse(localStorage.getItem(WORK_KEY)||'[]')||[]}catch(e){proWorks=[]}}fillSelects();renderCatalogue();renderHome()}
 function go(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));if(id==='marketing')renderMarketing(marketingTab);if(id==='calendrier')renderGlobal();if(id==='catalogue')loadProWorks()}
 document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page));
 function workName(id){return proWorks.find(w=>String(w.oeuvre_id)===String(id))?.titre||''}
 function fillSelects(){const opts='<option value="">Aucune</option>'+proWorks.filter(w=>w.active!==false).map(w=>`<option value="${esc(w.oeuvre_id)}">${esc(w.titre)}</option>`).join('');['c-work','e-work'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=opts});document.getElementById('e-channel').innerHTML=channels.map(c=>`<option>${c}</option>`).join('')}
 function renderCatalogue(){const z=document.getElementById('catalogue-zone'),q=(document.getElementById('work-q')?.value||'').toLowerCase(),d=document.getElementById('work-dest')?.value||'',active=document.getElementById('work-active')?.value||'active';let a=proWorks.filter(w=>(active==='all'||w.active!==false)&&(!d||w.destination===d)&&(!q||(w.titre||'').toLowerCase().includes(q)));z.innerHTML=a.length?a.map(w=>`<article class="work"><div class="workcover" ${w.couverture?`style="background-image:url('${esc(w.couverture)}')"`:''}>${w.couverture?'':esc((w.titre||'?').slice(0,2).toUpperCase())}</div><div class="workbody"><h3>${esc(w.titre)}</h3><span class="pill">${esc(w.destination)}</span>${w.cible?`<span class="pill">${esc(w.cible)}</span>`:''}<p class="note">${esc(w.statut_editorial||'')} ${w.publication?'· '+esc(w.publication):''}</p><div class="workactions"><button class="btn sm" onclick="openProDossier('${w.oeuvre_id}')">Ouvrir dossier</button><button class="btn sm" onclick="archiveProWork('${w.oeuvre_id}')">Clôturer</button></div></div></article>`).join(''):`<div class="empty">Aucune œuvre professionnelle ici.<br>Envoie-la depuis le Bureau éditorial de Passerelle avec le bouton 🪽.</div>`}
-function archiveProWork(id){const w=proWorks.find(x=>String(x.oeuvre_id)===String(id));if(w&&confirm('Clôturer cette œuvre dans Passe-Ailes ?')){w.active=false;localStorage.setItem(WORK_KEY,JSON.stringify(proWorks));renderCatalogue();renderHome()}}
+function archiveProWork(id){const w=proWorks.find(x=>String(x.oeuvre_id)===String(id));if(w&&confirm('Clôturer cette œuvre dans Passe-Ailes ?')){w.active=false;localStorage.setItem(WORK_KEY,JSON.stringify(proWorks));saveWorksRemoteV4();renderCatalogue();renderHome()}}
 function openProDossier(id){const w=proWorks.find(x=>String(x.oeuvre_id)===String(id));if(!w)return;alert(`${w.titre}\\n\\nDestination : ${w.destination}\\nCible : ${w.cible||'—'}\\nStatut éditorial : ${w.statut_editorial||'—'}\\n\\nLe dossier détaillé utilisera le workflow correspondant à cette destination.`)}
 
 function setupCampaignForm(){document.getElementById('c-channels').innerHTML=channels.map((c,i)=>`<label><input type="checkbox" value="${c}" ${i===0?'checked':''}>${c}</label>`).join('');document.getElementById('c-days').innerHTML=weekdays.map(([n,v])=>`<label><input type="checkbox" value="${v}">${n}</label>`).join('')}
@@ -114,5 +140,5 @@ function addObligation(){const title=prompt('Obligation');if(!title)return;const
 function addDocument(){const name=prompt('Nom du document');if(!name)return;const drive=prompt('Lien Google Drive')||'';state.documents.push({id:Date.now(),name,drive,category:'Document'});persist();renderAuthor('documents')}
 
 function renderHome(){const z=document.getElementById('home-events');if(z)z.innerHTML=futureItems(6);const p=document.getElementById('home-projects');if(p)p.innerHTML=proWorks.filter(w=>w.active!==false).length?proWorks.filter(w=>w.active!==false).slice(0,5).map(w=>`<div class="item"><b>${esc(w.titre)}</b><small>${esc(w.destination)} · ${esc(w.statut_editorial||'')}</small></div>`).join(''):'<div class="empty">Aucun projet professionnel actif.</div>';const n=document.getElementById('home-news');if(n)n.innerHTML=campaignItems(4)}
-setupCampaignForm();renderAuthor();renderMarketing();loadProWorks();renderGlobal();
+setupCampaignForm();initRemoteV4();
 </script></body></html>
