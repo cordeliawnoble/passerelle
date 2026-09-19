@@ -5110,6 +5110,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   // C99 · Passage volontaire Passerelle → Passe-Ailes.
   // Une œuvre n'entre jamais automatiquement dans le cockpit professionnel.
+  // C101 · Inscription initiale dans Passe-Ailes. Les données éditoriales courantes sont ensuite relues depuis passerelle.oeuvres ; l’historique professionnel reste intact.
   async function sendWorkToPasseAilesC99(id){
     const o=beData.find(x=>String(x.id)===String(id));if(!o)return;
     if(!o.destination_editoriale){showSaveToastV20('⚠ Définis d’abord la destination éditoriale','error');return;}
