@@ -5110,23 +5110,19 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   // C99 · Passage volontaire Passerelle → Passe-Ailes.
   // Une œuvre n'entre jamais automatiquement dans le cockpit professionnel.
-  function sendWorkToPasseAilesC99(id){
-    const o=beData.find(x=>String(x.id)===String(id)); if(!o)return;
-    if(!o.destination_editoriale){
-      showSaveToastV20('⚠ Définis d’abord la destination éditoriale','error'); return;
+  async function sendWorkToPasseAilesC99(id){
+    const o=beData.find(x=>String(x.id)===String(id));if(!o)return;
+    if(!o.destination_editoriale){showSaveToastV20('⚠ Définis d’abord la destination éditoriale','error');return;}
+    const local={oeuvre_id:o.id,titre:o.titre,destination:o.destination_editoriale,cible:o.niveau_editorial_cible||null,statut_editorial:o.statut_editorial_actuel||null,horizon:o.horizon_annee||null,publication:o.publication_envisagee||null,couverture:o.couverture||null,active:true,entered_at:new Date().toISOString()};
+    const {data:{user}}=await sb.auth.getUser();
+    if(user){
+      const {error}=await db().from('passe_ailes_oeuvres').upsert({user_id:user.id,oeuvre_id:String(o.id),payload:local,active:true,updated_at:new Date().toISOString()},{onConflict:'user_id,oeuvre_id'});
+      if(!error){showSaveToastV20('🪽 Œuvre envoyée vers Passe-Ailes');return;}
+      console.warn(error);
     }
-    const key='passe-ailes:professional-works:v2';
-    let list=[]; try{list=JSON.parse(localStorage.getItem(key)||'[]')||[]}catch(e){list=[]}
-    const payload={
-      oeuvre_id:o.id,titre:o.titre,destination:o.destination_editoriale,
-      cible:o.niveau_editorial_cible||null,statut_editorial:o.statut_editorial_actuel||null,
-      horizon:o.horizon_annee||null,publication:o.publication_envisagee||null,
-      couverture:o.couverture||null,active:true,entered_at:new Date().toISOString()
-    };
-    const i=list.findIndex(x=>String(x.oeuvre_id)===String(o.id));
-    if(i>=0)list[i]={...list[i],...payload};else list.push(payload);
-    localStorage.setItem(key,JSON.stringify(list));
-    showSaveToastV20('🪽 Œuvre envoyée vers Passe-Ailes');
+    const key='passe-ailes:professional-works:v2';let list=[];try{list=JSON.parse(localStorage.getItem(key)||'[]')||[]}catch(e){}
+    const i=list.findIndex(x=>String(x.oeuvre_id)===String(o.id));if(i>=0)list[i]={...list[i],...local};else list.push(local);localStorage.setItem(key,JSON.stringify(list));
+    showSaveToastV20('🪽 Sauvegarde locale · migration Passe-Ailes requise','error');
   }
 
   function renderBeGroupe(zone,champ,valeurs,isDestination){
