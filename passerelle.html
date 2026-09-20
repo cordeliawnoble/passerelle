@@ -1064,6 +1064,13 @@
 .be-table-v21 .be-work-cell img,.be-table-v21 .be-cover-empty{width:48px!important;height:68px!important}
 .be-table-v21 .be-work-cell strong{font-size:15px;line-height:1.35}
 .be-table-v21 .be-work-cell small{margin-top:5px}
+
+.manuscript-table .manuscript-summary-row{display:none}
+.manuscript-table .manuscript-summary-row.open{display:table-row}
+.manuscript-table .manuscript-summary-row td{padding:0 14px 14px;border-top:0}
+.manuscript-summary-box{background:var(--surface-soft,#f7f3fa);border:1px solid var(--border,#e5ddec);border-radius:12px;padding:14px 16px;line-height:1.55;white-space:pre-wrap}
+.manuscript-summary-toggle{white-space:nowrap}
+.manuscript-summary-toggle[disabled]{opacity:.45;cursor:default}
 </style>
 
 <style id="c43-ui">
@@ -7476,7 +7483,26 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       return (Number(c.nb_mots)||0)>0 || /écrit|ecrit|rédig|redig|relu|termin/.test(state);
     });
     const words=rows.reduce((a,c)=>a+(c.nb_mots||0),0);
-    zone.innerHTML=`<div class="work-toolbar" style="justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:12px;color:var(--text-dim);margin-right:auto">CSV compatible tableur, Notion et remplissage par IA.</span><button type="button" class="btn-secondary" onclick="downloadManuscriptCsvTemplateC104()">📄 Télécharger le modèle CSV</button><label class="btn-secondary upload-file-btn" style="margin:0">⇩ Importer les données Manuscrit CSV<input type="file" accept=".csv,text/csv" onchange="importManuscriptCsvC95(this.files[0]);this.value=''"></label></div><div class="stat-cards-row" style="grid-template-columns:repeat(2,minmax(180px,1fr));max-width:600px"><div class="stat-card"><h3>Chapitres écrits</h3><div class="stat-big">${rows.length}</div></div><div class="stat-card"><h3>Total de mots</h3><div class="stat-big">${words.toLocaleString('fr-FR')}</div></div></div><div class="panel"><table class="ch-table manuscript-table"><thead><tr><th>N°</th><th>Titre du chapitre</th><th>Statut</th><th>Mots</th><th>Date d’écriture</th><th>Notes</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${c.numero??c.ordre??'—'}</td><td><strong>${safeText(c.titre||'Sans titre')}</strong></td><td><span class="etat-pill">Écrit</span></td><td>${(c.nb_mots||0).toLocaleString('fr-FR')}</td><td>${safeText(c.date_ecriture||c.updated_at?.slice?.(0,10)||'—')}</td><td><button class="note-icon" onclick="openManuscriptDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\'"))}')">📝</button></td></tr>`).join('')||'<tr><td colspan="6"><div class="empty">Aucun chapitre écrit synchronisé pour le moment. La synchronisation Atelier alimente automatiquement cet onglet.</div></td></tr>'}</tbody></table></div>`;
+    const body=rows.map((c,i)=>{
+      const resume=String(c.resume||'').trim();
+      const key=`manuscript-summary-${i}`;
+      return `<tr>
+        <td>${c.numero??c.ordre??'—'}</td>
+        <td><strong>${safeText(c.titre||'Sans titre')}</strong></td>
+        <td>${(c.nb_mots||0).toLocaleString('fr-FR')}</td>
+        <td><span class="etat-pill">${safeText(c.etat||c.statut||'Écrit')}</span></td>
+        <td>${safeText(c.date_ecriture||c.updated_at?.slice?.(0,10)||'—')}</td>
+        <td><button class="btn-secondary manuscript-summary-toggle" ${resume?'':"disabled"} onclick="toggleManuscriptSummaryC105('${key}',this)">${resume?'Résumé ▾':'Pas de résumé'}</button></td>
+        <td><button class="note-icon" onclick="openManuscriptDrawer('${c.id}','${safeText((c.titre||'Chapitre').replace(/'/g,"\\'"))}')">📝</button></td>
+      </tr>
+      <tr id="${key}" class="manuscript-summary-row"><td colspan="7"><div class="manuscript-summary-box"><strong>Résumé du chapitre</strong><div style="margin-top:6px">${safeText(resume)}</div></div></td></tr>`;
+    }).join('');
+    zone.innerHTML=`<div class="work-toolbar" style="justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:12px;color:var(--text-dim);margin-right:auto">CSV compatible tableur, Notion et remplissage par IA.</span><button type="button" class="btn-secondary" onclick="downloadManuscriptCsvTemplateC104()">📄 Télécharger le modèle CSV</button><label class="btn-secondary upload-file-btn" style="margin:0">⇩ Importer les données Manuscrit CSV<input type="file" accept=".csv,text/csv" onchange="importManuscriptCsvC95(this.files[0]);this.value=''"></label></div><div class="stat-cards-row" style="grid-template-columns:repeat(2,minmax(180px,1fr));max-width:600px"><div class="stat-card"><h3>Chapitres écrits</h3><div class="stat-big">${rows.length}</div></div><div class="stat-card"><h3>Total de mots</h3><div class="stat-big">${words.toLocaleString('fr-FR')}</div></div></div><div class="panel"><table class="ch-table manuscript-table"><thead><tr><th>N°</th><th>Titre</th><th>Mots</th><th>État</th><th>Date</th><th>Résumé</th><th>Notes</th></tr></thead><tbody>${body||'<tr><td colspan="7"><div class="empty">Aucun chapitre écrit synchronisé pour le moment. La synchronisation Atelier alimente automatiquement cet onglet.</div></td></tr>'}</tbody></table></div>`;
+  }
+  function toggleManuscriptSummaryC105(id,button){
+    const row=document.getElementById(id);if(!row)return;
+    const open=row.classList.toggle('open');
+    if(button)button.textContent=open?'Résumé ▴':'Résumé ▾';
   }
   function manuscriptCsvFieldC95(row,names){const entries=Object.entries(row||{});for(const [k,v] of entries){const nk=normHeaderV572(k);if(names.some(n=>nk===n||nk.includes(n)))return v;}return '';}
   function downloadManuscriptCsvTemplateC104(){
