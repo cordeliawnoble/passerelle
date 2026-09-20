@@ -1057,6 +1057,13 @@
 .modal-box input,.modal-box select,.modal-box textarea{background:var(--card)!important;color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;border-color:var(--line)!important}
 /* C93 — cartes Poésie = même langage que le catalogue Œuvres indépendantes */
 .poetry-work-grid-c93{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px;align-items:start}
+
+<style>
+.be-table-v21 tbody tr{height:92px}
+.be-table-v21 tbody td{padding-top:16px!important;padding-bottom:16px!important;vertical-align:middle}
+.be-table-v21 .be-work-cell img,.be-table-v21 .be-cover-empty{width:48px!important;height:68px!important}
+.be-table-v21 .be-work-cell strong{font-size:15px;line-height:1.35}
+.be-table-v21 .be-work-cell small{margin-top:5px}
 </style>
 
 <style id="c43-ui">
@@ -4926,7 +4933,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   function sousSagaName(id){ return beSousSagas.find(s=>s.id===id)?.nom || ''; }
   function collectionName(o){ const saga=beSagas.find(s=>s.id===o.saga_id); const uid=o.univers_id||saga?.univers_id||saga?.collection_id||null; return beUnivers.find(u=>u.id===uid)?.nom||'—'; }
 
-  let bePageV102=1, bePageSizeV102=20, beFilteredV102=[];
+  let bePageV102=1, bePageSizeV102=5, beFilteredV102=[];
   function setBePageSizeV102(v){bePageSizeV102=Number(v)||20;bePageV102=1;drawBeRows(beFilteredV102.length||document.getElementById('be-search')?.value?beFilteredV102:beData)}
   function bePageMoveV102(delta){const max=Math.max(1,Math.ceil((beFilteredV102.length?beFilteredV102:beData).length/bePageSizeV102));bePageV102=Math.min(max,Math.max(1,bePageV102+delta));drawBeRows(beFilteredV102.length?beFilteredV102:beData)}
   function renderBeCatalogue(zone){
@@ -4948,7 +4955,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       </tr></thead><tbody id="be-catalogue-body"></tbody></table></div>
       <div class="be-count" id="be-count"></div>
       <div class="be-pagination-v102" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px">
-        <span>Afficher</span><select id="be-page-size-v102" onchange="setBePageSizeV102(this.value)"><option>20</option><option>40</option><option>60</option><option>100</option></select>
+        <span>Afficher</span><select id="be-page-size-v102" onchange="setBePageSizeV102(this.value)"><option>5</option><option>10</option><option>20</option><option>40</option></select>
         <button class="btn-secondary" id="be-prev-v102" onclick="bePageMoveV102(-1)">←</button><span id="be-page-label-v102"></span><button class="btn-secondary" id="be-next-v102" onclick="bePageMoveV102(1)">→</button>
       </div>`;
     beFilteredV102=beData;bePageV102=1;drawBeRows(beData);
