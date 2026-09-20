@@ -2634,7 +2634,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const activeSagas=(sr.data||[]).filter(x=>x.archive!==true);
     const activeSubs=(ssr.data||[]).filter(x=>x.archive!==true);
     Object.assign(adminCatalogWorksV576b,{data:activeWorks,collections:cr.data||[],sagas:activeSagas,subs:activeSubs});
-    content.innerHTML=adminPageHead('Œuvres','Catalogue actif. Les œuvres archivées vivent désormais uniquement dans Archives.',`<button class="btn-secondary" onclick="openWorksImportV576()">📦 Importer</button><button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div id="works-import-host-v576"></div>
+    content.innerHTML=adminPageHead('Œuvres','Catalogue actif. Les œuvres archivées vivent désormais uniquement dans Archives.',`<button class="btn-secondary" onclick="openWorksImportV576()">📥 Importer</button><button class="btn-secondary" onclick="exportTomTomPortfolioV66()">📤 Exporter portefeuille TomTom</button><button class="btn-primary" onclick="openOeuvreModal()">+ Nouvelle œuvre</button>`)+`<div id="works-import-host-v576"></div>
       <div class="catalog-filterbar-v576c3">
         <div class="catalog-filter-row-v576c3">
           <input class="search-input catalog-filter-search-v576c3" placeholder="🔍 Rechercher une œuvre…" oninput="adminCatalogWorksV576b.search=this.value;renderAdminWorksResultsV576b()">
@@ -4900,7 +4900,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
     const future=beData.filter(o=>Number(o.horizon_annee)>new Date().getFullYear()).length;
     content.innerHTML=`
       ${renderPageImageBanner(bureauBanner,'Bureau éditorial')}
-      <div class="be-title-row be-title-row-v21"><div><h2>Bureau éditorial</h2><p>Pilotez votre catalogue en un coup d’œil.</p></div><div class="be-title-actions-v66"><button class="btn-secondary" onclick="exportTomTomPortfolioV66()">📦 Export portefeuille TomTom</button><button class="btn-primary" onclick="openOeuvreModal()">＋ Ajouter une œuvre</button></div></div>
+      <div class="be-title-row be-title-row-v21"><div><h2>Bureau éditorial</h2><p>Pilotez votre catalogue en un coup d’œil.</p></div><div class="be-title-actions-v66"><button class="btn-primary" onclick="openOeuvreModal()">＋ Ajouter une œuvre</button></div></div>
       <div class="be-kpis-v21">
         <div><strong>${beData.length}</strong><span>œuvres au catalogue</span></div>
         <div><strong>${writing}</strong><span>en cours</span></div>
@@ -4926,6 +4926,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   function sousSagaName(id){ return beSousSagas.find(s=>s.id===id)?.nom || ''; }
   function collectionName(o){ const saga=beSagas.find(s=>s.id===o.saga_id); const uid=o.univers_id||saga?.univers_id||saga?.collection_id||null; return beUnivers.find(u=>u.id===uid)?.nom||'—'; }
 
+  let bePageV102=1, bePageSizeV102=20, beFilteredV102=[];
+  function setBePageSizeV102(v){bePageSizeV102=Number(v)||20;bePageV102=1;drawBeRows(beFilteredV102.length||document.getElementById('be-search')?.value?beFilteredV102:beData)}
+  function bePageMoveV102(delta){const max=Math.max(1,Math.ceil((beFilteredV102.length?beFilteredV102:beData).length/bePageSizeV102));bePageV102=Math.min(max,Math.max(1,bePageV102+delta));drawBeRows(beFilteredV102.length?beFilteredV102:beData)}
   function renderBeCatalogue(zone){
     const y=new Date().getFullYear();
     const collectionOptions=beUnivers.map(u=>`<option value="${u.id}">${safeText(u.nom)}</option>`).join('');
@@ -4943,14 +4946,18 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       <div class="be-table-wrap be-table-wrap-v21"><table class="be-table be-table-v21"><thead><tr>
         <th>Œuvre</th><th>Destination</th><th>Cible éditoriale</th><th>Éditorial actuel</th><th>Horizon</th><th>Date de publication</th><th>Actions</th>
       </tr></thead><tbody id="be-catalogue-body"></tbody></table></div>
-      <div class="be-count" id="be-count"></div>`;
-    drawBeRows(beData);
+      <div class="be-count" id="be-count"></div>
+      <div class="be-pagination-v102" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px">
+        <span>Afficher</span><select id="be-page-size-v102" onchange="setBePageSizeV102(this.value)"><option>20</option><option>40</option><option>60</option><option>100</option></select>
+        <button class="btn-secondary" id="be-prev-v102" onclick="bePageMoveV102(-1)">←</button><span id="be-page-label-v102"></span><button class="btn-secondary" id="be-next-v102" onclick="bePageMoveV102(1)">→</button>
+      </div>`;
+    beFilteredV102=beData;bePageV102=1;drawBeRows(beData);
   }
 
   function drawBeRows(rows){
     const tbody=document.getElementById('be-catalogue-body'); if(!tbody)return;
     const y=new Date().getFullYear();
-    tbody.innerHTML=rows.map(o=>{
+    beFilteredV102=rows;const max=Math.max(1,Math.ceil(rows.length/bePageSizeV102));bePageV102=Math.min(max,Math.max(1,bePageV102));const shown=rows.slice((bePageV102-1)*bePageSizeV102,bePageV102*bePageSizeV102);tbody.innerHTML=shown.map(o=>{
       const context=[collectionName(o),sagaName(o.saga_id)!=='—'?sagaName(o.saga_id):'',sousSagaName(o.sous_saga_id)].filter(Boolean).join(' › ');
       return `<tr>
         <td class="be-work-cell" onclick="openOeuvreDetail('${o.id}')">${o.couverture?`<img src="${safeText(o.couverture)}" alt="">`:'<div class="be-cover-empty">✒</div>'}<div><strong>${safeText(o.titre)}</strong><small>${safeText(context||'Œuvre indépendante')}</small></div></td>
@@ -4959,13 +4966,24 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         <td><select class="be-inline" onchange="saveBeField('${o.id}','statut_editorial_actuel',this.value)"><option value="">Non défini</option>${STATUTS_EDITORIAUX.map(v=>`<option ${o.statut_editorial_actuel===v?'selected':''}>${v}</option>`).join('')}</select></td>
         <td><select class="be-inline be-horizon-v21" onchange="saveBeHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="${y}" ${Number(o.horizon_annee)===y?'selected':''}>Y</option><option value="${y+1}" ${Number(o.horizon_annee)===y+1?'selected':''}>Y+1</option></select></td>
         <td><input class="be-inline be-publication" value="${safeText(o.publication_envisagee||'')}" placeholder="—" onchange="saveBeField('${o.id}','publication_envisagee',this.value)"></td>
-        <td class="be-actions-v21"><button class="be-icon-btn" title="Envoyer vers Passe-Ailes" onclick="event.stopPropagation();sendWorkToPasseAilesC99('${o.id}')">🪽</button><button class="be-icon-btn" title="Exporter le brief TomTom" onclick="event.stopPropagation();exportTomTomWorkV66('${o.id}')">📦</button><button class="be-icon-btn" title="Ouvrir l’œuvre" onclick="event.stopPropagation();openOeuvreDetail('${o.id}')">↗</button><button class="be-icon-btn" title="Modifier dans le back-office" onclick="event.stopPropagation();openAdminOeuvreEditor('${o.id}')">•••</button></td>
+        <td class="be-actions-v21"><div style="position:relative;display:inline-block"><button class="be-icon-btn" title="Actions" onclick="event.stopPropagation();toggleBeMenuV102('${o.id}',this)">•••</button></div></td>
       </tr>`;
     }).join('')||`<tr><td colspan="7" class="empty">Aucune œuvre pour ces filtres.</td></tr>`;
-    const c=document.getElementById('be-count'); if(c)c.textContent=`${rows.length} œuvre${rows.length>1?'s':''} affichée${rows.length>1?'s':''}`;
+    const c=document.getElementById('be-count'); if(c)c.textContent=`${rows.length} œuvre${rows.length>1?'s':''}`;
+    const pl=document.getElementById('be-page-label-v102');if(pl)pl.textContent=`Page ${bePageV102} / ${max}`;
+    const pr=document.getElementById('be-prev-v102'),nx=document.getElementById('be-next-v102');if(pr)pr.disabled=bePageV102<=1;if(nx)nx.disabled=bePageV102>=max;
   }
 
 
+  function toggleBeMenuV102(id,btn){
+    document.querySelectorAll('.be-pop-v102').forEach(x=>x.remove());
+    const pop=document.createElement('div');pop.className='be-pop-v102';
+    pop.style.cssText='position:absolute;right:0;top:34px;z-index:100;background:white;border:1px solid #ddd;border-radius:12px;padding:6px;min-width:210px;box-shadow:0 12px 30px #0002;text-align:left';
+    pop.innerHTML=`<button class="btn-secondary" style="width:100%;margin:2px 0" onclick="sendWorkToPasseAilesC99('${id}')">🪽 Envoyer vers Passe-Ailes</button>
+      <button class="btn-secondary" style="width:100%;margin:2px 0" onclick="exportTomTomWorkV66('${id}')">📦 Débrief TomTom</button>
+      <button class="btn-secondary" style="width:100%;margin:2px 0" onclick="openOeuvreDetail('${id}')">↗ Ouvrir l’œuvre</button>`;
+    btn.parentElement.appendChild(pop);setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true}),0)
+  }
   function downloadJsonV66(data,filename){
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
@@ -9724,4 +9742,3 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 </script>
 </body>
 </html>
-
