@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Passe-Ailes V5 · Maison d’autrice</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Passe-Ailes V6 · Maison d’autrice</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f8f5fb;--surface:#fff;--soft:#f1ebf7;--ink:#2d2633;--muted:#786f7e;--line:#e2d9e9;--violet:#76558e;--violet2:#a68cba;--pink:#b57894;--blue:#6785a4;--green:#728b74;--gold:#aa8956;--red:#a96c70;--shadow:0 12px 35px rgba(66,43,78,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif}.app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
@@ -17,6 +17,8 @@ main{padding:28px 34px 60px;min-width:0}.page{display:none}.page.active{display:
 .modalbg{display:none;position:fixed;inset:0;background:rgba(30,21,35,.45);z-index:50;align-items:center;justify-content:center;padding:18px}.modalbg.open{display:flex}.modal{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:17px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.24)}.modal h2{font:700 22px Georgia,serif;margin:0 0 16px}.modalactions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}.warn{background:#fff8e9;border:1px solid #ead8ac;border-radius:11px;padding:10px 12px;color:#6f5b35}
 .placeholder{border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted);background:rgba(255,255,255,.55)}
 @media(max-width:950px){.app{grid-template-columns:1fr}aside{position:relative;height:auto}.grid2,.grid-left,.profile-hero,.kpis{grid-template-columns:1fr}.calendar{min-width:760px}.calwrap{overflow:auto}}
+
+.resource-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.resource-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--card)}.resource-card h4{margin:0 0 6px}.resource-card .meta{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.resource-card .content{white-space:pre-wrap;line-height:1.45}.resource-card .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.resource-section{margin-bottom:20px}.resource-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.copy-ok{font-size:12px;color:var(--muted)}
 </style></head><body><div class="app"><aside>
 <div class="brand">🪽 Passe-Ailes<small>Maison d’autrice</small></div><nav class="nav">
 <button data-page="bureau" class="active">🏠 Bureau</button>
@@ -46,6 +48,18 @@ main{padding:28px 34px 60px;min-width:0}.page{display:none}.page.active{display:
 <section id="backoffice" class="page"><div class="head"><div><h1>Back-office Passe-Ailes</h1><p>Administration technique, distincte du back-office Passerelle.</p></div></div><div class="grid2"><div class="card"><h3>🗄 Archives</h3><p class="note">Œuvres professionnelles, campagnes et éléments clôturés.</p></div><div class="card"><h3>🔄 Exports & synchronisations</h3><p class="note">Exports, diagnostics et futurs raccords externes.</p></div></div></section>
 </main></div>
 
+<div class="modalbg" id="resource-modal" onclick="if(event.target===this)closeResource()"><div class="modal">
+<h2 id="resource-modal-title">Ajouter une ressource</h2>
+<div class="form">
+<label>Type<select id="r-type"><option value="hashtag">Hashtags</option><option value="identity">Identité de communication</option><option value="link">Lien / ressource</option></select></label>
+<label>Nom<input id="r-name" placeholder="Ex. Instagram · Romance"></label>
+<label>Plateforme<select id="r-platform"><option value="">Toutes</option><option>Instagram</option><option>TikTok</option><option>Discord</option><option>Newsletter</option><option>Site</option><option>Goodreads</option><option>Podcast</option><option>Autre</option></select></label>
+<label>Catégorie<input id="r-category" placeholder="Ex. Romance, Voxinaë, Signature"></label>
+<label class="full">Contenu<textarea id="r-content" rows="6" placeholder="#romance #lecture… ou texte / note réutilisable"></textarea></label>
+<label class="full">Lien<input id="r-url" placeholder="Lien Canva, Drive, dossier, ressource…"></label>
+</div>
+<div class="modalactions"><button class="btn danger" id="resource-delete" style="display:none" onclick="deleteEditingResource()">Supprimer</button><button class="btn" onclick="closeResource()">Annuler</button><button class="btn primary" onclick="saveResource()">Enregistrer</button></div>
+</div></div>
 <div class="modalbg" id="campaign-modal" onclick="if(event.target===this)closeCampaign()"><div class="modal"><h2 id="campaign-modal-title">Nouvelle campagne</h2>
 <div class="form"><label class="full">Nom de la campagne<input id="c-name" placeholder="Ex. Lancement Campus North T1"></label><label>Œuvre<select id="c-work"></select></label><label>Type<select id="c-type"><option>Lancement</option><option>Publication</option><option>Promotion</option><option>Annonce</option><option>Autre</option></select></label><label>Date de début<input type="date" id="c-start"></label><label>Date de fin<input type="date" id="c-end"></label>
 <label class="full">Canaux<div class="checkgrid" id="c-channels"></div></label><label class="full">Jours de publication<div class="checkgrid" id="c-days"></div></label><label>Premier chapitre à paraître<input type="number" min="1" step="1" id="c-start-chapter" value="1"></label><label>Nomenclature<input id="c-pattern" value="Chapitre {chapitre}" placeholder="Chapitre {chapitre}"></label><div class="full note">Variables : <b>{chapitre}</b> = numéro réel, <b>{n}</b> = rang dans la campagne, <b>{campagne}</b> et <b>{canal}</b>.</div><label class="full">Notes<textarea id="c-notes" rows="3"></textarea></label></div>
@@ -58,6 +72,7 @@ const supabaseUrl='https://ilhfzulwuuxyidhityoo.supabase.co',supabaseKey='eyJhbG
 const DATA_KEY='passe-ailes:v2:data',WORK_KEY='passe-ailes:professional-works:v2';
 let state=JSON.parse(localStorage.getItem(DATA_KEY)||'null')||{campaigns:[],events:[],promotions:[],author:{},obligations:[],documents:[]};
 let proWorks=[],editingEvent=null,editingCampaign=null,marketingTab='overview',planMonth=new Date(),globalMonth=new Date();
+let editingResource=null;
 const channels=['Instagram','TikTok','Discord','Newsletter','Site','Goodreads','Podcast','Autre'];
 const weekdays=[['Lundi',1],['Mardi',2],['Mercredi',3],['Jeudi',4],['Vendredi',5],['Samedi',6],['Dimanche',0]];
 let currentUserV4=null,dbReadyV4=false,passerelleWorksV5=[];
@@ -119,9 +134,45 @@ function deleteCampaign(id){if(!confirm('Supprimer la campagne et toutes ses pub
 function activateMarketingTab(tab){document.querySelectorAll('#marketing-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
 document.querySelectorAll('#marketing-tabs button').forEach(b=>b.onclick=()=>{marketingTab=b.dataset.tab;activateMarketingTab(marketingTab);renderMarketing(marketingTab)});
 function renderMarketing(tab='overview'){marketingTab=tab;activateMarketingTab(tab);const z=document.getElementById('marketing-zone');if(tab==='overview'){const future=state.events.filter(e=>e.status==='À venir').length,active=state.campaigns.filter(c=>c.status==='En cours').length;z.innerHTML=`<div class="kpis"><div class="card"><b>${future}</b><span>Publications prévues</span></div><div class="card"><b>${active}</b><span>Campagnes en cours</span></div><div class="card"><b>${state.promotions.length}</b><span>Promotions à venir</span></div></div><div class="grid2"><div class="card"><h3>Prochaines publications</h3>${futureItems(5)}</div><div class="card"><h3>Campagnes en cours</h3>${campaignItems(5)}</div></div>`}
-else if(tab==='planning')renderPlanningZone(z);else if(tab==='campaigns')renderCampaigns(z);else if(tab==='promos')z.innerHTML=`<div class="card"><h3>Promotions commerciales</h3><p class="note">Les promotions de prix restent distinctes des campagnes de communication, mais peuvent leur être reliées.</p><div class="empty">Aucune promotion enregistrée.</div></div>`;else if(tab==='identity')z.innerHTML=`<div class="grid2"><div class="card"><h3>Identité d’autrice</h3><p class="note">Charte graphique, logos, couleurs, typographies, signatures et bios sociales.</p></div><div class="card"><h3>Ressources</h3><p class="note">Références et liens utiles. Les contenus de publication restent dans Canva.</p></div></div>`;else z.innerHTML=`<div class="placeholder"><b>Statistiques</b><br><br>Aucune métrique n’est inventée. Cette vue attend des sources fiables.</div>`}
+else if(tab==='planning')renderPlanningZone(z);else if(tab==='campaigns')renderCampaigns(z);else if(tab==='promos')z.innerHTML=`<div class="card"><h3>Promotions commerciales</h3><p class="note">Les promotions de prix restent distinctes des campagnes de communication, mais peuvent leur être reliées.</p><div class="empty">Aucune promotion enregistrée.</div></div>`;else if(tab==='identity')renderIdentityResources(z);else z.innerHTML=`<div class="placeholder"><b>Statistiques</b><br><br>Aucune métrique n’est inventée. Cette vue attend des sources fiables.</div>`}
 function futureItems(n){const a=state.events.filter(e=>e.date>=new Date().toISOString().slice(0,10)&&e.status!=='Annulé').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,n);return a.length?a.map(e=>`<div class="item"><b>${esc(e.title)}</b><small>${esc(e.date)} · ${esc(e.channel)}${workName(e.workId)?' · '+esc(workName(e.workId)):''}</small></div>`).join(''):'<div class="empty">Aucune publication prévue.</div>'}
 function campaignItems(n){const a=state.campaigns.filter(c=>c.status==='En cours').slice(0,n);return a.length?a.map(c=>`<div class="item"><b>${esc(c.name)}</b><small>${esc(c.start)} → ${esc(c.end)} · ${state.events.filter(e=>e.campaignId===c.id).length} publication(s)</small></div>`).join(''):'<div class="empty">Aucune campagne en cours.</div>'}
+
+function marketingResources(){if(!Array.isArray(state.marketingResources))state.marketingResources=[];return state.marketingResources}
+function resourceTypeLabel(t){return t==='hashtag'?'# Hashtags':t==='identity'?'✦ Identité de communication':'🔗 Lien / ressource'}
+function renderIdentityResources(z){
+ const all=marketingResources(),groups=[['identity','Identité de communication'],['hashtag','Bibliothèque de hashtags'],['link','Liens & ressources']];
+ z.innerHTML=`<div class="resource-toolbar"><button class="btn primary" onclick="openResource()">+ Ajouter une ressource</button></div>`+
+ groups.map(([type,title])=>{const a=all.filter(r=>r.type===type);return `<section class="resource-section"><div class="resource-section-head"><h3>${title}</h3><button class="btn sm" onclick="openResource(null,'${type}')">+ Ajouter</button></div><div class="resource-grid">${a.length?a.map(resourceCard).join(''):`<div class="empty">Rien ici pour l’instant.</div>`}</div></section>`}).join('')
+}
+function resourceCard(r){
+ const tags=[r.platform,r.category].filter(Boolean).map(x=>`<span class="pill">${esc(x)}</span>`).join('');
+ const link=r.url?`<p><a href="${esc(r.url)}" target="_blank" rel="noopener">Ouvrir la ressource ↗</a></p>`:'';
+ return `<article class="resource-card"><h4>${esc(r.name||resourceTypeLabel(r.type))}</h4><div class="meta"><span class="pill">${resourceTypeLabel(r.type)}</span>${tags}</div>${r.content?`<div class="content">${esc(r.content)}</div>`:''}${link}<div class="actions">${r.content?`<button class="btn sm" onclick="copyResource('${r.id}')">Copier</button>`:''}<button class="btn sm" onclick="openResource('${r.id}')">Modifier</button><button class="btn sm danger" onclick="deleteResource('${r.id}')">Supprimer</button></div></article>`
+}
+function openResource(id=null,preset=null){
+ editingResource=id;const r=id?marketingResources().find(x=>x.id===id):null;
+ document.getElementById('resource-modal-title').textContent=r?'Modifier la ressource':'Ajouter une ressource';
+ document.getElementById('r-type').value=r?.type||preset||'hashtag';
+ document.getElementById('r-name').value=r?.name||'';
+ document.getElementById('r-platform').value=r?.platform||'';
+ document.getElementById('r-category').value=r?.category||'';
+ document.getElementById('r-content').value=r?.content||'';
+ document.getElementById('r-url').value=r?.url||'';
+ document.getElementById('resource-delete').style.display=r?'':'none';
+ document.getElementById('resource-modal').classList.add('open')
+}
+function closeResource(){editingResource=null;document.getElementById('resource-modal').classList.remove('open')}
+function saveResource(){
+ const type=document.getElementById('r-type').value,name=document.getElementById('r-name').value.trim(),platform=document.getElementById('r-platform').value,category=document.getElementById('r-category').value.trim(),content=document.getElementById('r-content').value.trim(),url=document.getElementById('r-url').value.trim();
+ if(!name&&!content&&!url)return alert('Ajoute au moins un nom, un contenu ou un lien.');
+ const r={id:editingResource||'RES-'+Date.now(),type,name,platform,category,content,url,updatedAt:new Date().toISOString()};
+ const a=marketingResources(),i=a.findIndex(x=>x.id===r.id);if(i>=0)a[i]={...a[i],...r};else a.push(r);
+ persist();closeResource();renderMarketing('identity')
+}
+function deleteResource(id){if(!confirm('Supprimer cette ressource ?'))return;state.marketingResources=marketingResources().filter(x=>x.id!==id);persist();renderMarketing('identity')}
+function deleteEditingResource(){if(editingResource){const id=editingResource;closeResource();deleteResource(id)}}
+async function copyResource(id){const r=marketingResources().find(x=>x.id===id);if(!r)return;try{await navigator.clipboard.writeText(r.content||r.url||'')}catch(e){const t=document.createElement('textarea');t.value=r.content||r.url||'';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}}
 function renderCampaigns(z){z.innerHTML=`<div class="toolbar"><button class="btn primary" onclick="openCampaign()">+ Créer une campagne</button></div><div class="campaign-grid">${state.campaigns.length?state.campaigns.map(c=>{const p=campaignProgress(c),count=state.events.filter(e=>e.campaignId===c.id).length;return `<article class="campaign"><h3>${esc(c.name)}</h3><div><span class="pill">${esc(c.type)}</span>${c.channels.map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div><p class="note">${esc(c.start)} → ${esc(c.end)}${workName(c.workId)?' · '+esc(workName(c.workId)):''}</p><div class="progress"><span style="width:${p}%"></span></div><small>${p}% · ${count} publication(s) générée(s)</small><div class="workactions"><button class="btn sm primary" onclick="openCampaign('${c.id}')">Modifier toute la campagne</button><button class="btn sm" onclick="marketingTab='planning';activateMarketingTab('planning');renderMarketing('planning')">Voir le planning</button><button class="btn sm danger" onclick="deleteCampaign('${c.id}')">Supprimer</button></div></article>`}).join(''):'<div class="empty">Aucune campagne.</div>'}</div>`}
 
 function renderPlanningZone(z){z.innerHTML=`<div class="toolbar"><button class="btn sm" onclick="planMove(-1)">←</button><b id="plan-title"></b><button class="btn sm" onclick="planMove(1)">→</button><select id="plan-channel" onchange="drawPlan()"><option value="">Tous canaux</option>${channels.map(c=>`<option>${c}</option>`).join('')}</select><select id="plan-campaign" onchange="drawPlan()"><option value="">Toutes campagnes</option>${state.campaigns.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="btn primary" onclick="openEvent()">+ Publication</button></div><div class="calwrap"><div class="calhead"><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div></div><div class="calendar" id="plan-cal"></div></div>`;drawPlan()}
