@@ -6161,8 +6161,8 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
   let mediaChaptersC108=[];
   async function loadMediaChaptersC108(oeuvreId){
-    // C110: même source et même règle que l'onglet Manuscrit. Aucun chapitre du Plan.
-    const {data,error}=await db().from('chapitres').select('id,numero,ordre,titre,nb_mots,etat,statut,date_ecriture').eq('oeuvre_id',oeuvreId).order('ordre',{ascending:true});
+    // C111: requête identique au Manuscrit via select(*). Évite de demander une colonne optionnelle inexistante (ex. statut), qui annulait tout le sélecteur. Aucun chapitre du Plan.
+    const {data,error}=await db().from('chapitres').select('*').eq('oeuvre_id',oeuvreId).order('ordre',{ascending:true});
     if(error){console.error('Chargement chapitres Média',error);mediaChaptersC108=[];showTransientStatusV572('Impossible de charger les chapitres du Manuscrit : '+error.message);return []}
     mediaChaptersC108=(data||[]).filter(c=>{const st=String(c.etat||c.statut||'').toLowerCase();return (Number(c.nb_mots)||0)>0||/écrit|ecrit|rédig|redig|relu|termin/.test(st)}).sort((a,b)=>Number(a.numero??a.ordre??9999)-Number(b.numero??b.ordre??9999));
     return mediaChaptersC108;
