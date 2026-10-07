@@ -4234,7 +4234,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         `}
       </div>
       <div class="admin-section"><div class="admin-section-head"><div><h2>🖼️ Connexion Médias</h2><p class="admin-section-sub" style="margin:4px 0 0">Le stockage des images utilise le projet Supabase Médias séparé. La session est indépendante de la base principale.</p></div><span id="media-auth-badge-v576c2" class="badge">Vérification…</span></div><div id="media-auth-panel-v576c2" class="panel" style="background:var(--bg-2)"><div class="status-line">Vérification de la connexion Médias…</div></div></div>
-      <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle passe par le relais Supabase sécurisé.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div><div class="admin-field-full"><label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="cfg-atelier-auto" style="width:auto" ${cfg.atelier_auto_sync_enabled!==false?'checked':''}> Synchroniser automatiquement Atelier → Passerelle</label><div class="admin-section-sub" style="margin-top:6px">Passerelle synchronise au démarrage, au retour sur l’onglet et toutes les 15 minutes tant que le site est ouvert. Le bouton manuel reste disponible. Pour EC-T2, conserve simplement « EC-T2 » comme Identifiant Atelier sur la fiche de l’œuvre ; les autres projets peuvent utiliser directement leur ID Passerelle.</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn-primary" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button><button class="btn-secondary" onclick="runAtelierAutoSyncC80({force:true,reason:'config'})">↻ Synchroniser toutes les œuvres maintenant</button></div></div>
+      <div class="admin-section"><div class="admin-section-head"><div><h2>🔌 Connecteur Atelier</h2><p class="admin-section-sub" style="margin:4px 0 0">URL du Web App Google Apps Script lié à « L’Atelier — Pilotage d’écriture ». Passerelle passe par le relais Supabase sécurisé.</p></div></div><div class="admin-section-grid"><div class="admin-field-full"><label>URL du connecteur Atelier</label><input id="cfg-atelier-url" value="${safeText(cfg.atelier_connector_url||'')}" placeholder="https://script.google.com/macros/s/.../exec"></div><div class="admin-field-full"><label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="cfg-atelier-auto" style="width:auto" ${cfg.atelier_auto_sync_enabled!==false?'checked':''}> Synchroniser automatiquement Atelier → Passerelle</label><div class="admin-section-sub" style="margin-top:6px">Passerelle synchronise au démarrage, au retour sur l’onglet et toutes les 15 minutes tant que le site est ouvert. Le bouton manuel reste disponible. Pour EC-T2, conserve simplement « EC-T2 » comme Identifiant Atelier sur la fiche de l’œuvre ; les autres projets peuvent utiliser directement leur ID Passerelle.</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn-primary" onclick="saveAtelierConnectorConfigV576c()">Enregistrer le connecteur</button><button id="atelier-sync-all-c119" type="button" class="btn-secondary" onclick="runAtelierManualSyncC119()">↻ Synchroniser toutes les œuvres maintenant</button><span id="atelier-sync-all-status-c119" class="admin-inline-status" style="align-self:center"></span></div></div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔗 Liens rapides</h2></div>
       ${linksOk?`<div class="admin-inline-form"><div><label>Nom</label><input id="ql-nom" placeholder="Todum"></div><div><label>URL</label><input id="ql-url" placeholder="https://..."></div><div><label>Icône</label><input id="ql-icone" placeholder="✓"></div><button class="btn-primary" onclick="saveQuickLink()">Ajouter</button></div><table class="admin-table"><thead><tr><th>Nom</th><th>Adresse</th><th>Ordre</th><th>Actif</th><th></th></tr></thead><tbody>${(links.data||[]).map(l=>`<tr><td>${safeText(l.icone||'↗')} ${safeText(l.nom)}</td><td>${safeText(l.url)}</td><td>${l.ordre??0}</td><td>${l.actif===false?'Non':'Oui'}</td><td><button class="tiny-btn danger-btn" onclick="deleteQuickLink('${l.id}')">Supprimer</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun lien rapide.</td></tr>'}</tbody></table>`:adminEmpty('Table Liens rapides non installée.')}</div>
       <div class="admin-section"><div class="admin-section-head"><h2>🔭 Horizons des œuvres</h2><span style="font-size:12px;color:var(--text-dim);">Horizon Y = ${new Date().getFullYear()}</span></div>${!works.error?`<table class="admin-table"><thead><tr><th>Œuvre</th><th>Horizon</th><th>Année réelle</th></tr></thead><tbody>${(works.data||[]).map(o=>{const y=new Date().getFullYear();return `<tr><td>${safeText(o.titre)}</td><td><select style="max-width:190px;padding:6px 8px" onchange="saveHorizon('${o.id}',this.value)"><option value="" ${!o.horizon_annee?'selected':''}>N/A</option><option value="Y" ${Number(o.horizon_annee)===y?'selected':''}>Horizon Y · ${y}</option><option value="Y1" ${Number(o.horizon_annee)===y+1?'selected':''}>Horizon Y+1 · ${y+1}</option></select></td><td>${o.horizon_annee||'—'}</td></tr>`}).join('')||'<tr><td colspan="3">Aucune œuvre.</td></tr>'}</tbody></table>`:adminEmpty('La colonne Horizon n’est pas installée.')}</div>`;
@@ -4348,7 +4348,9 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   }
 
   async function runAtelierAutoSyncC80({force=false,reason='auto'}={}){
-    if(!currentUser||atelierAutoSyncRunningC80)return;
+    if(!currentUser)return;
+    // C119 · une synchro manuelle forcée doit rester cliquable même si l'auto-sync tourne.
+    if(atelierAutoSyncRunningC80 && !force)return;
     if(!force && Date.now()-atelierAutoSyncLastRunC80<5*60*1000)return;
 
     atelierAutoSyncRunningC80=true;
@@ -4358,7 +4360,8 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
         .eq('user_id',currentUser.id)
         .maybeSingle();
       if(cfgErr)throw cfgErr;
-      if(cfg?.atelier_auto_sync_enabled===false)return;
+      // C119 · la case Auto ne désactive jamais le bouton manuel.
+      if(!force && cfg?.atelier_auto_sync_enabled===false)return;
 
       const {data:works,error}=await db().from('oeuvres')
         .select('id,titre,atelier_project_id,code_session,atelier_last_sync_at,archive')
@@ -4401,6 +4404,22 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       if(force)showTransientStatusV572('⚠ Synchro Atelier : '+(e?.message||e));
     }finally{
       atelierAutoSyncRunningC80=false;
+    }
+  }
+
+  async function runAtelierManualSyncC119(){
+    const btn=document.getElementById('atelier-sync-all-c119');
+    const status=document.getElementById('atelier-sync-all-status-c119');
+    if(btn){btn.disabled=true;btn.style.opacity='.65';btn.style.cursor='wait';}
+    if(status)status.textContent='Synchronisation Atelier en cours…';
+    try{
+      await runAtelierAutoSyncC80({force:true,reason:'manual-c119'});
+      if(status)status.textContent='✓ Synchronisation terminée';
+    }catch(e){
+      console.warn('Synchro Atelier manuelle C119',e);
+      if(status)status.textContent='⚠ '+(e?.message||e);
+    }finally{
+      if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='pointer';}
     }
   }
 
