@@ -4286,6 +4286,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
 
   async function syncAtelierWorkRecordC80(work,{silent=true}={}){
+    // C117 · synchronisation Atelier → Manuscrit : titre, mots, date et résumé réel.
     const projectId=String(work?.atelier_project_id||work?.code_session||'').trim();
     if(!work?.id||!projectId)return {skipped:true};
 
@@ -4294,7 +4295,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
 
     const written=(data.chapters||[]).filter(c=>/r[ée]dig|[ée]crit|termin[ée]/i.test(c.state||c.etat||c.status||''));
     const {data:existing,error:readErr}=await db().from('chapitres')
-      .select('id,numero,titre,nb_mots,etat')
+      .select('id,numero,titre,nb_mots,etat,resume,date_ecriture')
       .eq('oeuvre_id',work.id);
     if(readErr)throw readErr;
 
@@ -4305,12 +4306,20 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const numero=Number(c.number);
       if(!Number.isFinite(numero)||numero<1)continue;
       const old=byNum.get(numero);
-      const words=Number(String(c.words??0).replace(/[^0-9-]/g,''))||0;
-      const title=(c.manuscriptTitle||'').trim()||old?.titre||`Chapitre ${numero}`;
-      const payload={numero,titre:title,nb_mots:words,etat:'Rédigé'};
+      const words=Number(String(c.words??c.nb_mots??c.wordCount??0).replace(/[^0-9-]/g,''))||0;
+      const title=String(c.manuscriptTitle??c.title??c.titre??'').trim()||old?.titre||`Chapitre ${numero}`;
+      // C117 · Atelier est l'unique source du résumé réel du Manuscrit.
+      // Ne jamais conserver/reprendre silencieusement un ancien résumé provenant du Plan.
+      const atelierSummary=String(c.summary??c.resume??c.chapterSummary??c.manuscriptSummary??c.synopsis??c.description??'').trim();
+      const rawDate=String(c.writtenDate??c.date_ecriture??c.writingDate??c.date??'').trim();
+      const atelierDate=rawDate ? rawDate.slice(0,10) : null;
+      const payload={numero,titre:title,nb_mots:words,etat:'Rédigé',resume:atelierSummary||null};
+      if(atelierDate)payload.date_ecriture=atelierDate;
 
       if(old){
-        if(old.titre===title&&Number(old.nb_mots||0)===words&&/r[ée]dig/i.test(old.etat||'')){unchanged++;continue}
+        const sameSummary=String(old.resume||'').trim()===atelierSummary;
+        const sameDate=!atelierDate || String(old.date_ecriture||'').slice(0,10)===atelierDate;
+        if(old.titre===title&&Number(old.nb_mots||0)===words&&/r[ée]dig/i.test(old.etat||'')&&sameSummary&&sameDate){unchanged++;continue}
         const r=await db().from('chapitres').update(payload).eq('id',old.id);
         if(r.error)throw r.error;
         updated++;
