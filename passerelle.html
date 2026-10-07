@@ -4308,16 +4308,21 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const old=byNum.get(numero);
       const words=Number(String(c.words??c.nb_mots??c.wordCount??0).replace(/[^0-9-]/g,''))||0;
       const title=String(c.manuscriptTitle??c.title??c.titre??'').trim()||old?.titre||`Chapitre ${numero}`;
-      // C117 · Atelier est l'unique source du résumé réel du Manuscrit.
-      // Ne jamais conserver/reprendre silencieusement un ancien résumé provenant du Plan.
-      const atelierSummary=String(c.summary??c.resume??c.chapterSummary??c.manuscriptSummary??c.synopsis??c.description??'').trim();
+      // C118 · Le résumé Atelier n'est écrit QUE si le connecteur le fournit réellement.
+      // Une ancienne version du relais peut ne pas exposer la colonne Résumé : dans ce cas,
+      // on préserve chapitres.resume au lieu de l'effacer. Aucun fallback vers le Plan.
+      const summaryCandidates=[c.summary,c.resume,c.chapterSummary,c.manuscriptSummary,c.synopsis,c.description,c['Résumé'],c['Resume'],c['Résumé chapitre'],c['Résumé du chapitre'],c.raw?.summary,c.raw?.resume,c.raw?.['Résumé']];
+      const summaryValue=summaryCandidates.find(v=>v!==undefined&&v!==null);
+      const hasAtelierSummary=summaryValue!==undefined;
+      const atelierSummary=hasAtelierSummary?String(summaryValue).trim():'';
       const rawDate=String(c.writtenDate??c.date_ecriture??c.writingDate??c.date??'').trim();
       const atelierDate=rawDate ? rawDate.slice(0,10) : null;
-      const payload={numero,titre:title,nb_mots:words,etat:'Rédigé',resume:atelierSummary||null};
+      const payload={numero,titre:title,nb_mots:words,etat:'Rédigé'};
+      if(hasAtelierSummary)payload.resume=atelierSummary||null;
       if(atelierDate)payload.date_ecriture=atelierDate;
 
       if(old){
-        const sameSummary=String(old.resume||'').trim()===atelierSummary;
+        const sameSummary=!hasAtelierSummary || String(old.resume||'').trim()===atelierSummary;
         const sameDate=!atelierDate || String(old.date_ecriture||'').slice(0,10)===atelierDate;
         if(old.titre===title&&Number(old.nb_mots||0)===words&&/r[ée]dig/i.test(old.etat||'')&&sameSummary&&sameDate){unchanged++;continue}
         const r=await db().from('chapitres').update(payload).eq('id',old.id);
@@ -4448,7 +4453,7 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
   async function testAtelierConnectorV576c(){
     const status=document.getElementById('atelier-sync-status-v576c'); const projectId=document.getElementById('aow-code-session')?.value.trim();
     if(!projectId){if(status)status.textContent='Renseigne d’abord l’ID Atelier.';return}
-    try{if(status)status.textContent='Test du relais Supabase → Atelier…';const data=await atelierRelayV576c(projectId);if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');if(status)status.textContent=`✓ Atelier répond · ${data.project?.name||projectId} · ${(data.chapters||[]).length} chapitre(s)`;}catch(e){if(status)status.textContent='⚠ '+e.message}
+    try{if(status)status.textContent='Test du relais Supabase → Atelier…';const data=await atelierRelayV576c(projectId);if(!data?.ok)throw new Error(data?.error||'Réponse Atelier invalide');if(status){const chapters=data.chapters||[];const withSummary=chapters.filter(c=>[c.summary,c.resume,c.chapterSummary,c.manuscriptSummary,c.synopsis,c.description,c['Résumé'],c['Resume'],c['Résumé chapitre'],c['Résumé du chapitre'],c.raw?.summary,c.raw?.resume,c.raw?.['Résumé']].some(v=>v!==undefined&&v!==null&&String(v).trim())).length;status.textContent=`✓ Atelier répond · ${data.project?.name||projectId} · ${chapters.length} chapitre(s) · ${withSummary} résumé(s) transmis`;}}catch(e){if(status)status.textContent='⚠ '+e.message}
   }
   async function syncAtelierWorkV576c(){
     const status=document.getElementById('atelier-sync-status-v576c');
