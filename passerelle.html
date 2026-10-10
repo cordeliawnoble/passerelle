@@ -4318,8 +4318,17 @@ border:1px solid var(--line)!important;background:#fff!important;border-radius:9
       const rawDate=String(c.writtenDate??c.date_ecriture??c.writingDate??c.date??'').trim();
       const atelierDate=rawDate ? rawDate.slice(0,10) : null;
       const payload={numero,titre:title,nb_mots:words,etat:'Rédigé'};
-      if(hasAtelierSummary)payload.resume=atelierSummary||null;
-      if(atelierDate)payload.date_ecriture=atelierDate;
+      // C121 : ne jamais écraser les corrections manuelles du Manuscrit.
+      let lockedFields=[];
+      if(old){
+        const lock=await db().from('chapitres_manuels').select('champs').eq('chapitre_id',old.id).maybeSingle();
+        if(!lock.error)lockedFields=lock.data?.champs||[];
+      }
+      if(lockedFields.includes('titre'))payload.titre=old.titre;
+      if(lockedFields.includes('nb_mots'))payload.nb_mots=old.nb_mots;
+      if(lockedFields.includes('etat'))payload.etat=old.etat;
+      if(hasAtelierSummary&&!lockedFields.includes('resume'))payload.resume=atelierSummary||null;
+      if(atelierDate&&!lockedFields.includes('date_ecriture'))payload.date_ecriture=atelierDate;
 
       if(old){
         const sameSummary=!hasAtelierSummary || String(old.resume||'').trim()===atelierSummary;
@@ -10010,5 +10019,6 @@ function openArchiveEditC112(id=''){const a=notionArchivesC112.find(x=>x.id===id
 async function saveArchiveC112(id,btn){const payload={titre:document.getElementById('arc-titre-c112').value.trim(),univers_collection:document.getElementById('arc-univers-c112').value.trim()||null,genre:document.getElementById('arc-genre-c112').value.trim()||null,etat:document.getElementById('arc-etat-c112').value.trim()||null,couverture_url:document.getElementById('arc-cover-c112').value.trim()||null,synopsis:document.getElementById('arc-syn-c112').value.trim()||null,elements_importants:document.getElementById('arc-imp-c112').value.trim()||null,updated_at:new Date().toISOString()};if(!payload.titre)return alert('Le titre est obligatoire.');btn.disabled=true;let r=id?await db().from('archives_notion').update(payload).eq('id',id):await db().from('archives_notion').insert({...payload,user_id:currentUser.id});if(r.error){btn.disabled=false;return alert(r.error.message)}closeArchiveDrawerC112();await renderArchivesC112('notion')}
 async function restoreArchiveC112(id,btn){const a=notionArchivesC112.find(x=>x.id===id);if(!a)return;if(!confirm(`Restaurer « ${a.titre} » comme nouvelle œuvre active dans Passerelle ?\n\nL’archive Notion restera conservée.`))return;btn.disabled=true;const payload={user_id:currentUser.id,titre:a.titre,genre:a.genre||null,resume:a.synopsis||null,statut:'À développer',archive:false};const r=await db().from('oeuvres').insert(payload).select('id').single();if(r.error){btn.disabled=false;return alert('Restauration impossible : '+r.error.message)}await db().from('archives_notion').update({restauree_oeuvre_id:r.data.id,restauree_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);closeArchiveDrawerC112();if(typeof openOeuvreDetail==='function')openOeuvreDetail(r.data.id)}
 </script>
+<script src="c121-features.js"></script>
 </body>
 </html>
