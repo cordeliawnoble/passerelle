@@ -6,10 +6,37 @@
   const styles=document.createElement('style');styles.textContent=
   '.c121-tabs{display:flex;gap:8px;margin:10px 0 18px;flex-wrap:wrap}.c121-tabs button{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:9px 15px;color:var(--text);cursor:pointer}.c121-tabs button.active{background:var(--accent);color:white}.c121-editor{display:grid;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.c121-editor input,.c121-editor textarea,.c121-editor select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font:inherit}.c121-editor textarea{min-height:280px;resize:vertical;line-height:1.6}.c121-doc{border-bottom:1px solid var(--line);padding:14px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}.c121-overflow{overflow:auto}.c121-table{border-collapse:collapse;width:100%}.c121-table td,.c121-table th{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.c121-table select{border:1px solid var(--line);background:var(--card);color:var(--text);padding:7px;border-radius:8px;max-width:160px}';
   document.head.append(styles);
-  NAV[0].items.push({key:'edl',label:'🌱 État des lieux (EDL)',real:true});
+  // Navigation C121 : l'EDL est une page autonome, avec son entree visible
+  // meme si la navigation principale utilise des elements non standards.
+  function mountEDLC121(){
+    if(!document.body)return;
+    // Le Catalogue contient deja l'entree Personnages : s'ancrer a son noeud visible.
+    const candidates=[...document.querySelectorAll('button,a,[role="button"],.nav-item,.sidebar-item')];
+    const anchor=candidates.find(el=>/personnages/i.test(el.textContent||'') && (el.textContent||'').trim().length<100);
+    if(anchor && !document.getElementById('c121-edl-sidebar')){
+      const button=document.createElement('button');
+      button.id='c121-edl-sidebar';button.type='button';button.textContent='🌱 État des lieux';
+      button.className=anchor.className||'';button.style.cssText=anchor.getAttribute('style')||'';
+      button.style.cssText='';
+      button.onclick=()=>navigate('edl');
+      anchor.insertAdjacentElement('afterend',button);
+    }
+    // Secours : conserver l'acces flottant tant que le menu n'est pas valide.
+    if(!document.getElementById('c121-edl-sidebar')&&!document.getElementById('c121-edl-nav')){
+      const button=document.createElement('button');
+      button.id='c121-edl-nav';button.type='button';button.textContent='🌱 État des lieux';
+      button.style.cssText='position:fixed;right:22px;bottom:22px;z-index:2147483000;padding:13px 19px;border:0;border-radius:14px;background:#7752a3;color:white;font:600 15px system-ui;box-shadow:0 4px 18px #0004;cursor:pointer';
+      button.onclick=()=>navigate('edl');document.body.appendChild(button);
+    }
+    if(document.getElementById('c121-edl-sidebar'))document.getElementById('c121-edl-nav')?.remove();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountEDLC121,{once:true});
+  else mountEDLC121();
+  const c121NavObserver=new MutationObserver(()=>{if(!document.getElementById('c121-edl-sidebar'))mountEDLC121()});
+  c121NavObserver.observe(document.documentElement,{childList:true,subtree:true});
   const nav0=navigate;
   navigate=function(key){if(key==='edl'){resetTheme();setActiveNav(key);renderEDLC121();return;}return nav0(key)};
-  let edlRows=[],overrides={};
+  let edlRows=[],overrides={},sagaNames={},sousNames={};
   const code=(id,k)=>id+'::'+k;
   const auto=(w,p,l,kw)=>{
     const infos=[w.genre,w.format_cible||w.format,w.statut,w.tonalite,w.temporalite,w.lieu_principal,w.public_cible];
@@ -20,27 +47,30 @@
   window.renderEDLC121=async()=>{
     const root=document.getElementById('content');
     root.innerHTML='<div class="status-line">Chargement de l’État des lieux…</div>';
-    const [w,p,l,e,k,sagas,sous]=await Promise.all([db().from('oeuvres').select('*').order('titre'),db().from('personnages_oeuvres').select('oeuvre_id'),db().from('plans').select('oeuvre_id'),db().from('edl_evaluations').select('*'),db().from('keyword_links').select('entity_id').eq('entity_type','oeuvre'),db().from('sagas').select('id,nom'),db().from('sous_sagas').select('id,nom')]);
+    const [w,p,l,e,k]=await Promise.all([db().from('oeuvres').select('*').order('titre'),db().from('personnages_oeuvres').select('oeuvre_id'),db().from('plans').select('oeuvre_id'),db().from('edl_evaluations').select('*'),db().from('keyword_links').select('entity_id').eq('entity_type','oeuvre')]);
     const error=w.error||p.error||l.error||e.error;
-    if(error){root.innerHTML='<div class="panel">EDL indisponible : '+esc(error.message)+'<p>Applique la migration SQL C121 avant d’utiliser cet écran.</p></div>';return;}
-    const pCount={},lCount={},kCount={},sagaNames=Object.fromEntries((sagas.data||[]).map(x=>[x.id,x.nom])),sousNames=Object.fromEntries((sous.data||[]).map(x=>[x.id,x.nom]));
+    if(error){root.innerHTML='<div class="panel">EDL indisponible : '+esc(error.message)+'</div>';return;}
+    const pCount={},lCount={},kCount={};
     (k.data||[]).forEach(x=>kCount[x.entity_id]=(kCount[x.entity_id]||0)+1);
     (p.data||[]).forEach(x=>pCount[x.oeuvre_id]=(pCount[x.oeuvre_id]||0)+1);
     (l.data||[]).forEach(x=>lCount[x.oeuvre_id]=(lCount[x.oeuvre_id]||0)+1);
     edlRows=(w.data||[]).filter(x=>!x.archive).map(x=>({w:x,defaults:auto(x,pCount[x.id]||0,lCount[x.id]||0,kCount[x.id]||0)}));
     overrides=Object.fromEntries((e.data||[]).map(x=>[code(x.oeuvre_id,x.critere),x.etat]));
-    root.innerHTML='<div class="page-header"><div><h1>🌱 État des lieux</h1><p>Diagnostic narratif des œuvres. Aucune action ni deadline automatique.</p></div></div>'+
-    '<div class="work-toolbar"><input class="search-input" id="c121-q" placeholder="Chercher une œuvre…" oninput="filterEDLC121()">'+
-    '<select id="c121-state" onchange="filterEDLC121()"><option value="">Tous les états</option>'+states.map(x=>'<option>'+x+'</option>').join('')+'</select>'+
-    '<select id="c121-criterion" onchange="filterEDLC121()"><option value="">Tous les critères</option>'+criteria.map(([k,t])=>'<option value="'+k+'">'+t+'</option>').join('')+'</select></div>'+
-    '<div class="panel c121-overflow"><table class="c121-table"><thead><tr><th>Œuvre</th><th>Univers / Saga / Collection</th><th>Statut</th>'+criteria.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead><tbody id="c121-edl-body"></tbody></table></div><p class="status-line">« À qualifier » ne signifie pas urgent. Les appréciations manuelles remplacent les détections automatiques sans modifier les fiches.</p>';
+    root.innerHTML='<style>.c121-edl{font-size:13px}.c121-edl .c121-edl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}.c121-edl h1{margin:0;font-size:27px}.c121-edl p{margin:4px 0;color:var(--muted,#756c86)}.c121-edl-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.c121-edl-filters input{width:240px;max-width:100%;padding:9px 12px;border:1px solid var(--line,#ddd);border-radius:9px;background:var(--card,#fff);color:var(--text,#302638)}.c121-edl-filters select{max-width:150px;padding:9px;border:1px solid var(--line,#ddd);border-radius:9px;background:var(--card,#fff);color:var(--text,#302638)}.c121-edl .c121-overflow{overflow-x:auto}.c121-edl .c121-table{table-layout:fixed;min-width:780px;width:100%;font-size:12px}.c121-edl .c121-table th,.c121-edl .c121-table td{padding:9px 7px;white-space:normal;vertical-align:middle}.c121-edl .c121-table th:first-child{width:25%}.c121-edl .c121-table th:not(:first-child){width:15%}.c121-edl .c121-table select{width:100%;max-width:100%;font-size:11px;padding:6px 3px;min-width:0}.c121-edl .c121-work-link{border:0;background:transparent;color:var(--text,#302638);text-align:left;cursor:pointer;font:600 13px inherit;overflow-wrap:anywhere}.c121-edl .c121-work-link:hover{text-decoration:underline} .c121-edl .c121-edl-note{font-size:12px;margin-top:12px}.c121-edl .c121-state-field{display:flex;align-items:center;gap:5px;min-width:0;padding:3px 5px;border:1px solid var(--line,#e5ddec);border-radius:9px}.c121-edl .c121-state-dot{width:10px;height:10px;min-width:10px;border-radius:50%;box-shadow:0 0 0 2px #fff8}.c121-edl .c121-state-field select{border:0;background:transparent;padding:4px 0;flex:1;min-width:0;outline-offset:2px}</style>'+
+    '<section class="c121-edl"><div class="c121-edl-head"><div><h1>🌱 État des lieux</h1><p>Diagnostic automatique, appréciations modifiables.</p></div><div class="c121-edl-filters"><input id="c121-q" placeholder="Rechercher une œuvre…" oninput="filterEDLC121()"><select id="c121-state" onchange="filterEDLC121()"><option value="">Tous les états</option>'+states.map(x=>'<option>'+x+'</option>').join('')+'</select><select id="c121-criterion" onchange="filterEDLC121()"><option value="">Tous les critères</option>'+criteria.map(([k,t])=>'<option value="'+k+'">'+t+'</option>').join('')+'</select></div></div>'+
+    '<div class="panel c121-overflow"><table class="c121-table"><thead><tr><th>Œuvre</th>'+criteria.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead><tbody id="c121-edl-body"></tbody></table></div><p class="c121-edl-note">Les valeurs « Auto » proviennent des fiches. Tu peux les corriger à tout moment ; ton choix enregistré prime sur le diagnostic automatique. « À qualifier » ne signifie pas urgent.</p></section>';
     filterEDLC121();
   };
   window.filterEDLC121=()=>{
     const q=(document.getElementById('c121-q')?.value||'').toLowerCase(),s=document.getElementById('c121-state')?.value||'',c=document.getElementById('c121-criterion')?.value||'',b=document.getElementById('c121-edl-body');if(!b)return;
     const filtered=edlRows.filter(({w,defaults})=>String([w.titre,w.genre,w.statut].join(' ')).toLowerCase().includes(q)&&(!s||(c?[c]:criteria.map(x=>x[0])).some(k=>(overrides[code(w.id,k)]||defaults[k])===s)));
-    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><button class="btn-secondary" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td><td>'+esc([w.collection,w.univers,sagaNames[w.saga_id],sousNames[w.sous_saga_id]].filter(filled).join(' · ')||'Voir fiche')+'</td><td>'+esc(w.statut||'—')+'</td>'+
-    criteria.map(([k])=>'<td><select aria-label="'+esc(k)+'" onchange="saveEDLC121(\''+w.id+'\',\''+k+'\',this.value,this)"><option value="">Auto : '+esc(defaults[k])+'</option>'+states.map(st=>'<option value="'+st+'"'+(overrides[code(w.id,k)]===st?' selected':'')+'>'+st+'</option>').join('')+'</select></td>').join('')+'</tr>').join('')||'<tr><td colspan="8">Aucune œuvre pour ces filtres.</td></tr>';
+    const colors={'Complet':'#45a878','À qualifier':'#f3b23d','Sommaire':'#ee9c43','Non renseigné':'#ec477a','Non nécessaire':'#9b82d6'};
+    const stateSelect=(id,k,title,defaults)=>{
+      const current=overrides[code(id,k)]||defaults,manual=!!overrides[code(id,k)];
+      const dot='<span class="c121-state-dot" style="background:'+colors[current]+'"></span>';
+      return '<div class="c121-state-field">'+dot+'<select aria-label="'+esc(k)+' pour '+esc(title)+'" title="'+(manual?'Appréciation manuelle':'Diagnostic automatique')+' : '+esc(current)+'" onchange="saveEDLC121(\''+id+'\',\''+k+'\',this.value,this)"><option value="">Auto : '+esc(defaults)+'</option>'+states.map(st=>'<option value="'+st+'"'+(overrides[code(id,k)]===st?' selected':'')+'>'+st+'</option>').join('')+'</select></div>';
+    };
+    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><button class="c121-work-link" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td>'+criteria.map(([k])=>'<td>'+stateSelect(w.id,k,w.titre,defaults[k])+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="6">Aucune œuvre pour ces filtres.</td></tr>';
   };
   window.saveEDLC121=async(id,k,etat,select)=>{
     select.disabled=true;
@@ -69,13 +99,36 @@
       box.append(label,select);card.querySelector('.work-character-copy-c92')?.append(box);
     });
   };
+  // Les archives sont des personnages masques dans les fiches oeuvres,
+  // sans supprimer leurs associations en base.
+  const oldPeopleC121=renderOeuvrePersonnages;
+  renderOeuvrePersonnages=async function(zone){
+    await oldPeopleC121(zone);
+    const links=opoLinks.filter(r=>personnageFilter==='tous'||String(r.importance||'').toLowerCase()===personnageFilter);
+    const ids=[...new Set(links.map(r=>r.personnage_id).filter(Boolean))];
+    if(!ids.length)return;
+    const response=await db().from('personnages').select('*').in('id',ids);
+    if(response.error){console.warn('Archives personnages C121 :',response.error.message);return;}
+    const archived=new Set((response.data||[]).filter(p=>p.archive===true||p.archive===1||p.archive==='true'||p.archived===true||p.est_archive===true||p.statut_archive===true).map(p=>String(p.id)));
+    [...zone.querySelectorAll('.work-character-card-c92')].forEach((card,i)=>{
+      if(archived.has(String(links[i]?.personnage_id)))card.remove();
+    });
+  };
   const oldManuscript=renderOeuvreManuscrit;
   renderOeuvreManuscrit=async function(zone){
     await oldManuscript(zone);
+    if(!zone.querySelector('#c121-chapter-picker')){const picker=document.createElement('button');picker.id='c121-chapter-picker';picker.className='btn-secondary';picker.textContent='✏️ Modifier un chapitre';picker.style.cssText='margin:10px 0';picker.onclick=()=>openChapterPickerC121();zone.prepend(picker)}
     const trs=[...zone.querySelectorAll('.manuscript-table tbody tr')].filter(tr=>!tr.classList.contains('manuscript-summary-row'));if(!trs.length)return;
     const r=await db().from('chapitres').select('id,numero,ordre,nb_mots,etat,statut').eq('oeuvre_id',currentOeuvreId).order('ordre');if(r.error)return;
     const rows=(r.data||[]).filter(c=>Number(c.nb_mots)>0||/écrit|ecrit|rédig|redig|relu|termin/i.test(String(c.etat||c.statut||'')));
     trs.forEach((tr,i)=>{if(!rows[i])return;const b=document.createElement('button');b.className='btn-secondary';b.textContent='✏️ Modifier';b.style.marginLeft='6px';b.onclick=()=>openManuscriptEditC121(rows[i].id);tr.lastElementChild.append(b)});
+  };
+  // Point d'entree explicite, independant de la structure du tableau manuscrit.
+  window.openChapterPickerC121=async()=>{
+    const r=await db().from('chapitres').select('id,titre,numero,ordre').eq('oeuvre_id',currentOeuvreId).order('ordre');
+    if(r.error)return alert('Chapitres : '+r.error.message);
+    const list=r.data||[];
+    openDrawer('Modifier un chapitre','<div class="c121-editor"><p>Choisis le chapitre à modifier individuellement, sans réimporter le manuscrit.</p>'+list.map(c=>'<button class="btn-secondary" style="display:block;width:100%;margin:5px 0;text-align:left" onclick="openManuscriptEditC121(\''+c.id+'\')">'+esc((c.numero??c.ordre??'')+' · '+(c.titre||'Chapitre'))+'</button>').join('')+'</div>');
   };
   window.openManuscriptEditC121=async id=>{
     const r=await db().from('chapitres').select('*').eq('id',id).single();if(r.error)return alert(r.error.message);const c=r.data;
@@ -125,7 +178,14 @@
   };
   window.listChantierDocsC121=archived=>{
     const z=document.getElementById('c121-doc-list');if(!z)return;
-    z.innerHTML=docs.filter(x=>!!x.archive===!!archived).map(x=>'<div class="c121-doc"><div><strong>'+esc(x.titre)+'</strong><div class="status-line">'+(x.contenu||'').length+' caractères · '+esc(x.updated_at?.slice(0,10)||'')+'</div></div><button class="btn-secondary" onclick="editChantierDocC121(\''+x.id+'\')">Ouvrir</button></div>').join('')||'<p class="empty">Aucun document ici.</p>';
+    z.innerHTML=docs.filter(x=>!!x.archive===!!archived).map(x=>'<div class="c121-doc"><div><strong>'+esc(x.titre)+'</strong><div class="status-line">'+(x.contenu||'').length+' caractères · '+esc(x.updated_at?.slice(0,10)||'')+'</div></div><button class="btn-secondary" onclick="viewChantierDocC121(\''+x.id+'\')">👁️ Consulter</button></div>').join('')||'<p class="empty">Aucun document ici.</p>';
+  };
+    window.viewChantierDocC121=id=>{
+    const d=docs.find(x=>x.id===id),z=document.getElementById('c121-doc-editor');
+    if(!d||!z)return;
+    const safeContent=esc(d.contenu||'').replace(/\r\n?/g,'\n');
+    z.innerHTML='<article class="c121-editor"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h3>'+esc(d.titre)+'</h3><button class="btn-secondary" onclick="editChantierDocC121(\''+id+'\')">✏️ Modifier</button></div><div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;max-height:70vh;overflow:auto">'+(safeContent||'<em>Document vide.</em>')+'</div><button class="btn-secondary" onclick="document.getElementById(\'c121-doc-editor\').innerHTML=\'\'">Fermer</button></article>';
+    z.scrollIntoView({block:'nearest'});
   };
   window.editChantierDocC121=(id='')=>{
     const d=docs.find(x=>x.id===id)||{},z=document.getElementById('c121-doc-editor');
