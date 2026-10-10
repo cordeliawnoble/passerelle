@@ -11,22 +11,23 @@
   navigate=function(key){if(key==='edl'){resetTheme();setActiveNav(key);renderEDLC121();return;}return nav0(key)};
   let edlRows=[],overrides={};
   const code=(id,k)=>id+'::'+k;
-  const auto=(w,p,l)=>{
+  const auto=(w,p,l,kw)=>{
     const infos=[w.genre,w.format_cible||w.format,w.statut,w.tonalite,w.temporalite,w.lieu_principal,w.public_cible];
     const keywords=Array.isArray(w.mots_cles)?w.mots_cles:typeof w.mots_cles==='string'?w.mots_cles.split(',').filter(filled):[];
     const n=infos.filter(filled).length;
-    return {resume:filled(w.resume)?'Complet':'Non renseigné',informations:n===0?'Non renseigné':n===infos.length?'Complet':'À qualifier',mots_cles:keywords.length?'Complet':'Non renseigné',personnages:p?'À qualifier':'Non renseigné',plan:l?'À qualifier':'Non renseigné'};
+    return {resume:filled(w.resume)?'Complet':'Non renseigné',informations:n===0?'Non renseigné':n===infos.length?'Complet':'À qualifier',mots_cles:(keywords.length||kw)?'Complet':'Non renseigné',personnages:p?'À qualifier':'Non renseigné',plan:l?'À qualifier':'Non renseigné'};
   };
   window.renderEDLC121=async()=>{
     const root=document.getElementById('content');
     root.innerHTML='<div class="status-line">Chargement de l’État des lieux…</div>';
-    const [w,p,l,e]=await Promise.all([db().from('oeuvres').select('*').order('titre'),db().from('personnages_oeuvres').select('oeuvre_id'),db().from('plans').select('oeuvre_id'),db().from('edl_evaluations').select('*')]);
+    const [w,p,l,e,k,sagas,sous]=await Promise.all([db().from('oeuvres').select('*').order('titre'),db().from('personnages_oeuvres').select('oeuvre_id'),db().from('plans').select('oeuvre_id'),db().from('edl_evaluations').select('*'),db().from('keyword_links').select('entity_id').eq('entity_type','oeuvre'),db().from('sagas').select('id,nom'),db().from('sous_sagas').select('id,nom')]);
     const error=w.error||p.error||l.error||e.error;
     if(error){root.innerHTML='<div class="panel">EDL indisponible : '+esc(error.message)+'<p>Applique la migration SQL C121 avant d’utiliser cet écran.</p></div>';return;}
-    const pCount={},lCount={};
+    const pCount={},lCount={},kCount={},sagaNames=Object.fromEntries((sagas.data||[]).map(x=>[x.id,x.nom])),sousNames=Object.fromEntries((sous.data||[]).map(x=>[x.id,x.nom]));
+    (k.data||[]).forEach(x=>kCount[x.entity_id]=(kCount[x.entity_id]||0)+1);
     (p.data||[]).forEach(x=>pCount[x.oeuvre_id]=(pCount[x.oeuvre_id]||0)+1);
     (l.data||[]).forEach(x=>lCount[x.oeuvre_id]=(lCount[x.oeuvre_id]||0)+1);
-    edlRows=(w.data||[]).filter(x=>!x.archive).map(x=>({w:x,defaults:auto(x,pCount[x.id]||0,lCount[x.id]||0)}));
+    edlRows=(w.data||[]).filter(x=>!x.archive).map(x=>({w:x,defaults:auto(x,pCount[x.id]||0,lCount[x.id]||0,kCount[x.id]||0)}));
     overrides=Object.fromEntries((e.data||[]).map(x=>[code(x.oeuvre_id,x.critere),x.etat]));
     root.innerHTML='<div class="page-header"><div><h1>🌱 État des lieux</h1><p>Diagnostic narratif des œuvres. Aucune action ni deadline automatique.</p></div></div>'+
     '<div class="work-toolbar"><input class="search-input" id="c121-q" placeholder="Chercher une œuvre…" oninput="filterEDLC121()">'+
@@ -38,7 +39,7 @@
   window.filterEDLC121=()=>{
     const q=(document.getElementById('c121-q')?.value||'').toLowerCase(),s=document.getElementById('c121-state')?.value||'',c=document.getElementById('c121-criterion')?.value||'',b=document.getElementById('c121-edl-body');if(!b)return;
     const filtered=edlRows.filter(({w,defaults})=>String([w.titre,w.genre,w.statut].join(' ')).toLowerCase().includes(q)&&(!s||(c?[c]:criteria.map(x=>x[0])).some(k=>(overrides[code(w.id,k)]||defaults[k])===s)));
-    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><button class="btn-secondary" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td><td>'+esc([w.collection,w.saga,w.univers,w.genre].filter(filled).join(' · ')||'Voir fiche')+'</td><td>'+esc(w.statut||'—')+'</td>'+
+    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><button class="btn-secondary" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td><td>'+esc([w.collection,w.univers,sagaNames[w.saga_id],sousNames[w.sous_saga_id]].filter(filled).join(' · ')||'Voir fiche')+'</td><td>'+esc(w.statut||'—')+'</td>'+
     criteria.map(([k])=>'<td><select aria-label="'+esc(k)+'" onchange="saveEDLC121(\''+w.id+'\',\''+k+'\',this.value,this)"><option value="">Auto : '+esc(defaults[k])+'</option>'+states.map(st=>'<option value="'+st+'"'+(overrides[code(w.id,k)]===st?' selected':'')+'>'+st+'</option>').join('')+'</select></td>').join('')+'</tr>').join('')||'<tr><td colspan="8">Aucune œuvre pour ces filtres.</td></tr>';
   };
   window.saveEDLC121=async(id,k,etat,select)=>{
