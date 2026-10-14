@@ -34,9 +34,61 @@
   else mountEDLC121();
   const c121NavObserver=new MutationObserver(()=>{if(!document.getElementById('c121-edl-sidebar'))mountEDLC121()});
   c121NavObserver.observe(document.documentElement,{childList:true,subtree:true});
+
+  // C125 : liens natifs pour les rubriques du menu.
+  function menuKey125(el){
+    if(el.id==='c121-edl-sidebar'||el.id==='c121-edl-nav')return 'edl';
+    const handler=el.getAttribute('onclick')||'';
+    const pos=handler.indexOf('navigate(');
+    if(pos<0)return null;
+    const rest=handler.slice(pos+9).trim();
+    const quote=rest[0];
+    if(quote!=="'"&&quote!=='"')return null;
+    const end=rest.indexOf(quote,1);
+    return end>1?rest.slice(1,end):null;
+  }
+  function menuLinks125(){
+    const root=document.querySelector('aside,nav,.sidebar,#sidebar,.side-nav');
+    if(!root)return;
+    root.querySelectorAll('button[onclick],#c121-edl-sidebar').forEach(button=>{
+      if(button.dataset.c125Link||button.closest('a'))return;
+      const key=menuKey125(button);if(!key)return;
+      const a=document.createElement('a');
+      const url=new URL(location.href);url.searchParams.set('passerelle_page',key);
+      a.href=url.toString();a.className='c125-menu-link';
+      a.title='Clic droit ou Ctrl+clic : ouvrir dans un nouvel onglet';
+      button.dataset.c125Link='1';button.parentNode.insertBefore(a,button);a.appendChild(button);
+      a.addEventListener('click',e=>{
+        if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();button.click()}
+      });
+    });
+  }
+  const menuStyle125=document.createElement('style');
+  menuStyle125.textContent='.c125-menu-link{display:contents;color:inherit;text-decoration:none}';
+  document.head.append(menuStyle125);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menuLinks125,{once:true});else menuLinks125();
+  const navObserver125=new MutationObserver(menuLinks125);
+  navObserver125.observe(document.documentElement,{subtree:true,childList:true});
+  const initialPage125=new URLSearchParams(location.search).get('passerelle_page');
+  let initialNavigationPending125=!!initialPage125;
+  // Le lien direct ne doit restaurer sa rubrique qu'une fois au chargement.
+  // Un clic utilisateur annule la restauration pour ne pas ecraser sa navigation.
+  document.addEventListener('click',e=>{
+    if(e.target.closest('button,a,[role="button"]'))initialNavigationPending125=false;
+  },true);
+  if(initialPage125){
+    let tries=0;const restore125=setInterval(()=>{
+      tries++;
+      if(!initialNavigationPending125){clearInterval(restore125);return}
+      if(document.querySelector('#content')&&typeof navigate==='function'){
+        clearInterval(restore125);initialNavigationPending125=false;navigate(initialPage125);
+      }else if(tries>=40)clearInterval(restore125);
+    },250);
+  }
   const nav0=navigate;
   navigate=function(key){if(key==='edl'){resetTheme();setActiveNav(key);renderEDLC121();return;}return nav0(key)};
   let edlRows=[],overrides={},sagaNames={},sousNames={};
+  const edlSelected126=new Set();
   const code=(id,k)=>id+'::'+k;
   const auto=(w,p,l,kw)=>{
     const infos=[w.genre,w.format_cible||w.format,w.statut,w.tonalite,w.temporalite,w.lieu_principal,w.public_cible];
@@ -56,22 +108,91 @@
     (l.data||[]).forEach(x=>lCount[x.oeuvre_id]=(lCount[x.oeuvre_id]||0)+1);
     edlRows=(w.data||[]).filter(x=>!x.archive).map(x=>({w:x,defaults:auto(x,pCount[x.id]||0,lCount[x.id]||0,kCount[x.id]||0)}));
     overrides=Object.fromEntries((e.data||[]).map(x=>[code(x.oeuvre_id,x.critere),x.etat]));
+    edlSelected126.clear();
+    const [sg,ss]=await Promise.all([db().from('sagas').select('id,nom'),db().from('sous_sagas').select('id,nom,saga_id')]);
+    sagaNames=Object.fromEntries((sg.data||[]).map(x=>[x.id,x.nom]));
+    sousNames=Object.fromEntries((ss.data||[]).map(x=>[x.id,x.nom]));
     root.innerHTML='<style>.c121-edl{font-size:13px}.c121-edl .c121-edl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}.c121-edl h1{margin:0;font-size:27px}.c121-edl p{margin:4px 0;color:var(--muted,#756c86)}.c121-edl-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.c121-edl-filters input{width:240px;max-width:100%;padding:9px 12px;border:1px solid var(--line,#ddd);border-radius:9px;background:var(--card,#fff);color:var(--text,#302638)}.c121-edl-filters select{max-width:150px;padding:9px;border:1px solid var(--line,#ddd);border-radius:9px;background:var(--card,#fff);color:var(--text,#302638)}.c121-edl .c121-overflow{overflow-x:auto}.c121-edl .c121-table{table-layout:fixed;min-width:780px;width:100%;font-size:12px}.c121-edl .c121-table th,.c121-edl .c121-table td{padding:9px 7px;white-space:normal;vertical-align:middle}.c121-edl .c121-table th:first-child{width:25%}.c121-edl .c121-table th:not(:first-child){width:15%}.c121-edl .c121-table select{width:100%;max-width:100%;font-size:11px;padding:6px 3px;min-width:0}.c121-edl .c121-work-link{border:0;background:transparent;color:var(--text,#302638);text-align:left;cursor:pointer;font:600 13px inherit;overflow-wrap:anywhere}.c121-edl .c121-work-link:hover{text-decoration:underline} .c121-edl .c121-edl-note{font-size:12px;margin-top:12px}.c121-edl .c121-state-field{display:flex;align-items:center;gap:5px;min-width:0;padding:3px 5px;border:1px solid var(--line,#e5ddec);border-radius:9px}.c121-edl .c121-state-dot{width:10px;height:10px;min-width:10px;border-radius:50%;box-shadow:0 0 0 2px #fff8}.c121-edl .c121-state-field select{border:0;background:transparent;padding:4px 0;flex:1;min-width:0;outline-offset:2px}</style>'+
-    '<section class="c121-edl"><div class="c121-edl-head"><div><h1>🌱 État des lieux</h1><p>Diagnostic automatique, appréciations modifiables.</p></div><div class="c121-edl-filters"><input id="c121-q" placeholder="Rechercher une œuvre…" oninput="filterEDLC121()"><select id="c121-state" onchange="filterEDLC121()"><option value="">Tous les états</option>'+states.map(x=>'<option>'+x+'</option>').join('')+'</select><select id="c121-criterion" onchange="filterEDLC121()"><option value="">Tous les critères</option>'+criteria.map(([k,t])=>'<option value="'+k+'">'+t+'</option>').join('')+'</select></div></div>'+
-    '<div class="panel c121-overflow"><table class="c121-table"><thead><tr><th>Œuvre</th>'+criteria.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead><tbody id="c121-edl-body"></tbody></table></div><p class="c121-edl-note">Les valeurs « Auto » proviennent des fiches. Tu peux les corriger à tout moment ; ton choix enregistré prime sur le diagnostic automatique. « À qualifier » ne signifie pas urgent.</p></section>';
+    '<section class="c121-edl"><div class="c121-edl-head"><div><h1>🌱 État des lieux</h1><p>Diagnostic automatique, appréciations modifiables.</p></div><div class="c121-edl-filters"><input id="c121-q" placeholder="Rechercher une œuvre…" oninput="filterEDLC121()"><select id="c121-state" onchange="filterEDLC121()"><option value="">Tous les états</option>'+states.map(x=>'<option>'+x+'</option>').join('')+'</select><select id="c121-criterion" onchange="filterEDLC121()"><option value="">Toutes les colonnes</option>'+criteria.map(([k,t])=>'<option value="'+k+'">'+t+'</option>').join('')+'</select><select id="c126-saga" onchange="filterEDLC121()"><option value="">Toutes les sagas</option>'+Object.entries(sagaNames).map(([id,n])=>'<option value="'+esc(id)+'">'+esc(n)+'</option>').join('')+'</select><select id="c126-sous" onchange="filterEDLC121()"><option value="">Toutes les sous-sagas</option>'+Object.entries(sousNames).map(([id,n])=>'<option value="'+esc(id)+'">'+esc(n)+'</option>').join('')+'</select></div></div>'+
+    '<div class="panel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><button class="btn-secondary" onclick="selectVisibleEDL126(true)">Cocher les œuvres affichées</button><button class="btn-secondary" onclick="selectVisibleEDL126(false)">Décocher</button><select id="c126-bulk-column"><option value="">Toutes les colonnes</option>'+criteria.map(([k,t])=>'<option value="'+k+'">'+t+'</option>').join('')+'</select><select id="c126-bulk-state"><option value="">Choisir un état…</option>'+states.map(x=>'<option>'+x+'</option>').join('')+'</select><button class="btn-primary" onclick="bulkEDL126()">Appliquer aux œuvres cochées</button><span id="c126-count">0 sélectionnée(s)</span></div><div class="panel c121-overflow"><table class="c121-table"><thead><tr><th><input type="checkbox" aria-label="Tout sélectionner" onchange="selectVisibleEDL126(this.checked)"> Œuvre</th>'+criteria.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead><tbody id="c121-edl-body"></tbody></table></div><p class="c121-edl-note">Les valeurs « Auto » proviennent des fiches. Tu peux les corriger à tout moment ; ton choix enregistré prime sur le diagnostic automatique. « À qualifier » ne signifie pas urgent.</p></section>';
     filterEDLC121();
   };
   window.filterEDLC121=()=>{
     const q=(document.getElementById('c121-q')?.value||'').toLowerCase(),s=document.getElementById('c121-state')?.value||'',c=document.getElementById('c121-criterion')?.value||'',b=document.getElementById('c121-edl-body');if(!b)return;
-    const filtered=edlRows.filter(({w,defaults})=>String([w.titre,w.genre,w.statut].join(' ')).toLowerCase().includes(q)&&(!s||(c?[c]:criteria.map(x=>x[0])).some(k=>(overrides[code(w.id,k)]||defaults[k])===s)));
+    const saga=document.getElementById('c126-saga')?.value||'',sous=document.getElementById('c126-sous')?.value||'';
+    const filtered=edlRows.filter(({w,defaults})=>String([w.titre,w.genre,w.statut].join(' ')).toLowerCase().includes(q)&&(!saga||String(w.saga_id||'')===saga)&&(!sous||String(w.sous_saga_id||w.soussaga_id||'')===sous)&&(!s||(c?[c]:criteria.map(x=>x[0])).some(k=>(overrides[code(w.id,k)]||defaults[k])===s)));
+    window.edlVisible126=filtered.map(x=>String(x.w.id));
+    const counter=document.getElementById('c126-count');if(counter)counter.textContent=edlSelected126.size+' sélectionnée(s)';
     const colors={'Complet':'#45a878','À qualifier':'#f3b23d','Sommaire':'#ee9c43','Non renseigné':'#ec477a','Non nécessaire':'#9b82d6'};
     const stateSelect=(id,k,title,defaults)=>{
       const current=overrides[code(id,k)]||defaults,manual=!!overrides[code(id,k)];
       const dot='<span class="c121-state-dot" style="background:'+colors[current]+'"></span>';
       return '<div class="c121-state-field">'+dot+'<select aria-label="'+esc(k)+' pour '+esc(title)+'" title="'+(manual?'Appréciation manuelle':'Diagnostic automatique')+' : '+esc(current)+'" onchange="saveEDLC121(\''+id+'\',\''+k+'\',this.value,this)"><option value="">Auto : '+esc(defaults)+'</option>'+states.map(st=>'<option value="'+st+'"'+(overrides[code(id,k)]===st?' selected':'')+'>'+st+'</option>').join('')+'</select></div>';
     };
-    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><button class="c121-work-link" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td>'+criteria.map(([k])=>'<td>'+stateSelect(w.id,k,w.titre,defaults[k])+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="6">Aucune œuvre pour ces filtres.</td></tr>';
+    b.innerHTML=filtered.map(({w,defaults})=>'<tr><td><input type="checkbox" aria-label="Sélectionner '+esc(w.titre)+'" '+(edlSelected126.has(String(w.id))?'checked ':'')+'onchange="toggleEDL126(\''+w.id+'\',this.checked)"> <button class="c121-work-link" onclick="openOeuvreDetail(\''+w.id+'\')">'+esc(w.titre)+'</button></td>'+criteria.map(([k])=>'<td>'+stateSelect(w.id,k,w.titre,defaults[k])+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="6">Aucune œuvre pour ces filtres.</td></tr>';
   };
+  window.toggleEDL126=(id,checked)=>{if(checked)edlSelected126.add(String(id));else edlSelected126.delete(String(id));const n=document.getElementById('c126-count');if(n)n.textContent=edlSelected126.size+' sélectionnée(s)'};
+  window.selectVisibleEDL126=checked=>{(window.edlVisible126||[]).forEach(id=>{if(checked)edlSelected126.add(id);else edlSelected126.delete(id)});filterEDLC121()};
+  window.bulkEDL126=async()=>{
+    const ids=[...edlSelected126],col=document.getElementById('c126-bulk-column')?.value||'',state=document.getElementById('c126-bulk-state')?.value||'';
+    if(!ids.length||!state)return alert('Sélectionne au moins une œuvre et un état.');
+    const cols=col?[col]:criteria.map(x=>x[0]);
+    if(!confirm('Appliquer « '+state+' » à '+cols.length+' colonne(s) de '+ids.length+' œuvre(s) ?'))return;
+    const rows=ids.flatMap(id=>cols.map(k=>({oeuvre_id:id,critere:k,etat:state,user_id:currentUser.id,updated_at:new Date().toISOString()})));
+    const result=await db().from('edl_evaluations').upsert(rows,{onConflict:'oeuvre_id,critere'});
+    if(result.error)return alert('Mise à jour impossible : '+result.error.message);
+    rows.forEach(x=>overrides[code(x.oeuvre_id,x.critere)]=state);
+    edlSelected126.clear();filterEDLC121();
+  };
+
+  // C127 : presentation compacte de l'Etat des lieux, sans modifier les donnees.
+  const edlStyle127=document.createElement('style');
+  edlStyle127.textContent=`
+    .c121-edl .c121-edl-head{display:block!important}
+    .c121-edl .c121-edl-head>div:first-child{margin-bottom:16px}
+    .c121-edl .c121-edl-filters{display:grid!important;grid-template-columns:minmax(180px,1.6fr) repeat(4,minmax(125px,1fr));gap:9px!important;align-items:center;width:100%}
+    .c121-edl .c121-edl-filters input,.c121-edl .c121-edl-filters select{width:100%!important;max-width:none!important;min-width:0;box-sizing:border-box}
+    .c121-edl .c126-bulk-toolbar{display:flex!important;flex-wrap:wrap!important;gap:10px!important;align-items:center!important;padding:12px 14px!important}
+    .c121-edl .c126-bulk-toolbar select{flex:0 1 190px!important;width:auto!important;min-width:145px!important;max-width:220px!important;padding:9px!important}
+    .c121-edl .c126-bulk-toolbar button{flex:0 0 auto!important;white-space:nowrap}
+    .c121-edl .c126-bulk-toolbar #c126-count{margin-left:auto;white-space:nowrap}
+    .c121-edl .c121-table th:first-child{width:25%!important;text-align:left!important}
+    .c121-edl .c121-table th:first-child input{display:inline-block!important;vertical-align:middle!important;margin:0 9px 0 0!important;position:static!important}
+    .c121-edl .c121-table td:first-child input{display:inline-block!important;vertical-align:middle!important;margin:0 9px 0 0!important;position:static!important}
+    .c121-edl .c121-table td:first-child .c121-work-link{display:inline!important;vertical-align:middle!important}
+    @media(max-width:960px){
+      .c121-edl .c121-edl-filters{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;padding-bottom:6px}
+      .c121-edl .c121-edl-filters>*{flex:0 0 155px!important}
+      .c121-edl .c121-edl-filters input{flex-basis:220px!important}
+      .c121-edl .c126-bulk-toolbar select{flex:1 1 155px!important}
+    }
+  `;
+  document.head.append(edlStyle127);
+  const renderEDL127=window.renderEDLC121;
+  window.renderEDLC121=async function(){
+    await renderEDL127();
+    const body=document.getElementById('c121-edl-body');
+    if(!body)return;
+    const toolbar=body.closest('.c121-edl')?.querySelector('#c126-bulk-column')?.parentElement;
+    if(toolbar)toolbar.classList.add('c126-bulk-toolbar');
+    const head=body.closest('table')?.querySelector('thead th:first-child');
+    if(head){
+      const box=head.querySelector('input[type="checkbox"]');
+      if(box){head.textContent='';head.append(box,document.createTextNode(' Œuvre'))}
+    }
+  };
+
+  // C128 : case et titre sur une seule ligne dans la premiere colonne.
+  const checkboxStyle128=document.createElement('style');
+  checkboxStyle128.textContent=`
+    .c121-edl .c121-table th:first-child,
+    .c121-edl .c121-table td:first-child{vertical-align:middle!important}
+    .c121-edl .c121-table th:first-child input[type="checkbox"],
+    .c121-edl .c121-table td:first-child input[type="checkbox"]{float:left!important;display:block!important;margin:2px 10px 0 0!important;width:16px!important;height:16px!important;position:static!important}
+    .c121-edl .c121-table td:first-child .c121-work-link{display:block!important;overflow:hidden!important;line-height:1.35!important}
+    .c121-edl .c121-table th:first-child{line-height:20px!important}
+  `;
+  document.head.append(checkboxStyle128);
   window.saveEDLC121=async(id,k,etat,select)=>{
     select.disabled=true;
     const r=etat?await db().from('edl_evaluations').upsert({oeuvre_id:id,critere:k,etat,user_id:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'oeuvre_id,critere'}):await db().from('edl_evaluations').delete().eq('oeuvre_id',id).eq('critere',k);
@@ -224,8 +345,12 @@
   };
   function c122LabelImport(){
     const labels=new Map(characterMediaImportV65.characters.map(p=>[p.id,p.c122Label||p.nom]));
-    document.querySelectorAll('#character-media-import-zone-v65 select option, #cm-bulk-character-v65 option').forEach(o=>{if(labels.has(o.value))o.textContent=labels.get(o.value)});
+    document.querySelectorAll('#character-media-import-zone-v65 select option, #cm-bulk-character-v65 option').forEach(o=>{if(labels.has(o.value)){const full=labels.get(o.value);o.title=full;o.textContent=full.length>46?full.slice(0,43)+'…':full}});
   }
+  // Les menus natifs prennent la largeur de leur option la plus longue : borner les libelles.
+  const importSelectStyle122=document.createElement('style');
+  importSelectStyle122.textContent='#character-media-import-zone-v65 select,#cm-bulk-character-v65{max-width:100%!important;min-width:0!important;width:100%;text-overflow:ellipsis;overflow:hidden}#character-media-import-zone-v65 select option,#cm-bulk-character-v65 option{max-width:100%}';
+  document.head.append(importSelectStyle122);
   const preview122=renderCharacterMediaPreviewV65;
   renderCharacterMediaPreviewV65=function(){preview122();c122LabelImport()};
   // 2. Filtre : lire les associations, pas les libelles ni la position des cartes.
@@ -611,5 +736,155 @@
     if(!works.length){const empty=document.createElement('div');empty.className='empty';empty.textContent='Aucune œuvre directement rattachée à cette saga.';list.append(empty)}
     section.append(list);zone.append(section);
   };
+
+
+  // C124 : attribution d'oeuvre par lot dans l'import ZIP de medias personnages.
+  let worksForMedia124=[];
+  const mediaImport124=renderCharacterMediaImportV65;
+  renderCharacterMediaImportV65=async function(zone){
+    await mediaImport124(zone);
+    const result=await db().from('oeuvres').select('id,titre').order('titre');
+    if(!result.error)worksForMedia124=result.data||[];
+    renderCharacterMediaPreviewV65();
+  };
+  function decorateMediaWorks124(){
+    const root=document.getElementById('character-media-import-zone-v65');
+    if(!root||!characterMediaImportV65.items.length)return;
+    const bulk=root.querySelector('.character-media-bulk-v65');
+    if(!bulk)return;
+    const selector=document.createElement('select');selector.id='cm-bulk-work-c124';
+    selector.setAttribute('aria-label','Attribuer une œuvre aux images sélectionnées');
+    selector.append(new Option('Attribuer une œuvre…',''));
+    worksForMedia124.forEach(w=>selector.append(new Option(w.titre.length>48?w.titre.slice(0,45)+'…':w.titre,w.id)));
+    const action=document.createElement('button');action.type='button';action.className='btn-secondary';action.textContent='Appliquer l’œuvre';
+    action.onclick=()=>{
+      const id=selector.value;if(!id)return;
+      const selected=characterMediaImportV65.items.filter(x=>x.selected);
+      if(!selected.length)return;
+      const changed=selected.filter(x=>x.oeuvre_id&&x.oeuvre_id!==id);
+      if(changed.length&&!confirm('Remplacer l’œuvre déjà attribuée sur '+changed.length+' image(s) sélectionnée(s) ?'))return;
+      selected.forEach(x=>x.oeuvre_id=id);
+      renderCharacterMediaPreviewV65();
+    };
+    const apply=bulk.querySelector('button');bulk.insertBefore(selector,apply);bulk.insertBefore(action,apply);
+    const cards=[...root.querySelectorAll('.character-media-card-v65')];
+    cards.forEach((card,i)=>{
+      const x=characterMediaImportV65.items[i];if(!x)return;
+      const select=document.createElement('select');select.setAttribute('aria-label','Œuvre associée à '+x.name);
+      select.append(new Option('— Œuvre (facultatif) —',''));
+      worksForMedia124.forEach(w=>select.append(new Option(w.titre.length>48?w.titre.slice(0,45)+'…':w.titre,w.id)));
+      select.value=x.oeuvre_id||'';
+      select.onchange=()=>{x.oeuvre_id=select.value};
+      const destination=card.querySelectorAll('select')[1];
+      if(destination)destination.after(select);else card.append(select);
+    });
+  }
+  const previewWorks124=renderCharacterMediaPreviewV65;
+  renderCharacterMediaPreviewV65=function(){previewWorks124();decorateMediaWorks124()};
+  // La liaison a l'oeuvre est inscrite dans la ligne media, sans changer
+  // la fiche personnage ni ses relations canoniques aux oeuvres.
+  executeCharacterMediaImportV65=async function(){
+    const rows=characterMediaImportV65.items.filter(x=>x.selected&&x.character_id&&x.destination);
+    if(!rows.length)return;
+    if(!confirm('Importer '+rows.length+' image(s) dans les fiches personnages ?'))return;
+    const status=document.getElementById('character-media-import-status-v65');
+    let done=0;const errors=[];const successful=[];
+    for(const x of rows){
+      const p=characterMediaImportV65.characters.find(c=>c.id===x.character_id);
+      if(!p)continue;
+      try{
+        if(status)status.textContent='Conversion WebP & liaison… '+(done+1)+'/'+rows.length+' · '+p.nom;
+        const url=await uploadAssetFile(x.file,'personnages/'+p.id+'/bulk',{kind:x.destination==='portrait'?'portrait':'generic',throwOnError:true,requireOptimize:true});
+        const updated=await patchCharacterMediaC86(p.id,x.destination,url);
+        const types={portrait:'Portrait',vertical:'Profil vertical',appearance:'Apparence',reference:'Référence visuelle'};
+        const payload={user_id:currentUser.id,personnage_id:p.id,url,titre:x.name.replace(/\.[^.]+$/,''),type:types[x.destination]||'Illustration'};
+        if(x.oeuvre_id)payload.oeuvre_id=x.oeuvre_id;
+        const result=await db().from('medias').insert(payload);
+        if(result.error)throw result.error;
+        p.portrait_url=updated.portrait_url||p.portrait_url;
+        p.contenu=updated.contenu||p.contenu;
+        successful.push(x);done++;
+      }catch(e){errors.push(x.name+': '+(e?.message||e))}
+    }
+    if(status)status.textContent=(errors.length?'⚠ ':'✓ ')+done+' image(s) liée(s)'+(errors.length?' · '+errors.length+' erreur(s)':'');
+    if(errors.length){console.error('Import C124',errors);alert('Import terminé avec '+errors.length+' erreur(s).\n\n'+errors.slice(0,8).join('\n'))}
+    characterMediaImportV65.items=characterMediaImportV65.items.filter(x=>!successful.includes(x));
+    renderCharacterMediaPreviewV65();
+  };
+
+  // C124 : l'oeuvre choisie sert de filtre aux personnages disponibles.
+  let linkedCharactersByWork124=new Map();
+  const mediaImportFiltered124=renderCharacterMediaImportV65;
+  renderCharacterMediaImportV65=async function(zone){
+    await mediaImportFiltered124(zone);
+    const ids=characterMediaImportV65.characters.map(p=>p.id);
+    if(!ids.length)return;
+    const r=await db().from('personnages_oeuvres').select('personnage_id,oeuvre_id').in('personnage_id',ids);
+    if(r.error){console.warn('C124 filtre personnages',r.error);return}
+    linkedCharactersByWork124=new Map();
+    (r.data||[]).forEach(l=>{
+      const key=String(l.oeuvre_id);
+      if(!linkedCharactersByWork124.has(key))linkedCharactersByWork124.set(key,new Set());
+      linkedCharactersByWork124.get(key).add(String(l.personnage_id));
+    });
+    filterMediaCharacters124();
+  };
+  function filterMediaCharacters124(){
+    const root=document.getElementById('character-media-import-zone-v65');
+    if(!root)return;
+    const allIds=new Set(characterMediaImportV65.characters.map(p=>String(p.id)));
+    const rows=[...root.querySelectorAll('.character-media-card-v65')];
+    rows.forEach((card,i)=>{
+      const item=characterMediaImportV65.items[i];
+      if(!item)return;
+      const allowed=item.oeuvre_id?linkedCharactersByWork124.get(String(item.oeuvre_id))||new Set():allIds;
+      const characterSelect=[...card.querySelectorAll('select')].find(sel=>[...sel.options].some(o=>allIds.has(String(o.value))));
+      if(!characterSelect)return;
+      [...characterSelect.options].forEach(option=>{
+        if(!allIds.has(String(option.value)))return;
+        option.hidden=!allowed.has(String(option.value));
+        option.disabled=!allowed.has(String(option.value));
+      });
+      if(item.character_id&&!allowed.has(String(item.character_id))){
+        item.character_id='';
+        characterSelect.value='';
+      }
+      const notice=card.querySelector('.c124-character-count')||document.createElement('small');
+      notice.className='c124-character-count';
+      notice.textContent=item.oeuvre_id?allowed.size+' personnage(s) lié(s) à cette œuvre':'Toutes les fiches personnages';
+      notice.style.cssText='display:block;font-size:11px;opacity:.7;margin-top:3px';
+      characterSelect.after(notice);
+    });
+  }
+  const previewFiltered124=renderCharacterMediaPreviewV65;
+  renderCharacterMediaPreviewV65=function(){
+    previewFiltered124();
+    filterMediaCharacters124();
+    const root=document.getElementById('character-media-import-zone-v65');
+    root?.querySelectorAll('.character-media-card-v65').forEach(card=>{
+      const selects=[...card.querySelectorAll('select')];
+      const work=selects.find(sel=>sel.getAttribute('aria-label')?.startsWith('Œuvre associée'));
+      if(work)work.addEventListener('change',()=>queueMicrotask(filterMediaCharacters124));
+    });
+  };
+  const workSelectStyle124=document.createElement('style');
+  workSelectStyle124.textContent='#character-media-import-zone-v65 .character-media-bulk-v65{flex-wrap:wrap!important}#character-media-import-zone-v65 .character-media-bulk-v65 select{min-width:0;max-width:280px;width:auto;flex:1 1 190px}#character-media-import-zone-v65 .character-media-card-v65 select{max-width:100%;width:100%;min-width:0}';
+  document.head.append(workSelectStyle124);
+
+
+  // C130 : correctif Nouvelle session et prolongation des séries.
+  const planningScript130=document.createElement('script');
+  planningScript130.src='c130-planning.js?v=13002';
+  document.body.appendChild(planningScript130);
+
+  // C133 : export DOCX disponible avant l'initialisation de la bibliothèque.
+  const wordScript133=document.createElement('script');
+  wordScript133.src='c133-word-export.js?v=13301';
+  document.body.appendChild(wordScript133);
+
+  // C129 : charge le module poésie après initialisation des fonctions Passerelle.
+  const poetryScript129=document.createElement('script');
+  poetryScript129.src='c129-poetry.js?v=13301';
+  document.body.appendChild(poetryScript129);
 
 })();
